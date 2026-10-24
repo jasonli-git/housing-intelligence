@@ -324,3 +324,22 @@ layout, artwork sources, interactions and other page sections unchanged. No new 
 Verification: 747 frontend tests, TypeScript, homepage/stories-scoped production build,
 whitespace checks and all eight local responsive/theme gateway/axe checks passed.
 Inspected desktop light/dark and mobile dark screenshots. No merge or deployment.
+
+## Review follow-up: artistic blue light, not a stronger fill — 2026-10-24
+
+At the user's request, replace the preceding saturated blue-violet panel with a
+neutral-base card illuminated by soft blue pools and a blurred diagonal light ribbon.
+A thin edge highlight and restrained blue halo give it luminosity rather than a flat
+fill. Remove the violet, restore the chart composition's full opacity, and restore
+the normal secondary-text token. Keep the CTA in the primary foreground for contrast.
+Position the ribbon higher on mobile so it remains visible above the chart fragments.
+
+Only `web/app/home-refresh.css` changes. All colour comes from existing tokens; the
+glow is static and local to this card. The removed homepage-wide ambient glow stays
+removed. Layout, content, artwork sources, theme behavior and interactions are unchanged.
+This supersedes the previous “make the card colour prominent” treatment.
+
+Verification: 747 frontend tests, TypeScript, homepage/stories-scoped production build,
+whitespace checks and the eight local responsive/theme gateway/axe cases passed,
+including artwork click-through, focus and reduced motion. Inspected desktop light/dark
+and mobile dark screenshots. No merge or deployment.
