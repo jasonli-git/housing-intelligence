@@ -17,6 +17,19 @@ try {
       const link = footer.getByRole('link', { name: 'Source checks scheduled Fridays', exact: true });
       assert.equal(await page.locator('.site-status').count(), 1, 'one universal status link');
       assert.equal(await page.locator('.site-meta-row .site-status').count(), 0);
+      const provenance = page.locator('details.footer-provenance');
+      assert(await provenance.evaluate((el) => {
+        const title = el.querySelector('.foot-title-block').getBoundingClientRect(), publishers = el.querySelector('.foot-brief').getBoundingClientRect(), s = getComputedStyle(el);
+        return publishers.top >= title.bottom + 8 && Math.abs(publishers.left - title.left) < 1 && s.borderRadius === '0px' && s.backgroundImage === 'none' && s.boxShadow === 'none';
+      }), 'provenance title sits above left-aligned publishers in an open section');
+      const publisherCount = await provenance.locator('.brief-item').count();
+      await provenance.locator('summary').focus();
+      await page.keyboard.press('Enter');
+      assert(await provenance.evaluate((el) => el.open), 'source disclosure opens by keyboard');
+      assert.equal(await provenance.locator('.inst').count(), publisherCount, 'every publisher retained in full disclosure');
+      assert(await provenance.locator('.inst-grid').isVisible());
+      await page.keyboard.press('Enter');
+      assert.equal(await provenance.evaluate((el) => el.open), false);
       assert.deepEqual(await page.locator('.foot-link-list a').evaluateAll((links) => links.map((a) => a.getAttribute('href'))), ['/freshness', '/changes']);
       const notice = page.getByRole('region', { name: 'Code and data terms' });
       assert(await notice.evaluate((el) => {
@@ -43,7 +56,7 @@ try {
       }), 'status follows the complete notice/source/policy footer');
       await link.focus();
       assert(await link.evaluate((el) => el.matches(':focus-visible')));
-      const audit = await new AxeBuilder({ page }).include('.site-check-footer').include('.site-meta-row').include('.footer-colophon').include('.foot-links').analyze();
+      const audit = await new AxeBuilder({ page }).include('.site-check-footer').include('.site-meta-row').include('.footer-provenance').include('.footer-colophon').include('.foot-links').analyze();
       assert.deepEqual(audit.violations.map((v) => v.id), []);
       await page.emulateMedia({ media: 'print' });
       assert.equal(await footer.isVisible(), false, 'no extra status line in printed reports');

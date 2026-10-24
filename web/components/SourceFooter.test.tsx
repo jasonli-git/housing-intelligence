@@ -37,6 +37,7 @@ it("leaves the visible publisher notice and source disclosure intact", async () 
   render(await SourceFooter());
   expect(within(screen.getByRole("group", { name: "Notices the sources require" })).getByText("Synthetic attribution retained verbatim.")).toBeTruthy();
   expect(screen.getByText("Synthetic source").getAttribute("href")).toBe("https://example.com/source");
+  expect(document.querySelector("details.footer-provenance > summary .foot-title-block")?.textContent).toContain("Data provenance");
 });
 
 it("does not invent attribution when source data is unavailable", async () => {

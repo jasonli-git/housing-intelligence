@@ -1,5 +1,24 @@
 # Homepage text reduction
 
+## Shared-footer follow-up: top-left provenance heading — 2026-10-24
+
+Move Data provenance / Sources above the publisher list, aligned at its top-left,
+with the native disclosure control at top-right. Replace the enclosing card treatment
+with an open, ruled section matching the surrounding footer sections. All publishers,
+attribution, source details and destinations remain unchanged. Screen-only CSS leaves
+report print rules unchanged; no PDF pagination rerun was needed for this change.
+
+Files: `web/components/SourceFooter.tsx`, `web/app/site-chrome.css`,
+`web/components/SourceFooter.test.tsx`, `web/scripts/check-source-check-footer.mjs`.
+The browser regression now checks heading/publisher alignment, open styling, keyboard
+expansion and preservation of the publisher count, and includes provenance in axe.
+
+Verification: 760 tests across 128 files, TypeScript, five publication tests,
+representative-route production build and `git diff --check` passed. Thirty-two dev
+browser cases and sixteen built-static cases passed at 390/1440px in light/dark,
+plus 320px fit checks. Inspected mobile dark and desktop light captures. No full-site
+export, physical-device testing, data changes, deployment or merge.
+
 ## Review follow-up: much larger yellow Notice heading — 2026-10-24
 
 Increase only the yellow Notice treatment: title from 13px to 32px, shield from 18px

@@ -88,7 +88,7 @@ export async function SourceFooter() {
           </div>
         )}
 
-        <details className="foot-sources">
+        <details className="foot-sources footer-provenance">
           <summary className="foot-head disclose">
             <span className="foot-title-block">
               <span className="foot-kicker">Data provenance</span>
