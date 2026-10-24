@@ -1,5 +1,34 @@
 # Homepage text reduction
 
+## Review follow-up: mute whole metric cards — 2026-10-24
+
+User clarified that “mute” meant reducing overall prominence, not only desaturating
+the blue/amber. Keep the existing neutral-mixed accents, dimensions, shape and data,
+but reduce visual weight across the card:
+
+- Outline/top-band colour contribution: 65% accent to 35%; retain the requested 12px
+  top thickness and square-top / rounded-bottom shape.
+- Background light pool: 20% accent to 8%; reduce the glass wash to 35% strength.
+- Remove the card halo/inset glow and the chart-line glow.
+- Background line opacity: .5 to .28; stroke width 1.25 to .9.
+- Values: 44px/500 to 40px/400, keeping the 36px line box so card heights do not change.
+
+Labels and source/date contrast stay unchanged. Do not lower the entire section's
+opacity, which would also impair essential text. Full histories, plotted values,
+missing-data gaps and provenance remain unchanged. The two metric colours still
+identify their series rather than implying positive/negative movement.
+
+Files: `web/app/home-tool-previews.css` and `web/scripts/check-home-tool-previews.mjs`.
+Browser guards now check the lighter type weight, no card/chart glow and quieter graph
+opacity, while retaining the existing dimension, shape, source and history checks.
+
+Verification: 751 frontend tests, TypeScript, affected-route production build and
+whitespace checks passed. Local Chromium checks passed at 1440/768/390/320px in both
+themes, including muted styling, exact 161px/159px card heights, readable source/graph
+separation, full-history path equality, scoped axe, keyboard/touch, tool destinations
+and print behavior. Inspected desktop light and mobile dark captures. No data changes,
+full-site publication, physical-device testing, deployment or merge.
+
 ## Review follow-up: slightly muted metric palette — 2026-10-24
 
 Soften each metric accent by mixing 75% of its existing blue/amber token with 25% of
