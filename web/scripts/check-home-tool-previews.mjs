@@ -22,6 +22,7 @@ try {
     });
     assert.equal(await tools.locator('img').count(), 12);
     assert.equal(await tools.locator('img:visible').count(), 6);
+    assert(await tools.locator('img').evaluateAll((images) => images.every((img) => img.naturalWidth === 1440 && img.naturalHeight === 900 && getComputedStyle(img).objectFit === 'contain')), 'normal viewport screenshots shown without additional cropping');
     assert(await tools.locator(`.shot-${theme}`).evaluateAll((images) => images.every((img) => getComputedStyle(img).display !== 'none' && img.naturalWidth > 100)));
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'no horizontal page overflow');
     const columns = await tools.locator('ul').evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length);

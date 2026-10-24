@@ -113,3 +113,48 @@
   reran all twelve against the static build. A mock needed the new viewport method;
   corrected and reran both runner tests.
 - `git diff --check`: passed. No merge or deployment.
+
+## Review follow-up: normal page framing — 2026-10-24
+
+### What changed
+
+At the user's request, replace the component-detail crops with the normal first
+screen of each tool page. All twelve captures now use the same **1440 × 900** viewport
+at scroll position (0, 0), including normal navigation and page titles. Do not hide
+the site header or scroll the selected component into view. Existing illustrative
+sample choices are retained; only capture framing changes. This supersedes the
+content-only crop/hidden-header/wide-atlas decisions above.
+
+### Files/modules affected
+
+- `web/scripts/tool-previews.mjs`: remove component selectors, bounding-box clips,
+  per-tool viewport widths and header hiding. After setting sample inputs, blur the
+  input and explicitly restore the page top. Capture the viewport, not a long
+  full-scroll image. Keep readiness gates and suppress only motion/carets/dev indicator.
+- `web/scripts/tool-previews.test.mjs`: assert common viewport, restored scroll top,
+  no clip, no header hiding and context cleanup on failed capture.
+- `web/components/HomeTools.tsx`: image dimensions match the capture viewport.
+- `web/app/home-tool-previews.css`: use `object-fit: contain` for all previews and
+  remove image hover zoom; show the complete captured frame without further cropping.
+- `web/scripts/check-home-tool-previews.mjs`: assert actual 1440 × 900 image dimensions
+  and uncropped image fitting across all card sizes.
+
+### Assumptions / limitations
+
+“Whole page, default positioning” means the ordinary top-of-page viewport, not
+shrinking the entire length of a long scrolling document into a thumbnail. Card
+layout, colours, sample scenarios, light/dark support and compact national figures
+are unchanged. Generated JPEGs remain ignored artifacts, refreshed locally and by
+the screenshot pipeline before release. No full-site publication/deployment or merge.
+
+### Verification
+
+- 746 frontend tests, TypeScript, 2 screenshot-runner tests and all 5 publication
+  tests passed; whitespace checks passed.
+- Scoped production build of homepage, six tools and supporting JSON routes passed.
+- Tool-only capture succeeded on the dev server and the static production export:
+  all twelve normal-position screenshots generated.
+- Static homepage checks passed at 1440, 768, 390 and 320px in both themes, including
+  actual dimensions, complete-frame fitting, image loading, focus, axe and unchanged
+  national figures. All six card links and browser-back passed on desktop/mobile.
+- Inspected the actual guide capture and desktop/dark homepage tool grid.

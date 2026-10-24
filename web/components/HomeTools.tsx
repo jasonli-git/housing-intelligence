@@ -16,7 +16,7 @@ export function HomeTools() {
     <p className="home-tools-note">Example views. Open a tool to use your own figures.</p>
     <ul>{HOME_TOOLS.map((tool) => <li key={tool.href}>
       <Link href={tool.href} data-tool={tool.href.slice(1)} prefetch={false}>
-        <ThemedShot name={`tools/${tool.shot}`} width={1000} height={625} className="home-tool-preview" />
+        <ThemedShot name={`tools/${tool.shot}`} width={1440} height={900} className="home-tool-preview" />
         <span className="home-tool-copy">
           <span className="home-tool-title">{tool.title} <span aria-hidden="true">→</span></span>
           <span className="home-tool-text">{tool.text}</span>
