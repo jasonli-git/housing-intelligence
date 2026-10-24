@@ -1,5 +1,39 @@
 # Homepage text reduction
 
+## Review follow-up: compact horizon metric cards — 2026-10-24
+
+Restore the older horizon aesthetic without increasing card dimensions. Keep the
+centred serif labels, 24px corners, 12px coloured top edges and blue/amber identities;
+use larger 44px sans-serif values with tight spacing and a subtle vertical fade.
+Their line box remains 36px, preserving existing card heights and source/date placement.
+
+Add real background sparklines using the exact `trendGeometry` path behind each full
+history chart. `NationalTrendBackdrop` is a static server-rendered SVG: no new request,
+dependency or animation. It preserves missing-data gaps and renders nothing when there
+is insufficient comparable history. The full histories retain labels, dates, ranges,
+definitions and independent-scale/not-a-forecast caveats in the existing disclosure.
+The redundant miniature is `aria-hidden`, non-focusable, and ignores pointer events.
+It is absolutely positioned/clipped within the card and hidden when printing. Sources
+and dates are above the artwork and the actual linework stays clear of their text.
+
+Files: `web/app/page.tsx`, `web/components/NationalTrend.tsx`,
+`web/components/NationalTrend.test.tsx`, `web/app/home-tool-previews.css`, and
+`web/scripts/check-home-tool-previews.mjs`. No change to series selection, calculations,
+coverage, text, fetches, other homepage sections or existing full-history geometry.
+
+Two added unit tests check exact/gap-preserving path reuse and absent-history omission.
+Browser guards check identical backdrop/history paths, original card heights (161px
+desktop, 159px mobile), non-interactive background positioning and clear source text.
+
+Verification: 751 frontend tests across 126 files, TypeScript, final affected-route
+production build and whitespace checks passed. Local tool/metrics regression passed
+at 1440/768/390/320px in both themes, including all six tool destinations, keyboard,
+touch, history and scoped axe. Additional static-production checks at those same eight
+width/theme combinations passed: unchanged heights, source/graph clearance, matching
+full-history paths, zero metric-region axe violations and hidden backdrops in print.
+Inspected desktop light and mobile dark captures. No full-site publication, physical-
+device testing, deployment, merge or data changes.
+
 ## Review follow-up: original search wording, upright type — 2026-10-24
 
 Restore “State, town, county or ZIP code” in the homepage search and make its
