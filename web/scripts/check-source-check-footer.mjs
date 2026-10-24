@@ -24,6 +24,10 @@ try {
         return s.outlineStyle === 'none' && s.backgroundImage === 'none' && s.boxShadow === 'none' && s.borderLeftWidth === '0px' && s.borderTopWidth === '1px';
       }), 'notice is a quiet open colophon, not an outlined card');
       assert.equal(await notice.getByRole('navigation', { name: 'Site policies' }).getByRole('link').count(), 3);
+      assert(await notice.locator('.foot-notice-head').evaluate((el) => {
+        const icon = el.querySelector(':scope > svg').getBoundingClientRect(), title = el.querySelector('a').getBoundingClientRect();
+        return getComputedStyle(el.querySelector('a')).fontSize === '32px' && icon.width === 28 && icon.height === 28 && Math.abs(icon.top + icon.height / 2 - title.top - title.height / 2) < 1;
+      }), 'prominent yellow heading and shield stay aligned');
       assert(await notice.getByRole('link', { name: 'its source is public', exact: true }).isVisible());
       assert.equal(await link.getAttribute('href'), '/freshness');
       await footer.scrollIntoViewIfNeeded();

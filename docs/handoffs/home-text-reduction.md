@@ -1,5 +1,26 @@
 # Homepage text reduction
 
+## Review follow-up: much larger yellow Notice heading — 2026-10-24
+
+Increase only the yellow Notice treatment: title from 13px to 32px, shield from 18px
+to 28px, external-link icon from 13px to 16px. Keep icon/title vertically aligned and
+retain the warm warning colour. Reserve at least 180px for the desktop/tablet heading
+column so it cannot crowd the unchanged legal text and policy links; mobile stays
+stacked. No licence wording, destination, publisher notice, data or print-CSS changes.
+
+Files: `web/app/site-chrome.css`, `web/scripts/check-source-check-footer.mjs`.
+The regression now checks computed heading/icon sizes and vertical alignment. During
+iteration it caught the legacy global small-link font rule still forcing 13px; the
+final scoped override resolves it rather than relying on source CSS alone.
+
+Verification: 760 frontend tests, TypeScript, final representative-route production
+build and whitespace checks passed. Twenty local browser cases passed across home,
+guide, atlas, freshness and printable report at 390/1440px in both themes, plus 320px
+fit. Includes heading/icon alignment, Notice/history/status scoped axe, links, focus,
+placement and print suppression of check status. Inspected 1440px light, 390px dark
+and 640px intermediate Notice captures. No full-site export, physical-device testing,
+deployment or merge.
+
 ## Shared-footer follow-up: remove duplicate stories and redesign Notice — 2026-10-24
 
 Remove the Visual stories entry from Source history across the site. That area now
