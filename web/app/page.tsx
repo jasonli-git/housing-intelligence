@@ -7,7 +7,7 @@ import { api, regionsWithData, nationalBenchmarkTrends, nationalHomePriceChange,
 import { dataScale } from "@/lib/dataScale";
 import { propertyScale } from "@/lib/propertyScale";
 import { DataScale, ScaleSignature } from "@/components/DataScale";
-import { NationalTrend } from "@/components/NationalTrend";
+import { NationalTrend, NationalTrendBackdrop } from "@/components/NationalTrend";
 import { periodLabel } from "@/lib/periods";
 import { pageMetadata } from "@/lib/meta";
 import { HomeStories } from "@/components/HomeStories";
@@ -41,8 +41,7 @@ export default async function HousingLandingPage() {
       <header className="page-head nation-head" data-kind="nation">
         <p className="plate-kicker" aria-hidden="true"><span>Plate I</span><span>The United States</span><span>39.8° N · 98.6° W</span></p>
         <h1>Housing <em>Intelligence</em></h1>
-        <p className="entry-introduction">Housing costs. Local context. Clear sources.</p>
-        <details className="entry-free-assurance"><summary className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free · No fees or ads</span></summary><p>No fees, subscriptions or advertisements. Free to use.</p></details>
+        <p className="entry-free-assurance"><span className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free · No fees or ads</span></span></p>
       </header>
       <section className="coverage-entry coverage-entry-map" aria-label="Find your place">
         <NationalCoverageMap searchFirst focusedEntry scaleStrip={<div className="scale-map-edge artwork-caption">
@@ -56,12 +55,14 @@ export default async function HousingLandingPage() {
           <section className="national-benchmark" aria-labelledby="national-context-heading">
             <h3 id="national-context-heading">30-year<br />mortgage rate</h3>
             {rate ? <>
+              <NationalTrendBackdrop points={trends.rates} />
               <div className="national-rate"><strong>{rate.value.toFixed(2)}%</strong><small><a href="https://www.freddiemac.com/pmms" target="_blank" rel="noreferrer noopener">Freddie Mac</a> · {periodLabel(rate.period_start, rate.metric_id)}</small></div>
             </> : <p>Mortgage-rate data is unavailable in this snapshot.</p>}
           </section>
           <section className="national-benchmark" aria-labelledby="national-home-prices-heading">
             <h3 id="national-home-prices-heading">Home prices<br />Year-over-year</h3>
             {homePrices ? <>
+              <NationalTrendBackdrop points={trends.prices} />
               <div className="national-rate"><strong>{homePrices.pct_change > 0 ? "+" : ""}{homePrices.pct_change.toFixed(1)}%</strong><small>{periodLabel(homePrices.period_start, "fhfa_hpi_us_monthly")} → {periodLabel(homePrices.period_end, "fhfa_hpi_us_monthly")} · <a href="https://www.fhfa.gov/data/hpi/datasets?tab=monthly-data" target="_blank" rel="noreferrer noopener">FHFA HPI®</a></small></div>
             </> : <p>A full year of comparable home-price data is unavailable.</p>}
           </section>

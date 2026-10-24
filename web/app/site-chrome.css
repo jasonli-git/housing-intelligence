@@ -1,15 +1,11 @@
-/* Site chrome on phones (2026-10-15): the licence notice and the source-check link share one
-   row — the licence's toggle sits beside its label instead of pushing to the far edge, and
-   "scheduled" drops, leaving "Source checks · Fridays". Opening the licence still wraps its
-   text onto its own line below. */
+/* The licence stays below the menu. Source checks now live in the universal footer;
+   opening the licence still wraps its explanatory text onto its own line. */
 @media screen and (max-width: 600px) {
   :root body .site-meta-row.shared-meta, :root body .search-first-home .site-meta-row { display: flex !important; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .2rem .6rem !important; }
   :root body .site-meta-row .licence { flex: 0 1 auto !important; min-width: 0; margin: 0; }
   :root body .site-meta-row .licence-box > summary { justify-content: flex-start !important; gap: .35rem; width: auto; }
   :root body .site-meta-row .licence-box[open] { flex-basis: 100%; }
-  :root body .site-meta-row .site-status { flex: 0 0 auto; white-space: nowrap; margin-left: auto; }
-  :root body .site-meta-row .site-status-word { display: none; }
-  :root body .site-meta-row :is(.licence-label, .site-status, .site-status-kicker) { font-size: 9px !important; letter-spacing: .06em !important; }
+  :root body .site-meta-row .licence-label { font-size: 9px !important; letter-spacing: .06em !important; }
 }
 @media screen and (max-width: 600px) {
   .site-meta-row:has(.licence-box[open]) .licence { flex-basis: 100% !important; }
@@ -50,6 +46,59 @@
 
 /* A late weekly check (#411) reads in the page's ink, not the muted grey of a routine one. */
 .site-status[data-overdue] .site-status-kicker { color: var(--text-primary) !important; font-weight: 600; }
+
+/* One quiet, full-wording status line after all publisher notices and policies. */
+.site-check-footer { width: 100%; max-width: var(--shell); margin: 0 auto; padding: 0 var(--gutter) 1.5rem; box-sizing: border-box; }
+.site-check-footer .site-status { margin: 0; padding: .5rem 0; min-height: 44px; border: 0; border-radius: 0; background: none; box-shadow: none; font: 400 12px/1.5 var(--font-text); color: var(--text-secondary); }
+.site-check-footer .site-status-schedule { color: inherit; }
+.site-check-footer .site-status-kicker { font: inherit; letter-spacing: 0; text-transform: none; color: inherit; margin: 0; }
+.site-check-footer .site-status-word { display: inline; }
+.site-check-footer .site-status:hover { color: var(--text-primary); text-decoration: underline; text-underline-offset: 3px; }
+.site-check-footer .site-status:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .site-check-footer .site-status-arrow { transition: none; transform: none; } }
+@media print { .site-check-footer { display: none; } }
+
+/* Shared provenance: heading above publishers, not a label beside a dense text row. */
+@media screen {
+  :root body .foot .foot-inner { gap: 1rem; }
+  :root body .foot .foot-notices { margin: 0; }
+  :root body .foot .foot-links { padding-block: 1rem; }
+  :root body .foot details.footer-provenance { border: 0; border-top: 1px solid var(--border); border-radius: 0; background: none; box-shadow: none; padding-inline: 0; }
+  :root body .foot .footer-provenance > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title hint" "publishers publishers"; align-items: start; gap: .75rem 1rem; min-height: 0; padding: .9rem 0; }
+  :root body .foot .footer-provenance .foot-title-block { grid-area: title; min-width: 0; display: flex; align-items: baseline; gap: .75rem; }
+  :root body .foot .footer-provenance .foot-title-block > * { margin: 0; }
+  :root body .foot .footer-provenance .foot-title-block .foot-label { font-size: 18px; }
+  :root body .foot .footer-provenance .foot-title-separator { color: var(--text-muted); }
+  :root body .foot .footer-provenance .foot-brief,
+  :root body .foot .footer-provenance .foot-intro.when-open { grid-area: publishers; margin: 0; }
+  :root body .foot .footer-provenance .brief-item { display: inline-block; max-width: 100%; white-space: normal; overflow-wrap: anywhere; vertical-align: top; }
+  :root body .foot .footer-provenance .disclose-hint { grid-area: hint; align-self: center; justify-self: end; margin: 0; }
+  :root body .foot .footer-provenance > summary:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+  :root body .foot .footer-provenance > summary:is(:hover, :focus-visible) { box-shadow: inset 0 -1px var(--text-muted); }
+  :root body .foot .footer-provenance > summary:is(:hover, :focus-visible) .foot-label { text-decoration: underline; text-underline-offset: .2em; text-decoration-thickness: 1px; }
+  :root body .foot .footer-provenance .disclose-hint::after { margin: 0; transition: transform 140ms ease; }
+  @media (prefers-reduced-motion: reduce) {
+    :root body .foot .footer-provenance > summary,
+    :root body .foot .footer-provenance .disclose-hint::after { transition: none; }
+  }
+}
+
+/* A quiet colophon rather than another enclosed card. Keep all terms visible. */
+@media screen {
+  :root body .foot section.footer-colophon { display: grid; grid-template-columns: minmax(180px, .24fr) minmax(0, 1fr); grid-template-areas: "heading copy" "heading policies"; align-items: start; gap: .5rem 1.5rem; margin-top: 1rem; padding: 1.1rem 0 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; outline: none; background: none; box-shadow: none; }
+  :root body .foot .footer-colophon .foot-notice-head { grid-area: heading; display: flex; align-items: center; gap: .55rem; }
+  :root body .foot .footer-colophon .foot-notice-head > svg { width: 28px; height: 28px; stroke: var(--notice-text); }
+  :root body .foot .footer-colophon .foot-notice-head .foot-notice-title { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; font: 400 32px/1.15 Georgia, serif; font-family: Georgia, serif !important; font-size: 32px !important; letter-spacing: -.02em; text-transform: none; color: var(--notice-text); }
+  :root body .foot .footer-colophon .notice-external-icon { width: 16px; height: 16px; }
+  :root body .foot .footer-colophon > .foot-intro { grid-area: copy; margin: 0; max-width: 85ch; font: 12px/1.65 var(--font-text); color: var(--text-secondary); }
+  :root body .foot .footer-colophon .foot-policy-links { grid-area: policies; display: flex; flex-wrap: wrap; align-items: center; gap: .1rem 1.25rem; }
+  :root body .foot .footer-colophon .foot-policy-links .foot-tab { display: inline-flex; align-items: center; min-height: 32px; font: 500 13px/1.4 var(--font-text); letter-spacing: 0; text-transform: none; color: var(--text-secondary); }
+  :root body .foot .footer-colophon a:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+  @media (max-width: 600px) {
+    :root body .foot section.footer-colophon { grid-template-columns: minmax(0, 1fr); grid-template-areas: "heading" "copy" "policies"; gap: .65rem; }
+    :root body .foot .footer-colophon .foot-policy-links .foot-tab { min-height: 44px; }
+  }
+}
 
 /* The desktop search can be narrower than an input's intrinsic ~200px width.
    Let its grid track and input shrink together instead of covering the theme button. */
