@@ -43,8 +43,8 @@
   :root .search-first-home .national-scoreboard .national-rate > strong { text-align: center; }
   :root .search-first-home .national-scoreboard .national-rate > strong { position: relative; z-index: 2; font: 400 40px/36px var(--font-text) !important; letter-spacing: -.06em !important; background: none; -webkit-text-fill-color: currentColor; color: var(--score-accent); font-variant-numeric: lining-nums tabular-nums; }
   .national-scoreboard .national-benchmark { overflow: hidden; }
-  .national-score-trend { position: absolute; z-index: 0; inset: auto 0 24px; width: 100%; height: 64%; opacity: .28; pointer-events: none; }
-  .national-score-trend path { fill: none; stroke: var(--score-accent); stroke-width: .9; }
+  .national-score-trend { position: absolute; z-index: 0; inset: auto 0 24px; width: 100%; height: 64%; opacity: .6; pointer-events: none; }
+  .national-score-trend path { fill: none; stroke: var(--score-accent); stroke-width: 1.5; }
   .national-score-trend circle { fill: var(--score-accent); }
   :root .search-first-home .national-scoreboard .national-rate small { position: relative; z-index: 2; }
   :root .search-first-home .national-scoreboard .national-rate small { grid-column: 1 / -1; margin: 0; font-size: 10px !important; line-height: 1.5; color: var(--text-secondary); text-align: center; }

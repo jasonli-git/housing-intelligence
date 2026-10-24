@@ -1,5 +1,23 @@
 # Homepage text reduction
 
+## Review follow-up: re-emphasise metric graphs — 2026-10-24
+
+Bring back stronger graph visibility while retaining the quieter card surfaces and
+narrower 440px pair. Increase background chart opacity from .28 to .6 and stroke
+width from .9 to 1.5. Do not restore the card/chart glow or change numbers, sources,
+card geometry, real-data paths, history disclosures or print behavior. Update the
+browser assertion for the stronger, still non-glowing linework.
+
+Files: `web/app/home-tool-previews.css`, `web/scripts/check-home-tool-previews.mjs`.
+No data changes, deployment or merge.
+
+Verification: TypeScript, affected-route production build and whitespace checks passed.
+Local Chromium metric/tool checks passed at 1440/768/390/320px in light/dark, including
+line emphasis, unchanged card dimensions, sources, history-path equality, scoped axe,
+keyboard/touch, destinations and print suppression. Inspected desktop light and mobile
+dark captures. Unit suite not rerun for this line-style-only change; no full-site
+publication or physical-device testing.
+
 ## Review follow-up: narrower metric cards — 2026-10-24
 
 Reduce the metric pair's maximum width from 520px to 440px. With the unchanged 12px
