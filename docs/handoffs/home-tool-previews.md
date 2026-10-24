@@ -224,3 +224,63 @@ The rail, six cards, screenshots and other homepage sections are unchanged.
 Verification: 747 frontend tests, TypeScript, homepage-scoped production build,
 local browser assertion (tagline absent; rail and six links intact), and whitespace
 checks passed. No merge or deployment.
+
+## Review follow-up: one Visual stories collection card — 2026-10-24
+
+### What changed
+
+Replace the homepage's three-story sampler with **one collection-level card**. Keep
+the heading inside the card, show the registry-derived count and New Jersey scope,
+and use one “Explore collection” cue. The entire card, including the artwork, links
+to `/stories`. No outer heading, separate Browse all link, tagline or individual
+story destinations remain in this section.
+
+Three existing chart captures—the Wawa map, Twin towns' paired prices and the flood
+calendar—overlap with soft masks to form a continuous composition without frames.
+These are decorative crops of real charts, not newly computed quantitative artwork.
+Desktop is a shallow 220px banner; mobile is a 300px card with copy above the artwork.
+Subtle CSS translation responds equally to hover and keyboard focus; reduced motion
+removes it. No automatic rotation, timers or perpetual animation added.
+
+### Files/modules affected
+
+- `web/components/HomeStories.tsx`: static, single-link gateway and decorative themed
+  fragments; uses `STORIES.length` rather than a hard-coded collection count.
+- `web/app/home-refresh.css`: replace the obsolete three-card track/focal-point CSS
+  with the single responsive banner and reduced-motion rules. Other home rules unchanged.
+- `web/app/page.tsx`: remove the now-unused shared story-card stylesheet import from
+  the homepage. The stories library still imports its own card styling as before.
+- `web/components/HomeStories.test.tsx`: guard one link, true count, three hidden
+  decorative fragments, and absence of the old list/buttons/catalogue montage.
+- `web/scripts/check-home-stories.mjs`: replace sampler-specific checks with gateway
+  layout, theme images, focus, full-card navigation and reduced-motion checks.
+- `docs/DIRECTOR_NOTES.md`: append the approved single-gateway direction; supersede
+  the earlier homepage sampler without editing its historical note.
+
+### Decisions / assumptions / limitations
+
+Treat Visual stories as one invitation into a collection, distinct from the Tools
+rail. Reuse existing artifacts and light/dark image switching; no new image generation,
+client component, dependency, data fetch or capture-pipeline change. Existing full
+charts/sources remain in the collection. The count describes stories, not a claim
+about popularity. Tools, compact national figures, search/map, navigation, footer,
+stories index and individual stories are unchanged. Local Chromium verification only;
+physical-device/Safari and deployed validation remain outstanding. No new TODOs.
+
+### Verification
+
+- `npm test -- --reporter=dot`: **747 tests across 125 files passed**.
+- `npm run typecheck` and all five publication tests passed.
+- Scoped production build passed for homepage, stories index, six tools and supporting
+  JSON routes (12 selected entries; not a complete site export).
+- `node scripts/check-home-stories.mjs`: passed on dev and static export at **1440,
+  768, 390 and 320px in both themes**. One link, real count matching library, theme
+  image loads, no clipping/overflow, section order, focus and scoped axe all passed.
+  Clicking the decorative art opens the stories collection in every size/theme case.
+- Non-reduced-motion hover/focus translations match; no autoplay animation; reduced
+  motion suppresses translation and transitions. All passed.
+- `SITE_URL=http://localhost:3006 node scripts/check-home-tool-previews.mjs`: passed
+  unchanged Tools rail and national-figure checks in all eight size/theme cases,
+  including keyboard navigation, sources, touch, fades, reduced motion and axe.
+- Inspected desktop and mobile screenshots in both themes; `git diff --check` passed.
+- No full site publication, warehouse writes, merge or deployment.

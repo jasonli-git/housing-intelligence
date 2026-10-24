@@ -6,16 +6,19 @@ import { STORIES } from "@/lib/stories";
 
 afterEach(cleanup);
 
-it("shows three curated direct story links and a separate complete-library link", () => {
+it("provides one collection gateway with the real story count and decorative chart fragments", () => {
   render(<HomeStories />);
   const section = screen.getByRole("region", { name: "Visual stories" });
-  expect(within(section).getByText("New Jersey")).toBeTruthy();
-  expect(within(section).getByRole("link", { name: `Browse all ${STORIES.length}` }).getAttribute("href")).toBe("/stories");
-  const picks = within(screen.getByRole("list", { name: "Selected visual stories" })).getAllByRole("link");
-  expect(picks.map((link) => link.getAttribute("href"))).toEqual([
-    "/stories/the-wawa-line", "/stories/twin-towns", "/stories/the-flood-claims-calendar",
-  ]);
-  expect(section.querySelectorAll(".library-cover")).toHaveLength(3);
+  const links = within(section).getAllByRole("link");
+  expect(links).toHaveLength(1);
+  expect(links[0].getAttribute("href")).toBe("/stories");
+  expect(within(section).getByText(`${STORIES.length} stories`)).toBeTruthy();
+  expect(links[0].textContent).toContain("New Jersey");
+  expect(within(section).getByText(/Explore collection/)).toBeTruthy();
+  expect(section.querySelectorAll(".gallery-fragment")).toHaveLength(3);
+  expect(section.querySelector(".home-stories-gallery")?.getAttribute("aria-hidden")).toBe("true");
+  expect(section.querySelectorAll("img")).toHaveLength(6);
   expect(section.querySelector('img[src*="stories-index"]')).toBeNull();
   expect(within(section).queryByRole("button")).toBeNull();
+  expect(within(section).queryByRole("list")).toBeNull();
 });

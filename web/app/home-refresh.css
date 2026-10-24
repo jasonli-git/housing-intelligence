@@ -69,34 +69,38 @@
     .home-tools a:hover { transform: none; }
   }
 }
-/* Three direct story previews; native horizontal browsing on narrow screens. */
-.home-stories { margin-block: 2.6rem 0; padding-top: .7rem; border-top: 1px solid var(--plate-strong-rule, var(--border)); }
-.home-stories > header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-.home-stories-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: .4rem 1rem; }
-.home-stories h2 { margin: 0; font: 400 clamp(26px, 3vw, 34px)/1.1 Georgia, serif; letter-spacing: -.03em; }
-.home-stories-title > span { color: var(--text-secondary); font-size: 12px; }
-.home-stories-all { display: inline-flex; align-items: center; gap: .7rem; min-height: 44px; color: var(--text-primary); font-size: 14px; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
-.home-story-track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; list-style: none; margin: -4px; padding: 4px; }
-.home-story-track > li { min-width: 0; }
-/* Editorial focal points: map divide, paired prices, and the full seasonal field.
-   These crop previews only; full story charts keep their original framing. */
-.home-stories .library-cover[data-story="the-wawa-line"] { --preview-scale: 2.05; --preview-origin: 0% 58%; }
-.home-stories .library-cover[data-story="twin-towns"] { --preview-scale: 1.6; --preview-origin: 100% 42%; }
-.home-stories .library-cover[data-story="the-flood-claims-calendar"] { --preview-scale: 1.08; --preview-origin: 50% 15%; }
-.home-stories .library-chart-detail img { transform: scale(var(--preview-scale)); transform-origin: var(--preview-origin); transition: transform 220ms ease; }
-.home-stories .library-card h3 { transition: color 220ms ease; }
-.home-stories .library-cover-open { transition: transform 220ms ease, border-color 220ms ease; }
-.home-stories .library-card:is(:hover, :focus-visible) .library-chart-detail img { transform: scale(calc(var(--preview-scale) + .04)); }
-.home-stories .library-card:is(:hover, :focus-visible) h3 { color: var(--text-primary); text-decoration: underline; text-underline-offset: .2em; }
-.home-stories .library-card:is(:hover, :focus-visible) .library-cover-open { transform: translate(2px, -2px); border-color: var(--text-secondary); }
-@media (prefers-reduced-motion: reduce) {
-  .home-stories .library-card:is(:hover, :focus-visible) .library-chart-detail img { transform: scale(var(--preview-scale)); }
-  .home-stories .library-card:is(:hover, :focus-visible) .library-cover-open { transform: none; }
-}
+/* A single collection gateway: actual chart fragments, not another card rail. */
+.home-stories { margin-block: 2.6rem 0; }
+.home-stories-gateway { display: block; position: relative; min-height: 220px; overflow: hidden; isolation: isolate; border: 1px solid var(--plate-strong-rule, var(--border)); border-radius: 22px; background: var(--glass, var(--surface-card)); color: var(--text-primary); text-decoration: none; transition: border-color 220ms ease; }
+.home-stories-copy { position: relative; z-index: 2; width: 42%; padding: 30px; box-sizing: border-box; }
+.home-stories h2 { margin: 0; font: 400 clamp(32px, 3.5vw, 46px)/1.08 Georgia, serif; letter-spacing: -.035em; color: var(--text-primary); }
+.home-stories-count { margin: .75rem 0 .7rem; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
+.home-stories-count strong { color: var(--text-primary); font-weight: 500; }
+.home-stories-enter { display: inline-flex; align-items: center; min-height: 44px; gap: 1.2rem; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
+.home-stories-enter > span { display: inline-block; transition: translate 220ms ease; }
+.home-stories-gallery { position: absolute; inset: 0 0 0 34%; pointer-events: none; overflow: hidden; mask-image: linear-gradient(90deg, transparent, var(--text-primary) 18%); }
+.gallery-fragment { display: block; position: absolute; top: -10%; height: 125%; overflow: hidden; mask-image: linear-gradient(90deg, transparent, var(--text-primary) 12%, var(--text-primary) 84%, transparent); transition: translate 320ms ease; }
+.gallery-fragment img { width: 100%; height: 100%; object-fit: cover; }
+.gallery-map { left: 0; width: 45%; rotate: -8deg; }
+.gallery-map img { object-position: 5% 55%; transform: scale(1.9); transform-origin: 0% 58%; }
+.gallery-dots { left: 27%; width: 48%; rotate: 5deg; }
+.gallery-dots img { object-position: 80% 45%; transform: scale(1.4); transform-origin: 90% 45%; }
+.gallery-calendar { left: 63%; width: 49%; rotate: -6deg; }
+.gallery-calendar img { object-position: 65% 65%; transform: scale(1.3); }
+.home-stories-gateway:is(:hover, :focus-visible) { border-color: var(--text-secondary); }
+.home-stories-gateway:is(:hover, :focus-visible) .gallery-map { translate: -4px 2px; }
+.home-stories-gateway:is(:hover, :focus-visible) .gallery-dots { translate: 0 -3px; }
+.home-stories-gateway:is(:hover, :focus-visible) .gallery-calendar { translate: 4px 2px; }
+.home-stories-gateway:is(:hover, :focus-visible) .home-stories-enter > span { translate: 2px -2px; }
+.home-stories-gateway:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 4px; }
 @media (max-width: 600px) {
-  .home-stories-title { display: grid; gap: .3rem; }
-  .home-stories-all { font-size: 13px; }
-  .home-story-track { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 82%; gap: 14px; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--border) transparent; padding-bottom: 12px; }
-  .home-story-track > li { scroll-snap-align: start; }
+  .home-stories-gateway { min-height: 300px; border-radius: 18px; }
+  .home-stories-copy { width: 100%; padding: 22px; }
+  .home-stories h2 { font-size: 34px; }
+  .home-stories-gallery { inset: auto 0 0; height: 158px; mask-image: linear-gradient(180deg, transparent, var(--text-primary) 25%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-stories-gateway, .gallery-fragment, .home-stories-enter > span { transition: none; }
+  .home-stories-gateway:is(:hover, :focus-visible) .gallery-fragment, .home-stories-gateway:is(:hover, :focus-visible) .home-stories-enter > span { translate: none; }
 }
 .home-tools a[data-tool="compare"] { --tool-wash: color-mix(in srgb, var(--story-up) 22%, transparent); --tool-ink: var(--story-up); }

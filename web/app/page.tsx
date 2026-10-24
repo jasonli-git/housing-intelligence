@@ -16,7 +16,6 @@ import { HomeTools } from "@/components/HomeTools";
 import "./housing-entry.css";
 import "./state-navigation.css";
 import "./home-refresh.css";
-import "./stories/story-cards.css";
 import "./data-scale.css";
 import "./landing-search-first.css";
 import "./home-plate.css";
