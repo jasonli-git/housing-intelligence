@@ -1,5 +1,12 @@
+import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
+
+// The tools fetch their figures from the published artifacts, whose CORS policy admits
+// only the live site (config/r2-cors.json), so a capture from localhost gets nothing.
+// Answer those requests from the build about to ship instead: its artifacts sit beside
+// the screenshots, and they are the figures the covers should show.
+const ARTIFACTS = 'https://housing-data.jasonli.app';
 
 // UI samples, not property listings or publisher screenshots. Use only our own
 // rendered interfaces and public aggregate figures; never capture a parcel address.
@@ -17,6 +24,13 @@ export async function captureToolPreviews(browser, { origin, outDir }) {
   for (const scheme of ['light', 'dark']) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: scheme, reducedMotion: 'reduce', locale: 'en-US' });
     try {
+      const artifactDir = resolve(outDir, '..');
+      await context.route(`${ARTIFACTS}/**`, async (route) => {
+        const file = resolve(artifactDir, '.' + new URL(route.request().url()).pathname);
+        await route.fulfill(file.startsWith(artifactDir) && existsSync(file)
+          ? { path: file, headers: { 'access-control-allow-origin': '*' } }
+          : { status: 404, headers: { 'access-control-allow-origin': '*' } });
+      });
       const page = await context.newPage();
       for (const tool of TOOL_PREVIEWS) {
         const response = await page.goto(origin + tool.path, { waitUntil: 'networkidle', timeout: 90_000 });
