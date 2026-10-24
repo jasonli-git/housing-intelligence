@@ -1,5 +1,26 @@
 # Homepage tool previews
 
+## Review follow-up: editorial type and rounded metric cards — 2026-10-24
+
+At the user's request, supersede the square corners and monospace scoreboard type.
+Use Georgia (matching the homepage's editorial headings) for metric labels and values:
+18px labels on desktop, 16px mobile, 36px lining/tabular values. Keep source/date text
+in the existing small utility style. Give each card a pronounced 24px radius and a
+4px coloured top border versus 1px on its other edges. Preserve the separate blue/amber
+outlines, luminous surfaces, 520px footprint, source links and history disclosure.
+
+Files: `web/app/home-tool-previews.css` and its browser regression script. No markup,
+data behavior, new animation or unrelated page styling changes. Update the regression
+to require serif labels/values, readable label sizes, 24px corners and 4px/1px borders.
+
+Verification: 747 frontend tests and TypeScript passed; homepage/stories-scoped
+production build passed. Desktop cards measure 131px (185px including disclosure).
+Local Chromium checks passed at 1440/768/390/320px in both themes, including scoped
+axe, expanded histories, Tools keyboard/touch and destination navigation. Mobile cards
+measure 151px (206px including disclosure). Inspected desktop dark and mobile light
+captures. Whitespace checks passed. No full-site publication, physical-device testing,
+deployment or merge.
+
 ## Review follow-up: luminous metric surfaces and distinct outlines — 2026-10-24
 
 Restore some of the original horizon-card aesthetic without restoring its size:
