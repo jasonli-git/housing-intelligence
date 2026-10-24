@@ -13,6 +13,12 @@ are not yet recorded here.
 
 ### Added
 
+- **The home page shows the tools themselves** (ARCHITECTURE #442): each of the six tools
+  is a picture of its own first screen, light or dark to match the reader, taken by each
+  deploy; Visual stories is one card into the library; the two national figures are
+  compact cards with faint trend lines, their full histories and definitions one click
+  away; and the source-check status moved from the masthead to the foot of every page
+  (ARCHITECTURE #443).
 - **The visual stories are a library** (ARCHITECTURE #440): `/stories` opens on a
   featured story, Editor's picks and five themed rails, with every story searchable and
   filterable under All stories; the home page shows three picked stories instead of a
