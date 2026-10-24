@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { StoryCard, StoryCover } from "./StoryCard";
 import { STORIES } from "@/lib/stories";
-import { COLLECTIONS, EDITOR_PICKS, FEATURED_STORY, findStories, storyBySlug, storyPreview, type Story } from "@/lib/storyLibrary";
+import { COLLECTIONS, EDITOR_PICKS, FEATURED_HEADLINE, FEATURED_STORY, findStories, storyBySlug, storyPreview, type Story } from "@/lib/storyLibrary";
 
 function StoryRail({ id, title, stories, viewAll }: {
   id: string; title: string; stories: Story[]; viewAll?: () => void;
@@ -78,7 +78,7 @@ export function StoryLibrary() {
       <Link className="library-feature" href={featured.href} prefetch={false}>
         <div className="library-feature-copy">
           <span className="library-eyebrow">Featured</span>
-          <h2>Similar towns.<br />Different price tags.</h2>
+          <h2>{FEATURED_HEADLINE[0]}<br />{FEATURED_HEADLINE[1]}</h2>
           <p>{storyPreview(featured)}</p>
           <span className="library-feature-cta">Explore <span aria-hidden="true">↗</span></span>
         </div>

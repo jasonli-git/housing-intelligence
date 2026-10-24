@@ -20,6 +20,11 @@ describe("story library curation", () => {
     expect(new Set(EDITOR_PICKS).size).toBe(EDITOR_PICKS.length);
     for (const slug of [...EDITOR_PICKS, FEATURED_STORY]) expect(storyBySlug(slug).href).toBe(`/stories/${slug}`);
     expect(() => storyBySlug("missing-story")).toThrow("Unknown visual story");
+    expect(EDITOR_PICKS).not.toContain(FEATURED_STORY);
+  });
+  it("takes a pick from every collection", () => {
+    const picked = new Set(EDITOR_PICKS.map((slug) => collectionFor(storyBySlug(slug))));
+    expect([...picked].sort()).toEqual(COLLECTIONS.map((c) => c.id).sort());
   });
   it("searches titles and descriptions, ignoring case and extra whitespace", () => {
     expect(findStories("  TAX  ").map(storySlug)).toContain("same-house-different-tax-bill");
