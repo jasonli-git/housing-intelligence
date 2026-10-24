@@ -146,6 +146,10 @@ are not yet recorded here.
 
 ### Changed
 
+- **The repository is tidier** (ARCHITECTURE #441): the project documents and the Codex
+  handoffs moved to `docs/`, two one-file folders into `config/`, and Wrangler's local
+  cache is no longer tracked; screenshots now refresh within minutes of a deploy rather
+  than up to four hours.
 - **New Jersey's assumptions made explicit for a second state** (ARCHITECTURE #406, #407):
   sources declare the states they cover (32 are New Jersey's), and `hip acquire` and
   `hip check-config` name a scoped state one does not cover; municipality labels are

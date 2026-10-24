@@ -97,10 +97,10 @@ After successful merge, the milestone branch may be deleted.
 Claude owns reconciliation of:
 
 ```text
-SPEC.md
-ARCHITECTURE.md
-ROADMAP.md
-TODO.md
+docs/SPEC.md
+docs/ARCHITECTURE.md
+docs/ROADMAP.md
+docs/TODO.md
 CHANGELOG.md
 README.md
 ```
@@ -127,7 +127,7 @@ Codex development normally arrives as:
 ```text
 Codex task branch
 +
-agent-handoffs/<task-name>.md
+docs/handoffs/<task-name>.md
 +
 pull request into main
 ```
@@ -241,7 +241,7 @@ After a successful merge, the completed task branch may be deleted.
 Codex handoffs live in:
 
 ```text
-agent-handoffs/
+docs/handoffs/
 ```
 
 A handoff is a structured receipt from Codex to Claude.
@@ -263,7 +263,7 @@ When reviewing Codex work:
 - inspect the actual implementation
 - reconcile anything important into canonical documentation if appropriate
 
-Do not treat `agent-handoffs/` as a second authoritative documentation system.
+Do not treat `docs/handoffs/` as a second authoritative documentation system.
 Do not blindly copy handoff statements into canonical documentation.
 
 After a Codex PR has been reviewed, merged, and its important information has
@@ -273,7 +273,7 @@ Do not delete a handoff before its information has been reviewed and reconciled.
 
 ## Director Notes
 
-`DIRECTOR_NOTES.md` is a user-directed layer for informal project feedback,
+`docs/DIRECTOR_NOTES.md` is a user-directed layer for informal project feedback,
 observations, and possible future directions.
 
 Neither Claude nor Codex owns it.
@@ -303,7 +303,7 @@ proposed Director Note
         ↓
 user approval
         ↓
-DIRECTOR_NOTES.md
+docs/DIRECTOR_NOTES.md
         ↓
 discussion / exploration
         ↓

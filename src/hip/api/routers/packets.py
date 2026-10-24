@@ -35,7 +35,7 @@ def packet(
 ) -> Packet:
     """Every computed figure for one region, with its ranks, caveats, and sources.
 
-    The schema is published at `schemas/packet-v1.json` and versioned by
+    The schema is published at `config/packet-v1.json` and versioned by
     `packet_version`.
     """
     try:

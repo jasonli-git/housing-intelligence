@@ -27,7 +27,7 @@ Your job is to edit and normalize it without changing its meaning.
    - Possible direction
    - Approved direction
 9. Show the proposed note to the user.
-10. Wait for explicit approval before appending it to `DIRECTOR_NOTES.md`.
+10. Wait for explicit approval before appending it to `docs/DIRECTOR_NOTES.md`.
 11. Never silently promote the note into SPEC.md, ARCHITECTURE.md, ROADMAP.md,
     TODO.md, or implementation work.
 12. Do not delete or rewrite previous Director Notes merely because later

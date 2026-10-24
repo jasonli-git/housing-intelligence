@@ -17,7 +17,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ROADMAP = ROOT / "ROADMAP.md"
+ROADMAP = ROOT / "docs" / "ROADMAP.md"
 README = ROOT / "README.md"
 
 # `| 16 | ✅ done | **Three-dimensional map** — ... |`
@@ -58,7 +58,7 @@ def test_the_readme_points_to_where_shipped_work_is_recorded() -> None:
     )
     text = README.read_text()
     status = text[: text.index("\n## ")]
-    for document in ("ROADMAP.md", "CHANGELOG.md"):
+    for document in ("docs/ROADMAP.md", "CHANGELOG.md"):
         assert f"]({document})" in status, (
             f"README.md's opening and status block do not link {document}, where "
             "shipped work is recorded now that the Features list is short."

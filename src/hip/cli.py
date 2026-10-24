@@ -1615,7 +1615,7 @@ def pack(
 
     Each packet is re-parsed from the exact bytes about to be written before the file
     is created, so a packet on disk has always satisfied the model that generated
-    `schemas/packet-v1.json`. The published schema file itself is exercised against
+    `config/packet-v1.json`. The published schema file itself is exercised against
     real packets in `tests/test_packets.py`, which keeps `jsonschema` out of the
     runtime dependencies.
     """
@@ -1782,7 +1782,7 @@ def explain(
 @app.command()
 def schema(
     write: Annotated[
-        bool, typer.Option("--write", help="Update schemas/packet-v1.json in place.")
+        bool, typer.Option("--write", help="Update config/packet-v1.json in place.")
     ] = False,
 ) -> None:
     """Print the published analysis-packet JSON Schema (ARCHITECTURE #12)."""

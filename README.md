@@ -24,12 +24,12 @@ optional AI layer only explains figures that were already computed.
 > (#429-#436).
 >
 > **Next.** Clearing TODO and the open Director Notes; then the hosting move for a second
-> state, on hold until they are cleared. See [ROADMAP.md](ROADMAP.md) and
+> state, on hold until they are cleared. See [ROADMAP.md](docs/ROADMAP.md) and
 > [CHANGELOG.md](CHANGELOG.md).
 
-[SPEC.md](SPEC.md) says what the platform is for, [ARCHITECTURE.md](ARCHITECTURE.md) how
-it is built and why, [ROADMAP.md](ROADMAP.md) where it is going and
-[TODO.md](TODO.md) what is open now.
+[SPEC.md](docs/SPEC.md) says what the platform is for, [ARCHITECTURE.md](docs/ARCHITECTURE.md) how
+it is built and why, [ROADMAP.md](docs/ROADMAP.md) where it is going and
+[TODO.md](docs/TODO.md) what is open now.
 
 ## Screenshots
 

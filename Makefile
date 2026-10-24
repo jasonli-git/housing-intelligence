@@ -257,7 +257,7 @@ clean-dist:  ## Delete dist/ once a deploy has passed check-live (about 5 GB)
 r2-cors:  ## Let the site's pages read the R2 artifacts (the property-tax lookup needs it)
 	@# A standing bucket setting rather than part of `deploy`: it changes only when this
 	@# file does. GET and HEAD from the site's own origin; nothing else (#291).
-	npx wrangler r2 bucket cors set $(R2_BUCKET) --file deploy/r2-cors.json --force
+	npx wrangler r2 bucket cors set $(R2_BUCKET) --file config/r2-cors.json --force
 
 check-terms: check-dist  ## Fail if a glossary word's first use on a page has no definition (#389, #392)
 	@# Against the tree about to ship, served locally, so a failure stops the deploy before
@@ -299,6 +299,12 @@ deploy: check-dist check-terms check-accessibility screenshots  ## Upload artifa
 	@# `status.json` is the weekly check's, not the build's (#411): never deleted here.
 	rclone sync dist/artifacts $(R2_REMOTE):$(R2_BUCKET) --progress --checksum \
 	  --exclude /status.json --backup-dir $(R2_REMOTE):$(R2_BACKUP_BUCKET)/files
+	@# Screenshots keep their names across deploys, so the edge's default four-hour cache
+	@# showed the README and home page the previous build's pictures (2026-10-23). Sent
+	@# again, all ~100, with a five-minute lifetime: `--checksum` above skips an unchanged
+	@# file, which would otherwise keep whatever cache header it was first uploaded with.
+	rclone copy dist/artifacts/screenshots $(R2_REMOTE):$(R2_BUCKET)/screenshots \
+	  --ignore-times --header-upload "Cache-Control: public, max-age=300"
 	@# `--branch` pinned: wrangler otherwise names the deployment after the checked-out git
 	@# branch, and anything but `main` becomes a Preview. On 2026-09-23 a deploy run from a
 	@# docs branch did exactly that — the artifacts above went live, the pages did not, and

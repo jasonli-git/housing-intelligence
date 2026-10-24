@@ -6,7 +6,7 @@ import { chromium } from "playwright";
 const url = process.env.SCREENSHOT_URL ?? "http://localhost:3000/regions/8";
 const output = resolve(
   process.env.SCREENSHOT_OUTPUT ??
-    "../agent-handoffs/artifacts/screenshot-automation-poc.png",
+    "../docs/handoffs/artifacts/screenshot-automation-poc.png",
 );
 const width = Number(process.env.SCREENSHOT_WIDTH ?? 1440);
 const height = Number(process.env.SCREENSHOT_HEIGHT ?? 1000);

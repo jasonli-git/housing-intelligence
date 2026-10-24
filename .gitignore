@@ -70,3 +70,6 @@ logs/
 
 # Claude local permission grants (per machine)
 .claude/settings.local.json
+
+# Wrangler's local cache: the Cloudflare account it last used. Never tracked.
+.wrangler/

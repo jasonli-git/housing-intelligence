@@ -2,7 +2,7 @@
 
 The last stage of the pipeline (ARCHITECTURE #12). A packet is small enough to hand to a
 model, fully computed before it is written, and validated against the schema published
-in `schemas/packet-v1.json`.
+in `config/packet-v1.json`.
 
 Nothing in Version 1 sends a packet to an LLM — that runtime is deliberately unchosen
 until the Milestone 8 evaluation (#11). The report renderer and the dashboard's report

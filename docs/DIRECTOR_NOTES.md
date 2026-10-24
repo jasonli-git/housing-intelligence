@@ -54,7 +54,7 @@ Settles the screenshot half of the note above. The note itself is left as writte
 README images will represent the **deployed site**, captured from the finished static
 export at deploy time and never committed to the repository. A bot-opened PR carrying
 regenerated images and a ruleset bypass for CI were both considered and rejected — see
-ARCHITECTURE #175 for the rationale and `agent-handoffs/screenshot-automation.md` for
+ARCHITECTURE #175 for the rationale and `docs/handoffs/screenshot-automation.md` for
 the costed investigation.
 
 **Blocked on automated deployment**, which does not exist yet. Until it does the
@@ -289,7 +289,7 @@ Promotes *Accessible, comprehensive, and current housing data* into the roadmap,
 owner's explicit direction, after a research report from Codex on that note — sources,
 freshness, costs, licensing and presentation — was checked against the code. The note
 itself is left as written. ROADMAP.md, Versions 3 and 4, carries the milestones; the
-report is [`agent-handoffs/data-completeness-research.md`](agent-handoffs/data-completeness-research.md).
+report is [`docs/handoffs/data-completeness-research.md`](handoffs/data-completeness-research.md).
 
 **What changed in the roadmap:**
 

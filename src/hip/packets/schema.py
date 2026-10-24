@@ -1,6 +1,6 @@
 """The analysis packet: the contract between deterministic analytics and any consumer.
 
-ARCHITECTURE #12. These models *are* the schema — `schemas/packet-v1.json` is generated
+ARCHITECTURE #12. These models *are* the schema — `config/packet-v1.json` is generated
 from them and committed, so a consumer in another language validates against the same
 definition the assembler emits. `tests/test_packets.py` fails when the two drift.
 
@@ -65,7 +65,7 @@ PACKET_VERSION = "1.7"
 
 # The published contract. Resolved from the source tree, which is where this project
 # runs from (ARCHITECTURE #13 — local-first, no packaged deployment yet).
-SCHEMA_PATH = Path(__file__).resolve().parents[3] / "schemas" / "packet-v1.json"
+SCHEMA_PATH = Path(__file__).resolve().parents[3] / "config" / "packet-v1.json"
 
 
 class _Strict(BaseModel):
@@ -477,7 +477,7 @@ def still_describes(
 
 
 def published_schema() -> dict[str, Any]:
-    """The JSON Schema document written to `schemas/packet-v1.json`."""
+    """The JSON Schema document written to `config/packet-v1.json`."""
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         # Relative: the file is distributed with the repository, not hosted.

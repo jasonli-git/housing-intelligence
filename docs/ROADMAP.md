@@ -33,8 +33,8 @@ interpretation panel on every county page.
 
 A milestone counts as done when its capability is reachable through the CLI, the API,
 or the dashboard on a clean checkout; its tests pass; and
-[ARCHITECTURE.md](ARCHITECTURE.md), [CHANGELOG.md](CHANGELOG.md), and
-[README.md](README.md) have been updated to match what actually exists.
+[ARCHITECTURE.md](ARCHITECTURE.md), [CHANGELOG.md](../CHANGELOG.md), and
+[README.md](../README.md) have been updated to match what actually exists.
 
 ## Version 1 Milestones (New Jersey)
 
@@ -82,8 +82,8 @@ that rewrites the fact table has gone wrong.
 
 The done criterion from Version 1 is unchanged: a milestone counts as done when its
 capability is reachable through the CLI, the API, or the dashboard on a clean checkout;
-its tests pass; and [ARCHITECTURE.md](ARCHITECTURE.md), [CHANGELOG.md](CHANGELOG.md),
-and [README.md](README.md) have been updated to match what actually exists. Milestone 11
+its tests pass; and [ARCHITECTURE.md](ARCHITECTURE.md), [CHANGELOG.md](../CHANGELOG.md),
+and [README.md](../README.md) have been updated to match what actually exists. Milestone 11
 adds one condition to that list, because it is the first milestone whose output is not
 on this machine: the published artifact must be reachable at its public URL.
 
@@ -111,7 +111,7 @@ added. The Northeast adds roughly 3 to 6GB counting Postgres, and Milestone 15 s
 county level, which is where large national geometry would have been. **No Version 2
 milestone as scoped requires an external volume.** What does justify the work is a
 defect: `Settings.reports_dir` derives from `data_dir.parent`
-([src/hip/config.py:140](src/hip/config.py:140)), so relocating the data root silently
+([src/hip/config.py:140](../src/hip/config.py:140)), so relocating the data root silently
 relocates `reports/` with it — and `reports/regions/5y/*.md` were then tracked in git and
 linked from the README (no longer, since #418). It is dormant until someone moves the data root, and a trap
 when they do.
@@ -246,7 +246,7 @@ The problem is specific rather than cosmetic, and three findings define it.
 `transition` rule anywhere, so nothing on the page responds to being pointed at and
 keyboard focus falls back to whatever the browser supplies. The landing page's metric
 and window are module constants — `const METRIC = "zhvi_sfr"` in
-[web/app/page.tsx](web/app/page.tsx) — so a reader cannot ask it a different question,
+[web/app/page.tsx](../web/app/page.tsx) — so a reader cannot ask it a different question,
 and a dashboard nothing can be asked of reads as a screenshot of one. And the type is
 the system stack, which is the single largest reason a competent page still looks like
 every other data page.
@@ -386,7 +386,7 @@ Written down now because each one shapes a milestone and none is a bug to be fix
 later.
 
 - **`cousub` is the municipality layer**
-  ([src/hip/sources/tiger.py:37](src/hip/sources/tiger.py:37), and
+  ([src/hip/sources/tiger.py:37](../src/hip/sources/tiger.py:37), and
   `municipality_id_system: census_mcd`). New Jersey is a strong-MCD state where county
   subdivisions are real incorporated municipalities, and so is every state in
   Milestone 14. Much of the South and West is not: county subdivisions there are
@@ -412,7 +412,7 @@ like. Version 3 was scheduled to finish its *depth*, on data already held. On 20
 the owner folded Version 4 into it and turned the Director Note *Accessible, comprehensive,
 and current housing data* into milestones, after a research report on that note — its
 sources, freshness, costs, licensing and presentation — was checked against the code
-([`agent-handoffs/data-completeness-research.md`](agent-handoffs/data-completeness-research.md)). Version 3 is now the version that makes the platform current, as complete as public data
+([`docs/handoffs/data-completeness-research.md`](handoffs/data-completeness-research.md)). Version 3 is now the version that makes the platform current, as complete as public data
 allows, and honest about both. That is a larger promise than the original one: Milestones
 39–47 add sources, some of them needing a key or the publisher's permission.
 
@@ -571,10 +571,10 @@ Append one row per run, never rewriting one. The first is Milestone 27's.
 
 | Date | After | Summary |
 |---|---|---|
-| 2026-09-26 | Milestone 27 | First run ([report](reports/completeness/2026-09-26.md)). **Geographic:** 38 metrics; 27 reach municipalities, 22 of them at least 95% of the 564 — home values 388 and rents 188, at the newest month. **Temporal:** 16 sources — 10 current, 1 pending (HUD's FY2027 Fair Market Rents, in force 2026-10-01), 5 revalidated or pinned rather than discovered. **Subject:** 6 of 9 held; assistance, hazards and access are not. **Statistical quality:** a match method on every observation, and ZHVI and ZORI partly matched to municipalities by name (40% and 37%); no margins of error, sample counts or suppression flags loaded. **Usability:** 10 of 17 fixed reader questions answered; the other 7 are neither answered nor declined on the site — the questions decided against on 2026-09-13 are recorded here, not said to a reader. **Reuse rights:** 10 of 16 sources public domain; FRED, the three NJ sources and both Zillow indexes leave at least one use unverified. |
-| 2026-09-26 | Milestone 28 | Second run ([report](reports/completeness/2026-09-26-2.md)). **Statistical quality** is the one dimension that moved: margins of error on 10 metrics — the survey's seven, on 97–100% of their newest figures, and the three ratios on its income — where there were none; still no sample counts or suppression flags, and HUD's CHAS figures still carry no margins. Every other dimension is as Milestone 27 left it: 38 metrics, 6 of 9 subjects held, 10 of 17 reader questions answered, 10 of 16 sources public domain. |
-| 2026-10-08 | Correctness pass, item 7 | The check reads Milestone 47's community records (#355) ([report](reports/completeness/2026-10-08-2.md)). **Geographic:** 172 metrics; 140 reach municipalities, 84 of them at least 95% of the 564. **Temporal:** 47 sources — 22 current, 24 not tracked, 1 unreachable. **Subject:** 10 of 10 held; none not held. **Statistical quality:** match method on every observation, 2 metrics partly matched by name; margins of error on 66 metrics — the survey's and HUD's tabulation of it, and the ratios built on them; no sample counts. **Community records:** 12,210 in 5 components; 19 of 1,944 district results suppressed or not reported; 62 district areas with no NJDOE results record; 50 agencies reporting fewer than 12 months; 0 estimates without their 95% interval; 0 summaries without the 100/20 Mbps share. **Usability:** 17 of 20 fixed questions answered, 1 declined on the site, 2 neither. **Reuse rights:** 25 of 47 sources public domain; the rest carry at least one use the recorded licence leaves unverified. |
-| 2026-10-09 | Source watch (#360) | Re-fetched sources dated by their last download, TIGER discovered ([report](reports/completeness/2026-10-09.md)). **Temporal:** 48 sources — 38 current, 8 not tracked, 1 pending, 1 unreachable. Down from 24 not tracked: the eight left are imported or requested by hand, each on TODO's calendar but BPU's single 2025 order; TIGER2026 waits for review; HUD User's LIHTC page answers automated requests with an empty 202. Other dimensions unchanged. |
+| 2026-09-26 | Milestone 27 | First run ([report](../reports/completeness/2026-09-26.md)). **Geographic:** 38 metrics; 27 reach municipalities, 22 of them at least 95% of the 564 — home values 388 and rents 188, at the newest month. **Temporal:** 16 sources — 10 current, 1 pending (HUD's FY2027 Fair Market Rents, in force 2026-10-01), 5 revalidated or pinned rather than discovered. **Subject:** 6 of 9 held; assistance, hazards and access are not. **Statistical quality:** a match method on every observation, and ZHVI and ZORI partly matched to municipalities by name (40% and 37%); no margins of error, sample counts or suppression flags loaded. **Usability:** 10 of 17 fixed reader questions answered; the other 7 are neither answered nor declined on the site — the questions decided against on 2026-09-13 are recorded here, not said to a reader. **Reuse rights:** 10 of 16 sources public domain; FRED, the three NJ sources and both Zillow indexes leave at least one use unverified. |
+| 2026-09-26 | Milestone 28 | Second run ([report](../reports/completeness/2026-09-26-2.md)). **Statistical quality** is the one dimension that moved: margins of error on 10 metrics — the survey's seven, on 97–100% of their newest figures, and the three ratios on its income — where there were none; still no sample counts or suppression flags, and HUD's CHAS figures still carry no margins. Every other dimension is as Milestone 27 left it: 38 metrics, 6 of 9 subjects held, 10 of 17 reader questions answered, 10 of 16 sources public domain. |
+| 2026-10-08 | Correctness pass, item 7 | The check reads Milestone 47's community records (#355) ([report](../reports/completeness/2026-10-08-2.md)). **Geographic:** 172 metrics; 140 reach municipalities, 84 of them at least 95% of the 564. **Temporal:** 47 sources — 22 current, 24 not tracked, 1 unreachable. **Subject:** 10 of 10 held; none not held. **Statistical quality:** match method on every observation, 2 metrics partly matched by name; margins of error on 66 metrics — the survey's and HUD's tabulation of it, and the ratios built on them; no sample counts. **Community records:** 12,210 in 5 components; 19 of 1,944 district results suppressed or not reported; 62 district areas with no NJDOE results record; 50 agencies reporting fewer than 12 months; 0 estimates without their 95% interval; 0 summaries without the 100/20 Mbps share. **Usability:** 17 of 20 fixed questions answered, 1 declined on the site, 2 neither. **Reuse rights:** 25 of 47 sources public domain; the rest carry at least one use the recorded licence leaves unverified. |
+| 2026-10-09 | Source watch (#360) | Re-fetched sources dated by their last download, TIGER discovered ([report](../reports/completeness/2026-10-09.md)). **Temporal:** 48 sources — 38 current, 8 not tracked, 1 pending, 1 unreachable. Down from 24 not tracked: the eight left are imported or requested by hand, each on TODO's calendar but BPU's single 2025 order; TIGER2026 waits for review; HUD User's LIHTC page answers automated requests with an empty 202. Other dimensions unchanged. |
 
 ## Source register
 
@@ -599,7 +599,7 @@ line still said 13 after Milestones 24 and 25 had added three.)*
 
 **Free, not yet held.** Every row is public domain or an open state record unless the row
 says otherwise. Rows scheduled on 2026-09-23 come from the research behind Version 3's
-restructure ([`agent-handoffs/data-completeness-research.md`](agent-handoffs/data-completeness-research.md)), and each milestone's first task confirms its source against the
+restructure ([`docs/handoffs/data-completeness-research.md`](handoffs/data-completeness-research.md)), and each milestone's first task confirms its source against the
 publisher.
 
 | Source | What it adds | Where |
@@ -715,7 +715,7 @@ until deployment itself runs without a laptop open. Milestone 27 decided on 2026
 the refresh runs on this Mac, and only a runner off this machine unblocks this — so it stays
 blocked. Until then the Screenshots section stays empty and
 retakes are a manual `npm run screenshot:poc`. The investigation behind the decision,
-including the costed alternatives, is `agent-handoffs/screenshot-automation.md`.
+including the costed alternatives, is `docs/handoffs/screenshot-automation.md`.
 
 **Parcel and MOD-IV coverage does not generalize**, recorded when these were deferred:
 there is no free national parcel layer, and each state publishes assessments in its own
