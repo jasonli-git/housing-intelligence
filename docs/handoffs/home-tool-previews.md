@@ -1,5 +1,18 @@
 # Homepage tool previews
 
+## Review follow-up: centre metric values — 2026-10-24
+
+Centre only the metric numbers horizontally in each card. Keep headings and source
+lines left-aligned; no other styling, content or data behavior changes. Add a browser
+assertion for centred text and alignment with the card's horizontal midpoint.
+Files: `web/app/home-tool-previews.css`, `web/scripts/check-home-tool-previews.mjs`.
+
+Verification: TypeScript, affected homepage/stories production build and whitespace
+checks passed. Local Chromium browser regression passed at 1440/768/390/320px in
+light/dark, including alignment assertions, scoped axe, histories and Tools keyboard,
+touch and destination navigation. Inspected desktop dark capture. Unit suite not
+rerun for this alignment-only follow-up. No deployment, merge or data changes.
+
 ## Review follow-up: triple metric top borders — 2026-10-24
 
 Increase both metric cards' top borders from 4px to 12px as requested. Other borders
