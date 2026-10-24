@@ -1,5 +1,25 @@
 # Homepage text reduction
 
+## Review follow-up: coloured values and square card tops — 2026-10-24
+
+Colour the headline numbers with each card's existing metric accent: blue mortgage
+rate, amber annual home-price change. Remove the neutral text gradient so the values
+use solid, theme-aware accent colours. These identify metrics, not positive/negative
+movements. Square only the two top corners; keep both bottom corners at 24px and
+the existing 12px top border. No change to card width/height, typography, alignment,
+source/date lines, real-data backdrops or history disclosures.
+
+Files: `web/app/home-tool-previews.css` and the card browser regression. Update guards
+to check all four radii explicitly and that each number resolves to its metric accent
+with no background-image treatment. No data, navigation or other section changes.
+
+Verification: 751 frontend tests, TypeScript, affected-route production build and
+whitespace checks passed. Local Chromium regression passed at 1440/768/390/320px in
+light/dark, checking colours, corners, unchanged heights, source/graph clearance,
+matching history paths, scoped axe, keyboard/touch, six tool destinations and print
+suppression of the decorative backdrops. Inspected desktop light/dark captures.
+No full-site publication, physical-device testing, deployment or merge.
+
 ## Review follow-up: compact horizon metric cards — 2026-10-24
 
 Restore the older horizon aesthetic without increasing card dimensions. Keep the
