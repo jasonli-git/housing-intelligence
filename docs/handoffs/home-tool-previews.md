@@ -1,5 +1,26 @@
 # Homepage tool previews
 
+## Review follow-up: separate narrow metric cards — 2026-10-24
+
+Supersedes the joined scoreboard styling below. Split the two metrics into separate
+square-cornered cards with a 12px gap, no shared outer border or background, and a
+narrower desktop footprint (520px instead of 640px). Stack each label above its value;
+increase labels to 15px/600 desktop and 14px/600 mobile instead of 12px/500 and 11px/500.
+Keep sources, dates, values, history disclosure and data behavior unchanged.
+
+The user explicitly preferred readability and less width over the previous height
+target. Default section height is now 176px desktop and 197px at 390px/320px mobile;
+individual cards measure 121px desktop and 142px mobile. Both cards remain side by side.
+Updated the browser guard for separated square cards, minimum label size, narrow width
+and a compact height ceiling rather than the superseded 50%-desktop-height target.
+
+Files: `web/app/home-tool-previews.css`, `web/scripts/check-home-tool-previews.mjs`.
+Verification: 747 frontend tests, TypeScript, homepage/stories-scoped production build,
+and `git diff --check` passed. Local Chromium checks passed at 1440, 768, 390 and 320px
+in light/dark, including expanded histories, scoped axe, Tools keyboard/touch and all
+six tool destinations. Visually inspected desktop light and mobile dark screenshots.
+No full-site build, physical-device testing, data changes, deployment or merge.
+
 ## Review follow-up: minimal national scoreboard — 2026-10-24
 
 Replace the two oversized national metric cards above Visual stories with a compact,

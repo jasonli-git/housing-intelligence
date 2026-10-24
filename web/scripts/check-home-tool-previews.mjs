@@ -63,7 +63,10 @@ try {
     assert.equal(await figures.locator('svg[role="img"]').count(), 2);
     assert.equal(await figures.locator('a[href^="https://"]').count(), 2);
     const panelHeight = (await figures.boundingBox()).height;
-    assert(panelHeight <= (width > 760 ? 146 : 236), `at least 50% smaller than previous panel: ${panelHeight}px`);
+    assert(panelHeight <= 236, `compact default panel: ${panelHeight}px`);
+    assert((await figures.boundingBox()).width <= 520, 'narrow national figures footprint');
+    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards.every((card) => parseFloat(getComputedStyle(card).borderRadius) === 0 && parseFloat(getComputedStyle(card.querySelector('h3')).fontSize) >= 14)), 'square corners and readable labels');
+    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards[1].getBoundingClientRect().left - cards[0].getBoundingClientRect().right >= 11), 'two visibly separated cards');
     assert.equal(await figures.locator('svg[role="img"]:visible').count(), 0);
     const sizes = await figures.locator('.national-benchmark').evaluateAll((cards) => cards.map((card) => ({ height: card.getBoundingClientRect().height })));
     assert(await figures.locator('.national-benchmark').evaluateAll((cards) => Math.abs(cards[0].getBoundingClientRect().top - cards[1].getBoundingClientRect().top) < 1), 'both figures stay side by side');

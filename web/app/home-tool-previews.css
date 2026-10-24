@@ -20,13 +20,13 @@
   :root .search-first-home .home-tool-scope { margin-top: .25rem !important; }
   .home-tools a:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
 
-  /* A small national score strip; histories remain available on demand. */
-  :root .search-first-home .national-scoreboard { max-width: 640px; margin-inline: auto; }
-  :root .search-first-home .national-scoreboard .national-backdrop-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; border-radius: 12px; background: var(--glass); backdrop-filter: none; }
-  :root .search-first-home.search-first-home .national-scoreboard .national-benchmark { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 12px; min-height: 0; padding: 14px 16px !important; }
-  :root .search-first-home .national-scoreboard .national-benchmark + .national-benchmark { border-left: 1px solid var(--glass-edge) !important; border-top: 0 !important; }
+  /* Two narrow score cards; histories remain available on demand. */
+  :root .search-first-home .national-scoreboard { max-width: 520px; margin-inline: auto; }
+  :root .search-first-home .national-scoreboard .national-backdrop-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; border: 0; border-radius: 0; background: none; backdrop-filter: none; overflow: visible; }
+  :root .search-first-home.search-first-home .national-scoreboard .national-benchmark { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 10px; min-height: 0; padding: 16px !important; border: 1px solid var(--glass-edge) !important; border-radius: 0 !important; background: var(--glass) !important; }
+  :root .search-first-home .national-scoreboard .national-benchmark + .national-benchmark { border: 1px solid var(--glass-edge) !important; }
   :root .search-first-home .national-scoreboard .national-benchmark::after { content: none; }
-  :root .search-first-home .national-scoreboard .national-benchmark h3 { margin: 0 !important; font: 500 12px/1.35 var(--font-text) !important; letter-spacing: 0 !important; }
+  :root .search-first-home .national-scoreboard .national-benchmark h3 { margin: 0 !important; font: 600 15px/1.35 var(--font-text) !important; letter-spacing: 0 !important; }
   :root .search-first-home .national-scoreboard .national-rate { display: contents !important; }
   :root .search-first-home .national-scoreboard .national-rate > strong { font: 500 32px/1 var(--font-mono) !important; letter-spacing: -.06em !important; background: none; -webkit-text-fill-color: currentColor; color: var(--text-primary); font-variant-numeric: tabular-nums; }
   :root .search-first-home .national-scoreboard .national-rate small { grid-column: 1 / -1; margin: 0; font-size: 10px !important; line-height: 1.5; color: var(--text-secondary); }
@@ -45,7 +45,7 @@
   }
   @media (max-width: 600px) {
     :root .search-first-home.search-first-home .national-scoreboard .national-benchmark { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 12px !important; align-content: start; }
-    :root .search-first-home .national-scoreboard .national-benchmark h3 { font-size: 11px !important; }
+    :root .search-first-home .national-scoreboard .national-benchmark h3 { font-size: 14px !important; }
     .national-history-grid { grid-template-columns: minmax(0, 1fr); }
     .home-tools-rail { --tool-card-width: 82cqw; }
     .home-tool-copy { padding: .8rem; gap: .4rem; }
