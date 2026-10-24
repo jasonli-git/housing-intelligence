@@ -869,3 +869,13 @@ All three put validating the property estimate first and the reader-and-practiti
 round second. Claude would put inflation adjustment and the fair-housing review next.
 
 Do not implement yet.
+
+### Homepage tool previews and compact national figures — 2026-10-24
+
+**Status:** Approved scope for an exploratory frontend branch.
+
+Explore screenshot-led homepage tool cards using content-only captures of the actual
+interfaces, with light/dark variants, live text labels and subtle existing tool accents.
+Remove the “The national backdrop” heading and shrink the metric cards while retaining
+their luminous trend treatment, values, dates, sources and caveats. Keep the search/map,
+Visual stories and overall section order unchanged. This does not approve a wider redesign.

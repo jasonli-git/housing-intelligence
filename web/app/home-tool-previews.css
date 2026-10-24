@@ -1,0 +1,38 @@
+/* Homepage-only experiment: real tool interfaces, with live text outside the image. */
+@media screen {
+  :root .search-first-home .home-tools ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .home-tools-note { margin: -.35rem 0 1rem; color: var(--text-secondary); font-size: 13px; }
+  :root .search-first-home.search-first-home .home-tools a[data-tool] { padding: 0; gap: 0; overflow: hidden; border-radius: 18px; }
+  .home-tool-preview { display: block; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; background: color-mix(in srgb, var(--tool-ink) 8%, var(--plate-paper)); border-bottom: 1px solid var(--glass-edge); }
+  .home-tool-preview img { width: 100%; height: 100%; object-fit: cover; object-position: top center; transition: transform 220ms ease; }
+  .home-tools a[data-tool="tax"] .home-tool-preview img { object-fit: contain; object-position: center; }
+  .home-tool-copy { display: flex; flex: 1; flex-direction: column; align-items: start; gap: .5rem; padding: 1rem 1.1rem; }
+  :root .search-first-home .home-tool-title { font-size: 22px !important; }
+  :root .search-first-home .home-tool-scope { margin-top: .25rem !important; }
+  .home-tools a:is(:hover, :focus-visible) .home-tool-preview img { transform: scale(1.025); }
+  .home-tools a:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+
+  /* Keep the luminous horizons, but reduce their footprint and typography together. */
+  :root .search-first-home.search-first-home .national-backdrop .national-benchmark { min-height: 240px; padding: 1.1rem 1.35rem 1rem !important; }
+  :root .search-first-home .national-benchmark h3 { font-size: clamp(18px, 1.8vw, 22px) !important; }
+  :root .search-first-home .national-backdrop .national-rate > strong { font-size: clamp(64px, 7vw, 96px) !important; }
+  :root .search-first-home .national-trend { height: 50%; }
+  :root .search-first-home .national-benchmark::after { height: 50%; }
+  :root .search-first-home .national-trend figcaption { inset-inline: 1.35rem; }
+  @media (max-width: 1000px) {
+    :root .search-first-home .home-tools ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    :root .search-first-home.search-first-home .national-backdrop .national-benchmark { min-height: 210px; }
+  }
+  @media (max-width: 600px) {
+    :root .search-first-home .home-tools ul { gap: .7rem; }
+    .home-tool-copy { padding: .8rem; gap: .4rem; }
+    :root .search-first-home .home-tool-title { font-size: 18px !important; }
+    :root .search-first-home .home-tool-text { font-size: 13px !important; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .home-tool-preview img { transition: none; }
+    .home-tools a:is(:hover, :focus-visible) .home-tool-preview img { transform: none; }
+  }
+}
