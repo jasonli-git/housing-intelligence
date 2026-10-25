@@ -29,13 +29,11 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — Milestone 57, the national market scoreboard (2026-10-24)
+## Now — after Milestone 57 (2026-10-24)
 
-Branch `milestone/m57-national-dashboard`, PR open for the owner's review. Eight tiles on
-the home page (ARCHITECTURE #444, #445); the warehouse already holds the six new series,
-so a deploy needs only `make publish`.
-
-The three stories waiting on the owner's downloads are unchanged under Open.
+Milestone 57 merged 2026-10-24 (#250). Next is the owner's call: the three stories
+waiting on downloads (Open), the home page leftovers (Open), or the Director Note on an
+AI reading for the national scoreboard.
 
 ## Open
 
