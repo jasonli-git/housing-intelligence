@@ -185,7 +185,9 @@ export function CostToOwn({
   householdTools,
   planning = true,
   guidePlaceId,
-}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number; quiet?: boolean; householdTools?: ReactNode; planning?: boolean; guidePlaceId?: number }) {
+  compactOverview = false,
+  overviewContext,
+}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number; quiet?: boolean; householdTools?: ReactNode; planning?: boolean; guidePlaceId?: number; compactOverview?: boolean; overviewContext?: ReactNode }) {
   const id = useId();
   const { personal: rememberedPersonal, household, savePersonal, saveHousehold } = useBudgetScenario(control && planning);
   const personal = planning ? rememberedPersonal : {};
@@ -503,27 +505,12 @@ export function CostToOwn({
       </aside>
       </QuietDisclosure> : null;
 
-  return (
-    <section className="section cost" aria-labelledby={`${id}-heading`}>
-      <div className="section-head">
-        <h2 id={`${id}-heading`}>What it costs to own and to rent</h2>
-        {control ? (
-          <label className="control">
-            <span className="control-label">Down payment</span>
-            <select value={down} onChange={(event) => setPersonal("downPct", Number(event.target.value))}>
-              {DOWN_PAYMENTS.map((pct) => (
-                <option key={pct} value={pct}>
-                  {pct}%
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : (
-          <span className="control-label">{down}% down payment</span>
-        )}
-      </div>
+  const monthlyComparison = control && cashComparison ? <div className="cost-monthly-headline" role="group" aria-label="Monthly cash comparison">
+    <p className="cost-evidence-label">Monthly cash</p>
+    {quiet && rentMonth !== null && against ? <DifferenceBridge own={goneNoUtilities} rent={rentMonth} principal={kept} kind={against.kind} gap={against.gap} missing={missingBeyondUtilities}/> : <p className="cost-monthly-headline-copy" aria-live="polite">{cashComparison}</p>}
+  </div> : null;
 
-      {control && planning && (
+  const fineTune = control && planning && (
         <details className="cost-yours">
           <summary>
             <span className="cost-yours-title">Fine-tune the costs</span>
@@ -577,16 +564,35 @@ export function CostToOwn({
             </p>
           </div>
         </details>
-      )}
+      );
+
+  return (
+    <section className={`section cost${compactOverview ? " place-cost-overview" : ""}`} aria-labelledby={`${id}-heading`}>
+      <div className="section-head">
+        <h2 id={`${id}-heading`}>{compactOverview ? "Monthly housing costs" : "What it costs to own and to rent"}</h2>
+        {control ? (
+          <label className="control">
+            <span className="control-label">Down payment</span>
+            <select value={down} onChange={(event) => setPersonal("downPct", Number(event.target.value))}>
+              {DOWN_PAYMENTS.map((pct) => (
+                <option key={pct} value={pct}>
+                  {pct}%
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <span className="control-label">{down}% down payment</span>
+        )}
+      </div>
+
+      {compactOverview && <p className="cost-overview-meta">Published starting figures: {home.basis === "index" ? "home value" : "sale-price median"} {home.asOf}{rent && ` · rent ${rent.asOf}`} · mortgage benchmark {rate.asOf}. Your inputs adjust the estimates below.</p>}
+
+      {!compactOverview && fineTune}
 
       {!quiet && budgetFit}
 
-      {control && cashComparison && (
-        <div className="cost-monthly-headline" role="group" aria-label="Monthly cash comparison">
-          <p className="cost-evidence-label">Monthly cash</p>
-          {quiet && rentMonth !== null && against ? <DifferenceBridge own={goneNoUtilities} rent={rentMonth} principal={kept} kind={against.kind} gap={against.gap} missing={missingBeyondUtilities}/> : <p className="cost-monthly-headline-copy" aria-live="polite">{cashComparison}</p>}
-        </div>
-      )}
+      {!compactOverview && monthlyComparison}
 
       <div className="cost-cards">
         <article className="cost-card">
@@ -740,6 +746,10 @@ export function CostToOwn({
           </p>
         </aside>
       </div>
+
+      {compactOverview && fineTune}
+      {compactOverview && overviewContext && <div className="place-overview-context">{overviewContext}</div>}
+      {compactOverview && monthlyComparison}
 
       {control && (
         <div className="cost-strip cost-evidence">

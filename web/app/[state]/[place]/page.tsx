@@ -6,9 +6,11 @@ import { Glossed } from "@/components/Glossed";
 import { Term } from "@/components/Term";
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { PlacePhoto } from "@/components/PlacePhoto";
+import { PlaceSectionNav } from "@/components/PlaceSectionNav";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
 import "../../horizon-theme.css";
+import styles from "../../place-overview.module.css";
 import { TREND_METRICS } from "@/lib/trendMetrics";
 import { TownRow } from "@/components/TownRow";
 import { notFound } from "next/navigation";
@@ -441,13 +443,23 @@ export default async function RegionPage({
 
   // Counties only (ARCHITECTURE #368): a town's or ZIP's page never shows one.
   const photo = region.level === "county" ? photoFor(region.geoid) : undefined;
+  const housingContext = quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
+  const sections = [
+    { id: "place-overview", label: "Overview" },
+    { id: quiet ? "quiet-cost" : "place-costs", label: "Costs" },
+    { id: "field-notes", label: "Market" },
+    { id: "about-getting-around", label: "Getting around" },
+    { id: "about-living-there", label: "Living there" },
+    ...(similar ? [{ id: "place-explore", label: "Alternatives" }] : []),
+    { id: "sources-heading", label: "Sources" },
+  ];
 
   return (
     <>
       <Masthead affordability={affordabilityControl} />
       <AffordForward placeId={region.level === "zip" ? null : regionId} />
-      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local horizon-page${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
-      <header className={`page-head${photo ? " has-photo" : ""}`} data-kind={kindOf(region.level)}>
+      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local horizon-page ${styles.page}${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
+      <header id="place-overview" className={`page-head${photo ? " has-photo" : ""}`} data-kind={kindOf(region.level)}>
         {quiet && region.state_code === "NJ" && <GardenStateArtwork header />}
         <div className="region-head-main">
           <Crumbs
@@ -474,18 +486,17 @@ export default async function RegionPage({
               </aside>
             )}
             <Link className="eyebrow-report" href={`${regionPath(regionId)}/report`}>Full report <span aria-hidden="true">↗</span></Link>
-            <Link className="eyebrow-report" href={`/compare${placesQuery([regionId])}`}>Compare <span aria-hidden="true">↗</span></Link>
           </div>
           <div className="page-title-row">
             <h1 className="page-title">{name}</h1>
-            <ComputedBadge />
+            <div className="place-title-actions"><ComputedBadge /><Link className="place-compare" aria-label={`Compare ${name} with other places`} href={`/compare${placesQuery([regionId])}`}>Compare this place <span aria-hidden="true">↗</span></Link></div>
           </div>
           {/* Every rank names its own cohort now — "12th of 21 NJ counties" — so the
               line that named it once for the whole page is gone (Milestone 28). */}
-          {headline && <p className="verdict region-orientation">{headline}</p>}
-          {(lead || trade) && (
+          {(headline || lead || trade) && (
             <details className="verdict-details orientation-details">
-              <summary className="disclose">See the figures behind this <span className="disclose-hint"><span className="when-closed">Details</span><span className="when-open">Hide</span></span></summary>
+              <summary className="disclose">Market context and figures <span className="disclose-hint"><span className="when-closed">Details</span><span className="when-open">Hide</span></span></summary>
+              {headline && <p className="verdict region-orientation">{headline}</p>}
               {lead && <p className="verdict-more">{lead}</p>}
               {trade && <p className="verdict-more">{trade}</p>}
             </details>
@@ -507,20 +518,15 @@ export default async function RegionPage({
             </details>
           )}
         </div>
-        <div className="actions">
-          <nav className="state-jump place-jump" aria-label="On this page">
-            <a href={quiet ? "#quiet-cost" : "#place-costs"}><span>What it costs to own and rent</span><i aria-hidden="true">↓</i></a>
-            <a href="#place-understand"><span>About this place</span><i aria-hidden="true">↓</i></a>
-            {similar && <a href="#place-explore"><span>Cheaper alternatives</span><i aria-hidden="true">↓</i></a>}
-          </nav>
-        </div>
         {region.level === "county" && countyTowns.length > 0 && (
           <TownRow name={name} towns={countyTowns.map(t => ({ id: t.region_id, href: regionPath(t.region_id), name: countyTowns.filter(o => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, c => c.toUpperCase()) : displayName(t) }))} />
         )}
         {photo && <PlacePhoto geoid={region.geoid} />}
       </header>
 
-      {quiet ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : <ProfileTicker
+      <PlaceSectionNav sections={sections} />
+
+      {!quiet && <ProfileTicker
         items={profile}
         title="Housing here"
         ariaLabel={`${name} housing profile`}
@@ -536,6 +542,8 @@ export default async function RegionPage({
         <CostToOwn
           {...cost}
           quiet={quiet}
+          compactOverview
+          overviewContext={housingContext}
           guidePlaceId={regionId}
           householdTools={quiet ? householdContent : undefined}
           comparePlaceId={region.level === "county" || region.level === "municipality" ? region.region_id : undefined}
@@ -545,19 +553,18 @@ export default async function RegionPage({
       ) : (
         // Said rather than left out, so a thinner page reads as designed, not broken: the
         // section a reader looks for first says why it is empty here.
-        homePrice(packet.levels) === null && (
           <section className="section cost" aria-labelledby="cost-heading">
             <h2 id="cost-heading">What it costs per month</h2>
-            <p className="cost-missing">
+            {homePrice(packet.levels) === null ? <p className="cost-missing">
               No monthly cost is worked out for {name}. Zillow publishes no home value here,
               and there are too few recent qualifying sales to stand a purchase price on. The
               owner-reported value in the tables is a survey five years old, too old to price a
               mortgage on.
-            </p>
+            </p> : <p className="cost-missing">The current mortgage benchmark is unavailable, so a monthly ownership estimate is not shown for {name}.</p>}
           </section>
-        )
       )}
       </QuietAnchor>
+      {!cost && housingContext}
 
       <section id="place-next-step" className="local-next-step-group cost-next-strip" aria-label="Your next step">
       <div className="place-next-destinations">
@@ -582,12 +589,6 @@ export default async function RegionPage({
       <section id="place-understand" className="local-understand-group" aria-label="About this place">
       <AbstractField kind="architecture" />
       <h2>About this place</h2>
-      <nav className="about-toc" aria-label="About this place">
-        {consumer ? <a href="#about-picture">The local picture</a> : standing.length > 0 && <a href="#about-picture">How it ranks</a>}
-        <a href="#field-notes">The market</a>
-        <a href="#about-getting-around">Getting around</a>
-        <a href="#about-living-there">Living there</a>
-      </nav>
 
       {!quiet && householdContent}
 

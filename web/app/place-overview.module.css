@@ -1,0 +1,83 @@
+/* Scoped place-page composition. A few targeted !important declarations settle
+   display sizes inherited from Horizon; the underlying palette and charts stay. */
+:global(body:has(.horizon-page)) main:global(#main-content).page:global(.horizon-page) > :global(.page-head) { padding-block: 1.1rem 1.2rem; margin-bottom: 0; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.page-title) { font-size: clamp(34px, 4.4vw, 56px) !important; line-height: 1.08 !important; letter-spacing: -.04em !important; }
+.page.page :global(.page-title-row) { display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem 1.5rem; margin: .6rem 0; }
+.page :global(.place-title-actions) { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem 1rem; }
+.page :global(.place-title-actions .computed-line) { margin: 0; }
+.page :global(.place-compare) { display: inline-flex; align-items: center; gap: .65rem; min-height: 44px; padding: .5rem .8rem; border: 1px solid var(--plate-accent); border-radius: 6px; background: var(--plate-paper); color: var(--plate-ink) !important; font: 500 13px/1.4 var(--font-text); text-decoration: none; }
+.page :global(.place-compare:hover) { background: color-mix(in srgb, var(--plate-accent) 10%, var(--plate-paper)); }
+.page :global(.place-compare:focus-visible) { outline: 2px solid var(--plate-accent); outline-offset: 3px; }
+.page.page :global(.region-orientation) { max-width: 84ch; margin: .5rem 0 0; font-size: 14px; line-height: 1.55; }
+.page.page :global(.orientation-details) { margin: .2rem 0 0; }
+.page :global(.state-place-artwork-header) { max-height: 150px; opacity: .22; }
+.page :global([id]) { scroll-margin-top: 130px; }
+.page.page :global(.town-strip) { margin-top: .5rem; }
+
+.page.page :global(.place-cost-overview) { display: grid; grid-template-columns: minmax(0, 1fr); gap: .8rem 1.5rem; padding-top: 0; margin-top: 0; }
+.page :global(.place-cost-overview > *) { grid-column: 1 / -1; min-width: 0; order: 0; }
+.page.page :global(.place-cost-overview > .section-head) { grid-row: 1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem 1.5rem; padding: .3rem 0 0; margin: 0; border: 0; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview > .section-head h2) { max-width: none; margin: 0 !important; padding: 0 !important; font: 400 clamp(25px, 2.8vw, 34px)/1.2 Georgia, serif !important; letter-spacing: -.025em !important; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview > .section-head h2)::before, :global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview > .section-head h2)::after { content: none; }
+.page :global(.cost-overview-meta) { grid-row: 2; margin: 0; color: var(--text-secondary); font: 12px/1.55 var(--font-text); }
+.page.page :global(.place-cost-overview > .cost-yours) { grid-row: 4; margin: 0; }
+.page.page :global(.place-cost-overview > .cost-cards) { grid-row: 3; margin: 0; align-self: start; border-radius: 10px; }
+.page :global(.place-overview-context) { grid-row: 3; }
+.page.page :global(.place-cost-overview > .cost-monthly-headline) { grid-row: 5; margin: 0; }
+.page.page :global(.place-cost-overview > .cost-evidence) { grid-row: 6; margin: 0; }
+.page.page :global(.place-cost-overview > .quiet-tool-group) { grid-row: 7; margin-top: .8rem; }
+.page.page :global(.place-cost-overview .cost-card) { padding: 1.1rem; }
+.page.page :global(.place-cost-overview .cost-figure b) { font-size: clamp(30px, 3.4vw, 44px); }
+.page :global(.place-overview-context .quiet-profile) { padding: 0; margin: 0; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-overview-context .quiet-profile-grid) { display: grid; grid-template-columns: minmax(0, 1fr) !important; gap: 0; margin: .6rem 0 0; padding: .25rem 1rem; background: var(--glass) !important; border: 1px solid var(--glass-edge); border-radius: 10px; box-shadow: none; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-overview-context .quiet-profile-grid article) { position: relative; padding: .9rem 0; border: 0; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-overview-context .quiet-profile-grid article + article) { border-top: 1px solid var(--border); }
+.page.page :global(.place-overview-context .quiet-profile-grid strong) { font-size: 27px; }
+.page :global(.place-overview-context .quiet-profile-grid small) { font-size: 12px; }
+.page.page :global(.place-overview-context .quiet-portrait-dots) { position: absolute; top: 1rem; right: 0; width: 40px; height: 40px; opacity: .35; }
+.page.page :global(.place-overview-context .quiet-portrait-house) { width: 65px; height: 38px; right: 0; top: 1rem; opacity: .2; }
+.page.page :global(.place-overview-context .quiet-profile-more) { margin-top: .5rem; }
+.page.page :global(.place-overview-context .quiet-profile-more summary) { min-height: 44px; font-size: 12px; }
+.page.page :global(.local-understand-group) { margin-top: 2rem; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group > h2) { margin-top: 0 !important; padding-top: 1rem !important; font-size: 32px !important; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group > h2)::before { content: none; }
+.page.page :global(.exhibit-gallery > .exhibit-group-head) { margin-top: 1.4rem; padding-top: 1rem; font-size: 27px; }
+.page.page :global(.learning-exhibit) { padding: 1.3rem; border-radius: 12px; }
+.page :global(.exhibit-kicker > span:last-child) { display: none; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.exhibit-content :is(h2,h3)) { font-size: clamp(23px, 2.7vw, 30px) !important; line-height: 1.2; max-width: 32ch; }
+
+@media(min-width:1001px) {
+  .page.page :global(.place-cost-overview:has(.place-overview-context)) { grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr); }
+  .page.page :global(.place-cost-overview:has(.place-overview-context) > .cost-cards) { grid-column: 1; }
+  .page :global(.place-overview-context) { grid-column: 2; }
+  :global(body:has(.horizon-page)) main:global(#main-content).page > :global(header.has-photo) { grid-template-columns: minmax(0, 1fr) 250px; }
+  :global(body:has(.horizon-page)) main:global(#main-content).page > :global(header.has-photo > .place-photo) { max-width: 250px; margin-top: 1rem; }
+}
+@media(max-width:1000px) {
+  .page :global(.place-overview-context) { grid-row: 4; }
+  .page.page :global(.place-cost-overview > .cost-yours) { grid-row: 5; }
+  .page.page :global(.place-cost-overview > .cost-monthly-headline) { grid-row: 6; }
+  .page.page :global(.place-cost-overview > .cost-evidence) { grid-row: 7; }
+  .page.page :global(.place-cost-overview > .quiet-tool-group) { grid-row: 8; }
+  :global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-overview-context .quiet-profile-grid) { grid-template-columns: repeat(3,minmax(0,1fr)) !important; gap: 1rem; }
+  :global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-overview-context .quiet-profile-grid article + article) { border-top: 0; }
+  .page.page :global(.place-overview-context .quiet-portrait-dots), .page.page :global(.place-overview-context .quiet-portrait-house) { display: none; }
+}
+@media(max-width:760px) {
+  .page.page :global(.page-title-row) { align-items: flex-start; }
+  .page :global(.place-title-actions) { gap: .5rem .8rem; }
+  .page.page :global(.region-orientation) { font-size: 14px; }
+  .page.page :global(.place-cost-overview > .section-head) { display: flex; flex-direction: column; align-items: flex-start; }
+  .page.page :global(.place-cost-overview > .section-head .control) { flex-direction: row; align-items: center; gap: .75rem; align-self: stretch; justify-content: space-between; }
+  .page.page :global(.place-cost-overview > .section-head .control-label) { font: 13px/1.4 var(--font-text); }
+  .page.page :global(.place-cost-overview > .section-head select) { min-height: 44px; font-size: 16px; }
+  .page.page :global(.place-cost-overview .cost-card) { padding: .85rem; }
+  :global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-overview-context .quiet-profile-grid) { grid-template-columns: minmax(0,1fr) !important; gap: 0; }
+  :global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-overview-context .quiet-profile-grid article + article) { border-top: 1px solid var(--border); }
+  .page.page :global(.learning-exhibit) { padding: 1rem; }
+}
+@media print {
+  .page.page :global(.place-cost-overview) { display: block; }
+  .page :global(.place-compare) { display: none; }
+  .page :global(.place-overview-context) { margin-block: 1rem; }
+}
