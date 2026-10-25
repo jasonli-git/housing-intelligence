@@ -12,9 +12,9 @@ import { COVERED_STATES, coveredNames, PRIMARY_STATE } from "@/lib/states";
 import { boundCoverage, COVERAGE_HOME, COVERAGE_REGIONS, coverageScene, regionViewport, STATE_DESTINATIONS, zoomCoverage, type CoverageRegion, type CoverageViewport } from "@/lib/coverageMap";
 
 /** Zoomable coverage geometry without continuous reprojection or local-data downloads. */
-export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEntry = false }: { searchFirst?: boolean; scaleStrip?: ReactNode; focusedEntry?: boolean }) {
+export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEntry = false, preview = false }: { searchFirst?: boolean; scaleStrip?: ReactNode; focusedEntry?: boolean; preview?: boolean }) {
   const router = useRouter();
-  const [exploring, setExploring] = useState(!searchFirst);
+  const [exploring, setExploring] = useState(!searchFirst && !preview);
   const entry = useRef<HTMLDivElement>(null);
   const modeChanged = useRef(false);
   const modeTransition = useRef<ViewTransition | null>(null);
@@ -35,9 +35,9 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
     if (!modeChanged.current) return;
     const target = exploring ? entry.current?.querySelector<SVGSVGElement>(".coverage-map")
       ?? entry.current?.querySelector<HTMLButtonElement>(".coverage-search-return")
-      : entry.current?.querySelector<HTMLInputElement>(".place-search input");
+      : entry.current?.querySelector<HTMLElement>(preview ? ".coverage-preview-toggle" : ".place-search input");
     target?.focus({ preventScroll: true });
-  }, [exploring]);
+  }, [exploring, preview]);
 
   const changeMode = (next: boolean) => {
     if(next===exploring) return;
@@ -158,8 +158,9 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
   };
   const locator = drawing ? [viewport.x + drawing.locator[0] * viewport.scale, viewport.y + drawing.locator[1] * viewport.scale] : null;
 
-  return <div className={`coverage-atlas${focusedEntry ? " coverage-focused-entry" : ""}`}>
+  return <div className={`coverage-atlas${focusedEntry ? " coverage-focused-entry" : ""}${preview ? " coverage-home-preview" : ""}`}>
     <div ref={entry} className="coverage-search-stage" data-search-first={searchFirst} data-exploring={exploring}>
+    {preview && <button type="button" className="coverage-preview-toggle" aria-expanded={exploring} aria-controls="coverage-map-content" onClick={() => changeMode(!exploring)}>{exploring ? "Close map controls" : "Explore map"}<span aria-hidden="true">{exploring ? " −" : " ↗"}</span></button>}
     {searchFirst && (!focusedEntry || exploring) && <div className="coverage-mode-switch" data-exploring={exploring} role="group" aria-label="Find a place by search or map">
       <button className="coverage-search-return" type="button" hidden={focusedEntry && !exploring} aria-pressed={!exploring} aria-controls="coverage-place-search" onClick={() => { if (exploring) changeMode(false); }}>{focusedEntry && <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18" /></svg>}{focusedEntry ? "Back to search" : "Search places"}</button>
       {!focusedEntry && <button className="coverage-explore-button" type="button" aria-pressed={exploring} aria-controls="coverage-map-content" onClick={() => { if (!exploring) changeMode(true); }}>Explore map</button>}

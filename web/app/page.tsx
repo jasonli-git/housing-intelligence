@@ -36,15 +36,12 @@ export default async function HousingLandingPage() {
   return <div className={`search-first-home home-page ${styles.home}`}>
     <Masthead affordability={{ kind: "route", active: false }} search={false} />
     <main id="main-content" tabIndex={-1} className={`shell ${styles.main}`}>
-      <header className={styles.heading}>
-        <div>
-          <h1>Housing Intelligence</h1>
-          <p>Housing costs and local context, traced to their sources.</p>
-        </div>
-        <span className={styles.assurance}>Free · No fees or ads</span>
-      </header>
       <section className={styles.entry} aria-labelledby="home-find-heading">
         <div className={styles.find}>
+          <header className={styles.heading}>
+            <h1>Housing <em>Intelligence</em></h1>
+            <span className={styles.assurance}>Free · No fees or ads</span>
+          </header>
           <h2 id="home-find-heading">Find a place</h2>
           <HomeSearch />
           <nav className={styles.startLinks} aria-label="Start with a task">
@@ -53,14 +50,12 @@ export default async function HousingLandingPage() {
           </nav>
         </div>
         <aside className={styles.coverage} aria-labelledby="home-coverage-heading">
-          <p className={styles.eyebrow}>Detailed coverage</p>
-          <h2 id="home-coverage-heading">{COVERED_STATES.map((state, index) => <span key={state.code}>{index > 0 && ", "}<Link href={state.path}>{state.name} <span aria-hidden="true">↗</span></Link></span>)}</h2>
-          <p>Counties, towns and ZIP codes. Availability varies by measure.</p>
+          <div className={styles.coverageCaption}>
+            <p className={styles.eyebrow}>Detailed coverage</p>
+            <h2 id="home-coverage-heading">{COVERED_STATES.map((state, index) => <span key={state.code}>{index > 0 && ", "}<Link href={state.path}>{state.name} <span aria-hidden="true">↗</span></Link></span>)}</h2>
+          </div>
+          <div className={styles.map}><NationalCoverageMap preview focusedEntry /></div>
         </aside>
-        <details className={styles.mapDisclosure}>
-          <summary>Explore the coverage map</summary>
-          <div className={styles.map}><NationalCoverageMap /></div>
-        </details>
       </section>
       <HomeTools />
       <HomeStories />

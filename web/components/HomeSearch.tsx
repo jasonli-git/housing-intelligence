@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { PlaceSearch } from "./PlaceSearch";
 
-/** Keep the homepage's search shortcut independent of the optional coverage map. */
+/** Keep the homepage's search shortcut independent of map exploration. */
 export function HomeSearch() {
   const search = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -22,7 +21,6 @@ export function HomeSearch() {
   return <div className="home-search" ref={search}>
     <PlaceSearch variant="hero" />
     <div className="home-search-hints">
-      <p>Try <Link href="/nj/princeton">Princeton</Link> or <Link href="/nj/mercer-county">Mercer County</Link>.</p>
       <span className="home-search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span>
     </div>
   </div>;
