@@ -43,7 +43,10 @@
 .coverage h2 a:hover { text-decoration: underline; text-underline-offset: 5px; }
 .coverage h2 a span { color: var(--plate-accent); font-size: 18px; }
 .map { margin-top: .5rem; }
-.home :global(.coverage-home-preview) { --entry-accent: var(--state-blue); --entry-ink: var(--text-primary); position: relative; border: 0; border-radius: 0; background: transparent; overflow: visible; }
+/* The plate artwork from before the redesign: stippled states that draw themselves in,
+   guide lines and travelling traces (ui-refinement.css), and New Jersey in the page's
+   accent with a pulse ringing out from it. */
+.home :global(.coverage-home-preview) { --entry-accent: var(--plate-ink); --entry-ink: var(--text-primary); --state-blue: var(--plate-accent); position: relative; border: 0; border-radius: 0; background: transparent; overflow: visible; }
 .home :global(.coverage-home-preview .coverage-map-stage) { background: transparent; }
 .home :global(.coverage-home-preview .coverage-map) { height: clamp(220px, 23vw, 310px); }
 .home :global(.coverage-home-preview .coverage-map-placeholder) { min-height: clamp(220px, 23vw, 310px); }
@@ -51,14 +54,16 @@
 .home :global(.coverage-preview-toggle) { position: absolute; z-index: 3; left: 0; bottom: .25rem; min-height: 40px; padding: .4rem .9rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-card); color: var(--text-primary); font: 500 13px/1.4 var(--font-text); cursor: pointer; }
 .home :global(.coverage-preview-toggle:hover) { border-color: var(--state-blue); }
 .home :global(.coverage-preview-toggle:focus-visible) { outline: 2px solid var(--state-blue); outline-offset: 3px; }
-.home :global(.coverage-home-preview [data-exploring="false"] .coverage-map-content) { min-height: 0; opacity: .9; }
-.home :global(.coverage-home-preview [data-exploring="false"] .coverage-unavailable) { fill: color-mix(in srgb, var(--text-secondary) 12%, var(--plate-paper)); stroke: color-mix(in srgb, var(--text-secondary) 55%, var(--plate-paper)); stroke-dasharray: none; animation: none; }
-.home :global(.coverage-home-preview [data-exploring="false"] .coverage-state-top) { fill: var(--state-blue); stroke: var(--state-blue); stroke-dasharray: none; animation: none; }
-.home :global(.coverage-home-preview :is(.coverage-atlas-traces, .coverage-atlas-guides)) { display: none; }
+.home :global(.coverage-home-preview [data-exploring="false"] .coverage-map-content) { min-height: 0; }
+.home :global(.coverage-home-preview .coverage-availability-glow) { pointer-events: none; }
+.home :global(.coverage-home-preview .coverage-availability-glow circle) { fill: none; stroke: var(--state-blue); stroke-width: 1.5; transform-box: fill-box; transform-origin: center; animation: coverage-radial 5s ease-out infinite; }
+.home :global(.coverage-home-preview .coverage-availability-glow circle:nth-child(2)) { animation-delay: -2.5s; }
+.home :global(.coverage-home-preview .coverage-availability-glow circle:last-child) { fill: var(--state-blue); stroke: none; opacity: .65; animation: none; }
+.home :global(.coverage-home-preview [data-exploring="false"] .coverage-atlas-traces path[data-available="true"]) { stroke: var(--state-blue); filter: drop-shadow(0 0 4px var(--state-blue)); }
+.home :global(.coverage-home-preview [data-exploring="true"] .coverage-availability-glow) { opacity: 0; transition: opacity 250ms ease; }
+@keyframes coverage-radial { 0% { transform: scale(.25); opacity: .65; } 90%, 100% { transform: scale(3.5); opacity: 0; } }
 .home :global(.coverage-home-preview [data-exploring="false"] :is(.coverage-region-bar, .coverage-zoom, .map-pan-controls, .coverage-map-foot, .coverage-locator)) { display: none; }
 .home :global(.coverage-home-preview .coverage-map-caption) { display: none; }
-.home :global(.coverage-home-preview .coverage-availability-glow circle) { fill: var(--state-blue); opacity: .14; }
-.home :global(.coverage-home-preview .coverage-availability-glow circle:last-child) { opacity: .8; }
 .home :global(.coverage-home-preview .coverage-map-foot) { padding: .6rem 0; }
 .home :global(.coverage-home-preview .coverage-region-bar > span) { display: none; }
 .home :global(.coverage-home-preview .coverage-zoom) { right: .5rem; bottom: .5rem; top: auto; }
@@ -78,10 +83,12 @@
 .home :global(.home-tools-grid a:hover .home-tool-preview img) { transform: scale(1.02); }
 .home :global(.home-tool-preview) { display: block; height: 128px; overflow: hidden; border-bottom: 1px solid var(--border); background: var(--surface-2); }
 .home :global(.home-tool-preview img) { width: 100%; height: 100%; object-fit: cover; object-position: left top; transform-origin: left top; transition: transform 220ms ease; }
-.home :global(.home-tool-copy) { display: flex; flex-direction: column; gap: .3rem; padding: .9rem 1rem 1rem; }
-.home :global(.home-tool-title) { color: var(--text-primary); font: 600 16px/1.35 var(--font-text); }
+.home :global(.home-tool-copy) { display: flex; flex-direction: column; gap: .35rem; padding: .85rem 1rem 1rem; }
+/* What a tool does is what a reader chooses by, so the description leads and the
+   name is its label. */
+.home :global(.home-tool-title) { order: -1; color: var(--text-secondary); font: 600 11px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
 .home :global(.home-tool-title > span) { color: var(--plate-accent); }
-.home :global(.home-tool-text) { color: var(--text-secondary); font: 13px/1.5 var(--font-text); }
+.home :global(.home-tool-text) { color: var(--text-primary); font: 400 17px/1.35 Georgia, serif; letter-spacing: -.01em; }
 .home a:focus-visible, .home summary:focus-visible { outline: 2px solid var(--plate-accent); outline-offset: 4px; }
 
 .home :global(.home-stories) { margin-bottom: 2.5rem; }
@@ -137,6 +144,7 @@
   .home :global(.home-stories-gallery) { inset: auto 0 0; height: 135px; mask-image: linear-gradient(180deg, transparent, var(--text-primary) 25%); }
 }
 @media (prefers-reduced-motion: reduce) {
+  .home :global(.coverage-home-preview .coverage-availability-glow circle:not(:last-child)) { animation: none; transform: scale(1); opacity: .2; }
   .home :global(.home-tools-grid a), .home :global(.gallery-fragment), .home :global(.home-tool-preview img), .startLinks a { transition: none; }
   .home :global(.home-tools-grid a:hover .home-tool-preview img) { transform: none; }
   .home :global(.home-stories-gateway:is(:hover, :focus-visible) .gallery-fragment) { translate: none; }
