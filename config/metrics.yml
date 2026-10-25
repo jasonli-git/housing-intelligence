@@ -215,6 +215,119 @@ metrics:
     record_type: benchmark
     originator: Freddie Mac
 
+  # Milestone 57: the home page's national scoreboard. National only, through FRED.
+  realtor_active_listings:
+    label: Homes listed for sale
+    unit: count
+    frequency: monthly
+    direction: neutral
+    description: >-
+      Active listings in the United States in the month, as Realtor.com counts them and
+      FRED republishes (ACTLISCOUUS). Not seasonally adjusted, so compare a month with the
+      same month a year earlier. National only.
+    source_id: fred
+    record_type: administrative
+    originator: Realtor.com
+    ranked: false
+    changed: false
+    shown: false
+
+  realtor_price_reduced_listings:
+    label: Listings with a price cut
+    unit: count
+    frequency: monthly
+    direction: neutral
+    description: >-
+      Active listings in the United States whose asking price was cut during the month,
+      as Realtor.com counts them and FRED republishes (PRIREDCOUUS). National only.
+    source_id: fred
+    record_type: administrative
+    originator: Realtor.com
+    ranked: false
+    changed: false
+    shown: false
+
+  realtor_price_reduced_share:
+    label: Share of listings with a price cut
+    unit: percent
+    frequency: monthly
+    direction: neutral
+    description: >-
+      Listings with a price cut in the month as a share of all active listings, both
+      Realtor.com's counts for the same month (PRIREDCOUUS over ACTLISCOUUS). Not
+      seasonally adjusted. National only.
+    source_id: fred
+    record_type: calculated
+    originator: Realtor.com
+    ranked: false
+    changed: false
+    shown: false
+
+  cpi_rent_primary_residence:
+    label: Consumer price index, rent of primary residence
+    unit: index
+    frequency: monthly
+    direction: neutral
+    description: >-
+      BLS's CPI for rent of a primary residence, all urban consumers, seasonally adjusted
+      (1982-84 = 100; FRED CUSR0000SEHA). Its change from a year earlier is rent
+      inflation as the CPI measures it: rents on all leases, so it trails new leases.
+      National only.
+    source_id: fred
+    record_type: survey
+    originator: U.S. Bureau of Labor Statistics
+    ranked: false
+    changed: false
+    shown: false
+
+  housing_starts_saar:
+    label: Housing starts, annual rate
+    unit: count
+    frequency: monthly
+    direction: neutral
+    description: >-
+      New privately owned homes started in the month, all building types, at a seasonally
+      adjusted annual rate (Census Bureau, FRED HOUST, published in thousands). National
+      only.
+    source_id: fred
+    record_type: survey
+    originator: U.S. Census Bureau
+    ranked: false
+    changed: false
+    shown: false
+
+  new_home_months_supply:
+    label: Months' supply of new homes
+    unit: months
+    frequency: monthly
+    direction: neutral
+    description: >-
+      How many months the new single-family homes for sale would last at the month's
+      sales pace, seasonally adjusted (Census Bureau, FRED MSACSR). Built, under
+      construction and not yet started homes all count. National only.
+    source_id: fred
+    record_type: survey
+    originator: U.S. Census Bureau
+    ranked: false
+    changed: false
+    shown: false
+
+  new_home_median_sale_price:
+    label: Median sale price of new houses
+    unit: usd
+    frequency: quarterly
+    direction: neutral
+    description: >-
+      The median price of new single-family houses sold in the quarter (Census Bureau
+      and HUD, FRED MSPUS), not seasonally adjusted. New homes only: the median of all
+      sales is the National Association of Realtors', which is copyrighted. National only.
+    source_id: fred
+    record_type: survey
+    originator: U.S. Census Bureau
+    ranked: false
+    changed: false
+    shown: false
+
   unemployment_rate:
     label: Unemployment rate
     unit: percent
@@ -2464,7 +2577,7 @@ metrics:
     description: >-
       The median number of days listings spent on the market in the month, from list
       date to pending, sold or withdrawn, as Realtor.com counts them and FRED
-      republishes. County and state only. Realtor.com restated its history when it
+      republishes. County, state and (since Milestone 57) the nation. Realtor.com restated its history when it
       changed its method in 2021 and 2022.
     source_id: fred
     record_type: administrative

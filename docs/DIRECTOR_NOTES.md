@@ -889,3 +889,24 @@ typography, the actual story count and a unified composition of real chart fragm
 to suggest the collection's breadth. Keep the whole card linked to the library, with
 no tagline, separate outer heading, automatic story rotation or autoplay. Keep the
 Tools rail and national figures unchanged. This supersedes the earlier homepage sampler.
+
+### AI reading for the national scoreboard — 2026-10-24
+
+**Status:** Possible direction. To be decided later; do not implement yet.
+
+Consider a model-written reading of the home page's US market strip, like the county
+readings, to put the national figures in clearer plain English than a rule-written
+summary can.
+
+Open questions recorded when it was raised:
+
+- **Refusal rate is unmeasured.** County readings run 0–33% refused by the first model per
+  run (none withheld). National commentary may be refused more: it invites forecasts
+  ("rates are likely to ease") and causes ("high rates are why builders pulled back"),
+  and eight figures meet a three-figures-per-answer limit. A national evaluation run
+  would measure it; the pipeline cannot build a national packet yet.
+- **Cost is small.** County readings cost about $0.0009 each (GPT-6 Luna, flex). A weekly
+  national reading would cost roughly $0.05 a year, under $0.50 with heavy revisions.
+  The real cost is a national packet, its own evaluation cases and a weekly regeneration.
+- **Terms.** Freddie Mac forbids "alteration" of its content; whether a sentence about
+  the rate counts needs the owner's reading.

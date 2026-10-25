@@ -57,6 +57,16 @@ VALUE_BOUNDS = {
     "fhfa_hpi_us_monthly": (1.0, 10_000.0),
     "mortgage_rate_30y": (0.5, 25.0),
     "mortgage_rate_30y_weekly": (0.5, 25.0),
+    # Milestone 57's national scoreboard. Listings ran 0.4 to 1.4 million 2016-2026;
+    # starts 0.48 to 2.27 million a year since 1959; supply 3.3 to 12.2 months.
+    "realtor_active_listings": (50_000.0, 5_000_000.0),
+    "realtor_price_reduced_listings": (0.0, 5_000_000.0),
+    "realtor_price_reduced_share": (0.0, 100.0),
+    "cpi_rent_primary_residence": (10.0, 2_000.0),
+    "housing_starts_saar": (100_000.0, 5_000_000.0),
+    "new_home_months_supply": (0.5, 30.0),
+    # $17,000 in 1963 to about $440,000 at its peak.
+    "new_home_median_sale_price": (10_000.0, 2_000_000.0),
     # Milestone 48: HMDA's medians and FHA's limit. Rates as reported by lenders; a
     # loan amount is HMDA's rounded midpoint; the limit sits between HUD's national floor
     # and ceiling, with room for either to move.

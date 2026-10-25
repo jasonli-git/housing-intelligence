@@ -14,7 +14,7 @@ try {
   const clip={x:r.x+8,y:r.y+8,width:r.width-16,height:r.height-16};
   const before=await page.screenshot({clip});
   await page.screenshot({path:`/tmp/search-popup-${width}-${theme}.png`});
-  const hide=await page.addStyleTag({content:'.coverage-map-content,.coverage-scale-slot,.national-backdrop {visibility:hidden !important}'});
+  const hide=await page.addStyleTag({content:'.coverage-map-content,.coverage-scale-slot,.national-strip {visibility:hidden !important}'});
   const after=await page.screenshot({clip});
   assert(before.equals(after),'Popup pixels changed when background art/counts were hidden');
   await hide.evaluate(e=>e.remove());

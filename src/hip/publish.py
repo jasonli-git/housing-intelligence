@@ -103,6 +103,10 @@ class RegionIdentityChanged(RuntimeError):
     """
 
 
+# The API's ceiling for one region's observations (`/regions/{id}/metrics`, #402).
+OBSERVATION_LIMIT = 20_000
+
+
 def require_complete_list(api_path: str, payload: object) -> None:
     """Refuse truncated/unknown lists before writing their artifact (#402).
 
@@ -274,8 +278,14 @@ def _plan(
             f"regions/{region_id}/housing-pressure.json",
         )
         # The unfiltered series for every metric the region has. The filtered form takes
-        # arbitrary dates and is listed in UNPUBLISHABLE instead.
-        yield f"/regions/{region_id}/metrics", f"regions/{region_id}/metrics.json"
+        # arbitrary dates and is listed in UNPUBLISHABLE instead. Asked for at the API's
+        # 20,000 ceiling, not its 5,000 default: the nation's series reach back to 1959
+        # and passed 5,000 rows with the scoreboard's (Milestone 57). The completeness
+        # check (#402) still refuses the file if the region ever outgrows the ceiling.
+        yield (
+            f"/regions/{region_id}/metrics?limit={OBSERVATION_LIMIT}",
+            f"regions/{region_id}/metrics.json",
+        )
         # HUD's income limits for the region's county (Milestone 35). A 404 — the state,
         # or a ZIP the crosswalk does not place — is a skip, as everywhere here.
         yield (

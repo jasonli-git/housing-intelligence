@@ -12,13 +12,11 @@
 :root .search-first-home :is(.bar,.site-meta-row) { background:color-mix(in srgb,var(--plate-paper) 60%,transparent) !important; -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
 :root .search-first-home .nation-head h1 { font-size:clamp(54px,8.5vw,120px) !important; }
 :root .search-first-home .nation-head h1 em { background:linear-gradient(90deg,var(--plate-accent),light-dark(#d98a2b,#ffc27a) 55%,var(--plate-accent)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
-:root .search-first-home :is(.entry-introduction,.home-tool-text,.national-benchmark h3,.artwork-caption .scale-signature) { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Helvetica Neue",Arial,sans-serif !important; font-style:normal !important; }
+:root .search-first-home :is(.entry-introduction,.home-tool-text,.artwork-caption .scale-signature) { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Helvetica Neue",Arial,sans-serif !important; font-style:normal !important; }
 :root .search-first-home .coverage-search-panel .place-search-hero input { background:var(--glass); border:1px solid var(--glass-edge); border-radius:14px; box-shadow:0 20px 60px -20px color-mix(in srgb,var(--plate-accent) 55%,transparent); color:var(--plate-ink); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
 :root .search-first-home .coverage-search-panel .place-search-hero input:focus-visible { transform:none; border-color:var(--plate-accent); box-shadow:0 0 0 4px color-mix(in srgb,var(--plate-accent) 25%,transparent); }
 :root .search-first-home .coverage-explore-inline { background:var(--glass); border:1px solid var(--glass-edge); border-radius:14px; box-shadow:none; }
-:root .search-first-home :is(.national-backdrop,.home-tools) { border-top:0 !important; margin-top:3rem !important; }
-:root .search-first-home .national-backdrop-grid { gap:1rem !important; }
-:root .search-first-home.search-first-home .national-backdrop .national-benchmark { background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); border:1px solid var(--glass-edge) !important; border-radius:22px; padding:1.5rem !important; }
+:root .search-first-home .home-tools { border-top:0 !important; margin-top:3rem !important; }
 
 /* Tools as glass cards with icon roundels (from the bolder draft), tuned for the night
    sky: a rust-to-gold ring on each badge, tool-coloured light under the glass. */
@@ -48,37 +46,6 @@
 @media screen {
 }
 
-/* The national figures: the national figures rethought as two horizons. Each
-   figure is set huge, and its own history runs behind it as a glowing skyline that ends
-   in a beacon at today's value: the number and the line that produced it, read as one. */
-@media screen {
-:root .search-first-home .national-backdrop-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:0 !important; border:1px solid var(--glass-edge); border-radius:28px; overflow:hidden; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
-:root .search-first-home.search-first-home .national-backdrop .national-benchmark { position:relative; isolation:isolate; display:flex; flex-direction:column; min-height:340px; padding:1.6rem 1.8rem 1.2rem !important; border:0 !important; border-radius:0 !important; background:none !important; -webkit-backdrop-filter:none; backdrop-filter:none; }
-:root .search-first-home.search-first-home .national-backdrop .national-benchmark + .national-benchmark { border-left:1px solid var(--glass-edge) !important; }
-:root .search-first-home .national-benchmark h3 { position:relative; z-index:2; margin:0 0 .5rem !important; font:400 clamp(21px,2.1vw,26px)/1.2 Georgia,serif !important; letter-spacing:-.015em !important; text-transform:none !important; color:var(--plate-ink) !important; }
-:root .search-first-home .national-backdrop .national-rate { display:block !important; position:relative; z-index:2; }
-:root .search-first-home .national-backdrop .national-rate > strong { display:block; font-size:clamp(84px,10vw,148px) !important; line-height:.9 !important; letter-spacing:-.06em !important; background:linear-gradient(180deg,var(--plate-ink) 35%,color-mix(in srgb,var(--plate-ink) 35%,transparent)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
-:root .search-first-home .national-backdrop .national-rate small { display:block; margin-top:.5rem; font-size:12px !important; }
-:root .search-first-home .national-benchmark-definition { position:relative; z-index:2; }
-:root .search-first-home .national-trend { position:absolute; z-index:0; inset:auto 0 0 0; height:62%; margin:0 !important; pointer-events:auto; }
-:root .search-first-home .national-trend-plot { display:block !important; height:100%; }
-:root .search-first-home .national-trend-scale { display:none !important; }
-:root .search-first-home .national-trend svg { width:100% !important; height:100% !important; }
-:root .search-first-home .national-trend-guide, :root .search-first-home .national-trend-dot { display:none; }
-:root .search-first-home .national-trend-line { stroke:var(--plate-accent) !important; stroke-width:1.1 !important; filter:drop-shadow(0 0 6px var(--plate-accent)) drop-shadow(0 8px 18px color-mix(in srgb,var(--plate-accent) 60%,transparent)); }
-:root .search-first-home .national-benchmark + .national-benchmark .national-trend-line { stroke:light-dark(#d98a2b,#ffc27a) !important; filter:drop-shadow(0 0 6px light-dark(#d98a2b,#ffc27a)) drop-shadow(0 8px 18px light-dark(#d98a2b99,#ffc27a99)); }
-:root .search-first-home .national-trend-end { r:2.6px; fill:var(--plate-ink) !important; stroke:var(--plate-accent) !important; stroke-width:1.4 !important; animation:horizon-beacon 2.4s ease-in-out infinite; transform-box:fill-box; transform-origin:center; }
-@keyframes horizon-beacon { 50% { stroke-width:3.5; } }
-:root .search-first-home .national-trend figcaption { position:absolute; inset:auto 1.8rem .8rem; z-index:2; font:600 10px/1.4 var(--font-mono) !important; letter-spacing:.1em; text-transform:uppercase; color:var(--text-muted) !important; }
-:root .search-first-home .national-benchmark::after { content:""; position:absolute; inset:auto 0 0 0; height:62%; z-index:-1; background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--plate-accent) 10%,transparent)); }
-:root .search-first-home .national-backdrop-note { text-align:right; }
-@media (max-width:760px) {
-  :root .search-first-home .national-backdrop-grid { grid-template-columns:1fr !important; }
-  :root .search-first-home.search-first-home .national-backdrop .national-benchmark + .national-benchmark { border-left:0 !important; border-top:1px solid var(--glass-edge) !important; }
-  :root .search-first-home.search-first-home .national-backdrop .national-benchmark { min-height:280px; }
-}
-@media (prefers-reduced-motion: reduce) { :root .search-first-home .national-trend-end { animation:none; } }
-}
 @media screen and (max-width: 600px) {
   /* The licence and source-check lines stack rather than collide in small capitals. */
   .search-first-home .site-meta-row { display:grid !important; grid-template-columns:1fr; row-gap:.15rem; }
