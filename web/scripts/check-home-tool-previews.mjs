@@ -21,7 +21,12 @@ try {
     assert(await links.evaluateAll((links) => links.every((link) => link.getAttribute('aria-describedby') === 'home-tools-coverage')), 'shared coverage stays associated with every tool');
     assert.deepEqual(await links.evaluateAll((a) => a.map((e) => e.getAttribute('href'))), ['/afford', '/guide', '/tax', '/compare', '/help', '/atlas']);
     await tools.locator('img').evaluateAll(async (images) => {
-      await Promise.all(images.map(async (img) => { img.loading = 'eager'; await img.decode(); }));
+      // Switching lazy images to eager can cancel a transfer in flight; a cancelled
+      // load fails `decode()` once, so reload the image and decode again before failing.
+      await Promise.all(images.map(async (img) => {
+        img.loading = 'eager';
+        try { await img.decode(); } catch { img.src = img.currentSrc || img.src; await img.decode(); }
+      }));
     });
     assert.equal(await tools.locator('img').count(), 12);
     assert.equal(await tools.locator('img:visible').count(), 6);
@@ -61,44 +66,28 @@ try {
     assert(await links.first().evaluate((el) => document.activeElement === el));
     await page.waitForFunction(() => document.querySelector('.home-tools-previous').disabled);
     await links.first().evaluate((el) => el.blur());
-    const figures = page.getByRole('region', { name: 'United States housing figures' });
-    assert.equal(await page.getByRole('heading', { name: 'The national backdrop', exact: true }).count(), 0);
-    assert.equal(await figures.locator('svg[role="img"]').count(), 2);
-    assert.equal(await figures.locator('a[href^="https://"]').count(), 2);
-    const panelHeight = (await figures.boundingBox()).height;
-    assert(panelHeight <= 236, `compact default panel: ${panelHeight}px`);
-    assert((await figures.boundingBox()).width <= 440, 'narrow national figures footprint');
-    assert(await figures.locator('.national-rate small').evaluateAll((lines) => lines.every((line) => getComputedStyle(line).textAlign === 'center')), 'source/date lines centred');
-    assert(await figures.locator('.national-rate small a').evaluateAll((links) => links.every((link) => getComputedStyle(link).whiteSpace === 'nowrap' && link.getClientRects().length === 1)), 'publisher names stay together');
-    assert.equal(await figures.locator('#national-home-prices-heading br').count(), 1, 'deliberate home-price label line break');
-    assert((await figures.locator('#national-home-prices-heading').innerText()).includes('Year-over-year'));
-    assert(await figures.locator('.national-rate > strong').evaluateAll((values) => Math.abs(values[0].getBoundingClientRect().top - values[1].getBoundingClientRect().top) < 1), 'both values share a baseline row');
-    assert(await figures.locator('.national-benchmark h3').evaluateAll((labels) => labels.every((label) => getComputedStyle(label).textAlign === 'center')), 'metric names centred');
-    assert(await figures.locator('.national-rate > strong').evaluateAll((values) => values.every((value) => getComputedStyle(value).textAlign === 'center' && Math.abs((value.getBoundingClientRect().left + value.getBoundingClientRect().right) / 2 - (value.closest('.national-benchmark').getBoundingClientRect().left + value.closest('.national-benchmark').getBoundingClientRect().right) / 2) < 1)), 'numbers centred within each card');
-    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards.every((card) => { const s = getComputedStyle(card), value = getComputedStyle(card.querySelector('strong')); return s.borderTopLeftRadius === '0px' && s.borderTopRightRadius === '0px' && s.borderBottomLeftRadius === '24px' && s.borderBottomRightRadius === '24px' && parseFloat(getComputedStyle(card.querySelector('h3')).fontSize) >= 16 && getComputedStyle(card.querySelector('h3')).fontFamily.includes('Georgia') && value.fontSize === '40px' && value.fontWeight === '400' && s.boxShadow === 'none'; })), 'unchanged card shape with quieter numbers and no glow');
-    assert(await figures.locator('.national-rate > strong').evaluateAll((values) => values.every((value) => { const probe = document.createElement('span'); probe.style.color = 'var(--score-accent)'; value.parentElement.append(probe); const matches = getComputedStyle(value).color === getComputedStyle(probe).color; probe.remove(); return matches && getComputedStyle(value).backgroundImage === 'none'; })), 'numbers use their own metric accent');
-    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards[1].getBoundingClientRect().left - cards[0].getBoundingClientRect().right >= 11), 'two visibly separated cards');
-    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => getComputedStyle(cards[0]).borderTopColor !== getComputedStyle(cards[1]).borderTopColor), 'each metric has a distinct outline colour');
-    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards.every((card) => { const s = getComputedStyle(card); return [s.borderRightColor, s.borderBottomColor, s.borderLeftColor].every((c) => c === s.borderTopColor) && s.borderTopWidth === '12px' && [s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth].every((w) => w === '1px'); })), 'metric-coloured outline with a 12px top edge');
-    assert.equal(await figures.locator('svg[role="img"]:visible').count(), 0);
-    const sizes = await figures.locator('.national-benchmark').evaluateAll((cards) => cards.map((card) => ({ height: card.getBoundingClientRect().height })));
-    assert(sizes.every((s) => Math.abs(s.height - (width > 600 ? 161 : 159)) < 1), 'card heights unchanged');
-    assert.equal(await figures.locator('.national-score-trend[aria-hidden="true"]').count(), 2);
-    assert(await figures.locator('.national-score-trend').evaluateAll((plots) => plots.every((p) => getComputedStyle(p).opacity === '0.6' && getComputedStyle(p.querySelector('path')).strokeWidth === '1.5px' && getComputedStyle(p.querySelector('path')).filter === 'none')), 'visible, heavier chart lines without restoring card glow');
-    assert(await figures.locator('.national-score-trend').evaluateAll((plots) => plots.every((plot) => getComputedStyle(plot).position === 'absolute' && plot.getBoundingClientRect().height > 60 && getComputedStyle(plot).pointerEvents === 'none')), 'background charts visible without taking layout space or intercepting input');
-    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards.every((card) => card.querySelector('.national-score-trend path').getBoundingClientRect().bottom < card.querySelector('.national-rate small').getBoundingClientRect().top)), 'linework stays clear of source/date text');
-    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => Math.abs(cards[0].getBoundingClientRect().top - cards[1].getBoundingClientRect().top) < 1), 'both figures stay side by side');
+    // Milestone 57: the US market strip, eight scoreboard tiles.
+    const figures = page.getByRole('region', { name: 'US market' });
+    const tiles = figures.locator('.score-tile');
+    assert.equal(await tiles.count(), 8, 'eight national tiles');
+    assert.equal(await figures.locator('svg[role="img"]:visible').count(), 0, 'histories closed by default');
+    assert.equal(await figures.locator('.national-score-trend[aria-hidden="true"]').count(), 8);
+    assert.equal(await figures.locator('.score-tile-meta a[href^="https://"]').count(), 8, 'every tile credits its source');
+    assert(await tiles.evaluateAll((els) => els.every((el) => el.getBoundingClientRect().height <= 120)), 'tiles stay scoreboard-sized');
+    assert(await figures.locator('.score-tile-label, .score-tile-value, .score-tile-meta').evaluateAll((els) => els.every((el) => el.scrollWidth <= el.clientWidth + 1)), 'no clipped tile text');
+    assert(await tiles.evaluateAll((els) => els.every((el) => el.querySelector('.visually-hidden').textContent.includes('from a year earlier') || el.querySelector('.visually-hidden').textContent.includes('No comparable reading'))), 'each tile says its change in words');
+    if (width > 1180) assert(await tiles.evaluateAll((els) => els.every((el) => Math.abs(el.getBoundingClientRect().top - els[0].getBoundingClientRect().top) < 1)), 'one row on wide screens');
+    else assert(await figures.locator('.national-strip-track').evaluate((el) => el.scrollWidth > el.clientWidth && getComputedStyle(el).overflowX === 'auto'), 'scrolls as a ticker on narrow screens');
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'no page-level horizontal scroll');
     await figures.locator('summary').click();
-    assert.equal(await figures.locator('svg[role="img"]:visible').count(), 2);
-    assert.deepEqual(await figures.locator('.national-score-trend path').evaluateAll((paths) => paths.map((p) => p.getAttribute('d'))), await figures.locator('.national-history .national-trend-line').evaluateAll((paths) => paths.map((p) => p.getAttribute('d'))), 'backdrops match the full history plots exactly');
+    assert.equal(await figures.locator('svg[role="img"]:visible').count(), 8, 'every history opens');
     assert((await figures.innerText()).includes('Historical figures, not forecasts.'));
-    assert((await figures.innerText()).includes('National average—not a lender quote'));
-    const audit = await new AxeBuilder({ page }).include('.home-tools').include('.national-backdrop').analyze();
+    const audit = await new AxeBuilder({ page }).include('.home-tools').include('.national-strip').analyze();
     assert.deepEqual(audit.violations.map((v) => v.id), []);
     await figures.locator('summary').click();
     await tools.screenshot({ path: `/tmp/home-tools-${width}-${theme}.png` });
     await figures.screenshot({ path: `/tmp/home-figures-${width}-${theme}.png` });
-    console.log(`${width}/${theme}: tool captures, themes, rail controls, keyboard, metrics, sources, histories and axe passed. Heights: ${sizes.map((s) => Math.round(s.height)).join(', ')}; national panel: ${Math.round(panelHeight)}px`);
+    console.log(`${width}/${theme}: tool captures, themes, rail controls, keyboard, US market strip, sources, histories and axe passed`);
     assert.deepEqual(errors, []);
     if ((width === 1440 && theme === 'light') || (width === 390 && theme === 'dark')) {
       for (const path of ['/afford', '/guide', '/tax', '/compare', '/help', '/atlas']) {

@@ -1,0 +1,76 @@
+/* The home page's US market strip (Milestone 57): a row of small scoreboard tiles, after
+   a live sports ticker rather than a row of cards. Blue reads easier for buyers and
+   renters, amber harder, a muted ink neither: the stories' own colour-blind-safe pair,
+   never red against green. Each tile also says it in words for a screen reader. */
+.national-strip {
+  --tile-easier: var(--story-up);
+  --tile-harder: var(--story-down);
+  --tile-neutral: var(--text-secondary);
+  margin-top: 1rem;
+}
+.national-strip-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .25rem 1rem; margin-bottom: .6rem; }
+:root .search-first-home .national-strip-head h2 { display: inline-flex; align-items: center; gap: .5rem; margin: 0; font: 600 11px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--text-primary); }
+.national-strip-live { width: 7px; height: 7px; border-radius: 50%; background: var(--tile-easier); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tile-easier) 22%, transparent); }
+.national-strip-head p { margin: 0; font: 12px/1.4 var(--font-text); color: var(--text-secondary); }
+.tone-key { display: inline-flex; align-items: center; gap: .3rem; }
+.tone-key::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--tile-key); }
+.tone-key.tone-easier { --tile-key: var(--tile-easier); }
+.tone-key.tone-harder { --tile-key: var(--tile-harder); margin-left: .35rem; }
+
+.national-strip-track {
+  display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px;
+  margin: 0; padding: 0; list-style: none;
+}
+.score-tile {
+  --tile-accent: var(--tile-neutral);
+  position: relative; isolation: isolate; overflow: hidden;
+  display: grid; grid-template-rows: auto 1fr auto auto; gap: 2px;
+  min-width: 0; min-height: 104px; padding: 9px 10px 8px 12px; box-sizing: border-box;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: linear-gradient(165deg, color-mix(in srgb, var(--tile-accent) 7%, transparent), transparent 60%), var(--plate-paper, var(--surface-card));
+}
+.score-tile[data-tone="easier"] { --tile-accent: var(--tile-easier); }
+.score-tile[data-tone="harder"] { --tile-accent: var(--tile-harder); }
+/* The scoreboard's team stripe: one edge in the tile's reading. */
+.score-tile::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--tile-accent); }
+.score-tile-top { position: relative; z-index: 1; min-width: 0; }
+.score-tile-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 10px/1.3 var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--text-secondary); }
+.score-tile-value { position: relative; z-index: 1; align-self: center; font: 600 22px/1.1 var(--font-text); letter-spacing: -.03em; color: var(--text-primary); font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+.score-tile-foot { position: relative; z-index: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.score-tile-change { flex: none; display: inline-flex; align-items: center; gap: 3px; padding: 1px 5px; border-radius: 4px; background: color-mix(in srgb, var(--tile-accent) 14%, transparent); color: color-mix(in oklab, var(--tile-accent) 80%, var(--text-primary)); font: 600 11px/1.4 var(--font-text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.score-tile[data-tone="neutral"] .score-tile-change, .score-tile[data-tone="flat"] .score-tile-change { color: var(--text-secondary); background: color-mix(in srgb, var(--text-secondary) 10%, transparent); }
+.score-tile-arrow { font-size: 7px; }
+.score-tile-none { background: none; }
+.score-tile-meta { position: relative; z-index: 1; margin: 2px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 10px/1.3 var(--font-text); color: var(--text-secondary); }
+.score-tile-meta a { color: inherit; text-decoration: none; }
+.score-tile-meta a:hover { color: var(--text-primary); text-decoration: underline; text-underline-offset: 2px; }
+.score-tile-meta a:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; border-radius: 2px; }
+.national-strip .national-score-trend { flex: 1 1 auto; min-width: 0; height: 20px; opacity: .85; pointer-events: none; }
+.national-strip .national-score-trend path { fill: none; stroke: var(--tile-accent); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+.national-strip .national-score-trend circle { fill: var(--tile-accent); }
+
+/* History: the shared trend chart, laid out in place rather than as a card backdrop. */
+.national-strip .national-history > summary { width: fit-content; margin: 6px auto 0; padding: 8px 4px; color: var(--text-secondary); font: 11px/1.5 var(--font-text); cursor: pointer; }
+.national-strip .national-history > summary:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; border-radius: 4px; }
+.national-strip .national-history-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 20px; padding-top: 10px; }
+.national-strip .national-benchmark-definition { font: 12px/1.4 var(--font-text); }
+:root .search-first-home .national-strip .national-trend { position: static; height: auto; margin: 6px 0 0 !important; pointer-events: auto; }
+:root .search-first-home .national-strip .national-trend-plot { display: grid !important; grid-template-columns: 52px minmax(0, 1fr); height: 84px; }
+:root .search-first-home .national-strip .national-trend-scale { display: flex !important; flex-direction: column; justify-content: space-between; font: 9px/1.2 var(--font-text); color: var(--text-secondary); }
+:root .search-first-home .national-strip .national-trend svg { width: 100% !important; height: 100% !important; }
+:root .search-first-home .national-strip .national-trend-line { stroke: var(--story-up) !important; filter: none !important; }
+:root .search-first-home .national-strip .national-trend-end { animation: none; fill: var(--story-up) !important; stroke: none !important; }
+:root .search-first-home .national-strip .national-trend figcaption { position: static; display: flex; justify-content: space-between; margin-top: 2px; font: 9px/1.4 var(--font-text) !important; letter-spacing: 0; text-transform: none; color: var(--text-secondary); }
+.national-strip .national-backdrop-note { margin: 12px 0 0; font: 11px/1.5 var(--font-text); color: var(--text-secondary); text-align: center; }
+
+/* Under eight across, the strip becomes a ticker: tiles keep their size and scroll. */
+@media (max-width: 1180px) {
+  .national-strip-track { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 148px; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; padding-bottom: 8px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .score-tile { scroll-snap-align: start; }
+  .national-strip .national-history-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .national-strip-track { grid-auto-columns: 136px; margin-inline: calc(-1 * var(--gutter, 16px)); padding-inline: var(--gutter, 16px); scroll-padding-inline: var(--gutter, 16px); }
+  .national-strip .national-history-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media print { .national-strip .national-score-trend { display: none; } .national-strip-track { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

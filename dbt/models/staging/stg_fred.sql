@@ -70,3 +70,52 @@ select
     'MORTGAGE30US_weekly' as release_layer,
     'current' as release_vintage
 from weekly w
+
+-- The home page's national scoreboard (Milestone 57): monthly national series, each its
+-- own FRED layer, dated to the month they describe. Starts arrive in thousands of units
+-- at an annual rate and are stored as units.
+union all
+
+select
+    'fred' as source_id,
+    case series_id
+        when 'ACTLISCOUUS' then 'realtor_active_listings'
+        when 'PRIREDCOUUS' then 'realtor_price_reduced_listings'
+        when 'MEDDAYONMARUS' then 'realtor_median_days_on_market'
+        when 'CUSR0000SEHA' then 'cpi_rent_primary_residence'
+        when 'HOUST' then 'housing_starts_saar'
+        when 'MSACSR' then 'new_home_months_supply'
+    end as metric_id,
+    'US' as geoid,
+    'nation' as level,
+    date as period_start,
+    last_day(date) as period_end,
+    try_cast(value as double) * case when series_id = 'HOUST' then 1000 else 1 end as value,
+    'national' as match_method,
+    series_id as release_layer,
+    'current' as release_vintage
+from read_parquet('{{ var("parquet_dir") }}/fred/current/*.parquet')
+where series_id in ('ACTLISCOUUS', 'PRIREDCOUUS', 'MEDDAYONMARUS', 'CUSR0000SEHA', 'HOUST', 'MSACSR')
+  and try_cast(value as double) is not null
+
+union all
+
+-- The share of listings with a price cut: Realtor.com publishes the two counts, not the
+-- share, so it is taken here, month by month, from the same release.
+select
+    'fred' as source_id,
+    'realtor_price_reduced_share' as metric_id,
+    'US' as geoid,
+    'nation' as level,
+    a.date as period_start,
+    last_day(a.date) as period_end,
+    100.0 * try_cast(r.value as double) / try_cast(a.value as double) as value,
+    'national' as match_method,
+    'PRIREDCOUUS' as release_layer,
+    'current' as release_vintage
+from read_parquet('{{ var("parquet_dir") }}/fred/current/*.parquet') a
+join read_parquet('{{ var("parquet_dir") }}/fred/current/*.parquet') r
+  on r.series_id = 'PRIREDCOUUS' and r.date = a.date
+where a.series_id = 'ACTLISCOUUS'
+  and try_cast(a.value as double) > 0
+  and try_cast(r.value as double) is not null

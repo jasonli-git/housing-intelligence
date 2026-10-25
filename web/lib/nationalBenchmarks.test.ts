@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { annualHomePriceChange, annualHomePriceTrend, mortgageRateTrend, trendGeometry } from "./nationalBenchmarks";
+import { annualHomePriceChange, trendGeometry } from "./nationalBenchmarks";
 const row = (date: string, value: number) => ({ period_start: `${date}-01`, period_end: `${date}-28`, value });
 describe("annual national home-price change", () => {
   it("uses the same month last year, with unsorted observations", () => {
@@ -22,21 +22,6 @@ describe("annual national home-price change", () => {
 });
 
 describe("national trends", () => {
-  it("plots annual changes, with twelve calendar months and missing baselines as gaps", () => {
-    const points = annualHomePriceTrend([row("2026-07", 110), row("2025-07", 100), row("2026-06", 108), row("2025-06", 100), row("2026-05", 104)]);
-    expect(points).toHaveLength(12);
-    expect(points[0].date).toBe("2025-08-01");
-    expect(points.at(-1)?.value).toBeCloseTo(10);
-    expect(points.at(-2)?.value).toBeCloseTo(8);
-    expect(points.at(-3)?.value).toBeNull();
-    expect(annualHomePriceTrend([])).toEqual([]);
-  });
-  it("clips rate history to one year, sorts it and does not bridge missing weeks", () => {
-    const points = mortgageRateTrend([row("2026-07", 6), row("2024-07", 8), row("2026-06", 7)], true);
-    expect(points).toEqual([{ date: "2026-06-01", value: 7 }, { date: "2026-07-01", value: null }, { date: "2026-07-01", value: 6 }]);
-    expect(mortgageRateTrend([row("2026-06", 7), row("2026-07", 6)], false).filter(p => p.value === null)).toHaveLength(0);
-    expect(mortgageRateTrend([row("2026-07", NaN)], true)[0].value).toBeNull();
-  });
   it("uses actual elapsed time, not equal spacing, and breaks the line at gaps", () => {
     const plot = trendGeometry([{ date: "2026-01-01", value: -2 }, { date: "2026-01-02", value: 0 }, { date: "2026-01-03", value: null }, { date: "2026-01-11", value: 2 }]);
     expect(plot?.path).toBe("M42.00,64.00 L67.00,40.00 M292.00,16.00");

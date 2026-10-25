@@ -76,6 +76,15 @@ def test_what_survives_each_use_today() -> None:
             # Realtor.com's days on market through FRED (2026-10-23), read only by a
             # story: FRED's terms leave commercial use to each series' owner.
             "realtor_median_days_on_market",
+            # Milestone 57's scoreboard, all through FRED. BLS's and the Census Bureau's
+            # series are public domain at the source; through FRED they take FRED's terms
+            # until the platform fetches them from the publishers directly.
+            "realtor_active_listings",
+            "realtor_price_reduced_listings",
+            "realtor_price_reduced_share",
+            "cpi_rent_primary_residence",
+            "housing_starts_saar",
+            "new_home_months_supply",
         ]
     )
     assert restricted == {"ads": expected, "paid": expected}

@@ -20,6 +20,8 @@ export function formatValue(value: number, unit: string): string {
   // Milestone 34: people per household, and minutes of commuting each way.
   if (unit === "people") return value.toFixed(2);
   if (unit === "minutes") return `${value.toFixed(1)} min`;
+  // Milestone 57: months' supply of new homes.
+  if (unit === "months") return `${value.toFixed(1)} months`;
   // Milestone 39: net homes added per 1,000 homes standing.
   if (unit === "per_1000_homes") return `${value.toFixed(1)} per 1,000 homes`;
   if (unit === "per_1000_returns") return `${value.toFixed(1)} per 1,000 returns`;

@@ -29,28 +29,39 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — the third batch of visual stories (2026-10-23)
+## Now — Milestone 57, the national market scoreboard (2026-10-24)
 
-Branch `feature/stories-batch-3`. Milestone 56 merged 2026-10-23 (#240). The owner asked
-for all twelve stories proposed that day; nine are built from data now held (ARCHITECTURE
-#438, #439). Hosting stays on hold (Frontend and presentation, "A second state will not
-fit Pages' limits").
+Branch `milestone/m57-national-dashboard`, PR open for the owner's review. Eight tiles on
+the home page (ARCHITECTURE #444, #445); the warehouse already holds the six new series,
+so a deploy needs only `make publish`.
 
-1. **Three stories wait on the owner's downloads**, each registered only once its file
-   lands (a manual source with no file fails `hip refresh`):
-   - Minutes to Manhattan — NJ Transit's rail and bus GTFS zips into
-     `data/manual/njt_gtfs/` (developer.njtransit.com, free registration). Adapter,
-     landing and model are merged, unregistered; the page waits for the data.
-   - The liquor licence lottery — the ABC's Retail Licensee Listing (.xlsx) into
-     `data/manual/nj_abc/` (njoag.gov refuses scripts).
-   - Who solar actually reaches — the Clean Energy Program's Installation Data (.xlsx)
-     into `data/manual/njcep_solar/` (cleanenergy.nj.gov refuses scripts).
-2. **The nine built stories' PR** is open; the three above follow in their own PR.
+The three stories waiting on the owner's downloads are unchanged under Open.
 
 ## Open
 
 Every open item, wherever the work originated. The tag in parentheses is where it was
 first raised, not where it must be done.
+
+### Stories waiting on downloads (2026-10-23)
+
+Each is registered only once its file lands (a manual source with no file fails
+`hip refresh`):
+
+- Minutes to Manhattan — NJ Transit's rail and bus GTFS zips into
+  `data/manual/njt_gtfs/` (developer.njtransit.com, free registration). Adapter,
+  landing and model are merged, unregistered; the page waits for the data.
+- The liquor licence lottery — the ABC's Retail Licensee Listing (.xlsx) into
+  `data/manual/nj_abc/` (njoag.gov refuses scripts).
+- Who solar actually reaches — the Clean Energy Program's Installation Data (.xlsx)
+  into `data/manual/njcep_solar/` (cleanenergy.nj.gov refuses scripts).
+
+### Home page leftovers (Milestone 57)
+
+- **Dead national-card CSS.** Rules for `.national-backdrop`, `.national-benchmark` and
+  `.national-rate` in `web/app/home-plate.css`, `home-refresh.css` and `ui-refinement.css`
+  match nothing since #444; removing them lowers `colourBaseline.json` too.
+- **`web/scripts/check-ui-refinement.mjs` checks the pre-#246 home page** (a "Home prices
+  · past year" heading that no longer exists) and fails on any current build.
 
 ### Calendar — dated and recurring chores
 

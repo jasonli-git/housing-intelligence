@@ -94,6 +94,30 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     what: "FHFA’s monthly U.S. index of repeat home sales financed by Fannie Mae or Freddie Mac mortgages. Purchase-only, seasonally adjusted, not inflation-adjusted. Not a dollar price.",
     why: "National price-change context, not an estimate for an individual home.",
   },
+  realtor_active_listings: {
+    what: "Homes listed for sale across the country in the month, as Realtor.com counts them. Not seasonally adjusted, so the home page compares a month with the same month a year earlier.",
+    why: "More homes for sale gives buyers more choice and less reason to bid over asking.",
+  },
+  realtor_price_reduced_listings: {
+    what: "Listings across the country whose asking price was cut during the month, as Realtor.com counts them.",
+    why: "Sellers cut prices when homes are not selling at the first ask.",
+  },
+  realtor_price_reduced_share: {
+    what: "The share of homes listed for sale whose asking price was cut in the month: Realtor.com’s count of price cuts over its count of listings.",
+    why: "A rising share means sellers are meeting buyers lower; a falling one, that first asks are holding.",
+  },
+  cpi_rent_primary_residence: {
+    what: "The Consumer Price Index for rent, from the Bureau of Labor Statistics: what renters across the country pay, on new and existing leases alike. An index, not a rent; its change from a year earlier is rent inflation.",
+    why: "It counts every lease, not only new ones, so it turns months after asking rents do.",
+  },
+  housing_starts_saar: {
+    what: "New homes, houses and apartments alike, that builders started in the month across the country, at the yearly pace the month would set, adjusted for the season. From the Census Bureau.",
+    why: "Homes started now are the supply that arrives in a year or two.",
+  },
+  new_home_months_supply: {
+    what: "How many months the new houses for sale would last at the month’s pace of sales, adjusted for the season. Counts homes finished, under way and not yet started. From the Census Bureau.",
+    why: "Above about six months, builders have more homes than buyers and tend to cut prices or buy down rates.",
+  },
   fhfa_hpi_all_transactions: {
     what: "The same kind of index from FHFA, but counting refinance appraisals as well as sales. An index: 100 is early 1980. Statewide only.",
     why: "It reaches back further than the purchase-only index, so it shows the long run of prices.",
@@ -764,7 +788,7 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
   },
   realtor_median_days_on_market: {
     what: "The median number of days a listing spent on the market in the month, as Realtor.com counts them.",
-    why: "Read only by the visual stories: a short wait means homes sell fast.",
+    why: "A short wait means homes sell fast. Shown for the country on the home page and for New Jersey in the visual stories.",
   },
   wikidata_incorporated_year: {
     what: "The year the town was incorporated or set off, as Wikidata records it.",

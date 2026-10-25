@@ -18,7 +18,7 @@
 
 import type { IncomeLimits } from "./household";
 import type { AffordableHousing } from "./affordableHousing";
-import { annualHomePriceChange, annualHomePriceTrend, mortgageRateTrend } from "./nationalBenchmarks";
+import type { ScoreSeries } from "./nationalScoreboard";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -794,7 +794,7 @@ export async function regionsWithData(): Promise<Region[]> {
 const nationalRates = new Map<string, Promise<Observation[] | null>>();
 
 /**
- * One of the national 30-year mortgage rate's series, fetched once per build worker
+ * One national series — the 30-year rate's, FHFA's index, the scoreboard's — fetched once per build worker
  * rather than once per page: it is one series for the whole country, and every region
  * page and the affordability page asking for it would be thousands of requests.
  */
@@ -811,20 +811,22 @@ function nationalRateSeries(metricId: string): Promise<Observation[] | null> {
   return series;
 }
 
-/** A calculated annual change from the exact monthly national FHFA index series. */
-export async function nationalHomePriceChange() {
-  return annualHomePriceChange((await nationalRateSeries("fhfa_hpi_us_monthly")) ?? []);
-}
-
-/** Reuses the cached national series; the rate chart always matches the headline's basis. */
-export async function nationalBenchmarkTrends(rateMetricId?: string) {
-  const [prices, rates] = await Promise.all([
-    nationalRateSeries("fhfa_hpi_us_monthly"),
-    rateMetricId ? nationalRateSeries(rateMetricId) : Promise.resolve(null),
+/** The home page's national scoreboard (Milestone 57): every series it reads, cached. */
+export async function nationalScoreSeries(rateMetricId?: string): Promise<ScoreSeries> {
+  const read = async (id: string) => (await nationalRateSeries(id)) ?? [];
+  const [rate, hpi, listings, priceCutShare, daysOnMarket, rentCpi, starts, newHomeSupply] = await Promise.all([
+    rateMetricId ? read(rateMetricId) : Promise.resolve([]),
+    read("fhfa_hpi_us_monthly"),
+    read("realtor_active_listings"),
+    read("realtor_price_reduced_share"),
+    read("realtor_median_days_on_market"),
+    read("cpi_rent_primary_residence"),
+    read("housing_starts_saar"),
+    read("new_home_months_supply"),
   ]);
   return {
-    prices: annualHomePriceTrend(prices ?? []),
-    rates: mortgageRateTrend(rates ?? [], rateMetricId === "mortgage_rate_30y_weekly"),
+    rate: rateMetricId ? { metricId: rateMetricId, readings: rate } : null,
+    hpi, listings, priceCutShare, daysOnMarket, rentCpi, starts, newHomeSupply,
   };
 }
 

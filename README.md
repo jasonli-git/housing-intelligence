@@ -12,16 +12,16 @@ and not a chatbot: pages, maps, tools, reports and an API are the product, and a
 optional AI layer only explains figures that were already computed.
 
 > **Status — <!-- fill:version -->v0.50.0 (2026-10-08)<!-- /fill -->, updated
-> 2026-10-23.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
+> 2026-10-24.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
 > published in full: the state, <!-- fill:counties -->21<!-- /fill --> counties,
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** 37 visual stories, nine new: Boroughitis, the flood claims calendar, how
-> long homes sit, the hottest counties and five more, with four new sources (#438,
-> #439); the raw archive lives in R2, its working copy on the Mac down from 5.4GB to
-> 261MB (Milestone 56, #437); 28 stories before them, from the Wawa line to night skies
-> (#429-#436).
+> **Latest.** A US market scoreboard on the home page: eight tiles from the mortgage
+> rate to new-home supply, each against a year earlier (Milestone 57, #444); the home
+> page's tools shown as pictures of themselves (#442); 37 visual stories, nine new, with
+> four new sources (#438, #439); the raw archive lives in R2, its working copy on the Mac
+> down from 5.4GB to 261MB (Milestone 56, #437).
 >
 > **Next.** Clearing TODO and the open Director Notes; then the hosting move for a second
 > state, on hold until they are cleared. See [ROADMAP.md](docs/ROADMAP.md) and

@@ -42,9 +42,9 @@ try {
     assert(geometry.height <= (width <= 600 ? 320 : 240), "compact gateway");
     assert(geometry.copyFits, "copy remains within card");
     if (width > 600) assert(await link.evaluate((e) => { const a = e.getBoundingClientRect(), b = e.querySelector('.home-stories-copy').getBoundingClientRect(); return Math.abs((a.top + a.bottom) / 2 - (b.top + b.bottom) / 2) < 1; }), 'left-aligned copy vertically centred');
-    assert(await section.evaluate((e) => { const metrics = document.querySelector('.national-scoreboard'), coverage = document.querySelector('.coverage-entry'); return e.getBoundingClientRect().top - metrics.getBoundingClientRect().bottom <= 18 && metrics.getBoundingClientRect().top - coverage.getBoundingClientRect().bottom <= 17; }), 'tighter section gaps');
+    assert(await section.evaluate((e) => { const metrics = document.querySelector('.national-strip'), coverage = document.querySelector('.coverage-entry'); return e.getBoundingClientRect().top - metrics.getBoundingClientRect().bottom <= 18 && metrics.getBoundingClientRect().top - coverage.getBoundingClientRect().bottom <= 17; }), 'tighter section gaps');
     assert(await page.evaluate(() => {
-      const gateway = document.querySelector(".home-stories"), backdrop = document.querySelector(".national-backdrop"), tools = document.querySelector(".home-tools");
+      const gateway = document.querySelector(".home-stories"), backdrop = document.querySelector(".national-strip"), tools = document.querySelector(".home-tools");
       return Boolean(backdrop.compareDocumentPosition(gateway) & Node.DOCUMENT_POSITION_FOLLOWING) && Boolean(gateway.compareDocumentPosition(tools) & Node.DOCUMENT_POSITION_FOLLOWING);
     }));
     assert.equal(await page.locator(".home-tools-rail").count(), 1);

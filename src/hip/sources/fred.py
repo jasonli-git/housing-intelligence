@@ -1,11 +1,13 @@
 """Federal Reserve Economic Data — national macro series.
 
 `MORTGAGE30US`, the 30-year fixed mortgage rate, which is national and has no regional
-breakdown, and since 2026-10-23 Realtor.com's median days on market for New Jersey and
-its counties (`dom_*`), which the visual stories read. The rate lands at the `nation`
-level against a synthetic US region (ARCHITECTURE #30) rather than being attached to New
-Jersey, because recording a national rate as a state measurement is the kind of quiet
-inaccuracy this platform exists to refuse.
+breakdown; since 2026-10-23 Realtor.com's median days on market for New Jersey and its
+counties (`dom_*`), which the visual stories read; and since 2026-10-24 six national
+series for the home page's scoreboard (Milestone 57): Realtor.com's listings, price cuts
+and days on market, BLS's rent CPI, and Census housing starts and new-home supply. The
+national series land at the `nation` level against a synthetic US region (ARCHITECTURE
+#30) rather than being attached to New Jersey, because recording a national rate as a
+state measurement is the kind of quiet inaccuracy this platform exists to refuse.
 
 **Two frequencies of one series** (Milestone 26). Freddie Mac publishes the rate weekly;
 the platform had only ever asked FRED for monthly averages. So on 2026-09-23 the cost card
@@ -36,11 +38,26 @@ SERIES: dict[str, tuple[str, str | None]] = {
     # "citation required", which the source's display-only class already honours.
     "dom_34": ("MEDDAYONMARNJ", None),
     **{f"dom_34{c:03d}": (f"MEDDAYONMAR34{c:03d}", None) for c in range(1, 42, 2)},
+    # The home page's national scoreboard (Milestone 57, 2026-10-24): what the market is
+    # doing now, beside the rate and FHFA's prices. Each layer is its FRED series id.
+    # Realtor.com's three: listings for sale, how many had a price cut, and how long
+    # they sat, monthly from July 2016, not seasonally adjusted.
+    "ACTLISCOUUS": ("ACTLISCOUUS", None),
+    "PRIREDCOUUS": ("PRIREDCOUUS", None),
+    "MEDDAYONMARUS": ("MEDDAYONMARUS", None),
+    # BLS's CPI for rent of a primary residence, seasonally adjusted; the change from a
+    # year earlier is rent inflation as the CPI measures it.
+    "CUSR0000SEHA": ("CUSR0000SEHA", None),
+    # The Census Bureau's new residential construction and sales: housing starts at a
+    # seasonally adjusted annual rate (thousands), and months' supply of new houses.
+    "HOUST": ("HOUST", None),
+    "MSACSR": ("MSACSR", None),
 }
 
 
 class FredAdapter(SourceAdapter):
-    """National macro series: the 30-year rate, weekly and as monthly averages."""
+    """National macro series: the 30-year rate, weekly and as monthly averages, and the
+    scoreboard's market series; Realtor.com's days on market for New Jersey."""
 
     source_id: ClassVar[str] = "fred"
     default_vintage: ClassVar[str] = "current"

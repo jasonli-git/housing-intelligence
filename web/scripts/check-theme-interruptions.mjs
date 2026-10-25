@@ -14,7 +14,7 @@ try {
       const t=original(update);
       t.ready.then(()=>{
         if(document.documentElement.hasAttribute('data-theme-reveal')) window.__themeSnapshots.push(
-          [...document.querySelectorAll('.coverage-focused-entry,.coverage-map,.national-backdrop')].map(e=>getComputedStyle(e).viewTransitionName)
+          [...document.querySelectorAll('.coverage-focused-entry,.coverage-map,.national-strip')].map(e=>getComputedStyle(e).viewTransitionName)
         );
       }).catch(()=>{});
       return t;

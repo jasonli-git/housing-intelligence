@@ -66,6 +66,13 @@ export const GROUPS: readonly Group[] = [
       // Milestone 52: inputs to the long-run comparison, `shown: false`; grouped so the
       // catalog stays whole, never listed on a page.
       "fhfa_hpi_county",
+      // Milestone 57: the home page's national scoreboard, `shown: false`.
+      "realtor_active_listings",
+      "realtor_price_reduced_listings",
+      "realtor_price_reduced_share",
+      "cpi_rent_primary_residence",
+      "housing_starts_saar",
+      "new_home_months_supply",
     ],
   },
   {

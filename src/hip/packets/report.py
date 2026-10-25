@@ -154,6 +154,9 @@ def format_value(value: float, unit: str) -> str:
         return f"{value:.2f}"
     if unit == "minutes":
         return f"{value:.1f} min"
+    # Milestone 57: months' supply of new homes.
+    if unit == "months":
+        return f"{value:.1f} months"
     # Milestone 39: net homes added per 1,000 homes standing.
     if unit == "per_1000_homes":
         return f"{value:.1f} per 1,000 homes"
