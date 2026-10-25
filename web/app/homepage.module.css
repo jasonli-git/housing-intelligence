@@ -69,9 +69,14 @@
 .home :global(.home-search-shortcut) { white-space: nowrap; }
 .home :global(.home-search-shortcut kbd) { border: 1px solid var(--border); border-radius: 3px; padding: 0 .3rem; font: inherit; }
 .startLinks { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.1rem; }
-.startLinks a { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; padding: 0 1rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-card); color: var(--text-primary); font: 500 14px/1.4 var(--font-text); text-decoration: none; transition: border-color 160ms ease; }
-.startLinks a span { color: var(--plate-accent); }
-.startLinks a:hover { border-color: var(--plate-accent); }
+/* Filled in each tool's colour with white text. `!important` on the colour only: the
+   site-wide link rules (ui-refinement.css) outrank any class selector here. */
+.startLinks a { --start-fill: var(--plate-ink); display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; padding: 0 1.1rem; border: 0; border-radius: 999px; background: var(--start-fill); color: var(--home-start-text) !important; font: 600 14px/1.4 var(--font-text); text-decoration: none !important; transition: filter 160ms ease; }
+.startLinks a[href="/afford"] { --start-fill: var(--home-start-budget); }
+.startLinks a[href="/compare"] { --start-fill: var(--home-start-compare); }
+.startLinks a span { color: inherit; }
+.startLinks a:hover { filter: brightness(.88); }
+.startLinks a:focus-visible { outline: 2px solid var(--start-fill); outline-offset: 3px; }
 .coverage { min-width: 0; }
 .coverageCaption { display: flex; align-items: baseline; justify-content: flex-end; gap: .7rem; padding-right: .5rem; }
 .eyebrow { margin: 0 0 .4rem; color: var(--text-secondary); font: 500 12px/1.5 var(--font-text); }

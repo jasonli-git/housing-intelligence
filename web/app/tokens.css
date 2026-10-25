@@ -60,6 +60,12 @@
   --text-muted: #6e6e73;
 
   /* Homepage reading surface; scoped onto the homepage by homepage.module.css. */
+  /* The home page's two start buttons, filled in their tools' colours under white text:
+     the budget tool's rust and the compare tool's violet, the deep shade in both themes so
+     white stays legible (5.8:1 and 5.4:1). */
+  --home-start-budget: #a44e34;
+  --home-start-compare: #735e91;
+  --home-start-text: #fff;
   --home-paper: light-dark(#f7f5ef, #111614);
   --home-ink: light-dark(#242b27, #e8ece6);
   /* Ink, not a hue (owner, 2026-10-25): colour on the home page belongs to the data and
