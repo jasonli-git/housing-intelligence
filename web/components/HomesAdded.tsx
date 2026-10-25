@@ -29,6 +29,7 @@ export function HomesAdded({
   net,
   levels,
   portrait = false,
+  concise = false,
   exhibit = false,
 }: {
   name: string;
@@ -39,6 +40,7 @@ export function HomesAdded({
   net: Observation[];
   levels: Pick<PacketLevel, "metric_id" | "value" | "period_start" | "period_end">[];
   portrait?: boolean;
+  concise?: boolean;
   exhibit?: boolean;
 }) {
   const rows = constructionYears({ permitted, completed, demolished, net });
@@ -55,7 +57,7 @@ export function HomesAdded({
   return (
     <section className="section sales homes-added" aria-labelledby="homes-added-heading">
       <div className="section-head">
-        <h2 id="homes-added-heading">{exhibit ? "Are we adding homes—or losing them?" : "Is it adding homes?"}</h2>
+        <h2 id="homes-added-heading">{concise ? "Building and demolition" : exhibit ? "Are we adding homes—or losing them?" : "Is it adding homes?"}</h2>
       </div>
       {exhibit && <ConstructionExhibit rows={rows} level={level} />}
       {portrait && !exhibit && rows.some((r) => r.net !== null) && <figure className="quiet-net-chart">

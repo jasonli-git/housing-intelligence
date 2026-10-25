@@ -30,9 +30,11 @@ export function PlaceSectionNav({ sections }: { sections: PlaceSection[] }) {
     };
     const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(update); };
     update();
+    const followHash = () => { if (location.hash) go(location.hash.slice(1), false); };
+    followHash();
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
-    window.addEventListener("hashchange", schedule);
+    window.addEventListener("hashchange", followHash);
     const resize = new ResizeObserver(schedule);
     if (nav.current) resize.observe(nav.current);
     const bar = document.querySelector(".bar");
@@ -44,27 +46,28 @@ export function PlaceSectionNav({ sections }: { sections: PlaceSection[] }) {
       cancelAnimationFrame(frame);
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
-      window.removeEventListener("hashchange", schedule);
+      window.removeEventListener("hashchange", followHash);
       resize.disconnect();
       observer.disconnect();
     };
   }, [sections]);
 
-  function go(id: string) {
+  function go(id: string, recordHistory = true) {
     const target = document.getElementById(id);
     if (!target) return;
+    if (target instanceof HTMLDetailsElement) target.open = true;
     for (let parent = target.parentElement; parent; parent = parent.parentElement) {
       if (parent instanceof HTMLDetailsElement) parent.open = true;
     }
-    const focus = target.matches("h1,h2,h3,summary") ? target : target.querySelector<HTMLElement>("h1,h2,h3,summary") ?? target;
+    const focus = target instanceof HTMLDetailsElement ? target.querySelector<HTMLElement>(":scope > summary") ?? target : target.matches("h1,h2,h3,summary") ? target : target.querySelector<HTMLElement>("h1,h2,h3,summary") ?? target;
     if (!focus.hasAttribute("tabindex")) focus.tabIndex = -1;
     focus.focus({ preventScroll: true });
     const offset = (document.querySelector(".bar")?.getBoundingClientRect().height ?? 0)
       + (nav.current?.getBoundingClientRect().height ?? 0) + 16;
-    if (location.hash !== `#${id}`) history.pushState(null, "", `#${id}`);
+    if (recordHistory && location.hash !== `#${id}`) history.pushState(null, "", `#${id}`);
     window.scrollTo({ top: Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset),
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
-    setCurrent(id);
+      behavior: !recordHistory || window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+    if (sections.some(section => section.id === id)) setCurrent(id);
   }
 
   function follow(event: MouseEvent<HTMLAnchorElement>, id: string) {

@@ -8,8 +8,8 @@ import { MortgageLending } from "./MortgageLending";
 import { GettingAround } from "./GettingAround";
 import { StateBroadband } from "./StateBroadband";
 
-export function StateContextExhibits({ levels, destinations, community, name, level = "state", topics = ["lending","work","broadband"] }: {
-  levels: PacketLevel[]; destinations: WorkDestinations | null; community: CommunityContext | null; name:string; level?:string; topics?:readonly ("lending"|"work"|"broadband")[];
+export function StateContextExhibits({ levels, destinations, community, name, level = "state", concise = false, topics = ["lending","work","broadband"] }: {
+  levels: PacketLevel[]; destinations: WorkDestinations | null; community: CommunityContext | null; name:string; level?:string; concise?:boolean; topics?:readonly ("lending"|"work"|"broadband")[];
 }) {
   const loans = lending(levels);
   const commute = commutePicture(levels);
@@ -17,7 +17,7 @@ export function StateContextExhibits({ levels, destinations, community, name, le
   const leading = destinations?.destinations.slice(0, 3) ?? [];
   return <>
     {topics.includes("lending") && <LearningExhibit kind="Buyer financing">
-      <section aria-labelledby="state-loans-exhibit"><h2 id="state-loans-exhibit">What did buyers borrow?</h2>
+      <section aria-labelledby="state-loans-exhibit"><h2 id="state-loans-exhibit">{concise ? "Buyer financing" : "What did buyers borrow?"}</h2>
         {loans ? <>
           <dl className="state-exhibit-readouts">
             {loans.loan !== null && <div><dt><Gloss>Median loan</Gloss></dt><dd>{formatValue(loans.loan, "usd")}</dd></div>}
@@ -30,7 +30,7 @@ export function StateContextExhibits({ levels, destinations, community, name, le
       </section>
     </LearningExhibit>}
     {topics.includes("work") && <LearningExhibit kind="Work & transit">
-      <section aria-labelledby="state-work-exhibit"><h2 id="state-work-exhibit">Where does the workday lead?</h2>
+      <section id={concise ? "about-getting-around" : undefined} aria-labelledby="state-work-exhibit"><h2 id="state-work-exhibit">{concise ? "Getting around" : "Where does the workday lead?"}</h2>
         {commute?.minutes !== null && commute?.minutes !== undefined && <p className="state-commute-lead"><strong>{Math.round(commute.minutes)} min</strong> average commute · Census survey estimate{commutePeriod && ` · ${commutePeriod.period_start?.slice(0,4) ?? ""}–${commutePeriod.period_end.slice(0,4)}`}</p>}
         {leading.length > 0 && <ol className="state-job-preview">{leading.map(d => <li key={d.rank}><span>{d.name}</span><b>{(d.share * 100).toFixed(1)}%</b><i aria-hidden="true" style={{ width:`${Math.max(0, Math.min(100, d.share * 100))}%` }} /></li>)}</ol>}
         <p className="sales-note">{destinations ? `${destinations.year} · Top reported destinations for jobs held by residents—not a count of commuters.` : "Work destinations are unavailable in this snapshot."}</p>

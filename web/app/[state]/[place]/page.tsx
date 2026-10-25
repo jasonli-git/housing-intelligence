@@ -619,27 +619,30 @@ export default async function RegionPage({
       <ExhibitGallery>
       <h3 className="exhibit-group-head" id="field-notes">The market</h3>
       {!quiet && homeChecks}
-      <div className="place-exhibit-pair">
       <LearningExhibit kind="The homes that sold">
-      <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} portrait={quiet} />
+      <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} portrait={quiet} concise />
       </LearningExhibit>
+      <IncomePressure data={pressure} concise />
+      <details className="place-evidence-group" id="more-market-evidence">
+        <summary><h3>More market evidence</h3><span>Trends, financing, migration and building</span></summary>
+        <div className="place-evidence-body">
       {persistence && <LearningExhibit kind="Against its own history"><HowUnusual name={name} data={persistence} interactive={quiet} /></LearningExhibit>}
-      </div>
       <div className="place-exhibit-pair">
-      {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Did paychecks keep up with housing?</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
-      <StateContextExhibits topics={["lending"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
+      {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Prices and income</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
+      <StateContextExhibits concise topics={["lending"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
       </div>
-      <IncomePressure data={pressure} />
+
 
       {migration && (
       <QuietDisclosure enabled={false} title="Who is moving here" note="Households moving in and out of the county, from tax returns">
-        <LearningExhibit kind="Arrivals & departures"><WhoIsMoving name={name} data={migration} exhibit={quiet} /></LearningExhibit>
+        <LearningExhibit kind="Arrivals & departures"><WhoIsMoving name={name} data={migration} exhibit={quiet} concise /></LearningExhibit>
       </QuietDisclosure>
       )}
       {construction.some(series=>series.length>0) && <LearningExhibit kind="Building & demolition">
       <HomesAdded
         exhibit={quiet}
         portrait={quiet}
+        concise
         name={name}
         level={region.level}
         permitted={construction[0]}
@@ -655,15 +658,20 @@ export default async function RegionPage({
           <IndexedComparison series={indexedInputs} />
         </section>
       )}
-      <h3 className="exhibit-group-head" id="about-getting-around">Getting around</h3>
-      <StateContextExhibits topics={["work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
+        </div>
+      </details>
+      <StateContextExhibits concise topics={["work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
       <LocalEvidenceCharts kind="work" name={name} level={region.level} levels={packet.levels} series={construction} />
-      <h3 className="exhibit-group-head" id="about-living-there">Living there</h3>
+      <details className="place-evidence-group" id="about-living-there">
+        <summary><h3>Living there</h3><span>Water, flood, services and community</span></summary>
+        <div className="place-evidence-body">
           <LearningExhibit kind="Ground & water"><GroundAndWater compact name={name} levels={packet.levels} water={water} /></LearningExhibit>
           <LearningExhibit kind="Flood context"><FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} /></LearningExhibit>
           <div id="local-property-evidence" className="property-exhibit-anchor"><LearningExhibit kind="Service providers"><Utilities data={utilities} bpuInquiry={bpuInquiry} /></LearningExhibit></div>
-      <StateContextExhibits topics={["broadband"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
+      <StateContextExhibits concise topics={["broadband"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
           <CommunityContext exhibits data={community} level={region.level} supporting hideBroadband={region.level === "county"} />
+        </div>
+      </details>
       </ExhibitGallery>
       </section>
       <div id="place-explore">

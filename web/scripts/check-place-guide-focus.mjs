@@ -69,6 +69,7 @@ try {
       assert.equal(await page.locator('.local-housing-help details').count(),0,'Place help links stay compact');
       assert.equal(await page.locator('.local-help-links').count(),0,'Official help cards live on the help tool, not place pages');
       assert.equal(await page.locator('.bar-help-route[href="/help"]').count(),2,'Housing help remains in shared navigation');
+      await page.locator('.place-evidence-group').evaluateAll(nodes=>nodes.forEach(n=>n.open=true));
       assert(await page.locator('.learning-exhibit').evaluateAll(els=>els.every(el=>{
         const card=el.getBoundingClientRect(), gallery=el.closest('.exhibit-gallery').getBoundingClientRect();
         return card.left>=gallery.left-1 && card.right<=gallery.right+1;

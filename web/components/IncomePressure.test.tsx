@@ -13,3 +13,12 @@ it("separates tenures and shows uncomputed households and uncertainty",()=>{
 it("labels a statewide county sum and omits unsupported geography",()=>{
  const {container,rerender}=render(<IncomePressure data={{...data,basis:'county_sum',areas:21}}/>);expect(screen.getByText(/sum of estimates for all 21 counties/)).toBeTruthy();rerender(<IncomePressure data={null}/>);expect(container.innerHTML).toBe('');
 });
+it("keeps survey limits and interactive band explanations in the concise view",()=>{
+ render(<IncomePressure data={data} concise/>);
+ expect(screen.getByRole('heading',{name:'Housing cost burden'})).toBeTruthy();
+ expect(screen.queryByText('Tap an income band to understand it.')).toBeNull();
+ expect(screen.getByText(/90% margins/)).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:'Up to 30%'}));
+ expect(screen.getByText(/earn at most 30%/)).toBeTruthy();
+ expect(screen.getByText(/HUD rounds counts/)).toBeTruthy();
+});

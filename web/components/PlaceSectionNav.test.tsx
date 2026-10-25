@@ -34,3 +34,19 @@ it("adds a streamed destination and supports anchor navigation", async () => {
   expect(document.activeElement?.id).toBe("sources");
   expect(location.hash).toBe("#sources");
 });
+
+it("opens a collapsed destination itself and focuses its summary", () => {
+  render(<><PlaceSectionNav sections={sections} /><h1 id="overview">Place</h1><details id="sources"><summary>Living there</summary><p>Evidence</p></details></>);
+  fireEvent.click(screen.getByRole('link', { name: 'Sources' }));
+  expect(document.querySelector('details')?.open).toBe(true);
+  expect(document.activeElement).toBe(document.querySelector('details > summary'));
+});
+
+it("reveals an initial deep link inside nested closed evidence without adding history", () => {
+  history.replaceState(null, '', '#source-record');
+  const push = vi.spyOn(history, 'pushState');
+  render(<><PlaceSectionNav sections={sections} /><h1 id="overview">Place</h1><details><summary>Living there</summary><details><summary>Sources</summary><h2 id="source-record">Record</h2></details></details></>);
+  expect([...document.querySelectorAll('details')].every(d => d.open)).toBe(true);
+  expect(document.activeElement?.id).toBe('source-record');
+  expect(push).not.toHaveBeenCalled();
+});

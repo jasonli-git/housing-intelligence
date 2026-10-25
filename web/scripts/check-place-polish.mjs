@@ -13,6 +13,7 @@ try {
       page.on('pageerror', e => errors.push(e.message));
       await page.goto(`${origin}${path}`, { waitUntil: 'networkidle' });
       const gallery = page.locator('.exhibit-gallery');
+      await gallery.locator('.place-evidence-group').evaluateAll(nodes => nodes.forEach(n => n.open = true));
       const frame = await gallery.boundingBox();
       // Tall evidence receives a complete row instead of leaving a blank half-row.
       for (const kind of ['Income & housing pressure', 'Arrivals & departures', 'Building & demolition', 'Ground & water']) {
@@ -32,7 +33,7 @@ try {
       const cards = gallery.locator('.learning-exhibit');
       const surfaces = await cards.evaluateAll(nodes => nodes.map(n => ({ background: getComputedStyle(n).backgroundImage, radius: getComputedStyle(n).borderRadius })));
       assert(surfaces.every(s => s.background === 'none' && s.radius === '12px'));
-      const question = gallery.getByRole('heading', { name: 'What did buyers borrow?', exact: true });
+      const question = gallery.locator('#state-loans-exhibit');
       assert(await question.evaluate(n => parseFloat(getComputedStyle(n).fontSize)) > await page.locator('#field-notes').evaluate(n => parseFloat(getComputedStyle(n).fontSize)));
       const inputs = page.locator('.budget-inputs input');
       const boxes = await inputs.evaluateAll(nodes => nodes.map(n => { const r=n.getBoundingClientRect(); return {y:r.y, height:r.height, width:r.width}; }));

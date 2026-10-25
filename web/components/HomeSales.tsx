@@ -9,8 +9,8 @@ import { monthLabel, periodLabel } from "@/lib/periods";
 import { rankWords } from "@/lib/ranks";
 import { SaleExhibit } from "@/components/ExhibitCharts";
 
-function SaleDetails({ compact, children }: {compact:boolean; children:ReactNode}) {
-  return compact ? <ReaderDetails title="Sale details & assessments">{children}</ReaderDetails> : <>{children}</>;
+function SaleDetails({ compact, concise, children }: {compact:boolean; concise?:boolean; children:ReactNode}) {
+  return compact ? <ReaderDetails title={concise ? "View sale details" : "Sale details & assessments"}>{children}</ReaderDetails> : <>{children}</>;
 }
 
 /**
@@ -31,6 +31,7 @@ export function HomeSales({
   levels,
   showLookup = true,
   portrait = false,
+  concise = false,
 }: {
   name: string;
   level: string;
@@ -39,6 +40,7 @@ export function HomeSales({
     Partial<Pick<PacketLevel, "rank" | "of" | "direction">>)[];
   showLookup?: boolean;
   portrait?: boolean;
+  concise?: boolean;
 }) {
   const find = (id: string) => levels.find((l) => l.metric_id === id);
   const median = find("sr1a_median_sale_price");
@@ -64,9 +66,9 @@ export function HomeSales({
   return (
     <section className="section sales" aria-labelledby="sales-heading">
       <div className="section-head">
-        <h2 id="sales-heading">{portrait ? "What did buyers actually pay?" : "How homes sell here"}</h2>
+        <h2 id="sales-heading">{concise ? "Recent sale prices" : portrait ? "What did buyers actually pay?" : "How homes sell here"}</h2>
       </div>
-      {portrait && <><p className="sales-note">{Math.round(count.value).toLocaleString("en-US")} qualifying one- to four-family sales · {span}</p><SaleExhibit median={median.value} lower={q1?.period_start===median.period_start && q1?.period_end===median.period_end ? q1.value : undefined} upper={q3?.period_start===median.period_start && q3?.period_end===median.period_end ? q3.value : undefined} period={span} /></>}
+      {portrait && <><p className="sales-note">{Math.round(count.value).toLocaleString("en-US")} qualifying one- to four-family sales · {span}</p><SaleExhibit median={median.value} lower={q1?.period_start===median.period_start && q1?.period_end===median.period_end ? q1.value : undefined} upper={q3?.period_start===median.period_start && q3?.period_end===median.period_end ? q3.value : undefined} period={span} concise={concise} /></>}
       {!portrait && <p className="sales-lead">
         {Math.round(count.value).toLocaleString("en-US")} usable sales of one- to four-family
         homes in {name} from {span}, at a median of <b>{usd(median.value)}</b>
@@ -77,7 +79,8 @@ export function HomeSales({
         ) : null}
         .
       </p>}
-      <SaleDetails compact={portrait}>
+      <SaleDetails compact={portrait} concise={concise}>
+      {concise && <p>Only arm’s-length sales the state accepts. Quartiles bracket the middle half of qualifying sales.{level !== "municipality" && " Calculated from qualifying deeds across the area, not an average of town medians."}</p>}
       <dl className="cost-lines sales-lines">
         {toIncome && incomeYears && (
           <div>
@@ -146,12 +149,12 @@ export function HomeSales({
         )}
       </dl>
       </SaleDetails>
-      <p className="sales-note"><Gloss>
+      {concise ? <p className="sales-note">Sold homes only; changes can reflect which homes sold.</p> : <p className="sales-note"><Gloss>
         Only arm’s-length sales the state accepts. This describes sold homes, not every home.
         A higher median may mean pricier homes sold—not that each home gained value.
         {level !== "municipality" &&
           " Calculated from qualifying deeds across the area, not an average of town medians."}
-      </Gloss></p>
+      </Gloss></p>}
       {showLookup && level === "municipality" && (
         <p className="sales-note">
           <Link href={`/tax?town=${geoid}`}>Look up a property in {name}</Link>: its
