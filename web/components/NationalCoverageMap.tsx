@@ -35,9 +35,9 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
     if (!modeChanged.current) return;
     const target = exploring ? entry.current?.querySelector<SVGSVGElement>(".coverage-map")
       ?? entry.current?.querySelector<HTMLButtonElement>(".coverage-search-return")
-      : entry.current?.querySelector<HTMLElement>(preview ? ".coverage-preview-toggle" : ".place-search input");
+      : entry.current?.querySelector<HTMLElement>(".place-search input");
     target?.focus({ preventScroll: true });
-  }, [exploring, preview]);
+  }, [exploring]);
 
   const changeMode = (next: boolean) => {
     if(next===exploring) return;
@@ -160,7 +160,8 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
 
   return <div className={`coverage-atlas${focusedEntry ? " coverage-focused-entry" : ""}${preview ? " coverage-home-preview" : ""}`}>
     <div ref={entry} className="coverage-search-stage" data-search-first={searchFirst} data-exploring={exploring}>
-    {preview && <button type="button" className="coverage-preview-toggle" aria-expanded={exploring} aria-controls="coverage-map-content" onClick={() => changeMode(!exploring)}>{exploring ? "Close map controls" : "Explore map"}<span aria-hidden="true">{exploring ? " −" : " ↗"}</span></button>}
+    {/* `preview`: the home page's map is an illustration only, its explore controls off
+        for now (owner, 2026-10-25); the interactive map is the atlas. */}
     {searchFirst && (!focusedEntry || exploring) && <div className="coverage-mode-switch" data-exploring={exploring} role="group" aria-label="Find a place by search or map">
       <button className="coverage-search-return" type="button" hidden={focusedEntry && !exploring} aria-pressed={!exploring} aria-controls="coverage-place-search" onClick={() => { if (exploring) changeMode(false); }}>{focusedEntry && <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18" /></svg>}{focusedEntry ? "Back to search" : "Search places"}</button>
       {!focusedEntry && <button className="coverage-explore-button" type="button" aria-pressed={exploring} aria-controls="coverage-map-content" onClick={() => { if (!exploring) changeMode(true); }}>Explore map</button>}

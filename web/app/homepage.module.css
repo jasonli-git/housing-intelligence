@@ -84,9 +84,6 @@
 .home :global(.coverage-home-preview .coverage-map) { height: clamp(220px, 23vw, 310px); }
 .home :global(.coverage-home-preview .coverage-map-placeholder) { min-height: clamp(220px, 23vw, 310px); }
 .home :global(.coverage-home-preview .coverage-search-stage) { position: relative; display: flex; flex-direction: column; }
-.home :global(.coverage-preview-toggle) { position: absolute; z-index: 3; left: 0; bottom: .25rem; min-height: 40px; padding: .4rem .9rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-card); color: var(--text-primary); font: 500 13px/1.4 var(--font-text); cursor: pointer; }
-.home :global(.coverage-preview-toggle:hover) { border-color: var(--state-blue); }
-.home :global(.coverage-preview-toggle:focus-visible) { outline: 2px solid var(--state-blue); outline-offset: 3px; }
 .home :global(.coverage-home-preview [data-exploring="false"] .coverage-map-content) { min-height: 0; }
 .home :global(.coverage-home-preview .coverage-availability-glow) { pointer-events: none; }
 .home :global(.coverage-home-preview .coverage-availability-glow circle) { fill: none; stroke: var(--state-blue); stroke-width: 1.5; transform-box: fill-box; transform-origin: center; animation: coverage-radial 5s ease-out infinite; }
@@ -103,7 +100,6 @@
 .home :global(.coverage-home-preview .map-pan-controls) { margin-top: .5rem; }
 .home :global(.coverage-state-preview) { display: none; }
 .home :global(.coverage-home-preview .coverage-map-note) { margin: .5rem 0 0; padding: 0; color: var(--text-muted); font: 11px/1.5 var(--font-text); text-align: right; }
-.home :global(.coverage-home-preview [data-exploring="true"] .coverage-preview-toggle) { position: static; align-self: flex-start; order: -1; margin-bottom: .5rem; }
 
 .home :global(.home-tools) { padding: 2.25rem 0 2.25rem; border-top: 1px solid var(--border); }
 .home :global(.home-tools-heading) { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .4rem 1rem; margin-bottom: 1rem; }
@@ -192,8 +188,7 @@
   .home :global(.home-stories-gateway:is(:hover, :focus-visible) .gallery-fragment) { translate: none; }
 }
 @media print {
-  .home :global(.home-tool-visual), .assurance, .home :global(.coverage-preview-toggle) { display: none; }
-  .home :global(.home-tools-grid a) { display: block; }
+  .home :global(.home-tool-visual), .assurance,   .home :global(.home-tools-grid a) { display: block; }
   .home :global(.home-stories-gallery) { display: none; }
   .home :global(.home-stories-gateway) { min-height: 0; }
   .home :global(.home-stories-copy) { width: 100%; }

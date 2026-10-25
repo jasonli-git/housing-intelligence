@@ -18,21 +18,8 @@ try {
     await map.locator('svg.coverage-map').waitFor();
     assert(await map.locator('svg.coverage-map').isVisible(), 'US map is visible before exploration');
     assert.equal(await map.locator('.coverage-map-content').getAttribute('aria-hidden'), 'true', 'resting map is a decorative preview');
-    await map.getByRole('button', { name: 'Explore map', exact: true }).click();
-    await page.waitForFunction(() => document.activeElement?.classList.contains('coverage-map'));
-    const viewport = map.locator('.coverage-viewport');
-    const beforePan = await viewport.getAttribute('style');
-    await map.getByRole('button', { name: 'Move map right', exact: true }).click();
-    assert.notEqual(await viewport.getAttribute('style'), beforePan, 'expanded map retains non-drag pan controls');
-    const mapAudit = await new AxeBuilder({ page }).include('.coverage-home-preview').analyze();
-    assert.deepEqual(mapAudit.violations.map(v => v.id), [], 'expanded map accessibility');
-    const closeMap = map.getByRole('button', { name: 'Close map controls', exact: true });
-    await closeMap.click();
-    await page.waitForFunction(() => document.activeElement?.classList.contains('coverage-preview-toggle'));
-    assert(await map.locator('svg.coverage-map').isVisible(), 'closing controls preserves the US map');
-    const mapBounds = await map.locator('svg.coverage-map').boundingBox();
-    const toggleBounds = await map.getByRole('button', { name: 'Explore map', exact: true }).boundingBox();
-    assert(toggleBounds.y - mapBounds.y - mapBounds.height <= 16, 'resting map has no empty controls-sized gap');
+    // The home map is an illustration only for now (owner, 2026-10-25): no explore control.
+    assert.equal(await map.getByRole('button').count(), 0, 'no map controls on the home page');
     await page.keyboard.press('/');
     assert.equal(await page.locator('input[name="home-place-query"]').evaluate(el => el === document.activeElement), true, 'slash focuses search outside the map');
     await page.keyboard.press('Escape');
