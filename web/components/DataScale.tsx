@@ -7,19 +7,19 @@ import type {PropertyScale} from "@/lib/propertyScale";
 export function ScaleSignature({stats,properties}:{stats:Scale|null;properties?:PropertyScale|null}) {
   if(!stats) return null;
   const short=(n:number)=>n>=1_000_000?`${(n/1_000_000).toFixed(2)}M`:n.toLocaleString("en-US");
-  return <div className="scale-signature" aria-label="Project scale, rounded counts">
+  return <div className="scale-signature" role="group" aria-label="Project scale, rounded counts">
     <svg className="signature-flow scale-streams" viewBox="0 0 100 16" fill="none" aria-hidden="true"><path pathLength="100" d="M0 4H25L35 8H65L75 4H100M0 12H25L35 8H65L75 12H100" /></svg>
     {properties?<><span><b>{short(properties.parcels)}</b> <Glossed text="parcels" /></span><span><b>{short(properties.transactions)}</b> sales records</span></>:<span><b>{short(stats.observations)}</b> metric records</span>}
     <span><b>{stats.sources}</b> datasets</span>
   </div>;
 }
 
-export function DataScale({stats,properties,compactSummary=false}:{stats:Scale|null;properties?:PropertyScale|null;compactSummary?:boolean}) {
+export function DataScale({stats,properties,compactSummary=false,heading="Behind the picture"}:{stats:Scale|null;properties?:PropertyScale|null;compactSummary?:boolean;heading?:string}) {
   if(!stats) return null;
   const number=(n:number)=>n.toLocaleString("en-US");
   return <section className="data-scale" aria-labelledby="data-scale-heading">
-    <h2 id="data-scale-heading" className="sr-only">Behind the picture</h2>
-    <details className="scale-definitions"><summary aria-label={compactSummary?"About these figures":undefined}>{compactSummary?<span aria-hidden="true">ⓘ</span>:"Behind the picture"}</summary>
+    <h2 id="data-scale-heading" className="sr-only">{heading}</h2>
+    <details className="scale-definitions"><summary aria-label={compactSummary?"About these figures":undefined}>{compactSummary?<span aria-hidden="true">ⓘ</span>:heading}</summary>
     <svg className="scale-tapestry" viewBox="0 0 900 130" fill="none" aria-hidden="true">
       <g className="scale-records">{Array.from({length:72},(_,i)=><rect key={i} x={15+(i%12)*12} y={15+Math.floor(i/12)*16} width="5" height="9" rx="1" />)}</g>
       <g className="scale-streams">{[25,48,71,94].map((y,i)=><path key={y} pathLength="100" d={`M165 ${y} C260 ${y} 295 ${40+i*15} 380 ${40+i*15} H520 C610 ${40+i*15} 650 ${y} 735 ${y}`} />)}</g>

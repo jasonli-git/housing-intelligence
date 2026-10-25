@@ -1,13 +1,9 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { cleanup, render, screen, within } from "@testing-library/react";
+import { afterEach, expect, it } from "vitest";
 import { HOME_TOOLS, HomeTools } from "./HomeTools";
 
-beforeEach(() => {
-  vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
-  vi.stubGlobal("matchMedia", () => ({ matches: true }));
-});
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(cleanup);
 
 it("keeps all six tools directly linked with real text and paired theme previews", () => {
   render(<HomeTools />);
@@ -28,29 +24,4 @@ it("keeps all six tools directly linked with real text and paired theme previews
   expect(within(tools).getAllByText("New Jersey coverage")).toHaveLength(1);
   expect(tools.querySelectorAll(".home-tool-scope")).toHaveLength(0);
   expect(HOME_TOOLS.every((tool) => tool.text.split(/\s+/).length <= 6)).toBe(true);
-});
-
-it("supports rail keyboard navigation and reduced-motion arrow scrolling", () => {
-  render(<HomeTools />);
-  const list = screen.getByRole("list", { name: "Housing tools" });
-  const links = within(list).getAllByRole("link");
-  links[0].focus();
-  fireEvent.keyDown(links[0], { key: "ArrowRight" });
-  expect(document.activeElement).toBe(links[1]);
-  fireEvent.keyDown(links[1], { key: "End" });
-  expect(document.activeElement).toBe(links.at(-1));
-  fireEvent.keyDown(links.at(-1)!, { key: "Home" });
-  expect(document.activeElement).toBe(links[0]);
-  Object.defineProperties(list, { clientWidth: { value: 400 }, scrollWidth: { value: 1600 } });
-  const scrollBy = vi.fn();
-  list.scrollBy = scrollBy;
-  fireEvent.scroll(list);
-  expect(screen.getByRole("button", { name: "Previous tools" }).hasAttribute("disabled")).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: "Next tools" }));
-  expect(scrollBy).toHaveBeenCalledWith({ left: 340, behavior: "instant" });
-  list.scrollLeft = 1200;
-  fireEvent.scroll(list);
-  expect(screen.getByRole("button", { name: "Next tools" }).hasAttribute("disabled")).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: "Previous tools" }));
-  expect(scrollBy).toHaveBeenLastCalledWith({ left: -340, behavior: "instant" });
 });

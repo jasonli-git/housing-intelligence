@@ -33,39 +33,18 @@ try {
     assert(await tools.locator('img').evaluateAll((images) => images.every((img) => img.naturalWidth === 1440 && img.naturalHeight === 900 && getComputedStyle(img).objectFit === 'contain')), 'normal viewport screenshots shown without additional cropping');
     assert(await tools.locator(`.shot-${theme}`).evaluateAll((images) => images.every((img) => getComputedStyle(img).display !== 'none' && img.naturalWidth > 100)));
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'no horizontal page overflow');
-    const track = tools.locator('.home-tools-track');
-    const rail = tools.locator('.home-tools-rail');
-    assert(await track.evaluate((el) => el.scrollWidth > el.clientWidth + 4), 'tools scroll inside their row');
-    assert.equal(await track.locator('li').evaluateAll((items) => new Set(items.map((li) => Math.round(li.getBoundingClientRect().top))).size), 1, 'all tools stay in one row');
-    const next = tools.getByRole('button', { name: 'Next tools' });
-    const previous = tools.getByRole('button', { name: 'Previous tools' });
-    await rail.scrollIntoViewIfNeeded();
-    await page.mouse.move(0, 0);
-    assert.equal(await next.evaluate((el) => getComputedStyle(el).opacity), '0');
-    await rail.hover();
-    assert.equal(await next.evaluate((el) => getComputedStyle(el).opacity), '1');
-    assert.equal(await previous.isDisabled(), true);
-    const arrowBox = await next.boundingBox(), imageBox = await tools.locator('.home-tool-preview').first().boundingBox();
-    assert.equal(Math.round(arrowBox.height), 160);
-    assert(Math.abs(arrowBox.y + arrowBox.height / 2 - imageBox.y - imageBox.height / 2) <= 2, 'controls centered on screenshots');
-    await next.click();
-    await page.waitForFunction(() => document.querySelector('#home-tools-track').scrollLeft > 4 && !document.querySelector('.home-tools-previous').disabled);
-    await previous.click();
-    await page.waitForFunction(() => document.querySelector('#home-tools-track').scrollLeft <= 4);
-    await page.mouse.move(0, 0);
+    const grid = tools.locator('.home-tools-grid');
+    assert(await grid.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), 'all six tools fit without a horizontal rail');
+    const columns = width > 1000 ? 3 : width > 700 ? 2 : 1;
+    assert.equal(await grid.locator('li').evaluateAll((items) => new Set(items.map((li) => Math.round(li.getBoundingClientRect().top))).size), 6 / columns, 'tools reflow into complete rows');
+    assert.equal(await tools.getByRole('button').count(), 0, 'no carousel controls');
     await links.first().focus();
-    await page.keyboard.press('ArrowLeft');
     assert(await links.first().evaluate((el) => el.matches(':focus-visible')));
-    assert.equal(await next.evaluate((el) => getComputedStyle(el).opacity), '1', 'keyboard access reveals controls');
-    await page.keyboard.press('ArrowRight');
-    assert(await links.nth(1).evaluate((el) => document.activeElement === el));
-    await page.keyboard.press('End');
-    assert(await links.last().evaluate((el) => document.activeElement === el));
-    await page.waitForFunction(() => document.querySelector('.home-tools-next').disabled);
-    await page.keyboard.press('Home');
-    assert(await links.first().evaluate((el) => document.activeElement === el));
-    await page.waitForFunction(() => document.querySelector('.home-tools-previous').disabled);
-    await links.first().evaluate((el) => el.blur());
+    for (let index = 1; index < 6; index++) {
+      await page.keyboard.press('Tab');
+      assert(await links.nth(index).evaluate((el) => document.activeElement === el), 'ordinary Tab order reaches every tool');
+    }
+    await links.last().evaluate((el) => el.blur());
     // Milestone 57: the US market strip, eight scoreboard tiles.
     const figures = page.getByRole('region', { name: 'US market' });
     const tiles = figures.locator('.score-tile');
@@ -96,7 +75,7 @@ try {
     await figures.locator('.national-history > summary').click();
     await tools.screenshot({ path: `/tmp/home-tools-${width}-${theme}.png` });
     await figures.screenshot({ path: `/tmp/home-figures-${width}-${theme}.png` });
-    console.log(`${width}/${theme}: tool captures, themes, rail controls, keyboard, US market strip, sources, histories and axe passed`);
+    console.log(`${width}/${theme}: tool captures, themes, responsive grid, keyboard, US market strip, sources, histories and axe passed`);
     assert.deepEqual(errors, []);
     if ((width === 1440 && theme === 'light') || (width === 390 && theme === 'dark')) {
       for (const path of ['/afford', '/guide', '/tax', '/compare', '/help', '/atlas']) {
@@ -109,30 +88,15 @@ try {
     }
     await context.close();
   }
-  const touch = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, reducedMotion: 'reduce' });
-  const page = await touch.newPage();
-  await page.goto(origin);
-  const next = page.getByRole('button', { name: 'Next tools' });
-  await next.scrollIntoViewIfNeeded();
-  assert.equal(await next.evaluate((el) => getComputedStyle(el).opacity), '1', 'touch controls available without hover');
-  await next.tap();
-  await page.waitForFunction(() => document.querySelector('#home-tools-track').scrollLeft > 4);
-  await touch.close();
-  console.log('Tools touch controls visible and tappable without hover');
   const motion = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'no-preference' });
   const motionPage = await motion.newPage();
   await motionPage.goto(origin);
-  const stage = motionPage.locator('.home-tools-rail'), forward = motionPage.getByRole('button', { name: 'Next tools' });
-  await stage.scrollIntoViewIfNeeded();
-  assert((await forward.evaluate((el) => getComputedStyle(el).transitionDuration)).includes('0.18s'));
-  await stage.hover();
-  await motionPage.waitForFunction(() => getComputedStyle(document.querySelector('.home-tools-next')).opacity === '1');
-  await motionPage.mouse.move(0, 0);
-  await motionPage.waitForFunction(() => getComputedStyle(document.querySelector('.home-tools-next')).opacity === '0');
+  const card = motionPage.locator('.home-tools-grid a').first();
+  assert((await card.evaluate((el) => getComputedStyle(el).transitionDuration)).includes('0.16s'));
   await motionPage.emulateMedia({ reducedMotion: 'reduce' });
-  assert.equal(await forward.evaluate((el) => getComputedStyle(el).transitionDuration), '0s');
+  assert.equal(await card.evaluate((el) => getComputedStyle(el).transitionDuration), '0s');
   await motionPage.emulateMedia({ media: 'print' });
   assert.equal(await motionPage.locator('.national-score-trend:visible').count(), 0, 'background-only charts do not alter printed layout');
   await motion.close();
-  console.log('Tools 180ms hover fade and reduced-motion suppression passed');
+  console.log('Tool focus, border transition and reduced-motion suppression passed');
 } finally { await browser.close(); }

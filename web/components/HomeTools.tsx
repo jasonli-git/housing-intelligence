@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ThemedShot } from "./ThemedShot";
-import { ToolRail } from "./ToolRail";
 
 export const HOME_TOOLS = [
   { href: "/afford", shot: "budget-explorer", title: "Budget explorer", text: "Find places within your budget." },
@@ -14,7 +13,7 @@ export const HOME_TOOLS = [
 export function HomeTools() {
   return <section className="home-tools" aria-labelledby="home-tools-heading">
     <header className="home-tools-heading"><h2 id="home-tools-heading">Tools</h2><p id="home-tools-coverage">New Jersey coverage</p></header>
-    <ToolRail>{HOME_TOOLS.map((tool) => <li key={tool.href}>
+    <ul className="home-tools-grid" aria-label="Housing tools">{HOME_TOOLS.map((tool) => <li key={tool.href}>
       <Link href={tool.href} data-tool={tool.href.slice(1)} aria-describedby="home-tools-coverage" prefetch={false}>
         <ThemedShot name={`tools/${tool.shot}`} width={1440} height={900} className="home-tool-preview" />
         <span className="home-tool-copy">
@@ -22,6 +21,6 @@ export function HomeTools() {
           <span className="home-tool-text">{tool.text}</span>
         </span>
       </Link>
-    </li>)}</ToolRail>
+    </li>)}</ul>
   </section>;
 }
