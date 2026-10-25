@@ -11,7 +11,12 @@ it("keeps all six tools directly linked with real text and paired theme previews
   const links = within(tools).getAllByRole("link");
   expect(links.map((a) => a.getAttribute("href"))).toEqual(["/afford", "/guide", "/tax", "/compare", "/help", "/atlas"]);
   for (const [i, link] of links.entries()) {
+    // The name is a tag on the screenshot, hidden from screen readers there, and read
+    // once from the link's hidden text.
     expect(link.textContent).toContain(HOME_TOOLS[i].title);
+    expect(link.querySelector(".home-tool-tag")?.getAttribute("aria-hidden")).toBe("true");
+    expect(link.querySelector(".home-tool-name")?.getAttribute("aria-hidden")).toBe("true");
+    expect(link.querySelector(".visually-hidden")?.textContent).toBe(HOME_TOOLS[i].title);
     expect(link.getAttribute("aria-describedby")).toBe("home-tools-coverage");
     expect(link.textContent).not.toContain("New Jersey");
     expect(link.textContent).toContain(HOME_TOOLS[i].text);
