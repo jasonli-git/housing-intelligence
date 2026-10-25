@@ -6,7 +6,7 @@ const origin = process.env.PLACE_PREVIEW_ORIGIN ?? 'http://localhost:3002';
 const browser = await chromium.launch();
 try {
   for (const path of (process.env.PLACE_PATHS ?? '/nj/princeton,/nj/mercer-county,/nj/zip-07030,/nj/zip-08510,/nj/zip-07311').split(',')) {
-    for (const width of (process.env.PLACE_WIDTHS ?? '1440,768,390,320').split(',').map(Number)) {
+    for (const width of [1440, 768, 390, 320]) {
       const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce', colorScheme: width === 768 ? 'dark' : 'light' });
       const page = await context.newPage();
       const errors = [];
@@ -19,12 +19,12 @@ try {
       assert(await page.getByRole('link', { name: /^Compare .* with other places$/ }).getAttribute('href').then(s => s.startsWith('/compare?places=')));
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${path} ${width} overflow`);
       if (hasCosts) {
-      assert.equal(await cost.locator('.place-payment-layout').count(), 1);
+      const heading = await cost.locator(':scope > .section-head h2').boundingBox();
+      assert(heading.height < 80, 'Cost heading should remain compact');
       const figures = await cost.locator('.cost-cards').boundingBox();
       assert(figures.y < 850, `${path} ${width}: figures too far down (${figures.y})`);
       assert(await cost.locator('.cost-evidence-omissions').isVisible());
-      await cost.locator('.cost-yours > summary').click();
-      const down = cost.locator('.cost-yours select').first();
+      const down = cost.locator(':scope > .section-head select');
       const before = await cost.locator('.cost-figure').first().innerText();
       await down.selectOption('10');
       assert.notEqual(await cost.locator('.cost-figure').first().innerText(), before);

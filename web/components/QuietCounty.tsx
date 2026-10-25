@@ -43,7 +43,7 @@ export function QuietDisclosure({ enabled, title, note, preview, icon, children 
   </details>;
 }
 
-export function QuietProfile({ items, peers = "counties", statewide = false, allMetrics = false, title, sourceNotes }: { items: ProfileItem[]; peers?: string; statewide?: boolean; allMetrics?: boolean; title?: string; sourceNotes?: Record<string, string> }) {
+export function QuietProfile({ items, peers = "counties", statewide = false, allMetrics = false }: { items: ProfileItem[]; peers?: string; statewide?: boolean; allMetrics?: boolean }) {
   if (!items.length) return null;
   const primary = items.filter((item) => ["acs_median_hh_income", "acs_renter_cost_burden", "modiv_median_year_built"].includes(item.metric_id));
   const picked = allMetrics ? items : primary.length ? primary : items.slice(0, 3);
@@ -58,11 +58,10 @@ export function QuietProfile({ items, peers = "counties", statewide = false, all
     <p><strong>{item.value}</strong>{item.margin && <span className="quiet-margin">{item.margin}</span>}</p>
     {item.updated && <UpdatedMark updated={item.updated} />}
     <Term id={item.metric_id} definition={item.definition} why={null}>{item.label}</Term>
-    {sourceNotes?.[item.metric_id] && <small className="profile-source-note">{sourceNotes[item.metric_id]}</small>}
     {item.context && <small>{item.context.words}{item.context.rank && ` · ${item.context.rank.best !== undefined && item.context.rank.worst !== undefined ? `${item.context.rank.best}–${item.context.rank.worst}` : item.context.rank.value} of ${item.context.rank.of} ${peers}`}</small>}
   </article>)}</div>;
-  return <section className={`quiet-profile${statewide ? " quiet-state-profile" : ""}`} aria-label={title ?? (statewide ? "Additional statewide measures" : "Housing profile")}>
-    {title ? <h3 className="quiet-label">{title}</h3> : <span className="quiet-label">{statewide ? "More statewide measures" : "Housing, at a glance"}</span>}
+  return <section className={`quiet-profile${statewide ? " quiet-state-profile" : ""}`} aria-label={statewide ? "Additional statewide measures" : "Housing profile"}>
+    <span className="quiet-label">{statewide ? "More statewide measures" : "Housing, at a glance"}</span>
     {figures(picked, true)}
     {rest.length > 0 && <details className="quiet-profile-more"><summary>{statewide ? "More state measures" : "More about the housing here"} <span aria-hidden="true">↗</span></summary>{figures(rest)}</details>}
   </section>;
