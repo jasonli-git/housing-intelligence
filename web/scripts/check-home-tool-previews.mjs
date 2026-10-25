@@ -53,7 +53,9 @@ try {
     });
     assert.equal(await tools.locator('img').count(), 12);
     assert.equal(await tools.locator('img:visible').count(), 6);
-    assert(await tools.locator('img').evaluateAll((images) => images.every((img) => img.naturalWidth === 1440 && img.naturalHeight === 900 && getComputedStyle(img).objectFit === 'contain')), 'normal viewport screenshots shown without additional cropping');
+    // Each preview shows the top of the tool's first screen, where its title is: the full
+    // 1440×900 capture, cropped from the top left rather than shrunk until unreadable.
+    assert(await tools.locator('img').evaluateAll((images) => images.every((img) => img.naturalWidth === 1440 && img.naturalHeight === 900 && getComputedStyle(img).objectFit === 'cover' && getComputedStyle(img).objectPosition === '0% 0%')), 'previews show the top of each tool');
     assert(await tools.locator(`.shot-${theme}`).evaluateAll((images) => images.every((img) => getComputedStyle(img).display !== 'none' && img.naturalWidth > 100)));
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'no horizontal page overflow');
     const grid = tools.locator('.home-tools-grid');
