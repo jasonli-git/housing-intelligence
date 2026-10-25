@@ -68,7 +68,7 @@ try {
       await page.locator('.planning-preview').first().locator('summary').click();
       assert.equal(await page.locator('.local-housing-help details').count(),0,'Place help links stay compact');
       assert.equal(await page.locator('.local-help-links').count(),0,'Official help cards live on the help tool, not place pages');
-      assert(await page.locator('.local-housing-help a[href="/help"]').isVisible(),'Compact help destination remains discoverable');
+      assert.equal(await page.locator('.bar-help-route[href="/help"]').count(),2,'Housing help remains in shared navigation');
       assert(await page.locator('.learning-exhibit').evaluateAll(els=>{
         const widths=els.filter(el=>getComputedStyle(el).display!=='none').map(el=>el.getBoundingClientRect().width);
         return Math.max(...widths)-Math.min(...widths)<2;
@@ -81,7 +81,8 @@ try {
         const table=el.getBoundingClientRect(), body=el.closest('.reader-details-body').getBoundingClientRect();
         return table.left>=body.left-1 && table.right<=body.right+1;
       }),'Rate table fits its disclosure on desktop and mobile');
-      assert(await page.locator('.place-guide-entry a').isVisible(),'Place-aware guide entry is exposed');
+      assert.equal(await page.locator('.place-next-destinations, .place-guide-entry, .local-housing-help').count(),0,'Duplicate guide and housing-help cards are removed');
+      assert(await page.locator('.quiet-tool-group a[href^="/guide?place="]').isVisible(),'Place-aware guide remains in Make it yours');
       assert(await page.locator('#local-price-history, .who-is-moving, .similar-places, .county-place-directory').evaluateAll(els=>els.every(el=>{
         const frame=el.closest('.learning-exhibit')??el;
         return parseFloat(getComputedStyle(frame).paddingLeft)>=16 && parseFloat(getComputedStyle(frame).paddingRight)>=16;

@@ -566,26 +566,6 @@ export default async function RegionPage({
       </QuietAnchor>
       {!cost && housingContext}
 
-      <section id="place-next-step" className="local-next-step-group cost-next-strip" aria-label="Your next step">
-      <div className="place-next-destinations">
-      <section className="place-guide-entry" id="home-checks-heading" aria-labelledby="place-guide-title">
-        <StepIcon name="guide" />
-        <div><h3 id="place-guide-title">Planning a purchase here?</h3>
-          <p>Buying budget, rent or buy, and checks before an offer.</p>
-          <Link href={`/guide?place=${regionId}`}>Open the buyer’s guide for {name} <span aria-hidden="true">→</span></Link>
-        </div>
-      </section>
-      <section id="housing-assistance" className="local-housing-help" aria-labelledby="local-help-heading">
-        <StepIcon name="listings" />
-        <div>
-        <h3 id="local-help-heading">Find housing help</h3>
-        <p>Affordable homes, vouchers and local housing authorities.</p>
-        <Link href="/help">Explore your options <span aria-hidden="true">→</span></Link>
-        </div>
-      </section>
-      </div>
-      </section>
-
       <section id="place-understand" className="local-understand-group" aria-label="About this place">
       <AbstractField kind="architecture" />
       <h2>About this place</h2>

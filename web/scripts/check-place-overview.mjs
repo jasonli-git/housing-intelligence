@@ -14,6 +14,8 @@ try {
       await page.goto(`${origin}${path}`, { waitUntil: 'networkidle' });
       const nav = page.getByRole('navigation', { name: 'Place sections' });
       const cost = page.locator('.place-cost-overview');
+      assert.equal(await page.locator('.place-next-destinations, .place-guide-entry, .local-housing-help').count(), 0);
+      assert(await page.getByRole('heading', { name: 'About this place', exact: true }).isVisible());
       const hasCosts = await cost.count() > 0;
       assert.equal(hasCosts, !path.endsWith("zip-07311"));
       assert(await page.getByRole('link', { name: /^Compare .* with other places$/ }).getAttribute('href').then(s => s.startsWith('/compare?places=')));
