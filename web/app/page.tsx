@@ -44,22 +44,25 @@ export default async function HousingLandingPage() {
           </header>
           <h2 id="home-find-heading">Find a place</h2>
           <HomeSearch />
+          {/* What the platform holds, as proof of "Free" rather than a section of its own. */}
+          <div className={styles.evidence}>
+            <ScaleSignature stats={scale} properties={properties} />
+            <DataScale stats={scale} properties={properties} heading="About these figures" />
+          </div>
         </div>
         <aside className={styles.coverage} aria-labelledby="home-coverage-heading">
-          <div className={styles.coverageCaption}>
-            <p className={styles.eyebrow}>Detailed coverage</p>
-            <h2 id="home-coverage-heading">{COVERED_STATES.map((state, index) => <span key={state.code}>{index > 0 && ", "}<Link href={state.path}>{state.name} <span aria-hidden="true">↗</span></Link></span>)}</h2>
-          </div>
           <div className={styles.map}><NationalCoverageMap preview focusedEntry /></div>
+          {/* One caption for the map: where detailed coverage is, and what the map is not. */}
+          <p className={styles.coverageCaption}>
+            <span id="home-coverage-heading">Detailed coverage: {COVERED_STATES.map((state, index) => <span key={state.code}>{index > 0 && ", "}<Link href={state.path}>{state.name}&nbsp;<span aria-hidden="true">↗</span></Link></span>)}</span>
+            <span aria-hidden="true"> · </span>
+            <span>A coverage map, not prices. Alaska and Hawaii not shown.</span>
+          </p>
         </aside>
       </section>
       <HomeTools />
       <HomeStories />
       <NationalScoreboard tiles={tiles} homePrice={latestPrice(series.newHomePrice)} />
-      <div className={styles.evidence}>
-        <ScaleSignature stats={scale} properties={properties} />
-        <DataScale stats={scale} properties={properties} heading="About these figures" />
-      </div>
     </main>
   </div>;
 }
