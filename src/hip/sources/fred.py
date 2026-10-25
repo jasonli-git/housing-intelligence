@@ -52,6 +52,9 @@ SERIES: dict[str, tuple[str, str | None]] = {
     # seasonally adjusted annual rate (thousands), and months' supply of new houses.
     "HOUST": ("HOUST", None),
     "MSACSR": ("MSACSR", None),
+    # The Census Bureau's median sale price of new houses, quarterly: what the scoreboard
+    # prices a mortgage on. The all-homes median is NAR's, whose data is copyrighted.
+    "MSPUS": ("MSPUS", None),
 }
 
 

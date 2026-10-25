@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { annualChanges, compact, marketSummary, scoreboard, type ScoreSeries } from "./nationalScoreboard";
+import { annualChanges, compact, latestPrice, marketTakeaways, monthlyPayment, oneIn, scoreboard, type ScoreSeries } from "./nationalScoreboard";
 
 const month = (date: string, value: number) => ({ period_start: `${date}-01`, period_end: `${date}-28`, value });
 const day = (date: string, value: number) => ({ period_start: date, period_end: date, value });
@@ -56,26 +56,42 @@ describe("the national scoreboard", () => {
     expect(compact(61)).toBe("61");
   });
 
-  it("summarises what moved in the tiles' own figures, and leaves out what cannot be compared", () => {
+  it("says what the figures mean for buyers and renters, in everyday terms", () => {
     const tiles = scoreboard({
       ...empty,
       rate: { metricId: "mortgage_rate_30y_weekly", readings: [day("2025-10-23", 6.19), day("2026-10-22", 7.32)] },
+      hpi: [month("2024-07", 100), month("2025-07", 102.7), month("2026-07", 105.37)],
       listings: [month("2025-09", 1_102_006), month("2026-09", 1_161_615)],
       daysOnMarket: [month("2025-09", 62), month("2026-09", 61)],
+      priceCutShare: [month("2025-09", 35.1), month("2026-09", 35.0)],
       starts: [month("2025-09", 1_319_000), month("2026-09", 1_221_000)],
       newHomeSupply: [month("2025-08", 8.5), month("2026-08", 8.5)],
       rentCpi: [month("2024-09", 100), month("2025-09", 103.4), month("2026-09", 106.3)],
     });
-    expect(marketSummary(tiles)).toEqual([
-      "The 30-year mortgage rate is 7.32%, 1.13 points higher than a year ago.",
-      "More homes are for sale than a year ago (+5.4%), and they sell 1 day faster (61 days on the market).",
-      "Builders started 7.4% fewer homes than a year ago, with 8.5 months' supply of new homes for sale.",
-      "Rents are rising 2.8% a year, 0.6 points slower than a year ago.",
+    expect(marketTakeaways(tiles, 410_700)).toEqual([
+      { id: "rate", headline: "Borrowing costs more", detail: "A 30-year rate of 7.32%, against 6.19%: about $250 more a month on a typical new home ($410,700, 20% down)." },
+      { id: "choice", headline: "More homes to choose from", detail: "5.4% more listings than a year ago; homes sell in 61 days, and about 1 in 3 has had a price cut." },
+      { id: "prices", headline: "Prices still rising", detail: "Up 2.6% over the past year, down from 2.7% the year before." },
+      { id: "rent", headline: "Rent increases easing", detail: "Rents rose 2.8% over the past year, down from 3.4%." },
+      { id: "building", headline: "Fewer homes being built", detail: "7.4% fewer starts than a year ago; unsold new homes would last 8.5 months (about 6 is balanced)." },
     ]);
-    expect(marketSummary(scoreboard({ ...empty, listings: [month("2026-09", 1_161_615)] }))).toEqual([]);
+    expect(marketTakeaways(tiles)[0].detail).toBe("A 30-year rate of 7.32%, against 6.19%.");
+    expect(marketTakeaways(scoreboard({ ...empty, listings: [month("2026-09", 1_161_615)] }))).toEqual([]);
+    const alike = marketTakeaways(scoreboard({ ...empty, hpi: [month("2024-07", 100), month("2025-07", 102.64), month("2026-07", 105.29)] }));
+    expect(alike[0].detail).toBe("Up 2.6% over the past year, about as fast as the year before.");
   });
+
+  it("prices a rate change as a monthly payment", () => {
+    expect(Math.round(monthlyPayment(400_000, 7.32))).toBe(2748);
+    expect(Math.round(monthlyPayment(400_000, 6.19))).toBe(2447);
+    expect(latestPrice([month("2026-01", 408_500), month("2026-04", 410_700)])).toBe(410_700);
+    expect(latestPrice(undefined)).toBeNull();
+    expect(oneIn(35)).toBe("about 1 in 3");
+    expect(oneIn(12)).toBe("about 1 in 8");
+  });
+
   it("never explains or predicts", () => {
     const tiles = scoreboard({ ...empty, rate: { metricId: "mortgage_rate_30y", readings: [month("2025-09", 6), month("2026-09", 7)] }, starts: [month("2025-09", 1), month("2026-09", 2)] });
-    for (const s of marketSummary(tiles)) expect(s).not.toMatch(/because|due to|driven|will|expect|likely/i);
+    for (const t of marketTakeaways(tiles)) expect(`${t.headline} ${t.detail}`).not.toMatch(/because|due to|driven|will|expect|likely/i);
   });
 });

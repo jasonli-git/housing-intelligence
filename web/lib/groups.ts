@@ -73,6 +73,7 @@ export const GROUPS: readonly Group[] = [
       "cpi_rent_primary_residence",
       "housing_starts_saar",
       "new_home_months_supply",
+      "new_home_median_sale_price",
     ],
   },
   {

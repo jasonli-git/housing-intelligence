@@ -85,6 +85,7 @@ def test_what_survives_each_use_today() -> None:
             "cpi_rent_primary_residence",
             "housing_starts_saar",
             "new_home_months_supply",
+            "new_home_median_sale_price",
         ]
     )
     assert restricted == {"ads": expected, "paid": expected}

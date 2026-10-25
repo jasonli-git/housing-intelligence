@@ -65,6 +65,8 @@ VALUE_BOUNDS = {
     "cpi_rent_primary_residence": (10.0, 2_000.0),
     "housing_starts_saar": (100_000.0, 5_000_000.0),
     "new_home_months_supply": (0.5, 30.0),
+    # $17,000 in 1963 to about $440,000 at its peak.
+    "new_home_median_sale_price": (10_000.0, 2_000_000.0),
     # Milestone 48: HMDA's medians and FHA's limit. Rates as reported by lenders; a
     # loan amount is HMDA's rounded midpoint; the limit sits between HUD's national floor
     # and ceiling, with room for either to move.

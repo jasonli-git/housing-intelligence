@@ -17,11 +17,10 @@ optional AI layer only explains figures that were already computed.
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** A US market scoreboard on the home page: eight tiles from the mortgage
-> rate to new-home supply, each against a year earlier (Milestone 57, #444); the home
-> page's tools shown as pictures of themselves (#442); 37 visual stories, nine new, with
-> four new sources (#438, #439); the raw archive lives in R2, its working copy on the Mac
-> down from 5.4GB to 261MB (Milestone 56, #437).
+> **Latest.** A US market scoreboard on the home page (#444-#446): eight
+> tiles from the mortgage rate to new-home supply, each against a year earlier and named
+> by its kind of figure, with five plain-English takeaways, such as what this year's rate
+> costs a month on a typical new home.
 >
 > **Next.** Clearing TODO and the open Director Notes; then the hosting move for a second
 > state, on hold until they are cleared. See [ROADMAP.md](docs/ROADMAP.md) and

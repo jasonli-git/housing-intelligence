@@ -814,7 +814,7 @@ function nationalRateSeries(metricId: string): Promise<Observation[] | null> {
 /** The home page's national scoreboard (Milestone 57): every series it reads, cached. */
 export async function nationalScoreSeries(rateMetricId?: string): Promise<ScoreSeries> {
   const read = async (id: string) => (await nationalRateSeries(id)) ?? [];
-  const [rate, hpi, listings, priceCutShare, daysOnMarket, rentCpi, starts, newHomeSupply] = await Promise.all([
+  const [rate, hpi, listings, priceCutShare, daysOnMarket, rentCpi, starts, newHomeSupply, newHomePrice] = await Promise.all([
     rateMetricId ? read(rateMetricId) : Promise.resolve([]),
     read("fhfa_hpi_us_monthly"),
     read("realtor_active_listings"),
@@ -823,10 +823,11 @@ export async function nationalScoreSeries(rateMetricId?: string): Promise<ScoreS
     read("cpi_rent_primary_residence"),
     read("housing_starts_saar"),
     read("new_home_months_supply"),
+    read("new_home_median_sale_price"),
   ]);
   return {
     rate: rateMetricId ? { metricId: rateMetricId, readings: rate } : null,
-    hpi, listings, priceCutShare, daysOnMarket, rentCpi, starts, newHomeSupply,
+    hpi, listings, priceCutShare, daysOnMarket, rentCpi, starts, newHomeSupply, newHomePrice,
   };
 }
 

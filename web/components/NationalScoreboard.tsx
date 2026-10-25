@@ -1,6 +1,6 @@
 import { Term } from "@/components/Term";
 import { NationalTrend, NationalTrendBackdrop } from "@/components/NationalTrend";
-import { marketSummary, monthLabel, type ScoreTile } from "@/lib/nationalScoreboard";
+import { marketTakeaways, monthLabel, type ScoreTile } from "@/lib/nationalScoreboard";
 import { KIND_LABELS, KIND_MEANINGS, kindOf, type RecordType } from "@/lib/kinds";
 
 // The kind of each figure (SPEC principle 11), shortened to fit a tile; the full label
@@ -18,16 +18,22 @@ const ARROW = { up: "▲", down: "▼", flat: "■" } as const;
  * Colour says whether the change makes buying or renting easier, and the tile's sentence
  * says so in words, so neither arrow nor colour is the only way to read it.
  */
-export function NationalScoreboard({ tiles }: { tiles: ScoreTile[] }) {
+export function NationalScoreboard({ tiles, homePrice = null }: { tiles: ScoreTile[]; homePrice?: number | null }) {
   if (!tiles.length) return null;
   const newest = tiles.map((t) => t.trend.at(-1)?.date ?? "").sort().at(-1);
-  const summary = marketSummary(tiles);
+  const takeaways = marketTakeaways(tiles, homePrice);
   return <section className="national-strip" aria-labelledby="national-strip-heading">
     <header className="national-strip-head">
       <h2 id="national-strip-heading"><span className="national-strip-live" aria-hidden="true" />US market</h2>
       <p>{newest ? <>Latest through {monthLabel(newest)} · </> : null}vs. a year earlier · <span className="tone-key tone-easier">easier</span> <span className="tone-key tone-harder">harder</span> for buyers and renters</p>
     </header>
-    {summary.length > 0 && <p className="national-strip-summary">{summary.join(" ")}</p>}
+    {/* One open at a time (`name`): each a headline pill whose figures open beneath it. */}
+    {takeaways.length > 0 && <div className="national-takeaways" role="group" aria-label="What this means for buyers and renters">
+      {takeaways.map((t) => <details key={t.id} name="us-takeaways" className="takeaway" data-takeaway={t.id}>
+        <summary><span>{t.headline}</span><span className="takeaway-sign" aria-hidden="true" /></summary>
+        <p>{t.detail}</p>
+      </details>)}
+    </div>}
     <ul className="national-strip-track" aria-label="US housing figures">
       {tiles.map((t) => <li key={t.id} className="score-tile" data-tile={t.id} data-tone={t.tone}>
         <p className="visually-hidden">{t.summary}</p>

@@ -119,3 +119,20 @@ join read_parquet('{{ var("parquet_dir") }}/fred/current/*.parquet') r
 where a.series_id = 'ACTLISCOUUS'
   and try_cast(a.value as double) > 0
   and try_cast(r.value as double) is not null
+
+union all
+
+-- The median sale price of new houses (Census Bureau, quarterly): dated to its quarter.
+select
+    'fred' as source_id,
+    'new_home_median_sale_price' as metric_id,
+    'US' as geoid,
+    'nation' as level,
+    date as period_start,
+    last_day(date + interval 2 month) as period_end,
+    try_cast(value as double) as value,
+    'national' as match_method,
+    series_id as release_layer,
+    'current' as release_vintage
+from read_parquet('{{ var("parquet_dir") }}/fred/current/*.parquet')
+where series_id = 'MSPUS' and try_cast(value as double) is not null

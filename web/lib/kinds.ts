@@ -220,6 +220,7 @@ export const KINDS: Record<string, RecordType> = {
   cpi_rent_primary_residence: "survey",
   housing_starts_saar: "survey",
   new_home_months_supply: "survey",
+  new_home_median_sale_price: "survey",
   wikidata_incorporated_year: "administrative",
   wikidata_notable_births: "administrative",
   nclimgrid_days_over_90: "modelled",

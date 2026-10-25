@@ -33,6 +33,9 @@ export type ScoreTile = {
   trend: TrendPoint[];
   /** How the history's scale is written. */
   unit: "percent" | "count" | "days" | "months" | "index";
+  /** The figure shown, and the same figure a year earlier, for the plain-English summary. */
+  now: number;
+  then: number | null;
 };
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -139,11 +142,11 @@ type Spec = {
   easier: Easier;
 };
 
-function tile(spec: Spec, value: string, delta: { text: string; n: number; flatBelow: number } | null, period: string, trend: TrendPoint[]): ScoreTile {
+function tile(spec: Spec, value: string, delta: { text: string; n: number; flatBelow: number } | null, period: string, trend: TrendPoint[], now: number, then: number | null): ScoreTile {
   const { direction, tone } = delta ? toneOf(delta.n, spec.easier, delta.flatBelow) : { direction: null, tone: "neutral" as Tone };
   return {
     id: spec.id, metricId: spec.metricId, label: spec.label, value, period, trend, unit: spec.unit, source: spec.source,
-    change: delta?.text ?? null, direction, tone,
+    change: delta?.text ?? null, direction, tone, now, then,
     summary: sentence(spec.label, value, delta?.text ?? null, tone, period),
   };
 }
@@ -159,6 +162,8 @@ export type ScoreSeries = {
   rentCpi: readonly Reading[];
   starts: readonly Reading[];
   newHomeSupply: readonly Reading[];
+  /** Not a tile: the price the summary prices a mortgage on. */
+  newHomePrice?: readonly Reading[];
 };
 
 /** Up to eight tiles, in reading order; a series with no readings drops its tile. */
@@ -178,6 +183,7 @@ export function scoreboard(series: ScoreSeries): ScoreTile[] {
         d === null ? null : { text: `${signed(d, 2)} pts`, n: d, flatBelow: 0.005 },
         weekly ? weekLabel(latest.period_start) : monthLabel(latest.period_start),
         trendOf(r, weekly),
+        latest.value, pair?.[0].value ?? null,
       ));
     }
   }
@@ -190,7 +196,7 @@ export function scoreboard(series: ScoreSeries): ScoreTile[] {
     const d = pair ? latest.value - pair[0].value : null;
     tiles.push(tile(spec, `${signed(latest.value, 1)}%`,
       d === null ? null : { text: `${signed(d, 1)} pts`, n: d, flatBelow: 0.05 },
-      monthLabel(latest.period_start), trendOf(yoy)));
+      monthLabel(latest.period_start), trendOf(yoy), latest.value, pair?.[0].value ?? null));
   };
 
   percentChange({ id: "prices", metricId: "fhfa_hpi_us_monthly", label: "Home prices y/y", unit: "percent", easier: "down", source: { name: "FHFA", href: "https://www.fhfa.gov/data/hpi/datasets?tab=monthly-data" } }, series.hpi);
@@ -200,7 +206,7 @@ export function scoreboard(series: ScoreSeries): ScoreTile[] {
     const latest = r.at(-1);
     if (!latest) return;
     const pair = sameMonthLastYear(r);
-    tiles.push(tile(spec, show(latest.value), pair ? change(latest.value, pair[0].value) : null, monthLabel(latest.period_start), trendOf(r)));
+    tiles.push(tile(spec, show(latest.value), pair ? change(latest.value, pair[0].value) : null, monthLabel(latest.period_start), trendOf(r), latest.value, pair?.[0].value ?? null));
   };
   const pct = (now: number, then: number) => {
     const n = then > 0 ? (now / then - 1) * 100 : 0;
@@ -227,50 +233,84 @@ export function scoreboard(series: ScoreSeries): ScoreTile[] {
   return tiles;
 }
 
+/** The monthly principal and interest on a 30-year fixed loan, in dollars. */
+export function monthlyPayment(loan: number, ratePercent: number): number {
+  const r = ratePercent / 100 / 12;
+  return r === 0 ? loan / 360 : (loan * r) / (1 - (1 + r) ** -360);
+}
+
+/** 35.0 → "about 1 in 3"; 12 → "about 1 in 8". */
+export function oneIn(share: number): string {
+  return `about 1 in ${Math.max(1, Math.round(100 / share))}`;
+}
+
+/** The down payment the summary assumes, as a share of the price. */
+const DOWN = 0.2;
+
+/** The latest median new-home price, for pricing a mortgage. */
+export function latestPrice(readings: readonly Reading[] | undefined): number | null {
+  return sorted(readings ?? []).at(-1)?.value ?? null;
+}
+
+export type Takeaway = { id: string; headline: string; detail: string };
+
 /**
- * Two or three plain sentences the tiles support, written by rule rather than by a model
- * (Milestone 57): what changed from a year earlier, in the tiles' own figures. Says only
- * what moved and by how much, never why, and never what comes next, so it needs none of
- * the reading pipeline's gates. A sentence whose tiles lack a year-earlier change is left
- * out rather than written around the gap.
+ * What the tiles mean for someone buying or renting, in plain words (Milestone 57): a
+ * headline saying which way things moved for them, and one short line of figures in
+ * everyday terms — dollars a month, "about 1 in 3". Written by rule, not a model: it says
+ * what moved, never why or what comes next. A takeaway whose tiles have no year-earlier
+ * figure is left out rather than written around the gap.
  */
-export function marketSummary(tiles: readonly ScoreTile[]): string[] {
+export function marketTakeaways(tiles: readonly ScoreTile[], homePrice: number | null = null): Takeaway[] {
   const by = new Map(tiles.map((t) => [t.id, t]));
-  const moved = (t: ScoreTile | undefined): t is ScoreTile & { change: string } => Boolean(t?.change);
-  const amount = (t: ScoreTile & { change: string }) => t.change.replace(/^[+−]/, "").replace(/ pts$/, " points");
-  const sentences: string[] = [];
+  const compared = (t: ScoreTile | undefined): t is ScoreTile & { then: number } => t?.then != null && t.direction !== null;
+  const bare = (t: ScoreTile) => t.change!.replace(/^[+\u2212]/, "");
+  const dollars = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+  const out: Takeaway[] = [];
 
   const rate = by.get("rate");
-  if (moved(rate)) {
-    sentences.push(rate.direction === "flat"
-      ? `The 30-year mortgage rate is ${rate.value}, where it was a year ago.`
-      : `The 30-year mortgage rate is ${rate.value}, ${amount(rate)} ${rate.direction === "up" ? "higher" : "lower"} than a year ago.`);
+  if (compared(rate)) {
+    const headline = rate.direction === "up" ? "Borrowing costs more" : rate.direction === "down" ? "Borrowing costs less" : "Borrowing costs about the same";
+    let effect = "";
+    if (homePrice) {
+      const loan = homePrice * (1 - DOWN);
+      const diff = Math.round((monthlyPayment(loan, rate.now) - monthlyPayment(loan, rate.then)) / 10) * 10;
+      effect = diff === 0 ? `: about the same payment on a typical new home (${dollars(homePrice)}, 20% down)`
+        : `: about ${dollars(Math.abs(diff))} ${diff > 0 ? "more" : "less"} a month on a typical new home (${dollars(homePrice)}, 20% down)`;
+    }
+    out.push({ id: "rate", headline, detail: `A 30-year rate of ${rate.now.toFixed(2)}%, against ${rate.then.toFixed(2)}%${effect}.` });
   }
 
-  const listings = by.get("listings"), days = by.get("days");
-  if (moved(listings)) {
-    const more = listings.direction === "up" ? "More" : listings.direction === "down" ? "Fewer" : "About as many";
-    const pct = listings.direction === "flat" ? "" : ` (${listings.change})`;
-    const sit = moved(days)
-      ? days.direction === "flat" ? `, and they sell about as fast (${days.value} on the market)`
-        : `, and they sell ${amount(days)} ${days.direction === "up" ? "slower" : "faster"} (${days.value} on the market)`
-      : "";
-    sentences.push(`${more} homes are for sale than a year ago${pct}${sit}.`);
+  const listings = by.get("listings"), days = by.get("days"), cuts = by.get("cuts");
+  if (compared(listings)) {
+    const headline = listings.direction === "up" ? "More homes to choose from" : listings.direction === "down" ? "Fewer homes to choose from" : "About as many homes to choose from";
+    const count = listings.direction === "flat" ? "About as many listings as a year ago" : `${bare(listings)} ${listings.direction === "up" ? "more" : "fewer"} listings than a year ago`;
+    const rest = [days && `homes sell in ${Math.round(days.now)} days`, cuts && `${oneIn(cuts.now)} has had a price cut`].filter(Boolean).join(", and ");
+    out.push({ id: "choice", headline, detail: rest ? `${count}; ${rest}.` : `${count}.` });
   }
 
-  const starts = by.get("starts"), supply = by.get("supply");
-  if (moved(starts)) {
-    const verb = starts.direction === "up" ? `started ${amount(starts)} more homes` : starts.direction === "down" ? `started ${amount(starts)} fewer homes` : "started about as many homes";
-    const stock = supply ? `, with ${supply.value.replace(" mo", " months")}' supply of new homes for sale` : "";
-    sentences.push(`Builders ${verb} than a year ago${stock}.`);
+  const prices = by.get("prices");
+  if (prices) {
+    const rising = prices.now > 0;
+    // Compared as the reader sees them: two paces that round alike are "about as fast".
+    const same = compared(prices) && prices.now.toFixed(1) === prices.then.toFixed(1);
+    const pace = compared(prices) ? same ? ", about as fast as the year before" : `, ${prices.now > prices.then ? "up" : "down"} from ${prices.then.toFixed(1)}% the year before` : "";
+    out.push({ id: "prices", headline: rising ? "Prices still rising" : "Prices falling", detail: `${rising ? "Up" : "Down"} ${Math.abs(prices.now).toFixed(1)}% over the past year${pace}.` });
   }
 
   const rent = by.get("rent");
-  if (moved(rent)) {
-    const pace = rent.direction === "down" ? "slower" : rent.direction === "up" ? "faster" : "the same pace";
-    sentences.push(rent.direction === "flat"
-      ? `Rents are rising ${rent.value.replace(/^\+/, "")} a year, at the same pace as a year ago.`
-      : `Rents are rising ${rent.value.replace(/^\+/, "")} a year, ${amount(rent)} ${pace} than a year ago.`);
+  if (compared(rent)) {
+    const steady = rent.now.toFixed(1) === rent.then.toFixed(1);
+    const headline = steady ? "Rent increases steady" : rent.now < rent.then ? "Rent increases easing" : "Rent increases picking up";
+    out.push({ id: "rent", headline, detail: `Rents rose ${rent.now.toFixed(1)}% over the past year${steady ? ", as they did the year before" : `, ${rent.now < rent.then ? "down" : "up"} from ${rent.then.toFixed(1)}%`}.` });
   }
-  return sentences;
+
+  const starts = by.get("starts"), supply = by.get("supply");
+  if (compared(starts)) {
+    const headline = starts.direction === "down" ? "Fewer homes being built" : starts.direction === "up" ? "More homes being built" : "About as many homes being built";
+    const change = starts.direction === "flat" ? "About as many starts as a year ago" : `${bare(starts)} ${starts.direction === "up" ? "more" : "fewer"} starts than a year ago`;
+    const stock = supply ? `; unsold new homes would last ${supply.now.toFixed(1)} months (about 6 is balanced)` : "";
+    out.push({ id: "building", headline, detail: `${change}${stock}.` });
+  }
+  return out;
 }

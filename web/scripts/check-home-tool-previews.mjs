@@ -79,12 +79,21 @@ try {
     if (width > 1180) assert(await tiles.evaluateAll((els) => els.every((el) => Math.abs(el.getBoundingClientRect().top - els[0].getBoundingClientRect().top) < 1)), 'one row on wide screens');
     else assert(await figures.locator('.national-strip-track').evaluate((el) => el.scrollWidth > el.clientWidth && getComputedStyle(el).overflowX === 'auto'), 'scrolls as a ticker on narrow screens');
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'no page-level horizontal scroll');
-    await figures.locator('summary').click();
+    // Takeaways: five pills, closed by default, one open at a time.
+    const pills = figures.locator('details.takeaway');
+    assert.equal(await pills.count(), 5, 'five takeaways');
+    assert.equal(await figures.locator('details.takeaway[open]').count(), 0, 'takeaways closed by default');
+    await pills.nth(0).locator('summary').click();
+    await pills.nth(1).locator('summary').click();
+    assert.equal(await figures.locator('details.takeaway[open]').count(), 1, 'one takeaway open at a time');
+    assert((await pills.nth(1).locator('p').innerText()).length > 20, 'an open takeaway shows its figures');
+    await pills.nth(1).locator('summary').click();
+    await figures.locator('.national-history > summary').click();
     assert.equal(await figures.locator('svg[role="img"]:visible').count(), 8, 'every history opens');
     assert((await figures.innerText()).includes('Historical figures, not forecasts.'));
     const audit = await new AxeBuilder({ page }).include('.home-tools').include('.national-strip').analyze();
     assert.deepEqual(audit.violations.map((v) => v.id), []);
-    await figures.locator('summary').click();
+    await figures.locator('.national-history > summary').click();
     await tools.screenshot({ path: `/tmp/home-tools-${width}-${theme}.png` });
     await figures.screenshot({ path: `/tmp/home-figures-${width}-${theme}.png` });
     console.log(`${width}/${theme}: tool captures, themes, rail controls, keyboard, US market strip, sources, histories and axe passed`);

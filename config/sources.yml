@@ -686,9 +686,10 @@ sources:
         cannot vouch for the data or analyses derived from these data after the data have
         been retrieved from BLS.gov.
       - >-
-        Housing starts and new-home supply: U.S. Census Bureau and U.S. Department of
-        Housing and Urban Development, New Privately-Owned Housing Units Started [HOUST]
-        and Monthly Supply of New Houses [MSACSR], retrieved from FRED.
+        Housing starts, new-home supply and new-home prices: U.S. Census Bureau and U.S.
+        Department of Housing and Urban Development, New Privately-Owned Housing Units
+        Started [HOUST], Monthly Supply of New Houses [MSACSR] and Median Sales Price of
+        New Houses Sold [MSPUS], retrieved from FRED.
     url: https://api.stlouisfed.org/fred
     homepage: https://fred.stlouisfed.org/
     cadence: monthly

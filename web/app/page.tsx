@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { NationalCoverageMap } from "@/components/NationalCoverageMap";
 import { Masthead } from "@/components/Masthead";
 import { api, regionsWithData, nationalMortgageRate, nationalScoreSeries } from "@/lib/api";
-import { scoreboard } from "@/lib/nationalScoreboard";
+import { latestPrice, scoreboard } from "@/lib/nationalScoreboard";
 import { NationalScoreboard } from "@/components/NationalScoreboard";
 import { dataScale } from "@/lib/dataScale";
 import { propertyScale } from "@/lib/propertyScale";
@@ -29,7 +29,8 @@ export const metadata: Metadata = pageMetadata({
 
 export default async function HousingLandingPage() {
   const rate = await nationalMortgageRate();
-  const tiles = scoreboard(await nationalScoreSeries(rate?.metric_id));
+  const series = await nationalScoreSeries(rate?.metric_id);
+  const tiles = scoreboard(series);
   const [metrics,sources,places] = await Promise.all([api.metrics(),api.sources(),regionsWithData()]);
   const scale = dataScale(metrics,sources,places);
   const properties = propertyScale();
@@ -48,7 +49,7 @@ export default async function HousingLandingPage() {
           <DataScale stats={scale} properties={properties} compactSummary />
         </div>} />
       </section>
-      <NationalScoreboard tiles={tiles} />
+      <NationalScoreboard tiles={tiles} homePrice={latestPrice(series.newHomePrice)} />
       <HomeStories />
       <HomeTools />
       </div>

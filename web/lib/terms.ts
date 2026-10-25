@@ -118,6 +118,10 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     what: "How many months the new houses for sale would last at the month’s pace of sales, adjusted for the season. Counts homes finished, under way and not yet started. From the Census Bureau.",
     why: "Above about six months, builders have more homes than buyers and tend to cut prices or buy down rates.",
   },
+  new_home_median_sale_price: {
+    what: "The middle price of new houses sold across the country in the quarter, from the Census Bureau: half sold for more, half for less. New homes only.",
+    why: "The home page prices a mortgage on it, to show what a change in the rate costs a month.",
+  },
   fhfa_hpi_all_transactions: {
     what: "The same kind of index from FHFA, but counting refinance appraisals as well as sales. An index: 100 is early 1980. Statewide only.",
     why: "It reaches back further than the purchase-only index, so it shows the long run of prices.",

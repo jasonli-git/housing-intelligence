@@ -312,6 +312,22 @@ metrics:
     changed: false
     shown: false
 
+  new_home_median_sale_price:
+    label: Median sale price of new houses
+    unit: usd
+    frequency: quarterly
+    direction: neutral
+    description: >-
+      The median price of new single-family houses sold in the quarter (Census Bureau
+      and HUD, FRED MSPUS), not seasonally adjusted. New homes only: the median of all
+      sales is the National Association of Realtors', which is copyrighted. National only.
+    source_id: fred
+    record_type: survey
+    originator: U.S. Census Bureau
+    ranked: false
+    changed: false
+    shown: false
+
   unemployment_rate:
     label: Unemployment rate
     unit: percent

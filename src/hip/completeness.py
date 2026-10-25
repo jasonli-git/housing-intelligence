@@ -110,6 +110,7 @@ METRIC_SUBJECTS: dict[str, str] = {
     "cpi_rent_primary_residence": "rent",
     "housing_starts_saar": "supply",
     "new_home_months_supply": "supply",
+    "new_home_median_sale_price": "price",
     "modiv_median_tax_bill": "taxes",
     "nj_general_tax_rate": "taxes",
     "nj_effective_tax_rate": "taxes",

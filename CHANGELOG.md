@@ -20,8 +20,9 @@ are not yet recorded here.
   easier for buyers and renters and amber where it is harder, with two years of history
   behind a disclosure. Six new national series through FRED, from Realtor.com, BLS and
   the Census Bureau; a region's published observations now reach the API's 20,000-row
-  ceiling (#445). Each tile names its kind of figure, and a few plain sentences above
-  the row say what moved, written by rule rather than by a model (#446).
+  ceiling (#445). Each tile names its kind of figure, and five plain-English takeaways
+  above the row open from pills, among them what this year's rate costs a month on a
+  typical new home, written by rule rather than by a model (#446).
 - **The home page shows the tools themselves** (ARCHITECTURE #442): each of the six tools
   is a picture of its own first screen, light or dark to match the reader, taken by each
   deploy; Visual stories is one card into the library; the two national figures are
