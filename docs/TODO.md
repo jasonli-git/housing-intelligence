@@ -53,7 +53,15 @@ Each is registered only once its file lands (a manual source with no file fails
 - Who solar actually reaches — the Clean Energy Program's Installation Data (.xlsx)
   into `data/manual/njcep_solar/` (cleanenergy.nj.gov refuses scripts).
 
-### Home page leftovers (Milestone 57)
+### Home page leftovers (Milestones 57, #447)
+
+- **Unused home stylesheets.** `home-plate.css`, `home-refresh.css`, `home-horizon.css`,
+  `landing-search-first.css` and `home-tool-previews.css` are no longer imported by the
+  home page (#447); delete them and lower `colourBaseline.json`.
+- **`check-accessibility-interactions.mjs` fails on the home page** before its map step:
+  it expects the national trend chart open, which #444 put behind a disclosure.
+- **The footer is taller than half the home page** (publisher notices, every source, source
+  history, notice). A site-wide change: the source list could collapse behind its heading.
 
 - **Dead national-card CSS.** Rules for `.national-backdrop`, `.national-benchmark` and
   `.national-rate` in `web/app/home-plate.css`, `home-refresh.css` and `ui-refinement.css`
