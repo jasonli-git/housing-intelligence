@@ -443,7 +443,9 @@ export default async function RegionPage({
 
   // Counties only (ARCHITECTURE #368): a town's or ZIP's page never shows one.
   const photo = region.level === "county" ? photoFor(region.geoid) : undefined;
-  const housingContext = quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
+  const profileSourceNotes = Object.fromEntries(packet.levels.filter(level => profile.some(item => item.metric_id === level.metric_id)).map(level => [level.metric_id, level.metric_id.startsWith("acs_") ? `ACS · ${surveyYears(level.period_start, level.period_end)}` : `Property records · ${periodLabel(level.period_end)}`]));
+  const incomeProfile = profile.filter(item => item.metric_id === "acs_median_hh_income");
+  const housingContext = quiet && profile.length > 0 ? <QuietProfile items={cost ? profile.filter(item => item.metric_id !== "acs_median_hh_income") : profile} peers={peerNoun(peer_level)} title={cost ? "A little more context" : undefined} sourceNotes={profileSourceNotes} /> : null;
   const sections = [
     { id: "place-overview", label: "Overview" },
     { id: quiet ? "quiet-cost" : "place-costs", label: "Costs" },
@@ -489,7 +491,7 @@ export default async function RegionPage({
           </div>
           <div className="page-title-row">
             <h1 className="page-title">{name}</h1>
-            <div className="place-title-actions"><ComputedBadge /><Link className="place-compare" aria-label={`Compare ${name} with other places`} href={`/compare${placesQuery([regionId])}`}>Compare this place <span aria-hidden="true">↗</span></Link></div>
+            <div className="place-title-actions"><ComputedBadge /><Link className="place-compare" aria-label={`Compare ${name} with other places`} href={`/compare${placesQuery([regionId])}`}>Compare {name} <span aria-hidden="true">↗</span></Link></div>
           </div>
           {/* Every rank names its own cohort now — "12th of 21 NJ counties" — so the
               line that named it once for the whole page is gone (Milestone 28). */}
@@ -544,6 +546,7 @@ export default async function RegionPage({
           quiet={quiet}
           compactOverview
           overviewContext={housingContext}
+          overviewFigure={incomeProfile.length > 0 ? <QuietProfile items={incomeProfile} peers={peerNoun(peer_level)} title="Household income" sourceNotes={profileSourceNotes} /> : undefined}
           guidePlaceId={regionId}
           householdTools={quiet ? householdContent : undefined}
           comparePlaceId={region.level === "county" || region.level === "municipality" ? region.region_id : undefined}

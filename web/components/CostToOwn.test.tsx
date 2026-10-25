@@ -108,3 +108,19 @@ describe("local monthly budget", () => {
     expect(deeds.container.textContent).not.toContain("its home value");
   });
 });
+
+it("keeps the study summary and separate payment chart synchronized with edited assumptions", () => {
+  const { container } = render(createElement(CostToOwn, { ...inputs, quiet: true, compactOverview: true, showHelp: false,
+    overviewFigure: createElement("p", null, "Survey income"), overviewContext: createElement("p", null, "Local context") }));
+  const chart = container.querySelector('.place-payment [role="img"]')!;
+  const figure = container.querySelector('.cost-figure b')!;
+  const before = figure.textContent;
+  const barBefore = chart.getAttribute('aria-label');
+  fireEvent.change(screen.getByLabelText("Down payment"), { target: { value: "10" } });
+  expect(figure.textContent).not.toBe(before);
+  expect(chart.getAttribute('aria-label')).not.toBe(barBefore);
+  expect(chart.getAttribute('aria-label')).toContain(figure.textContent!);
+  fireEvent.click(screen.getByRole('button', { name: 'See the breakdown' }));
+  expect(container.querySelector('.shared-calculation')?.hasAttribute('hidden')).toBe(false);
+  expect(container.querySelectorAll('.cost-cards > article')).toHaveLength(3);
+});

@@ -187,7 +187,8 @@ export function CostToOwn({
   guidePlaceId,
   compactOverview = false,
   overviewContext,
-}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number; quiet?: boolean; householdTools?: ReactNode; planning?: boolean; guidePlaceId?: number; compactOverview?: boolean; overviewContext?: ReactNode }) {
+  overviewFigure,
+}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number; quiet?: boolean; householdTools?: ReactNode; planning?: boolean; guidePlaceId?: number; compactOverview?: boolean; overviewContext?: ReactNode; overviewFigure?: ReactNode }) {
   const id = useId();
   const { personal: rememberedPersonal, household, savePersonal, saveHousehold } = useBudgetScenario(control && planning);
   const personal = planning ? rememberedPersonal : {};
@@ -510,6 +511,101 @@ export function CostToOwn({
     {quiet && rentMonth !== null && against ? <DifferenceBridge own={goneNoUtilities} rent={rentMonth} principal={kept} kind={against.kind} gap={against.gap} missing={missingBeyondUtilities}/> : <p className="cost-monthly-headline-copy" aria-live="polite">{cashComparison}</p>}
   </div> : null;
 
+  const monthlyPaymentBar = <>
+          <div className="gone-kept">
+            <div
+              className="gone-kept-bar"
+              role="img"
+              aria-label={
+                `Of ${money(month.total)}: ` +
+                parts.map((p) => `${p.label.toLowerCase()} ${money(p.value)}`).join(", ") +
+                `, and ${money(kept)} paid into the home`
+              }
+            >
+              {parts.map((p) => (
+                <i key={p.key} style={{ width: share(p.value, month.total), background: PART_COLOURS[p.key] }} />
+              ))}
+              <i style={{ width: share(kept, month.total), background: "var(--good)" }} />
+            </div>
+            {quiet && <p className="quiet-receipt"><span>Money gone <b>{money(month.gone)}</b></span><span>Into the home <b>{money(kept)}</b></span></p>}
+            <p className="gone-kept-key" aria-hidden="true">
+              {parts.map((p) => (
+                <span key={p.key}>
+                  <i style={{ background: PART_COLOURS[p.key] }} />
+                  {p.label} {money(p.value)}
+                </span>
+              ))}
+              <span className="kept">
+                <i style={{ background: "var(--good)" }} />
+                Paid into your home {money(kept)}
+              </span>
+            </p>
+          </div>
+  </>;
+  const mortgageRateDetails = <>
+          {/* Stated assumptions, not a forecast of rates (#327). */}
+          <ReaderDetails title="At other mortgage rates" className="mortgage-rate-details">
+            <table className="change-places rate-scenarios">
+              <caption className="visually-hidden">The month at other mortgage rates, everything else as above</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Rate</th>
+                  <th scope="col" className="num">Principal and interest</th>
+                  <th scope="col" className="num">The month</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map((row) => (
+                  <tr key={row.ratePct}>
+                    <th scope="row">{row.ratePct}%</th>
+                    <td className="num">{money(row.mortgage)}</td>
+                    <td className="num">{money(row.total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="sales-note">
+              The same home, down payment and costs at each rate. Assumptions to compare, not a
+              forecast of where rates go.
+            </p>
+          </ReaderDetails>
+  </>;
+  const paymentBreakdown = <>{monthlyPaymentBar}{mortgageRateDetails}</>;
+
+  const calculationSupport = <>
+        {quiet && <>
+          {calculationToggle}
+          <section id={id+"-calculation"} className="shared-calculation" hidden={!calculationOpen} aria-label="Owning and renting calculation">
+            <div><h4>Owning</h4><p className="calculation-note">Cash payment includes principal and included utilities. Money spent includes utilities here; the bridge excludes them.</p>{owningLedger}</div>
+            <div><h4>Renting</h4>{rentingLedger ?? <p>No rent figure. {planning ? "Enter one under ‘Your numbers’ to compare." : "Enter your rent in the buyer’s guide to compare."}</p>}</div>
+          </section>
+        </>}
+        <aside className="cost-evidence-omissions" aria-label="Costs not included in the monthly owning estimate">
+          <p className="cost-evidence-label">
+            <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
+            Not included
+          </p>
+          <p>
+            <Glossed text={`The monthly owning estimate leaves out ${listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.`} />
+          </p>
+        </aside>
+  </>;
+
+  const downPaymentControl = control ? (
+          <label className="control">
+            <span className="control-label">Down payment</span>
+            <select value={down} onChange={(event) => setPersonal("downPct", Number(event.target.value))}>
+              {DOWN_PAYMENTS.map((pct) => (
+                <option key={pct} value={pct}>
+                  {pct}%
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <span className="control-label">{down}% down payment</span>
+        );
+
   const fineTune = control && planning && (
         <details className="cost-yours">
           <summary>
@@ -519,6 +615,7 @@ export function CostToOwn({
             </span>
           </summary>
           <div className="cost-yours-body">
+            {compactOverview && downPaymentControl}
             <MonthlyBill current={month} baseline={baselineMonth} />
             <fieldset>
               <legend>This home <small>stays on this page</small></legend>
@@ -570,20 +667,7 @@ export function CostToOwn({
     <section className={`section cost${compactOverview ? " place-cost-overview" : ""}`} aria-labelledby={`${id}-heading`}>
       <div className="section-head">
         <h2 id={`${id}-heading`}>{compactOverview ? "Monthly housing costs" : "What it costs to own and to rent"}</h2>
-        {control ? (
-          <label className="control">
-            <span className="control-label">Down payment</span>
-            <select value={down} onChange={(event) => setPersonal("downPct", Number(event.target.value))}>
-              {DOWN_PAYMENTS.map((pct) => (
-                <option key={pct} value={pct}>
-                  {pct}%
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : (
-          <span className="control-label">{down}% down payment</span>
-        )}
+        {!compactOverview && downPaymentControl}
       </div>
 
       {compactOverview && <p className="cost-overview-meta">Published starting figures: {home.basis === "index" ? "home value" : "sale-price median"} {home.asOf}{rent && ` · rent ${rent.asOf}`} · mortgage benchmark {rate.asOf}. Your inputs adjust the estimates below.</p>}
@@ -601,7 +685,7 @@ export function CostToOwn({
               {typedPrice !== null
                 ? `To own at your ${money(typedPrice)} price`
                 : home.basis === "index"
-                  ? "To own the typical home"
+                  ? compactOverview ? "Estimated cost to own" : "To own the typical home"
                   : `To own at a ${money(home.value)} purchase price`}
             </Term>
           </h3>
@@ -652,67 +736,13 @@ export function CostToOwn({
             )}{" "}
             · not a lender quote
           </p>
-          {/* Stated assumptions, not a forecast of rates (#327). */}
-          <ReaderDetails title="At other mortgage rates" className="mortgage-rate-details">
-            <table className="change-places rate-scenarios">
-              <caption className="visually-hidden">The month at other mortgage rates, everything else as above</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Rate</th>
-                  <th scope="col" className="num">Principal and interest</th>
-                  <th scope="col" className="num">The month</th>
-                </tr>
-              </thead>
-              <tbody>
-                {scenarios.map((row) => (
-                  <tr key={row.ratePct}>
-                    <th scope="row">{row.ratePct}%</th>
-                    <td className="num">{money(row.mortgage)}</td>
-                    <td className="num">{money(row.total)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="sales-note">
-              The same home, down payment and costs at each rate. Assumptions to compare, not a
-              forecast of where rates go.
-            </p>
-          </ReaderDetails>
-          <div className="gone-kept">
-            <div
-              className="gone-kept-bar"
-              role="img"
-              aria-label={
-                `Of ${money(month.total)}: ` +
-                parts.map((p) => `${p.label.toLowerCase()} ${money(p.value)}`).join(", ") +
-                `, and ${money(kept)} paid into the home`
-              }
-            >
-              {parts.map((p) => (
-                <i key={p.key} style={{ width: share(p.value, month.total), background: PART_COLOURS[p.key] }} />
-              ))}
-              <i style={{ width: share(kept, month.total), background: "var(--good)" }} />
-            </div>
-            {quiet && <p className="quiet-receipt"><span>Money gone <b>{money(month.gone)}</b></span><span>Into the home <b>{money(kept)}</b></span></p>}
-            <p className="gone-kept-key" aria-hidden="true">
-              {parts.map((p) => (
-                <span key={p.key}>
-                  <i style={{ background: PART_COLOURS[p.key] }} />
-                  {p.label} {money(p.value)}
-                </span>
-              ))}
-              <span className="kept">
-                <i style={{ background: "var(--good)" }} />
-                Paid into your home {money(kept)}
-              </span>
-            </p>
-          </div>
+          {!compactOverview && <>{mortgageRateDetails}{monthlyPaymentBar}</>}
           {!quiet && owningLedger}
         </article>
 
         <article className="cost-card">
           <h3 className="cost-card-label">
-            <Term entry={terms.rent}>{typedRent !== null ? "To rent at your figure" : "To rent the typical home"}</Term>
+            <Term entry={terms.rent}>{typedRent !== null ? "To rent at your figure" : compactOverview ? "Typical rent" : "To rent the typical home"}</Term>
           </h3>
           {rentMonth !== null ? (
             <>
@@ -729,27 +759,25 @@ export function CostToOwn({
             </p>
           )}
         </article>
-        {quiet && <>
-          {calculationToggle}
-          <section id={id+"-calculation"} className="shared-calculation" hidden={!calculationOpen} aria-label="Owning and renting calculation">
-            <div><h4>Owning</h4><p className="calculation-note">Cash payment includes principal and included utilities. Money spent includes utilities here; the bridge excludes them.</p>{owningLedger}</div>
-            <div><h4>Renting</h4>{rentingLedger ?? <p>No rent figure. {planning ? "Enter one under ‘Your numbers’ to compare." : "Enter your rent in the buyer’s guide to compare."}</p>}</div>
-          </section>
-        </>}
-        <aside className="cost-evidence-omissions" aria-label="Costs not included in the monthly owning estimate">
-          <p className="cost-evidence-label">
-            <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
-            Not included
-          </p>
-          <p>
-            <Glossed text={`The monthly owning estimate leaves out ${listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.`} />
-          </p>
-        </aside>
+        {compactOverview && overviewFigure && <article className="cost-card cost-income">{overviewFigure}</article>}
+        {!compactOverview && calculationSupport}
+
       </div>
 
-      {compactOverview && fineTune}
-      {compactOverview && overviewContext && <div className="place-overview-context">{overviewContext}</div>}
-      {compactOverview && monthlyComparison}
+      {compactOverview && <>
+        <p className="place-summary-caveat">Buying and renting describe different homes. These figures are local context; the ownership estimate is not a lender quote or a household budget.</p>
+        <div className="place-payment-layout">
+          <section className="place-payment" aria-label="Monthly payment breakdown">
+            <h3>Where the monthly payment goes</h3>
+            <p className="place-payment-basis">Estimated first month · {input.ratePct.toFixed(2)}% mortgage rate · {down}% down</p>
+            {paymentBreakdown}
+            {calculationSupport}
+          </section>
+          {overviewContext && <div className="place-overview-context">{overviewContext}</div>}
+        </div>
+        {fineTune}
+      </>}
+      {compactOverview && monthlyComparison && <details className="place-comparison-details"><summary>Owning and renting in more detail</summary>{monthlyComparison}</details>}
 
       {control && (
         <div className="cost-strip cost-evidence">
