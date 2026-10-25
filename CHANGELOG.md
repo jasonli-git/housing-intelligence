@@ -13,6 +13,9 @@ are not yet recorded here.
 
 ### Added
 
+- **A redesigned home page** (ARCHITECTURE #447): search first, in ink, beside the
+  animated map of the US; all six tools in a grid, each with its own colour, glowing behind
+  the page when pointed at; Visual stories and the US market below.
 - **A US market scoreboard on the home page** (Milestone 57, ARCHITECTURE #444): eight
   small tiles in one row — the 30-year rate, home prices, homes for sale, days on market,
   the share of listings with a price cut, rent inflation, housing starts and new-home

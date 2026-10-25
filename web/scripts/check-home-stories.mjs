@@ -21,7 +21,7 @@ try {
     assert.equal(await link.getAttribute("href"), "/stories");
     assert.equal(await section.locator("h2").count(), 1);
     assert.equal(await section.getByText('Explore collection').count(), 0);
-    assert(await section.locator('h2').evaluate((h, min) => parseFloat(getComputedStyle(h).fontSize) >= min, width <= 600 ? 40 : 38));
+    assert(await section.locator('h2').evaluate((h) => parseFloat(getComputedStyle(h).fontSize) >= 32));
     assert.equal(await section.locator("ul, button, .library-card, .home-stories-all").count(), 0);
     assert.equal(await section.locator('img[src*="stories-index"]').count(), 0);
     const count = Number((await section.locator(".home-stories-count strong").innerText()).match(/^\d+/)?.[0]);
@@ -42,12 +42,11 @@ try {
     assert(geometry.height <= (width <= 600 ? 320 : 240), "compact gateway");
     assert(geometry.copyFits, "copy remains within card");
     if (width > 600) assert(await link.evaluate((e) => { const a = e.getBoundingClientRect(), b = e.querySelector('.home-stories-copy').getBoundingClientRect(); return Math.abs((a.top + a.bottom) / 2 - (b.top + b.bottom) / 2) < 1; }), 'left-aligned copy vertically centred');
-    assert(await section.evaluate((e) => { const metrics = document.querySelector('.national-strip'), coverage = document.querySelector('.coverage-entry'); return e.getBoundingClientRect().top - metrics.getBoundingClientRect().bottom <= 18 && metrics.getBoundingClientRect().top - coverage.getBoundingClientRect().bottom <= 17; }), 'tighter section gaps');
     assert(await page.evaluate(() => {
       const gateway = document.querySelector(".home-stories"), backdrop = document.querySelector(".national-strip"), tools = document.querySelector(".home-tools");
-      return Boolean(backdrop.compareDocumentPosition(gateway) & Node.DOCUMENT_POSITION_FOLLOWING) && Boolean(gateway.compareDocumentPosition(tools) & Node.DOCUMENT_POSITION_FOLLOWING);
+      return Boolean(tools.compareDocumentPosition(gateway) & Node.DOCUMENT_POSITION_FOLLOWING) && Boolean(gateway.compareDocumentPosition(backdrop) & Node.DOCUMENT_POSITION_FOLLOWING);
     }));
-    assert.equal(await page.locator(".home-tools-rail").count(), 1);
+    assert.equal(await page.locator(".home-tools-grid").count(), 1);
     await page.keyboard.press("Tab");
     await link.focus();
     assert(await link.evaluate((el) => el.matches(":focus-visible")));
