@@ -1,6 +1,14 @@
 import { Term } from "@/components/Term";
 import { NationalTrend, NationalTrendBackdrop } from "@/components/NationalTrend";
-import { monthLabel, type ScoreTile } from "@/lib/nationalScoreboard";
+import { marketSummary, monthLabel, type ScoreTile } from "@/lib/nationalScoreboard";
+import { KIND_LABELS, KIND_MEANINGS, kindOf, type RecordType } from "@/lib/kinds";
+
+// The kind of each figure (SPEC principle 11), shortened to fit a tile; the full label
+// and its meaning are the tag's tooltip and the definition card's.
+const SHORT_KIND: Record<RecordType, string> = {
+  survey: "Survey", administrative: "Records", determination: "Determination",
+  benchmark: "Benchmark", calculated: "Calculated", modelled: "Modelled",
+};
 
 const ARROW = { up: "▲", down: "▼", flat: "■" } as const;
 
@@ -13,15 +21,17 @@ const ARROW = { up: "▲", down: "▼", flat: "■" } as const;
 export function NationalScoreboard({ tiles }: { tiles: ScoreTile[] }) {
   if (!tiles.length) return null;
   const newest = tiles.map((t) => t.trend.at(-1)?.date ?? "").sort().at(-1);
+  const summary = marketSummary(tiles);
   return <section className="national-strip" aria-labelledby="national-strip-heading">
     <header className="national-strip-head">
       <h2 id="national-strip-heading"><span className="national-strip-live" aria-hidden="true" />US market</h2>
       <p>{newest ? <>Latest through {monthLabel(newest)} · </> : null}vs. a year earlier · <span className="tone-key tone-easier">easier</span> <span className="tone-key tone-harder">harder</span> for buyers and renters</p>
     </header>
+    {summary.length > 0 && <p className="national-strip-summary">{summary.join(" ")}</p>}
     <ul className="national-strip-track" aria-label="US housing figures">
       {tiles.map((t) => <li key={t.id} className="score-tile" data-tile={t.id} data-tone={t.tone}>
         <p className="visually-hidden">{t.summary}</p>
-        <div className="score-tile-top" aria-hidden="true"><span className="score-tile-label">{t.label}</span></div>
+        <div className="score-tile-top"><span className="score-tile-label" aria-hidden="true">{t.label}</span>{(() => { const kind = kindOf(t.metricId); return kind ? <span className={`score-tile-kind kind-${kind}`} title={`${KIND_LABELS[kind]}: ${KIND_MEANINGS[kind]}`}><span className="visually-hidden">{t.label}: </span>{SHORT_KIND[kind]}</span> : null; })()}</div>
         <strong className="score-tile-value" aria-hidden="true">{t.value}</strong>
         <div className="score-tile-foot" aria-hidden="true">
           {t.change ? <span className="score-tile-change">{t.direction && <span className="score-tile-arrow">{ARROW[t.direction]}</span>}{t.change}</span> : <span className="score-tile-change score-tile-none">—</span>}

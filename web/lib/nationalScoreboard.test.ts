@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { annualChanges, compact, scoreboard, type ScoreSeries } from "./nationalScoreboard";
+import { annualChanges, compact, marketSummary, scoreboard, type ScoreSeries } from "./nationalScoreboard";
 
 const month = (date: string, value: number) => ({ period_start: `${date}-01`, period_end: `${date}-28`, value });
 const day = (date: string, value: number) => ({ period_start: date, period_end: date, value });
@@ -54,5 +54,28 @@ describe("the national scoreboard", () => {
     expect(compact(1_161_615)).toBe("1.16M");
     expect(compact(407_028)).toBe("407K");
     expect(compact(61)).toBe("61");
+  });
+
+  it("summarises what moved in the tiles' own figures, and leaves out what cannot be compared", () => {
+    const tiles = scoreboard({
+      ...empty,
+      rate: { metricId: "mortgage_rate_30y_weekly", readings: [day("2025-10-23", 6.19), day("2026-10-22", 7.32)] },
+      listings: [month("2025-09", 1_102_006), month("2026-09", 1_161_615)],
+      daysOnMarket: [month("2025-09", 62), month("2026-09", 61)],
+      starts: [month("2025-09", 1_319_000), month("2026-09", 1_221_000)],
+      newHomeSupply: [month("2025-08", 8.5), month("2026-08", 8.5)],
+      rentCpi: [month("2024-09", 100), month("2025-09", 103.4), month("2026-09", 106.3)],
+    });
+    expect(marketSummary(tiles)).toEqual([
+      "The 30-year mortgage rate is 7.32%, 1.13 points higher than a year ago.",
+      "More homes are for sale than a year ago (+5.4%), and they sell 1 day faster (61 days on the market).",
+      "Builders started 7.4% fewer homes than a year ago, with 8.5 months' supply of new homes for sale.",
+      "Rents are rising 2.8% a year, 0.6 points slower than a year ago.",
+    ]);
+    expect(marketSummary(scoreboard({ ...empty, listings: [month("2026-09", 1_161_615)] }))).toEqual([]);
+  });
+  it("never explains or predicts", () => {
+    const tiles = scoreboard({ ...empty, rate: { metricId: "mortgage_rate_30y", readings: [month("2025-09", 6), month("2026-09", 7)] }, starts: [month("2025-09", 1), month("2026-09", 2)] });
+    for (const s of marketSummary(tiles)) expect(s).not.toMatch(/because|due to|driven|will|expect|likely/i);
   });
 });

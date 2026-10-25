@@ -226,3 +226,51 @@ export function scoreboard(series: ScoreSeries): ScoreTile[] {
 
   return tiles;
 }
+
+/**
+ * Two or three plain sentences the tiles support, written by rule rather than by a model
+ * (Milestone 57): what changed from a year earlier, in the tiles' own figures. Says only
+ * what moved and by how much, never why, and never what comes next, so it needs none of
+ * the reading pipeline's gates. A sentence whose tiles lack a year-earlier change is left
+ * out rather than written around the gap.
+ */
+export function marketSummary(tiles: readonly ScoreTile[]): string[] {
+  const by = new Map(tiles.map((t) => [t.id, t]));
+  const moved = (t: ScoreTile | undefined): t is ScoreTile & { change: string } => Boolean(t?.change);
+  const amount = (t: ScoreTile & { change: string }) => t.change.replace(/^[+−]/, "").replace(/ pts$/, " points");
+  const sentences: string[] = [];
+
+  const rate = by.get("rate");
+  if (moved(rate)) {
+    sentences.push(rate.direction === "flat"
+      ? `The 30-year mortgage rate is ${rate.value}, where it was a year ago.`
+      : `The 30-year mortgage rate is ${rate.value}, ${amount(rate)} ${rate.direction === "up" ? "higher" : "lower"} than a year ago.`);
+  }
+
+  const listings = by.get("listings"), days = by.get("days");
+  if (moved(listings)) {
+    const more = listings.direction === "up" ? "More" : listings.direction === "down" ? "Fewer" : "About as many";
+    const pct = listings.direction === "flat" ? "" : ` (${listings.change})`;
+    const sit = moved(days)
+      ? days.direction === "flat" ? `, and they sell about as fast (${days.value} on the market)`
+        : `, and they sell ${amount(days)} ${days.direction === "up" ? "slower" : "faster"} (${days.value} on the market)`
+      : "";
+    sentences.push(`${more} homes are for sale than a year ago${pct}${sit}.`);
+  }
+
+  const starts = by.get("starts"), supply = by.get("supply");
+  if (moved(starts)) {
+    const verb = starts.direction === "up" ? `started ${amount(starts)} more homes` : starts.direction === "down" ? `started ${amount(starts)} fewer homes` : "started about as many homes";
+    const stock = supply ? `, with ${supply.value.replace(" mo", " months")}' supply of new homes for sale` : "";
+    sentences.push(`Builders ${verb} than a year ago${stock}.`);
+  }
+
+  const rent = by.get("rent");
+  if (moved(rent)) {
+    const pace = rent.direction === "down" ? "slower" : rent.direction === "up" ? "faster" : "the same pace";
+    sentences.push(rent.direction === "flat"
+      ? `Rents are rising ${rent.value.replace(/^\+/, "")} a year, at the same pace as a year ago.`
+      : `Rents are rising ${rent.value.replace(/^\+/, "")} a year, ${amount(rent)} ${pace} than a year ago.`);
+  }
+  return sentences;
+}

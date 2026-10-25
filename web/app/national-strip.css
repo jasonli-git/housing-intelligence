@@ -17,6 +17,8 @@
 .tone-key.tone-easier { --tile-key: var(--tile-easier); }
 .tone-key.tone-harder { --tile-key: var(--tile-harder); margin-left: .35rem; }
 
+/* The rule-written summary: what moved, in the tiles' own figures. */
+.national-strip-summary { max-width: 92ch; margin: 0 0 .7rem; font: 400 15px/1.5 Georgia, serif; color: var(--text-primary); text-wrap: pretty; }
 .national-strip-track {
   display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px;
   margin: 0; padding: 0; list-style: none;
@@ -33,8 +35,10 @@
 .score-tile[data-tone="harder"] { --tile-accent: var(--tile-harder); }
 /* The scoreboard's team stripe: one edge in the tile's reading. */
 .score-tile::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--tile-accent); }
-.score-tile-top { position: relative; z-index: 1; min-width: 0; }
-.score-tile-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 10px/1.3 var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--text-secondary); }
+.score-tile-top { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; }
+/* The figure's kind (SPEC principle 11): a quiet tag under the label. */
+.score-tile-kind { flex: none; padding: 0 4px; border: 1px solid var(--border); border-radius: 3px; font: 500 9px/1.5 var(--font-text); color: var(--text-secondary); cursor: help; }
+.score-tile-label { display: block; max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 10px/1.3 var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--text-secondary); }
 .score-tile-value { position: relative; z-index: 1; align-self: center; font: 600 22px/1.1 var(--font-text); letter-spacing: -.03em; color: var(--text-primary); font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
 .score-tile-foot { position: relative; z-index: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
 .score-tile-change { flex: none; display: inline-flex; align-items: center; gap: 3px; padding: 1px 5px; border-radius: 4px; background: color-mix(in srgb, var(--tile-accent) 14%, transparent); color: color-mix(in oklab, var(--tile-accent) 80%, var(--text-primary)); font: 600 11px/1.4 var(--font-text); font-variant-numeric: tabular-nums; white-space: nowrap; }
