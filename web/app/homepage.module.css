@@ -19,18 +19,18 @@
 /* Background light (owner, 2026-10-25). The page itself is ink on paper; pointing at a
    tool lights the page behind it in that tool's own colour, and pointing at Visual stories
    in the stories' colours. One fixed layer behind everything, faded in and out. */
-.home { --glow-1: transparent; --glow-2: var(--glow-1); --glow-3: var(--glow-1); --glow-strength: 20%; }
+.home { --glow-1: transparent; --glow-2: var(--glow-1); --glow-3: var(--glow-1); --glow-strength: 36%; }
 .home::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0;
   background:
-    radial-gradient(42vw 34vw at 14% 70%, color-mix(in srgb, var(--glow-1) var(--glow-strength), transparent), transparent 70%),
-    radial-gradient(38vw 30vw at 86% 30%, color-mix(in srgb, var(--glow-2) var(--glow-strength), transparent), transparent 70%),
-    radial-gradient(34vw 26vw at 52% 104%, color-mix(in srgb, var(--glow-3) var(--glow-strength), transparent), transparent 70%);
+    radial-gradient(56vw 46vw at 12% 70%, color-mix(in srgb, var(--glow-1) var(--glow-strength), transparent), transparent 70%),
+    radial-gradient(52vw 42vw at 88% 28%, color-mix(in srgb, var(--glow-2) var(--glow-strength), transparent), transparent 70%),
+    radial-gradient(48vw 36vw at 52% 104%, color-mix(in srgb, var(--glow-3) var(--glow-strength), transparent), transparent 70%);
   transition: opacity 450ms ease;
 }
-@media (prefers-color-scheme: dark) { .home { --glow-strength: 26%; } }
-:global(:root[data-theme="dark"]) .home { --glow-strength: 26%; }
-:global(:root[data-theme="light"]) .home { --glow-strength: 20%; }
+@media (prefers-color-scheme: dark) { .home { --glow-strength: 44%; } }
+:global(:root[data-theme="dark"]) .home { --glow-strength: 44%; }
+:global(:root[data-theme="light"]) .home { --glow-strength: 36%; }
 .home:has(:global(.home-tools-grid a):is(:hover, :focus-visible))::before,
 .home:has(:global(.home-stories-gateway):is(:hover, :focus-visible))::before { opacity: 1; }
 .home:has(:global(a[data-tool="afford"]):is(:hover, :focus-visible)) { --glow-1: var(--kind-budget); }
