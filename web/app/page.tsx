@@ -44,10 +44,6 @@ export default async function HousingLandingPage() {
           </header>
           <h2 id="home-find-heading">Find a place</h2>
           <HomeSearch />
-          <nav className={styles.startLinks} aria-label="Start with a task">
-            <Link href="/afford">Check your budget <span aria-hidden="true">→</span></Link>
-            <Link href="/compare">Compare places <span aria-hidden="true">→</span></Link>
-          </nav>
         </div>
         <aside className={styles.coverage} aria-labelledby="home-coverage-heading">
           <div className={styles.coverageCaption}>

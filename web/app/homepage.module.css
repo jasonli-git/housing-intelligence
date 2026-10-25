@@ -40,14 +40,14 @@
 .home:has(:global(a[data-tool="help"]):is(:hover, :focus-visible)) { --glow-1: var(--kind-help); }
 .home:has(:global(a[data-tool="atlas"]):is(:hover, :focus-visible)) { --glow-1: var(--kind-state); }
 /* The card being pointed at takes its tool's colour too: border, arrow and name label. */
-.home :global(a[data-tool="afford"]) { --tool-colour: var(--kind-budget); }
-.home :global(a[data-tool="guide"]) { --tool-colour: var(--kind-guide); }
-.home :global(a[data-tool="tax"]) { --tool-colour: var(--kind-tax); }
-.home :global(a[data-tool="compare"]) { --tool-colour: var(--kind-zip); }
-.home :global(a[data-tool="help"]) { --tool-colour: var(--kind-help); }
-.home :global(a[data-tool="atlas"]) { --tool-colour: var(--kind-state); }
+.home :global(a[data-tool="afford"]) { --tool-colour: var(--kind-budget); --tool-fill: var(--home-tool-budget); }
+.home :global(a[data-tool="guide"]) { --tool-colour: var(--kind-guide); --tool-fill: var(--home-tool-guide); }
+.home :global(a[data-tool="tax"]) { --tool-colour: var(--kind-tax); --tool-fill: var(--home-tool-tax); }
+.home :global(a[data-tool="compare"]) { --tool-colour: var(--kind-zip); --tool-fill: var(--home-tool-compare); }
+.home :global(a[data-tool="help"]) { --tool-colour: var(--kind-help); --tool-fill: var(--home-tool-help); }
+.home :global(a[data-tool="atlas"]) { --tool-colour: var(--kind-state); --tool-fill: var(--home-tool-atlas); }
 .home.home :global(.home-tools-grid a:is(:hover, :focus-visible)) { border-color: var(--tool-colour); }
-.home.home :global(.home-tools-grid a:is(:hover, :focus-visible) :is(.home-tool-text, .home-tool-name) > span) { color: var(--tool-colour); }
+.home.home :global(.home-tools-grid a:is(:hover, :focus-visible) .home-tool-text > span) { color: var(--tool-colour); }
 /* The stories: several lights at once, in the colours their charts use. */
 .home:has(:global(.home-stories-gateway):is(:hover, :focus-visible)) { --glow-1: var(--story-1); --glow-2: var(--story-2); --glow-3: var(--story-3); }
 @media (prefers-reduced-motion: reduce) { .home::before { transition: none; } }
@@ -68,15 +68,6 @@
 .home :global(.home-search-hints) { margin-top: .7rem; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
 .home :global(.home-search-shortcut) { white-space: nowrap; }
 .home :global(.home-search-shortcut kbd) { border: 1px solid var(--border); border-radius: 3px; padding: 0 .3rem; font: inherit; }
-.startLinks { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.1rem; }
-/* Filled in each tool's colour with white text. `!important` on the colour only: the
-   site-wide link rules (ui-refinement.css) outrank any class selector here. */
-.startLinks a { --start-fill: var(--plate-ink); display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; padding: 0 1.1rem; border: 0; border-radius: 999px; background: var(--start-fill); color: var(--home-start-text) !important; font: 600 14px/1.4 var(--font-text); text-decoration: none !important; transition: filter 160ms ease; }
-.startLinks a[href="/afford"] { --start-fill: var(--home-start-budget); }
-.startLinks a[href="/compare"] { --start-fill: var(--home-start-compare); }
-.startLinks a span { color: inherit; }
-.startLinks a:hover { filter: brightness(.88); }
-.startLinks a:focus-visible { outline: 2px solid var(--start-fill); outline-offset: 3px; }
 .coverage { min-width: 0; }
 .coverageCaption { display: flex; align-items: baseline; justify-content: flex-end; gap: .7rem; padding-right: .5rem; }
 .eyebrow { margin: 0 0 .4rem; color: var(--text-secondary); font: 500 12px/1.5 var(--font-text); }
@@ -132,9 +123,9 @@
 .home :global(.home-tool-text) { color: var(--text-primary); font: 400 17px/1.35 Georgia, serif; letter-spacing: -.01em; }
 .home :global(.home-tool-text > span) { color: var(--plate-accent); font-family: var(--font-text); }
 .home :global(.home-tool-visual) { position: relative; display: block; overflow: hidden; }
-.home :global(.home-tool-tag) { position: absolute; z-index: 1; top: 10px; left: 10px; padding: .15rem .5rem; border: 1px solid var(--border); border-radius: 999px; background: color-mix(in srgb, var(--surface-card) 92%, transparent); color: var(--text-secondary); font: 600 10px/1.5 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; transition: opacity 160ms ease; }
-.home :global(.home-tool-name) { position: absolute; z-index: 1; inset: auto 0 0 0; padding: 1.8rem 1rem .75rem; background: linear-gradient(transparent, color-mix(in srgb, var(--surface-card) 97%, transparent) 42%); color: var(--text-primary); font: 600 18px/1.25 var(--font-text); letter-spacing: -.01em; opacity: 0; transform: translateY(6px); transition: opacity 180ms ease, transform 180ms ease; pointer-events: none; }
-.home :global(.home-tool-name > span) { color: var(--plate-accent); }
+.home :global(.home-tool-tag) { position: absolute; z-index: 1; top: 10px; left: 10px; padding: .25rem .7rem; border-radius: 999px; background: var(--tool-fill); color: var(--home-tool-text); font: 600 12px/1.4 var(--font-text); box-shadow: 0 2px 8px -3px color-mix(in srgb, var(--tool-fill) 70%, transparent); transition: opacity 160ms ease; }
+.home :global(.home-tool-name) { position: absolute; z-index: 1; left: 12px; bottom: 12px; padding: .45rem 1rem; border-radius: 999px; background: var(--tool-fill); color: var(--home-tool-text); font: 600 17px/1.25 var(--font-text); letter-spacing: -.01em; box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--tool-fill) 80%, transparent); opacity: 0; transform: translateY(6px); transition: opacity 180ms ease, transform 180ms ease; pointer-events: none; }
+.home :global(.home-tool-name > span) { color: inherit; }
 @media (hover: hover) {
   .home :global(.home-tools-grid a:is(:hover, :focus-visible) .home-tool-tag) { opacity: 0; }
   .home :global(.home-tools-grid a:is(:hover, :focus-visible) .home-tool-name) { opacity: 1; transform: none; }
@@ -195,7 +186,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .home :global(.coverage-home-preview .coverage-availability-glow circle:not(:last-child)) { animation: none; transform: scale(1); opacity: .2; }
-  .home :global(.home-tools-grid a), .home :global(.gallery-fragment), .home :global(.home-tool-preview img), .startLinks a, .home :global(.home-tool-tag), .home :global(.home-tool-name) { transition: none; }
+  .home :global(.home-tools-grid a), .home :global(.gallery-fragment), .home :global(.home-tool-preview img), .home :global(.home-tool-tag), .home :global(.home-tool-name) { transition: none; }
   .home :global(.home-tool-name) { transform: none; }
   .home :global(.home-tools-grid a:hover .home-tool-preview img) { transform: none; }
   .home :global(.home-stories-gateway:is(:hover, :focus-visible) .gallery-fragment) { translate: none; }
