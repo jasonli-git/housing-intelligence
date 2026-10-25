@@ -81,3 +81,53 @@
   .page :global(.place-compare) { display: none; }
   .page :global(.place-overview-context) { margin-block: 1rem; }
 }
+
+/* Review refinements: explicit compact pairs, full-width complex exhibits, and
+   consistent evidence framing. These rules apply only to this place route. */
+.page.page :global(.exhibit-gallery) { display: grid; grid-template-columns: minmax(0,1fr); gap: 1.25rem; align-items: start; }
+.page.page :global(.exhibit-gallery > *) { grid-column: 1/-1; min-width: 0; }
+.page :global(.place-exhibit-pair) { display: grid; grid-template-columns: minmax(0,1fr); gap: 1.25rem; align-items: stretch; }
+.page :global(.place-exhibit-pair:empty) { display: none; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.learning-exhibit) { margin: 0 !important; padding: 1.4rem !important; background: var(--glass) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; box-shadow: none !important; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.learning-exhibit)::before { content: none; }
+.page :global(.learning-exhibit > .exhibit-linework) { display: none; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.exhibit-kicker) { margin: 0 0 .6rem; padding: 0; border: 0; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.exhibit-kicker > span:first-child) { padding: 0 !important; border: 0 !important; border-radius: 0; background: transparent !important; color: var(--text-secondary) !important; font: 500 12px/1.4 var(--font-text) !important; letter-spacing: 0; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group > h2) { margin: 0 0 .7rem !important; padding: 0 !important; font: 500 18px/1.4 var(--font-text) !important; border: 0 !important; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.exhibit-gallery > .exhibit-group-head) { margin: 1rem 0 0; padding: .9rem 0 0; border-top: 1px solid var(--border); font: 600 15px/1.4 var(--font-text); letter-spacing: 0; }
+.page.page :global(.exhibit-group-head)::before { content: none !important; }
+.page.page :global(.standouts-disclosure) { margin: 0 0 .5rem; border: 0; }
+.page.page :global(.standouts-disclosure > summary) { min-height: 44px; padding: .4rem 0; font-size: 13px; }
+.page.page :global(.standouts-disclosure > summary strong) { font: 500 13px/1.4 var(--font-text); }
+.page.page :global(.standouts-disclosure-cue) { font-size: 12px; }
+
+/* All three budget fields use the same label-above-control arrangement. */
+.page.page :global(.budget-inputs) { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); align-items: start; gap: 1rem; }
+.page.page :global(.budget-inputs > :is(.control,.cost-field)) { display: flex; flex-direction: column; align-items: stretch; gap: .45rem; min-width: 0; margin: 0; font: 400 13px/1.5 var(--font-text); }
+.page.page :global(.budget-inputs input) { width: 100%; min-width: 0; min-height: 44px; margin: 0; padding: .65rem .75rem; font: 400 16px/1.4 var(--font-text); }
+.page.page :global(.budget-inputs .cost-field > span) { min-width: 0; }
+
+/* Preserve specific disclosure labels and content; standardize their affordance. */
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.learning-exhibit details) { margin-top: 1rem; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(:is(.learning-exhibit details,.interpretation-figures) > summary) { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 44px; padding: .65rem 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent !important; color: var(--text-secondary); font: 500 13px/1.5 var(--font-text); list-style: none; cursor: pointer; }
+.page :global(:is(.learning-exhibit details,.interpretation-figures) > summary)::-webkit-details-marker { display: none; }
+.page :global(:is(.learning-exhibit details,.interpretation-figures) > summary)::marker { content: ""; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(:is(.learning-exhibit details,.interpretation-figures) > summary)::after { content: ""; flex: 0 0 7px; width: 7px; height: 7px; margin: 0 .25rem .25rem; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(:is(.learning-exhibit details,.interpretation-figures)[open] > summary)::after { transform: rotate(225deg); margin-bottom: -.1rem; }
+.page :global(:is(.learning-exhibit details,.interpretation-figures) > summary > .reader-details-chevron) { display: none; }
+.page :global(:is(.learning-exhibit details,.interpretation-figures) > summary:focus-visible) { outline: 2px solid var(--focus); outline-offset: 3px; }
+@media(min-width:901px) {
+  .page :global(.place-exhibit-pair) { grid-template-columns: repeat(auto-fit,minmax(380px,1fr)); }
+}
+@media(max-width:760px) {
+  :global(body:has(.horizon-page)) main:global(#main-content).page :global(.learning-exhibit) { padding: 1rem !important; }
+  .page.page :global(.budget-inputs) { grid-template-columns: minmax(0,1fr); }
+}
+@media print {
+  .page :global(.place-exhibit-pair) { display: block; }
+}
+
+.page :global(.budget-inputs > label > span) { min-height: 1.5em; }
+@media(min-width:761px) and (max-width:1000px) {
+  .page :global(.budget-inputs > label > span) { min-height: 3em; }
+}

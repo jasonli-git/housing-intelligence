@@ -485,8 +485,8 @@ export function CostToOwn({
         <div className="budget-basics">
           <h4>Your budget{household.income && household.income > 0 ? ` · Owning uses ${Math.round(month.total / (household.income / 12) * 100)}% of your income${partial ? " on included costs" : ""}` : " · Add your income to check"}</h4>
           <div className="budget-inputs">
-            <label className="control">Yearly household income before tax<input inputMode="decimal" value={household.income ?? ""} placeholder="e.g. 100000" onChange={(event) => saveHousehold({ ...household, income: parseAmount(event.target.value) ?? undefined })} /></label>
-            <label className="control">Cash available for buying<input inputMode="decimal" value={household.cash ?? ""} placeholder="optional" onChange={(event) => saveHousehold({ ...household, cash: parseAmount(event.target.value) ?? undefined })} /></label>
+            <label className="control"><span>Yearly household income before tax</span><input inputMode="decimal" value={household.income ?? ""} placeholder="e.g. 100000" onChange={(event) => saveHousehold({ ...household, income: parseAmount(event.target.value) ?? undefined })} /></label>
+            <label className="control"><span>Cash available for buying</span><input inputMode="decimal" value={household.cash ?? ""} placeholder="optional" onChange={(event) => saveHousehold({ ...household, cash: parseAmount(event.target.value) ?? undefined })} /></label>
             {quiet && <Field label="Rent you’d pay instead, a month" value={fields.rent} placeholder={rent ? money(rent.value) : "not published"} onChange={(t) => setField("rent", t)} />}
           </div>
           <p>Uses cash paid each month, including principal—not the lower “money gone” figure. The comparison line is 30% of income, not loan approval.</p>

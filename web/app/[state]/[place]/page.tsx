@@ -567,7 +567,6 @@ export default async function RegionPage({
       {!cost && housingContext}
 
       <section id="place-understand" className="local-understand-group" aria-label="About this place">
-      <AbstractField kind="architecture" />
       <h2>About this place</h2>
 
       {!quiet && householdContent}
@@ -620,12 +619,16 @@ export default async function RegionPage({
       <ExhibitGallery>
       <h3 className="exhibit-group-head" id="field-notes">The market</h3>
       {!quiet && homeChecks}
+      <div className="place-exhibit-pair">
       <LearningExhibit kind="The homes that sold">
       <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} portrait={quiet} />
       </LearningExhibit>
       {persistence && <LearningExhibit kind="Against its own history"><HowUnusual name={name} data={persistence} interactive={quiet} /></LearningExhibit>}
+      </div>
+      <div className="place-exhibit-pair">
       {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Did paychecks keep up with housing?</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
       <StateContextExhibits topics={["lending"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
+      </div>
       <IncomePressure data={pressure} />
 
       {migration && (
