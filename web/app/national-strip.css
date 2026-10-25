@@ -29,7 +29,7 @@
 .takeaway-sign::after { transform: rotate(90deg); transition: transform 160ms ease; }
 .takeaway[open] { flex-basis: 100%; border-radius: 14px; }
 .takeaway[open] .takeaway-sign::after { transform: rotate(0deg); }
-.takeaway > p { margin: 0; padding: 0 .85rem .6rem; font: 13px/1.5 var(--font-text); color: var(--text-secondary); }
+.takeaway > p { max-width: 75ch; margin: 0; padding: .1rem .85rem .7rem; font: 14px/1.55 var(--font-text); color: var(--text-secondary); text-wrap: pretty; }
 @media (prefers-reduced-motion: reduce) { .takeaway-sign::after { transition: none; } }
 @media print { .takeaway > p { display: block; } }
 .national-strip-track {

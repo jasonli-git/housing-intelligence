@@ -256,7 +256,7 @@ export type Takeaway = { id: string; headline: string; detail: string };
 
 /**
  * What the tiles mean for someone buying or renting, in plain words (Milestone 57): a
- * headline saying which way things moved for them, and one short line of figures in
+ * headline saying which way things moved for them, and a sentence or two of figures in
  * everyday terms — dollars a month, "about 1 in 3". Written by rule, not a model: it says
  * what moved, never why or what comes next. A takeaway whose tiles have no year-earlier
  * figure is left out rather than written around the gap.
@@ -275,18 +275,19 @@ export function marketTakeaways(tiles: readonly ScoreTile[], homePrice: number |
     if (homePrice) {
       const loan = homePrice * (1 - DOWN);
       const diff = Math.round((monthlyPayment(loan, rate.now) - monthlyPayment(loan, rate.then)) / 10) * 10;
-      effect = diff === 0 ? `: about the same payment on a typical new home (${dollars(homePrice)}, 20% down)`
-        : `: about ${dollars(Math.abs(diff))} ${diff > 0 ? "more" : "less"} a month on a typical new home (${dollars(homePrice)}, 20% down)`;
+      effect = diff === 0 ? ` On a typical new home (${dollars(homePrice)}, with 20% down), the monthly payment is about the same.`
+        : ` On a typical new home (${dollars(homePrice)}, with 20% down), that is about ${dollars(Math.abs(diff))} ${diff > 0 ? "more" : "less"} a month.`;
     }
-    out.push({ id: "rate", headline, detail: `A 30-year rate of ${rate.now.toFixed(2)}%, against ${rate.then.toFixed(2)}%${effect}.` });
+    out.push({ id: "rate", headline, detail: `A typical 30-year mortgage rate is ${rate.now.toFixed(2)}%, against ${rate.then.toFixed(2)}% a year ago.${effect}` });
   }
 
   const listings = by.get("listings"), days = by.get("days"), cuts = by.get("cuts");
   if (compared(listings)) {
     const headline = listings.direction === "up" ? "More homes to choose from" : listings.direction === "down" ? "Fewer homes to choose from" : "About as many homes to choose from";
-    const count = listings.direction === "flat" ? "About as many listings as a year ago" : `${bare(listings)} ${listings.direction === "up" ? "more" : "fewer"} listings than a year ago`;
-    const rest = [days && `homes sell in ${Math.round(days.now)} days`, cuts && `${oneIn(cuts.now)} has had a price cut`].filter(Boolean).join(", and ");
-    out.push({ id: "choice", headline, detail: rest ? `${count}; ${rest}.` : `${count}.` });
+    const count = listings.direction === "flat" ? "About as many homes are for sale as a year ago" : `${bare(listings)} ${listings.direction === "up" ? "more" : "fewer"} homes are for sale than a year ago`;
+    const pace = days ? ` A typical home sells in ${Math.round(days.now)} days` : "";
+    const cut = cuts ? `${pace ? ", and" : " And"} ${oneIn(cuts.now)} listings has had its price cut` : "";
+    out.push({ id: "choice", headline, detail: `${count}.${pace}${cut}${pace || cut ? "." : ""}` });
   }
 
   const prices = by.get("prices");
@@ -294,23 +295,23 @@ export function marketTakeaways(tiles: readonly ScoreTile[], homePrice: number |
     const rising = prices.now > 0;
     // Compared as the reader sees them: two paces that round alike are "about as fast".
     const same = compared(prices) && prices.now.toFixed(1) === prices.then.toFixed(1);
-    const pace = compared(prices) ? same ? ", about as fast as the year before" : `, ${prices.now > prices.then ? "up" : "down"} from ${prices.then.toFixed(1)}% the year before` : "";
-    out.push({ id: "prices", headline: rising ? "Prices still rising" : "Prices falling", detail: `${rising ? "Up" : "Down"} ${Math.abs(prices.now).toFixed(1)}% over the past year${pace}.` });
+    const pace = compared(prices) ? same ? ", about as fast as the year before" : `, ${prices.now > prices.then ? "faster" : "slower"} than the ${prices.then.toFixed(1)}% the year before` : "";
+    out.push({ id: "prices", headline: rising ? "Prices still rising" : "Prices falling", detail: `Prices of the same homes ${rising ? "rose" : "fell"} ${Math.abs(prices.now).toFixed(1)}% over the past year${pace}.` });
   }
 
   const rent = by.get("rent");
   if (compared(rent)) {
     const steady = rent.now.toFixed(1) === rent.then.toFixed(1);
     const headline = steady ? "Rent increases steady" : rent.now < rent.then ? "Rent increases easing" : "Rent increases picking up";
-    out.push({ id: "rent", headline, detail: `Rents rose ${rent.now.toFixed(1)}% over the past year${steady ? ", as they did the year before" : `, ${rent.now < rent.then ? "down" : "up"} from ${rent.then.toFixed(1)}%`}.` });
+    out.push({ id: "rent", headline, detail: `Rents rose ${rent.now.toFixed(1)}% over the past year${steady ? ", about as much as the year before" : `, against ${rent.then.toFixed(1)}% the year before`}.` });
   }
 
   const starts = by.get("starts"), supply = by.get("supply");
   if (compared(starts)) {
     const headline = starts.direction === "down" ? "Fewer homes being built" : starts.direction === "up" ? "More homes being built" : "About as many homes being built";
-    const change = starts.direction === "flat" ? "About as many starts as a year ago" : `${bare(starts)} ${starts.direction === "up" ? "more" : "fewer"} starts than a year ago`;
-    const stock = supply ? `; unsold new homes would last ${supply.now.toFixed(1)} months (about 6 is balanced)` : "";
-    out.push({ id: "building", headline, detail: `${change}${stock}.` });
+    const change = starts.direction === "flat" ? "about as many homes as a year ago" : `${bare(starts)} ${starts.direction === "up" ? "more" : "fewer"} homes than a year ago`;
+    const stock = supply ? ` Unsold new homes would take ${supply.now.toFixed(1)} months to sell at today's pace${supply.now > 6 ? ", more than the roughly six months usually read as balanced" : supply.now < 4 ? ", less than the roughly six months usually read as balanced" : ""}.` : "";
+    out.push({ id: "building", headline, detail: `Construction began on ${change}.${stock}` });
   }
   return out;
 }

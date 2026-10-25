@@ -69,16 +69,16 @@ describe("the national scoreboard", () => {
       rentCpi: [month("2024-09", 100), month("2025-09", 103.4), month("2026-09", 106.3)],
     });
     expect(marketTakeaways(tiles, 410_700)).toEqual([
-      { id: "rate", headline: "Borrowing costs more", detail: "A 30-year rate of 7.32%, against 6.19%: about $250 more a month on a typical new home ($410,700, 20% down)." },
-      { id: "choice", headline: "More homes to choose from", detail: "5.4% more listings than a year ago; homes sell in 61 days, and about 1 in 3 has had a price cut." },
-      { id: "prices", headline: "Prices still rising", detail: "Up 2.6% over the past year, down from 2.7% the year before." },
-      { id: "rent", headline: "Rent increases easing", detail: "Rents rose 2.8% over the past year, down from 3.4%." },
-      { id: "building", headline: "Fewer homes being built", detail: "7.4% fewer starts than a year ago; unsold new homes would last 8.5 months (about 6 is balanced)." },
+      { id: "rate", headline: "Borrowing costs more", detail: "A typical 30-year mortgage rate is 7.32%, against 6.19% a year ago. On a typical new home ($410,700, with 20% down), that is about $250 more a month." },
+      { id: "choice", headline: "More homes to choose from", detail: "5.4% more homes are for sale than a year ago. A typical home sells in 61 days, and about 1 in 3 listings has had its price cut." },
+      { id: "prices", headline: "Prices still rising", detail: "Prices of the same homes rose 2.6% over the past year, slower than the 2.7% the year before." },
+      { id: "rent", headline: "Rent increases easing", detail: "Rents rose 2.8% over the past year, against 3.4% the year before." },
+      { id: "building", headline: "Fewer homes being built", detail: "Construction began on 7.4% fewer homes than a year ago. Unsold new homes would take 8.5 months to sell at today's pace, more than the roughly six months usually read as balanced." },
     ]);
-    expect(marketTakeaways(tiles)[0].detail).toBe("A 30-year rate of 7.32%, against 6.19%.");
+    expect(marketTakeaways(tiles)[0].detail).toBe("A typical 30-year mortgage rate is 7.32%, against 6.19% a year ago.");
     expect(marketTakeaways(scoreboard({ ...empty, listings: [month("2026-09", 1_161_615)] }))).toEqual([]);
     const alike = marketTakeaways(scoreboard({ ...empty, hpi: [month("2024-07", 100), month("2025-07", 102.64), month("2026-07", 105.29)] }));
-    expect(alike[0].detail).toBe("Up 2.6% over the past year, about as fast as the year before.");
+    expect(alike[0].detail).toBe("Prices of the same homes rose 2.6% over the past year, about as fast as the year before.");
   });
 
   it("prices a rate change as a monthly payment", () => {
