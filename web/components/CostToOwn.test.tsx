@@ -27,6 +27,18 @@ describe("a state whose rules are not held", () => {
   });
 });
 describe("local monthly budget", () => {
+  it("groups compact scenario controls and resets edited costs to their starting figures", () => {
+    const { container } = render(createElement(CostToOwn, { ...inputs, quiet: true, compactOverview: true }));
+    const group = screen.getByRole("group", { name: "Your household and buying plans" });
+    expect(group.contains(screen.getByLabelText("Down payment"))).toBe(true);
+    expect(group.contains(screen.getByLabelText("Purchase price"))).toBe(true);
+    const total = container.querySelector(".cost-card .cost-figure b")?.textContent;
+    fireEvent.change(screen.getByLabelText("Purchase price"), { target: { value: "600000" } });
+    expect(container.querySelector(".cost-card .cost-figure b")?.textContent).not.toBe(total);
+    fireEvent.click(screen.getByRole("button", { name: "Use the published figures" }));
+    expect(container.querySelector(".cost-card .cost-figure b")?.textContent).toBe(total);
+    expect(container.querySelectorAll(".cost-ownership-breakdown .gone-kept").length).toBe(1);
+  });
   it("updates monthly layers from existing inputs without changing the starting estimate", () => {
     const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,showHelp:false}));
     const bill=container.querySelector(".monthly-bill")!;

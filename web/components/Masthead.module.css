@@ -1,0 +1,18 @@
+/* Shared navigation owns its responsive layout; route themes supply the colors. */
+@media screen {
+  .navigation.navigation :global(.bar-tools) { gap: .65rem; }
+  .navigation.navigation :global(.bar-tool-menu) { display: block; position: relative; }
+  .navigation.navigation :global(.bar-tool-menu > summary) { display: flex; align-items: center; min-height: 44px; padding-inline: .8rem; cursor: pointer; list-style: none; }
+  .navigation :global(.bar-tool-menu > summary::-webkit-details-marker) { display: none; }
+  .navigation.navigation :global(.bar-tool-menu .bar-controls) { display: none; position: absolute; top: calc(100% + .4rem); right: 0; z-index: 100; min-width: 220px; max-height: 75dvh; overflow: auto; }
+  .navigation.navigation :global(.bar-tool-menu[open] .bar-controls) { display: flex; flex-direction: column; align-items: stretch; }
+  .navigation.navigation :global(.bar-controls a), .navigation.navigation :global(.bar-controls button) { min-height: 44px; display: flex; align-items: center; padding: .65rem .8rem; }
+  .navigation.navigation :global(.bar-desktop-tools) { display: flex; }
+  .mobilePrimary, .mobileLabel { display: none; }
+  .navigation :global(.bar-controls [aria-current="page"]) { text-decoration: underline; text-underline-offset: 5px; }
+}
+@media screen and (max-width: 1100px) {
+  .navigation.navigation :global(.bar-desktop-tools), .desktopLabel { display: none; }
+  .mobileLabel { display: inline; }
+  .mobilePrimary { display: flex; flex-direction: column; border-bottom: 1px solid var(--border); padding-bottom: .35rem; margin-bottom: .35rem; }
+}

@@ -1,0 +1,14 @@
+.navigation { position: sticky; top: var(--place-nav-top, 60px); z-index: 30; margin: 0 0 1.2rem; border-block: 1px solid var(--border); background: var(--plate-paper, var(--surface-card)); color: var(--text-primary); }
+.links { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem 1.3rem; }
+.links a { display: inline-flex; align-items: center; min-height: 48px; padding: .25rem 0; border-bottom: 2px solid transparent; color: var(--text-secondary); font: 500 13px/1.4 var(--font-text); text-decoration: none; }
+.links a[aria-current] { border-bottom-color: var(--plate-accent, var(--state-blue)); color: var(--text-primary); }
+.links a:hover { color: var(--plate-accent, var(--state-blue)); }
+.navigation :is(a,select):focus-visible { outline: 2px solid var(--plate-accent, var(--state-blue)); outline-offset: 3px; }
+.picker { display: none; }
+@media(max-width:760px) {
+  .links { display: none; }
+  .picker { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .25rem 0; font: 13px/1.4 var(--font-text); }
+  .picker > span { flex: none; color: var(--text-secondary); }
+  .picker select { min-width: 0; width: min(65%, 22rem); min-height: 44px; padding: .4rem 1.8rem .4rem .7rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-card); color: var(--text-primary); font: 400 16px/1.4 var(--font-text); }
+}
+@media print { .navigation { display: none; } }

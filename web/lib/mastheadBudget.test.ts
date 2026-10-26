@@ -9,9 +9,9 @@ vi.mock("@/components/SiteStatus", () => ({ SiteStatus: () => null }));
 vi.mock("@/components/LicenceLine", () => ({ LicenceLine: () => null }));
 describe("budget entry availability", () => {
   it("renders a truly disabled, neutral entry when coverage must be chosen first", () => {
-    const html = renderToStaticMarkup(createElement(Masthead, { affordability: { kind: "disabled", reason: "Choose a covered state first" }, budgetLabel: "Find within my budget" }));
+    const html = renderToStaticMarkup(createElement(Masthead, { affordability: { kind: "disabled", reason: "Choose a covered state first" } }));
     expect(html).toContain('type="button" disabled=""');
-    expect(html).toContain("Find within my budget");
+    expect(html).toContain("Budget. Choose a covered state first");
     expect(html).not.toContain("Budget · NJ");
     expect(html).not.toContain('href="/afford?county=all"');
   });
@@ -24,7 +24,7 @@ describe("budget entry availability", () => {
   it("keeps the statewide entry navigable on supported pages", () => {
     const html = renderToStaticMarkup(createElement(Masthead, { affordability: { kind: "route" } }));
     expect(html).toContain('href="/afford?county=all"');
-    expect(html).toContain("Budget explorer");
+    expect(html).toContain(">Budget</a>");
     expect(html).not.toContain("→");
     expect(html.indexOf('href="/afford?county=all"')).toBeLessThan(html.indexOf('href="/guide"'));
     expect(html.indexOf('href="/guide"')).toBeLessThan(html.indexOf('href="/tax"'));

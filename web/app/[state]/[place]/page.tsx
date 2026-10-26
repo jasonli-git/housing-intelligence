@@ -6,9 +6,11 @@ import { Glossed } from "@/components/Glossed";
 import { Term } from "@/components/Term";
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { PlacePhoto } from "@/components/PlacePhoto";
+import { PlaceSectionNav } from "@/components/PlaceSectionNav";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
 import "../../horizon-theme.css";
+import styles from "../../place-overview.module.css";
 import { TREND_METRICS } from "@/lib/trendMetrics";
 import { TownRow } from "@/components/TownRow";
 import { notFound } from "next/navigation";
@@ -441,13 +443,23 @@ export default async function RegionPage({
 
   // Counties only (ARCHITECTURE #368): a town's or ZIP's page never shows one.
   const photo = region.level === "county" ? photoFor(region.geoid) : undefined;
+  const housingContext = quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
+  const sections = [
+    { id: "place-overview", label: "Overview" },
+    { id: quiet ? "quiet-cost" : "place-costs", label: "Costs" },
+    { id: "field-notes", label: "Market" },
+    { id: "about-getting-around", label: "Getting around" },
+    { id: "about-living-there", label: "Living there" },
+    ...(similar ? [{ id: "place-explore", label: "Alternatives" }] : []),
+    { id: "sources-heading", label: "Sources" },
+  ];
 
   return (
     <>
       <Masthead affordability={affordabilityControl} />
       <AffordForward placeId={region.level === "zip" ? null : regionId} />
-      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local horizon-page${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
-      <header className={`page-head${photo ? " has-photo" : ""}`} data-kind={kindOf(region.level)}>
+      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local horizon-page ${styles.page}${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
+      <header id="place-overview" className={`page-head${photo ? " has-photo" : ""}`} data-kind={kindOf(region.level)}>
         {quiet && region.state_code === "NJ" && <GardenStateArtwork header />}
         <div className="region-head-main">
           <Crumbs
@@ -474,18 +486,17 @@ export default async function RegionPage({
               </aside>
             )}
             <Link className="eyebrow-report" href={`${regionPath(regionId)}/report`}>Full report <span aria-hidden="true">↗</span></Link>
-            <Link className="eyebrow-report" href={`/compare${placesQuery([regionId])}`}>Compare <span aria-hidden="true">↗</span></Link>
           </div>
           <div className="page-title-row">
             <h1 className="page-title">{name}</h1>
-            <ComputedBadge />
+            <div className="place-title-actions"><ComputedBadge /><Link className="place-compare" aria-label={`Compare ${name} with other places`} href={`/compare${placesQuery([regionId])}`}>Compare this place <span aria-hidden="true">↗</span></Link></div>
           </div>
           {/* Every rank names its own cohort now — "12th of 21 NJ counties" — so the
               line that named it once for the whole page is gone (Milestone 28). */}
-          {headline && <p className="verdict region-orientation">{headline}</p>}
-          {(lead || trade) && (
+          {(headline || lead || trade) && (
             <details className="verdict-details orientation-details">
-              <summary className="disclose">See the figures behind this <span className="disclose-hint"><span className="when-closed">Details</span><span className="when-open">Hide</span></span></summary>
+              <summary className="disclose">Market context and figures <span className="disclose-hint"><span className="when-closed">Details</span><span className="when-open">Hide</span></span></summary>
+              {headline && <p className="verdict region-orientation">{headline}</p>}
               {lead && <p className="verdict-more">{lead}</p>}
               {trade && <p className="verdict-more">{trade}</p>}
             </details>
@@ -507,20 +518,15 @@ export default async function RegionPage({
             </details>
           )}
         </div>
-        <div className="actions">
-          <nav className="state-jump place-jump" aria-label="On this page">
-            <a href={quiet ? "#quiet-cost" : "#place-costs"}><span>What it costs to own and rent</span><i aria-hidden="true">↓</i></a>
-            <a href="#place-understand"><span>About this place</span><i aria-hidden="true">↓</i></a>
-            {similar && <a href="#place-explore"><span>Cheaper alternatives</span><i aria-hidden="true">↓</i></a>}
-          </nav>
-        </div>
         {region.level === "county" && countyTowns.length > 0 && (
           <TownRow name={name} towns={countyTowns.map(t => ({ id: t.region_id, href: regionPath(t.region_id), name: countyTowns.filter(o => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, c => c.toUpperCase()) : displayName(t) }))} />
         )}
         {photo && <PlacePhoto geoid={region.geoid} />}
       </header>
 
-      {quiet ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : <ProfileTicker
+      <PlaceSectionNav sections={sections} />
+
+      {!quiet && <ProfileTicker
         items={profile}
         title="Housing here"
         ariaLabel={`${name} housing profile`}
@@ -536,6 +542,8 @@ export default async function RegionPage({
         <CostToOwn
           {...cost}
           quiet={quiet}
+          compactOverview
+          overviewContext={housingContext}
           guidePlaceId={regionId}
           householdTools={quiet ? householdContent : undefined}
           comparePlaceId={region.level === "county" || region.level === "municipality" ? region.region_id : undefined}
@@ -545,49 +553,21 @@ export default async function RegionPage({
       ) : (
         // Said rather than left out, so a thinner page reads as designed, not broken: the
         // section a reader looks for first says why it is empty here.
-        homePrice(packet.levels) === null && (
           <section className="section cost" aria-labelledby="cost-heading">
             <h2 id="cost-heading">What it costs per month</h2>
-            <p className="cost-missing">
+            {homePrice(packet.levels) === null ? <p className="cost-missing">
               No monthly cost is worked out for {name}. Zillow publishes no home value here,
               and there are too few recent qualifying sales to stand a purchase price on. The
               owner-reported value in the tables is a survey five years old, too old to price a
               mortgage on.
-            </p>
+            </p> : <p className="cost-missing">The current mortgage benchmark is unavailable, so a monthly ownership estimate is not shown for {name}.</p>}
           </section>
-        )
       )}
       </QuietAnchor>
-
-      <section id="place-next-step" className="local-next-step-group cost-next-strip" aria-label="Your next step">
-      <div className="place-next-destinations">
-      <section className="place-guide-entry" id="home-checks-heading" aria-labelledby="place-guide-title">
-        <StepIcon name="guide" />
-        <div><h3 id="place-guide-title">Planning a purchase here?</h3>
-          <p>Buying budget, rent or buy, and checks before an offer.</p>
-          <Link href={`/guide?place=${regionId}`}>Open the buyer’s guide for {name} <span aria-hidden="true">→</span></Link>
-        </div>
-      </section>
-      <section id="housing-assistance" className="local-housing-help" aria-labelledby="local-help-heading">
-        <StepIcon name="listings" />
-        <div>
-        <h3 id="local-help-heading">Find housing help</h3>
-        <p>Affordable homes, vouchers and local housing authorities.</p>
-        <Link href="/help">Explore your options <span aria-hidden="true">→</span></Link>
-        </div>
-      </section>
-      </div>
-      </section>
+      {!cost && housingContext}
 
       <section id="place-understand" className="local-understand-group" aria-label="About this place">
-      <AbstractField kind="architecture" />
       <h2>About this place</h2>
-      <nav className="about-toc" aria-label="About this place">
-        {consumer ? <a href="#about-picture">The local picture</a> : standing.length > 0 && <a href="#about-picture">How it ranks</a>}
-        <a href="#field-notes">The market</a>
-        <a href="#about-getting-around">Getting around</a>
-        <a href="#about-living-there">Living there</a>
-      </nav>
 
       {!quiet && householdContent}
 
@@ -640,22 +620,29 @@ export default async function RegionPage({
       <h3 className="exhibit-group-head" id="field-notes">The market</h3>
       {!quiet && homeChecks}
       <LearningExhibit kind="The homes that sold">
-      <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} portrait={quiet} />
+      <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} portrait={quiet} concise />
       </LearningExhibit>
+      <IncomePressure data={pressure} concise />
+      <details className="place-evidence-group" id="more-market-evidence">
+        <summary><h3>More market evidence</h3><span>Trends, financing, migration and building</span></summary>
+        <div className="place-evidence-body">
       {persistence && <LearningExhibit kind="Against its own history"><HowUnusual name={name} data={persistence} interactive={quiet} /></LearningExhibit>}
-      {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Did paychecks keep up with housing?</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
-      <StateContextExhibits topics={["lending"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
-      <IncomePressure data={pressure} />
+      <div className="place-exhibit-pair">
+      {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Prices and income</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
+      <StateContextExhibits concise topics={["lending"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
+      </div>
+
 
       {migration && (
       <QuietDisclosure enabled={false} title="Who is moving here" note="Households moving in and out of the county, from tax returns">
-        <LearningExhibit kind="Arrivals & departures"><WhoIsMoving name={name} data={migration} exhibit={quiet} /></LearningExhibit>
+        <LearningExhibit kind="Arrivals & departures"><WhoIsMoving name={name} data={migration} exhibit={quiet} concise /></LearningExhibit>
       </QuietDisclosure>
       )}
       {construction.some(series=>series.length>0) && <LearningExhibit kind="Building & demolition">
       <HomesAdded
         exhibit={quiet}
         portrait={quiet}
+        concise
         name={name}
         level={region.level}
         permitted={construction[0]}
@@ -671,15 +658,20 @@ export default async function RegionPage({
           <IndexedComparison series={indexedInputs} />
         </section>
       )}
-      <h3 className="exhibit-group-head" id="about-getting-around">Getting around</h3>
-      <StateContextExhibits topics={["work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
+        </div>
+      </details>
+      <StateContextExhibits concise topics={["work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
       <LocalEvidenceCharts kind="work" name={name} level={region.level} levels={packet.levels} series={construction} />
-      <h3 className="exhibit-group-head" id="about-living-there">Living there</h3>
+      <details className="place-evidence-group" id="about-living-there">
+        <summary><h3>Living there</h3><span>Water, flood, services and community</span></summary>
+        <div className="place-evidence-body">
           <LearningExhibit kind="Ground & water"><GroundAndWater compact name={name} levels={packet.levels} water={water} /></LearningExhibit>
           <LearningExhibit kind="Flood context"><FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} /></LearningExhibit>
           <div id="local-property-evidence" className="property-exhibit-anchor"><LearningExhibit kind="Service providers"><Utilities data={utilities} bpuInquiry={bpuInquiry} /></LearningExhibit></div>
-      <StateContextExhibits topics={["broadband"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
+      <StateContextExhibits concise topics={["broadband"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
           <CommunityContext exhibits data={community} level={region.level} supporting hideBroadband={region.level === "county"} />
+        </div>
+      </details>
       </ExhibitGallery>
       </section>
       <div id="place-explore">

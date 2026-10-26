@@ -46,7 +46,7 @@ function Flows({ flows, caption, heading }: { flows: MigrationFlow[]; caption: s
  * those who stayed, six years of the balance, and where movers came from and went to.
  * A town or ZIP shows its county's, and says so.
  */
-export function WhoIsMoving({ name, data, exhibit = false }: { name: string; data: Migration | null; exhibit?: boolean }) {
+export function WhoIsMoving({ name, data, exhibit = false, concise = false }: { name: string; data: Migration | null; exhibit?: boolean; concise?:boolean }) {
   if (!data) return null;
   const latest = latestYear(data);
   if (!latest) return null;
@@ -59,11 +59,11 @@ export function WhoIsMoving({ name, data, exhibit = false }: { name: string; dat
   return (
     <section className="section sales who-is-moving" aria-labelledby="who-is-moving-heading">
       <div className="section-head">
-        <h2 id="who-is-moving-heading">{exhibit ? "Who’s arriving—and where are others going?" : "Who is moving here?"}</h2>
+        <h2 id="who-is-moving-heading">{concise ? "Arrivals and departures" : exhibit ? "Who’s arriving—and where are others going?" : "Who is moving here?"}</h2>
       </div>
       {note && <p className="sales-note">{note}</p>}
-      {moves && <p className="sales-lead">{moves}</p>}
-      {income && (
+      {!concise && moves && <p className="sales-lead">{moves}</p>}
+      {!concise && income && (
         <p className="sales-note">
           {income} Newcomers with more to spend can add to demand for homes; this shows who moved, not that
           they moved prices.
@@ -111,7 +111,9 @@ export function WhoIsMoving({ name, data, exhibit = false }: { name: string; dat
       />
       </>}
 
-      <ReaderDetails title="About these figures">
+      <ReaderDetails title={concise ? "Details & sources" : "About these figures"}>
+        {concise && moves && <p>{moves}</p>}
+        {concise && income && <p>{income} This shows who moved, not that they moved prices.</p>}
         {exhibit && <><Flows flows={data.arrivals} heading="Where arrivals lived" caption={`Arrivals to ${county}, ${data.flows_year}`} /><Flows flows={data.departures} heading="Where leavers went" caption={`Departures from ${county}, ${data.flows_year}`} />
           <p className="sales-note">Annual net matched returns per 1,000: {trend.map(y=>`${y.year}: ${y.net_per_1000?.toFixed(1)}`).join(" · ")}.</p></>}
         <p className="sales-note">
@@ -123,8 +125,9 @@ export function WhoIsMoving({ name, data, exhibit = false }: { name: string; dat
           a change into 2023 is partly the method. A pair of counties is published only with 20 returns or
           more. <a href={IRS_MIGRATION} target="_blank" rel="noreferrer">The IRS’s migration data ↗</a>
         </p>
+        {concise && <StoryLink href="/stories/who-moves-in" />}
       </ReaderDetails>
-      <StoryLink href="/stories/who-moves-in" />
+      {!concise && <StoryLink href="/stories/who-moves-in" />}
     </section>
   );
 }

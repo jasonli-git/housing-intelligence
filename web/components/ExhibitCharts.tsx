@@ -61,9 +61,9 @@ export function MigrationExhibit({ data }: { data: Migration }) {
   </figure>;
 }
 
-export function SaleExhibit({ median, lower, upper, period }: { median:number; lower?:number; upper?:number; period:string }) {
+export function SaleExhibit({ median, lower, upper, period, concise = false }: { median:number; lower?:number; upper?:number; period:string; concise?:boolean }) {
   const values=[{label:"Lower quartile",value:lower},{label:"Median sale",value:median},{label:"Upper quartile",value:upper}].filter((p):p is {label:string;value:number}=>p.value!==undefined);
   const [chosen,setChosen]=useState("Median sale");
   const point=values.find(p=>p.label===chosen)??values[0];
-  return <figure className="exhibit-plot sale-exhibit"><div className="exhibit-readout"><strong>{formatValue(point.value,"usd")}</strong><span>{point.label} · {period}</span></div><div className="exhibit-choice" aria-label="Explore the sale-price distribution">{values.map(p=><button type="button" key={p.label} aria-pressed={chosen===p.label} onClick={()=>setChosen(p.label)}>{p.label}</button>)}</div><figcaption>{lower!==undefined&&upper!==undefined?"Quartiles bracket the middle half of qualifying sales. ":"Only the median is available. "}Sold homes—not every home’s value.</figcaption></figure>;
+  return <figure className="exhibit-plot sale-exhibit"><div className="exhibit-readout"><strong>{formatValue(point.value,"usd")}</strong><span>{point.label}{!concise && ` · ${period}`}</span></div><div className="exhibit-choice" aria-label="Explore the sale-price distribution">{values.map(p=><button type="button" key={p.label} aria-pressed={chosen===p.label} onClick={()=>setChosen(p.label)}>{p.label}</button>)}</div>{!concise && <figcaption>{lower!==undefined&&upper!==undefined?"Quartiles bracket the middle half of qualifying sales. ":"Only the median is available. "}Sold homes—not every home’s value.</figcaption>}</figure>;
 }
