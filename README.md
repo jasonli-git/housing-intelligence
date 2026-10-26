@@ -19,7 +19,8 @@ optional AI layer only explains figures that were already computed.
 >
 > **Latest.** A redesigned home page, search first beside the animated map, with each
 > tool in its own colour (#447); place pages that open on their costs, Compare with topics
-> and differences, and a Budget explorer with its controls beside the matches (#448).
+> and differences, and a Budget explorer with its controls beside the matches (#448); the
+> Buyer's guide, Property tax lookup and Housing help with setup beside the answers (#449).
 >
 > **Next.** Clearing TODO and the open Director Notes; then the hosting move for a second
 > state, on hold until they are cleared. See [ROADMAP.md](docs/ROADMAP.md) and
