@@ -42,6 +42,15 @@ it("opens a collapsed destination itself and focuses its summary", () => {
   expect(document.activeElement).toBe(document.querySelector('details > summary'));
 });
 
+it("leaves the skip link's focus on main rather than moving it to the first heading", () => {
+  render(<><PlaceSectionNav sections={sections} /><main id="main-content" tabIndex={-1}><h1 id="overview">Place</h1></main></>);
+  const main = document.getElementById('main-content')!;
+  main.focus();
+  history.replaceState(null, '', '#main-content');
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
+  expect(document.activeElement).toBe(main);
+});
+
 it("reveals an initial deep link inside nested closed evidence without adding history", () => {
   history.replaceState(null, '', '#source-record');
   const push = vi.spyOn(history, 'pushState');

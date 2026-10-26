@@ -30,7 +30,12 @@ export function PlaceSectionNav({ sections }: { sections: PlaceSection[] }) {
     };
     const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(update); };
     update();
-    const followHash = () => { if (location.hash) go(location.hash.slice(1), false); };
+    // Any deep link but main itself: the skip link's #main-content must leave focus on
+    // main, not move it to the page's first heading.
+    const followHash = () => {
+      const id = location.hash.slice(1);
+      if (id && !(document.getElementById(id) instanceof HTMLElement && document.getElementById(id)!.tagName === "MAIN")) go(id, false);
+    };
     followHash();
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
