@@ -13,6 +13,10 @@ are not yet recorded here.
 
 ### Added
 
+- **Place pages, Compare and the Budget explorer reworked** (ARCHITECTURE #448): place
+  pages open on their costs with a section navigator; Compare starts with five measures,
+  topics and differences from the first place; the Budget explorer puts its controls beside
+  the matching places; the bar leads with Explore, Compare, Budget and Stories.
 - **A redesigned home page** (ARCHITECTURE #447): search first, in ink, beside the
   animated map of the US; all six tools in a grid, each with its own colour, glowing behind
   the page when pointed at; Visual stories and the US market below.

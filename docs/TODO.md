@@ -53,6 +53,13 @@ Each is registered only once its file lands (a manual source with no file fails
 - Who solar actually reaches — the Clean Energy Program's Installation Data (.xlsx)
   into `data/manual/njcep_solar/` (cleanenergy.nj.gov refuses scripts).
 
+### Place pages and tools after #448
+
+- **Reader testing.** Nobody outside the project has tried finding a place, comparing
+  alternatives or adjusting a budget on the reworked pages; do it before further
+  structural changes.
+- **Duplicate named landmark** in the place pages' ground/water evidence (axe best practice).
+
 ### Home page leftovers (Milestones 57, #447)
 
 - **Unused home stylesheets.** `home-plate.css`, `home-refresh.css`, `home-horizon.css`,
