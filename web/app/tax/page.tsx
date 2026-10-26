@@ -1,3 +1,4 @@
+import styles from "@/components/SupportTools.module.css";
 import type { Metadata } from "next";
 
 import { Crumbs, Kind } from "@/components/Crumbs";
@@ -50,13 +51,13 @@ export default async function TaxPage() {
   return (
     <>
       <Masthead affordability={{ kind: "route" }} taxActive />
-      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool quiet-county quiet-tax horizon-page" data-region-level="tax">
+      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-tool quiet-county quiet-tax horizon-page ${styles.taxPage}`} data-region-level="tax">
         <header className="page-head" data-kind="tool">
           <div>
             <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="Property tax lookup" />
             <Kind kind="tool" />
-            <h1 className="page-title">Property tax lookup</h1>
-            <p className="meta tax-intro">Type any New Jersey address to see its tax bill and value. Owner names are never shown.</p>
+            <h1 className={`page-title ${styles.title}`}>Property tax lookup</h1>
+            <p className="meta tax-intro">Find the recorded tax bill, assessment, and town context for a New Jersey property.</p>
             {modivInquiry && <InquiryNote inquiry={modivInquiry} />}
           </div>
         </header>
