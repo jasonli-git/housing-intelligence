@@ -139,3 +139,13 @@
   .horizon-page .housing-atlas { height: calc(100svh - 165px); }
   @media (max-width: 900px) { .horizon-page.housing-atlas-page .atlas-title { padding: .6rem 0 .5rem !important; } .horizon-page .housing-atlas { height: auto; } }
 }
+.atlas-view-switch { display: none; }
+.atlas-place-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin-top: .7rem; }
+.atlas-place-actions > :is(a, button) { min-height: 44px; display: inline-flex; align-items: center; }
+@media screen and (max-width: 760px) {
+  .atlas-view-switch { display: flex; gap: .4rem; margin-block: 1rem; }
+  .atlas-view-switch button { flex: 1; min-height: 44px; border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); background: var(--surface-card); font: inherit; }
+  .atlas-view-switch [aria-pressed="true"] { border-color: currentColor; font-weight: 700; text-decoration: underline; text-underline-offset: 5px; }
+  .horizon-page .housing-atlas[data-mobile-view="list"] .atlas-map-stage { display: none; }
+  .horizon-page .housing-atlas .atlas-sheet-toggle { display: none; }
+}

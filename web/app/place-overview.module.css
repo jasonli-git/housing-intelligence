@@ -28,6 +28,15 @@
 .page.page :global(.place-cost-overview > .quiet-tool-group) { grid-row: 7; margin-top: .8rem; }
 .page.page :global(.place-cost-overview .cost-card) { padding: 1.1rem; }
 .page.page :global(.place-cost-overview .cost-figure b) { font-size: clamp(30px, 3.4vw, 44px); }
+.page :global(.cost-ownership-breakdown) { grid-column: 1 / -1; padding: 1rem 1.1rem; border-top: 1px solid var(--border); }
+.page :global(.cost-ownership-breakdown > h4) { margin: 0 0 .6rem; font: 500 14px/1.5 var(--font-text); }
+.page :global(.cost-ownership-breakdown .gone-kept) { margin-block: .6rem 0; }
+.page :global(.place-overview-context :is(.quiet-portrait-dots, .quiet-portrait-house)) { display: none; }
+.page :global(.quiet-tool-group > .cost-yours) { margin-block: 1rem; }
+.page :global(.budget-inputs select) { min-height: 44px; width: 100%; font: inherit; color: var(--text-primary); background: var(--surface-card); border: 1px solid var(--border); border-radius: 6px; padding: .5rem; }
+@media (max-width: 760px) { .page.page :global(.budget-inputs) { grid-template-columns: minmax(0, 1fr); } }
+.page :global(.difference-bridge > svg) { display: none; }
+.page.page :global(.bridge-difference) { background: none; border-radius: 0; border-inline: 1px solid var(--border); }
 .page :global(.place-overview-context .quiet-profile) { padding: 0; margin: 0; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-overview-context .quiet-profile-grid) { display: grid; grid-template-columns: minmax(0, 1fr) !important; gap: 0; margin: .6rem 0 0; padding: .25rem 1rem; background: var(--glass) !important; border: 1px solid var(--glass-edge); border-radius: 10px; box-shadow: none; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-overview-context .quiet-profile-grid article) { position: relative; padding: .9rem 0; border: 0; }
@@ -102,7 +111,7 @@
 .page.page :global(.standouts-disclosure-cue) { font-size: 12px; }
 
 /* All three budget fields use the same label-above-control arrangement. */
-.page.page :global(.budget-inputs) { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); align-items: start; gap: 1rem; }
+.page.page :global(.budget-inputs) { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: 1rem; }
 .page.page :global(.budget-inputs > :is(.control,.cost-field)) { display: flex; flex-direction: column; align-items: stretch; gap: .45rem; min-width: 0; margin: 0; font: 400 13px/1.5 var(--font-text); }
 .page.page :global(.budget-inputs input) { width: 100%; min-width: 0; min-height: 44px; margin: 0; padding: .65rem .75rem; font: 400 16px/1.4 var(--font-text); }
 .page.page :global(.budget-inputs .cost-field > span) { min-width: 0; }
@@ -127,9 +136,9 @@
   .page :global(.place-exhibit-pair) { display: block; }
 }
 
-.page :global(.budget-inputs > label > span) { min-height: 1.5em; }
+.page.page :global(.budget-inputs > label > span) { min-height: 1.5em; font: 400 13px/1.5 var(--font-text); letter-spacing: normal; text-transform: none; }
 @media(min-width:761px) and (max-width:1000px) {
-  .page :global(.budget-inputs > label > span) { min-height: 3em; }
+  .page.page :global(.budget-inputs > label > span) { min-height: 3em; }
 }
 
 /* Content pass: four primary topics, with secondary evidence one click away. */

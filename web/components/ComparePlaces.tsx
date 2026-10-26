@@ -8,7 +8,7 @@ import { Term } from "@/components/Term";
 import type { Packet, PacketLevel } from "@/lib/api";
 import { ownershipInputs, utilityTotal } from "@/lib/budgetScenario";
 import { COMPARE_SECTIONS, levelOf, MAX_PLACES, parsePlaces, placesQuery } from "@/lib/compare";
-import { formatMetric, formatValue } from "@/lib/format";
+import { formatMetric, formatValue, SHARE_METRICS } from "@/lib/format";
 import { homePrice } from "@/lib/homePrice";
 import { eachMonth } from "@/lib/ownership";
 import { periodLabel } from "@/lib/periods";
@@ -33,7 +33,7 @@ async function loadPacket(artifactUrl: string, id: number): Promise<Packet | nul
   }
 }
 
-function Figure({ level }: { level: PacketLevel | null }) {
+function Figure({ level, baseline, baselineName }: { level: PacketLevel | null; baseline?: PacketLevel | null; baselineName?: string }) {
   if (!level) return <span className="compare-missing">Not published</span>;
   const margin = level.survey ? marginLabel(level.value, level.margin_of_error ?? null, level.unit, level.metric_id) : null;
   return (
@@ -43,6 +43,9 @@ function Figure({ level }: { level: PacketLevel | null }) {
         {periodLabel(level.period_end, level.metric_id)}
         {margin ? ` · ${margin}` : ""}
       </small>
+      {baseline && baselineName && (baseline.period_start === level.period_start && baseline.period_end === level.period_end && baseline.unit === level.unit ?
+        <small className="compare-difference">{level.value === baseline.value ? "Same as" : `${level.value > baseline.value ? "+" : "−"}${(level.unit === "percent" || SHARE_METRICS.has(level.metric_id) ? `${(Math.abs(level.value - baseline.value) * (level.unit === "ratio" ? 100 : 1)).toFixed(1)} percentage points` : formatMetric(Math.abs(level.value - baseline.value), level.unit, level.metric_id))} vs`} {baselineName}</small> :
+        <small className="compare-difference">Different periods or units · no difference calculated</small>)}
     </>
   );
 }
@@ -70,6 +73,17 @@ function ownMonth(packet: Packet, ratePct: number): { value: number; partial: bo
 export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate: { value: number; asOf: string } }) {
   const [ids, setIds] = useState<number[]>([]);
   const [places, setPlaces] = useState<Loaded[]>([]);
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const query = window.matchMedia("(max-width: 600px)");
+    const update = () => setMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  const [topic, setTopic] = useState("Overview");
+  const [mobileOther, setMobileOther] = useState<number | null>(null);
   const [entries, setEntries] = useState<SearchEntry[] | null>(null);
 
   useEffect(() => {
@@ -102,6 +116,13 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
   const remove = (id: number) => update(ids.filter((other) => other !== id));
   const shown = places.filter((place) => ids.includes(place.id));
 
+  const baseline = shown[0]?.packet;
+  const secondId = ids.includes(mobileOther ?? -1) && mobileOther !== ids[0] ? mobileOther : ids[1];
+  const mobileVisible = (id: number) => id === ids[0] || id === secondId;
+  const columns = mobile ? shown.filter(place => mobileVisible(place.id)) : shown;
+  const overviewMetrics = new Set(["zhvi_sfr", "zori_all", "acs_median_hh_income", "acs_mean_commute_minutes"]);
+  const sections = topic === "Overview" ? COMPARE_SECTIONS.map(section => ({...section, rows: section.rows.filter(row => "cost" in row || overviewMetrics.has(row.metric))})).filter(section => section.rows.length) : COMPARE_SECTIONS.filter(section => topic === "All figures" || section.title === topic);
+
   return (
     <div className="compare-places" data-count={shown.length}>
       <div className="compare-picker">
@@ -118,16 +139,21 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
             />
           </>
         ) : (
-          <p className="meta">Four places is the most this page sets side by side. Remove one to add another.</p>
+          <p className="meta">4 places selected. Remove one to add another.</p>
         )}
         <p className="compare-share">
-          The places you choose are kept in this page’s address, so you can bookmark it or send it. Nothing is
-          saved in your browser.
+          Bookmark or share this address to keep your comparison.
         </p>
       </div>
 
       {ids.length === 0 && <p className="meta">Pick up to four counties, towns or ZIP codes to set side by side.</p>}
 
+      {ids.length > shown.length && <p role="status">Loading selected places…</p>}
+      {shown.length > 0 && <>
+        <div className="compare-topic-picker"><label>Show <select value={topic} onChange={event => setTopic(event.target.value)}>{["Overview", ...COMPARE_SECTIONS.map(section => section.title), "All figures"].map(title => <option key={title}>{title}</option>)}</select></label></div>
+        {baseline && <details className="compare-reading"><summary>Differences from {baseline.region.label}</summary><p>Differences use matching periods, units and geographic levels. Survey differences are arithmetic, not a test of significance; read them with the margins shown. Counties, towns and ZIP codes describe different geographic areas.</p></details>}
+        {ids.length > 2 && <label className="compare-mobile-picker">Compare the starting place with <select value={secondId ?? ""} onChange={event => setMobileOther(Number(event.target.value))}>{shown.slice(1).map(place => <option key={place.id} value={place.id}>{place.packet?.region.label ?? `Place ${place.id}`}</option>)}</select></label>}
+      </>}
       {shown.length > 0 && (
         <div className="compare-scroll" role="region" aria-label="Places compared" tabIndex={0}>
           <table className="compare-table">
@@ -135,18 +161,18 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
             <thead>
               <tr>
                 <th scope="col"><span className="visually-hidden">Figure</span></th>
-                {shown.map(({ id, packet }) => (
-                  <th scope="col" key={id}>
+                {columns.map(({ id, packet }) => (
+                  <th scope="col" key={id} data-mobile-visible={mobileVisible(id)}>
                     {packet ? <Link href={regionPath(id)}>{packet.region.label}</Link> : <span>Place {id}</span>}
                     <button type="button" className="compare-remove" onClick={() => remove(id)} aria-label={`Remove ${packet?.region.label ?? `place ${id}`}`}>×</button>
                   </th>
                 ))}
               </tr>
             </thead>
-            {COMPARE_SECTIONS.map((section) => (
+            {sections.map((section) => (
               <tbody key={section.title}>
                 <tr className="compare-section">
-                  <th scope="rowgroup" colSpan={shown.length + 1}>{section.title}</th>
+                  <th scope="rowgroup" colSpan={columns.length + 1}>{section.title}</th>
                 </tr>
                 {section.rows.map((row) => {
                   if ("cost" in row) {
@@ -157,10 +183,10 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
                             Monthly cost to own
                           </Term>
                         </th>
-                        {shown.map(({ id, packet }) => {
+                        {columns.map(({ id, packet }) => {
                           const own = packet ? ownMonth(packet, rate.value) : null;
                           return (
-                            <td key={id}>
+                            <td key={id} data-mobile-visible={mobileVisible(id)}>
                               {own ? (
                                 <>
                                   <strong>{formatValue(own.value, "usd")}</strong>
@@ -179,8 +205,8 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
                   return (
                     <tr key={row.metric}>
                       <th scope="row"><Term id={row.metric}>{label}</Term></th>
-                      {shown.map(({ id, packet }) => (
-                        <td key={id}>{packet ? <Figure level={levelOf(packet.levels, row.metric)} /> : <span className="compare-missing">Could not load</span>}</td>
+                      {columns.map(({ id, packet }) => (
+                        <td key={id} data-mobile-visible={mobileVisible(id)}>{packet ? <Figure level={levelOf(packet.levels, row.metric)} baseline={id !== shown[0]?.id && baseline && packet.region.level === baseline.region.level ? levelOf(baseline.levels, row.metric) : null} baselineName={baseline?.region.label} /> : <span className="compare-missing">Could not load</span>}</td>
                       ))}
                     </tr>
                   );

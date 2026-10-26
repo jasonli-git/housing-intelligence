@@ -35,11 +35,11 @@ try {
       assert(surfaces.every(s => s.background === 'none' && s.radius === '12px'));
       const question = gallery.locator('#state-loans-exhibit');
       assert(await question.evaluate(n => parseFloat(getComputedStyle(n).fontSize)) > await page.locator('#field-notes').evaluate(n => parseFloat(getComputedStyle(n).fontSize)));
-      const inputs = page.locator('.budget-inputs input');
+      const inputs = page.locator('.budget-inputs input, .budget-inputs select');
       const boxes = await inputs.evaluateAll(nodes => nodes.map(n => { const r=n.getBoundingClientRect(); return {y:r.y, height:r.height, width:r.width}; }));
-      assert.equal(boxes.length, 3);
+      assert.equal(boxes.length, 4);
       assert(boxes.every(b => b.height >= 44 && b.width > 0));
-      if (width > 760) assert(Math.max(...boxes.map(b => b.y)) - Math.min(...boxes.map(b => b.y)) < 2, 'Budget input baselines align');
+      if (width > 760) { assert(Math.abs(boxes[0].y - boxes[1].y) < 2, 'First pair aligns'); assert(Math.abs(boxes[2].y - boxes[3].y) < 2, 'Second pair aligns'); }
       await page.locator('.budget-basics').getByLabel('Yearly household income before tax', { exact: true }).fill('100000');
       assert(await page.locator('.budget-basics h4').innerText().then(t => t.includes('Owning uses')));
       await page.locator('.budget-basics').getByLabel('Rent you’d pay instead, a month', { exact: true }).fill('2200');
