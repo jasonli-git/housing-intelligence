@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import styles from "./Masthead.module.css";
+
 import { PlaceSearch } from "@/components/PlaceSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import type { AffordabilityControl } from "@/components/HousingModeToggle";
@@ -31,7 +33,6 @@ export function Masthead({
   helpActive = false,
   atlasActive = false,
   compareActive = false,
-  budgetLabel = "Budget explorer",
   search = true,
 }: {
   affordability: AffordabilityControl;
@@ -43,26 +44,25 @@ export function Masthead({
   atlasActive?: boolean;
   /** On the compare page. */
   compareActive?: boolean;
-  budgetLabel?: string;
   /** False on the home page, whose own search is the page's main action. */
   search?: boolean;
 }) {
-  const budgetContent = <>
-    <span className="bar-budget-long">{budgetLabel}</span>
-    <span className="bar-budget-short" aria-hidden="true">{budgetLabel === "Find places · NJ" ? "Budget · NJ" : budgetLabel === "Find within my budget" ? "My budget" : budgetLabel === "Budget explorer" ? "Budget" : budgetLabel}</span>
-  </>;
-  const toolLinks = <>
-    {affordability.kind === "hidden" ? null : affordability.kind === "disabled" ? <button className="bar-budget" type="button" disabled title={affordability.reason} aria-label={`${budgetLabel}. ${affordability.reason}`}>{budgetContent}</button> :
-      <Link className="bar-budget" href="/afford?county=all" aria-current={affordability.kind === "route" && affordability.active ? "page" : undefined} aria-label="Find places within my budget across all New Jersey">{budgetContent}</Link>}
-    <Link className="bar-link" href="/guide" aria-label="Buyer’s guide" aria-current={guideActive ? "page" : undefined}>Buyer’s guide</Link>
-    <Link className="bar-link" href="/tax" aria-label="Property tax lookup" aria-current={taxActive ? "page" : undefined}>Property tax</Link>
+  const primaryLinks = <>
+    <Link className="bar-link" href="/atlas" aria-current={atlasActive ? "page" : undefined}>Explore</Link>
     <Link className="bar-link" href="/compare" aria-label="Compare places" aria-current={compareActive ? "page" : undefined}>Compare</Link>
-    <Link className="bar-link bar-help-route" href="/help" aria-current={helpActive ? "page" : undefined}>Housing help</Link>
-    <Link className="bar-link" href="/atlas" aria-current={atlasActive ? "page" : undefined}>Housing atlas</Link>
+    {affordability.kind === "hidden" ? null : affordability.kind === "disabled" ?
+      <button className="bar-budget" type="button" disabled title={affordability.reason} aria-label={`Budget. ${affordability.reason}`}>Budget</button> :
+      <Link className="bar-budget" href="/afford?county=all" aria-current={affordability.kind === "route" && affordability.active ? "page" : undefined} aria-label="Find places within my budget across all New Jersey">Budget</Link>}
+    <Link className="bar-link" href="/stories">Stories</Link>
+  </>;
+  const secondaryLinks = <>
+    <Link className="bar-link" href="/guide" aria-current={guideActive ? "page" : undefined}>Buyer’s guide</Link>
+    <Link className="bar-link" href="/tax" aria-current={taxActive ? "page" : undefined}>Property tax</Link>
+    <Link className="bar-link" href="/help" aria-current={helpActive ? "page" : undefined}>Housing help</Link>
   </>;
   return (
     <>
-      <nav className="bar print-hide" aria-label="Sites">
+      <nav className={`bar print-hide ${styles.navigation}`} aria-label="Sites">
         <div className="bar-inner">
           <div className="bar-trail">
             <a className="bar-home" href="https://jasonli.app" aria-label="Jason Li — portfolio">
@@ -91,12 +91,13 @@ export function Masthead({
           {/* Desktop follows the reader's journey; mobile keeps the same links in
               a native disclosure beside search, with theme on the brand row. */}
           <div className="bar-tools">
-            <div className="bar-controls bar-desktop-tools">{toolLinks}</div>
+            <div className="bar-controls bar-desktop-tools">{primaryLinks}</div>
             {search && <PlaceSearch />}
             <details className="bar-tool-menu">
-              <summary>Tools <span aria-hidden="true">⌄</span></summary>
+              <summary><span className={styles.desktopLabel}>Tools</span><span className={styles.mobileLabel}>Menu</span> <span aria-hidden="true">⌄</span></summary>
               <div className="bar-controls">
-                {toolLinks}
+                <div className={styles.mobilePrimary}>{primaryLinks}</div>
+                {secondaryLinks}
               </div>
             </details>
           </div>

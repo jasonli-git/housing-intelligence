@@ -1,0 +1,8 @@
+@media screen {
+  .details.details > summary { display: flex; align-items: center; gap: .65rem; min-height: 44px; padding-block: .5rem; box-sizing: border-box; list-style: none; }
+  .details > summary::-webkit-details-marker { display: none; }
+  .details > summary > svg { width: 16px; height: 16px; flex: 0 0 auto; }
+  .details[open] > summary > svg { transform: rotate(180deg); }
+  .details > summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+  :global(.report) .details.details > summary { display: none; }
+}
