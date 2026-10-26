@@ -11,7 +11,7 @@ describe("budget explorer presentation", () => {
     const html = renderToStaticMarkup(createElement(AffordExplorer, base));
     expect(html).toContain("All New Jersey");
     expect(html).toContain("Your monthly budget shows here");
-    expect(html).toContain("show which towns’ typical homes fit it");
+    expect(html).toContain("monthly comparison budget and matching towns");
     expect(html).toContain('data-view="list"');
     expect(html).not.toContain('class="globe-stage"');
   });

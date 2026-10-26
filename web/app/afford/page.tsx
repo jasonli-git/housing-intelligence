@@ -1,3 +1,5 @@
+import styles from "@/components/AffordExplorer.module.css";
+
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -47,7 +49,7 @@ export default async function AffordPage() {
   return (
     <>
       <Masthead affordability={{ kind: "route", active: true }} />
-      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool budget-page horizon-page" data-region-level="tool">
+      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-tool budget-page horizon-page ${styles.page}`} data-region-level="tool">
       <header className="page-head" data-kind="tool">
         <div>
           <Crumbs
@@ -66,6 +68,7 @@ export default async function AffordPage() {
       <AffordExplorer
         {...data}
         appearance="atlas"
+        workspace
       />
       </main>
     </>

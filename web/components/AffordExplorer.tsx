@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "./AffordExplorer.module.css";
+
 import { Gloss } from "@/components/Gloss";
 import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
@@ -50,6 +52,7 @@ export function AffordExplorer({
   rate,
   asOf,
   appearance = "classic",
+  workspace = false,
   scope: initialScope,
 }: {
   counties: Place[];
@@ -57,6 +60,7 @@ export function AffordExplorer({
   rate: { value: number; asOf: string };
   asOf: { home: string; rent: string; tax: string; insurance?: string; utilities?: string };
   appearance?: "classic" | "atlas";
+  workspace?: boolean;
   scope?: { countyId: number; countyName: string };
 }) {
   const [incomeText, setIncomeText] = useState(DEFAULT_INCOME);
@@ -89,6 +93,10 @@ export function AffordExplorer({
     if (params.has("place") || params.has("county")) {
       setCountyId(context.countyId);
     }
+    if (workspace) {
+      setMode(params.get("mode") === "rent" ? "rent" : "own");
+      setAllTowns(params.get("show") === "all");
+    }
     setAddressRead(true);
   }, [places]);
 
@@ -104,13 +112,28 @@ export function AffordExplorer({
     window.history.replaceState(window.history.state, "", url);
   }, [countyId, addressRead]);
 
+  useEffect(() => {
+    if (!workspace || !addressRead) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("mode", mode);
+    if (allTowns) url.searchParams.set("show", "all"); else url.searchParams.delete("show");
+    // Update an explicitly supplied income without adding household income to new URLs.
+    if (url.searchParams.has("income")) {
+      const value = parseAmount(incomeText);
+      if (value && value > 0) url.searchParams.set("income", String(value));
+      else url.searchParams.delete("income");
+    }
+    window.history.replaceState(window.history.state, "", url);
+  }, [workspace, addressRead, mode, allTowns, incomeText]);
+
   const income = Number(incomeText.replace(/[^0-9.]/g, "")) || 0;
   const options = { mode, income, downPct: down, ratePct: personal.ratePct ?? rate.value, personal };
   const countyRows = income > 0 ? reach(counties, options) : [];
   const allTownRows = income > 0 ? reach(towns, options) : [];
   const townRows = scope ? allTownRows.filter((row) => row.place.parentId === scope.countyId) : allTownRows;
   const townsWithin = townRows.filter((row) => row.within);
-  const shownTowns = allTowns ? townsWithin : townsWithin.slice(0, FIRST_TOWNS);
+  const firstTowns = workspace ? 10 : FIRST_TOWNS;
+  const shownTowns = allTowns ? townsWithin : townsWithin.slice(0, firstTowns);
 
   function onModeKeys(event: KeyboardEvent<HTMLDivElement>) {
     if (
@@ -205,8 +228,17 @@ export function AffordExplorer({
     </>
   );
 
+  const resultCaveats = (
+        <p className="wca-fineprint">
+          Typical costs from published figures, not listings or loan approval{mode === "own" ? " — HOA fees and flood insurance aren’t included" : " — rent only, no utilities"}.
+          {unlisted > 0 && <> {unlisted} towns without {mode === "own" ? "a home value or tax bill" : "a rent figure"} aren’t listed; that doesn’t make them unaffordable.</>}
+        </p>
+  );
+
   return (
-    <section className="afford budget-explorer wca" data-view="list" data-has-income={income > 0} aria-label="Find places within your budget">
+    <section className={`afford budget-explorer wca ${workspace ? styles.workspace : ""}`} data-view="list" data-has-income={income > 0} aria-label="Find places within your budget">
+      <div className={workspace ? styles.controls : undefined} id={`${id}-inputs`}>
+      {workspace && <h2 className={styles.panelTitle}>Your budget</h2>}
       <div className="wca-step-label wca-step-first"><span>1</span>Your situation{income <= 0 && <em>Start here</em>}</div>
       <div className="afford-controls wca-first">
         {situation}
@@ -227,22 +259,25 @@ export function AffordExplorer({
       <div className="budget-headline" aria-live="polite">
         {income > 0 ? <>
           <strong>{money(budget)}<small> a month</small></strong>
-          <p>30% of {money(income)} a year — the usual line for what housing should cost.{mode === "own" && <> At a <b>{options.ratePct.toFixed(2)}%</b> mortgage rate with <b>{down}%</b> down.</>}</p>
+          <p>30% of {money(income)} a year — a comparison line, not loan approval.{mode === "own" && <> At a <b>{options.ratePct.toFixed(2)}%</b> mortgage rate with <b>{down}%</b> down.</>}</p>
         </> : <>
           <strong className="wca-empty">Your monthly budget shows here</strong>
-          <p>Enter your income in step 1; we’ll turn it into a monthly housing budget and show which towns’ typical homes fit it.</p>
+          <p>Enter your income to see a monthly comparison budget and matching towns.</p>
         </>}
       </div>
-      {income > 0 && <details className="budget-assumptions">
-        <summary>Adjust the rate, insurance or upkeep</summary>
+      {income > 0 && (!workspace || mode === "own") && <details className="budget-assumptions">
+        <summary>{workspace ? "Advanced assumptions" : "Adjust the rate, insurance or upkeep"}</summary>
         <div className="budget-inputs">
           <label className="control">Cash available for buying<input inputMode="decimal" value={household.cash ?? ""} placeholder="optional" onChange={(event) => saveHousehold({ ...household, cash: parseAmount(event.target.value) ?? undefined })} /></label>
           {([ ["ratePct", "Mortgage rate, %", rate.value], ["insuranceYear", "Homeowners insurance a year", null], ["upkeepPct", "Upkeep, % of price a year", UPKEEP_PCT] ] as const).map(([key, label, fallback]) => <label className="control" key={key}>{label}<input inputMode="decimal" value={personal[key] ?? ""} placeholder={fallback === null ? "area figure" : String(fallback)} onChange={(event) => { const next = { ...personal }; const value = parseAmount(event.target.value); if (value === null) delete next[key]; else next[key] = value; savePersonal(next); }} /></label>)}
         </div>
-        <p>Saved in this browser and shared with the cost cards on each place’s page.</p>
+        <p>Saved in this browser and shared with the cost cards on each place’s page. {workspace && "Cash is saved for planning; it does not filter these monthly-cost results."}</p>
         {mode === "own" && down === FHA_DOWN && <p>FHA scenario: county loan limits are not checked. <a href={FHA_LIMITS.url} target="_blank" rel="noreferrer">Check the loan limit</a>.</p>}
       </details>}
 
+      </div>
+      <div className={workspace ? styles.results : undefined}>
+      {workspace && <div className={styles.resultsHeading}><h2>Matching places</h2><a href={`#${id}-inputs`}>Edit budget ↑</a></div>}
       {income <= 0 && <>
         <div className="wca-step-label"><span>3</span>Where it fits</div>
         <p className="wca-placeholder">The towns whose typical home fits your budget show here.</p>
@@ -262,6 +297,7 @@ export function AffordExplorer({
           </p>}
         </div>
 
+        {workspace && resultCaveats}
         <div className="wca-results">
           {townsWithin.length > 0 && <section className="budget-town-results wca-list" aria-labelledby={`${id}-towns`}>
             <h2 id={`${id}-towns`}>Within your budget</h2>
@@ -275,9 +311,9 @@ export function AffordExplorer({
                 </li>
               ))}
             </ol>
-            {townsWithin.length > FIRST_TOWNS && (
+            {townsWithin.length > firstTowns && (
               <button type="button" className="button" onClick={() => setAllTowns((all) => !all)}>
-                {allTowns ? `Show the first ${FIRST_TOWNS}` : `Show all ${townsWithin.length}`}
+                {allTowns ? `Show the first ${firstTowns}` : `Show all ${townsWithin.length}`}
               </button>
             )}
           </section>}
@@ -318,10 +354,7 @@ export function AffordExplorer({
         {scope && <p className="budget-scope-line wca-scope">Searching <b>{scope.countyName}</b> <button type="button" onClick={() => { setCountyId(null); setAllTowns(false); }}>Search all New Jersey</button></p>}
 
         <p className="wca-pointer">Have a town in mind? Search it in the menu bar — its cost card uses the income you entered here.</p>
-        <p className="wca-fineprint">
-          Typical costs from published figures, not listings or loan approval{mode === "own" ? " — HOA fees and flood insurance aren’t included" : " — rent only, no utilities"}.
-          {unlisted > 0 && <> {unlisted} towns without {mode === "own" ? "a home value or tax bill" : "a rent figure"} aren’t listed; that doesn’t make them unaffordable.</>}
-        </p>
+        {!workspace && resultCaveats}
       </>}
 
 
@@ -344,6 +377,7 @@ export function AffordExplorer({
         A place fits when its typical monthly cost is at most 30% of income before tax, HUD’s cost-burden line.
         Computed from these figures by fixed rules; not a quote, and not written by AI.
       </Gloss></p></details>
+      </div>
     </section>
   );
 }
