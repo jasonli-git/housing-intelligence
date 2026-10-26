@@ -672,7 +672,7 @@ export function CostToOwn({
           )}
           <p className="cost-figure" aria-live="polite">
             <b>{money(month.total)}</b>
-            <span>{quiet ? "a month, including principal" : "a month, every cost below"}</span>
+            <span>{quiet ? <Glossed text="a month, including principal" /> : "a month, every cost below"}</span>
           </p>
           {month.loan.fha && (
             <p className="cost-basis">
