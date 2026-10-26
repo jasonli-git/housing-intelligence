@@ -12,15 +12,14 @@ and not a chatbot: pages, maps, tools, reports and an API are the product, and a
 optional AI layer only explains figures that were already computed.
 
 > **Status — <!-- fill:version -->v0.50.0 (2026-10-08)<!-- /fill -->, updated
-> 2026-10-24.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
+> 2026-10-26.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
 > published in full: the state, <!-- fill:counties -->21<!-- /fill --> counties,
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** A US market scoreboard on the home page (#444-#446): eight
-> tiles from the mortgage rate to new-home supply, each against a year earlier and named
-> by its kind of figure, with five plain-English takeaways, such as what this year's rate
-> costs a month on a typical new home.
+> **Latest.** A redesigned home page, search first beside the animated map, with each
+> tool in its own colour (#447); place pages that open on their costs, Compare with topics
+> and differences, and a Budget explorer with its controls beside the matches (#448).
 >
 > **Next.** Clearing TODO and the open Director Notes; then the hosting move for a second
 > state, on hold until they are cleared. See [ROADMAP.md](docs/ROADMAP.md) and
