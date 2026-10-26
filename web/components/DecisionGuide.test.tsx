@@ -9,7 +9,7 @@ it("asks for a place first and names the three answers without claiming missing 
   expect(html).toContain("Pick a place");
   expect(html).toContain("Start here");
   expect(html).toContain('data-ready="false"');
-  expect(html).toContain("can you afford it, should you rent or buy, and what to check before an offer");
+  expect(html).toContain("buying costs, rent versus buy, and checks before an offer");
   expect(html).not.toContain("No home price is published");
   expect(html).not.toContain('class="guide-answers"');
   expect(html).not.toContain("guide-slide");

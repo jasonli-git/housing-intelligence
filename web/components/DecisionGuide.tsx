@@ -28,6 +28,7 @@ import type { SearchEntry } from "@/lib/search";
 import { cashFit } from "@/lib/budgetScenario";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
 import { readGuideTransfer } from "@/lib/guideTransfer";
+import styles from "./DecisionGuide.module.css";
 import { TwoPaths } from "@/components/TwoPaths";
 
 /**
@@ -227,7 +228,8 @@ export function DecisionGuide({
   }, [data]);
 
   return (
-    <div className="decision-guide guide-steps-layout" data-ready={Boolean(data)} data-has-income={Boolean(yearly)}>
+    <div className={`decision-guide guide-steps-layout ${styles.workspace}`} data-ready={Boolean(data)} data-has-income={Boolean(yearly)}>
+      <div className={styles.setup} id="guide-inputs">
       <div className="wca-step-label wca-step-first"><span>1</span>Pick a place{!data && <em>Start here</em>}</div>
       <section className="guide-place guide-first" aria-labelledby="guide-place-heading">
         <h2 id="guide-place-heading" className={data ? undefined : "visually-hidden"}>{data ? data.region.label : "Choose a place"}</h2>
@@ -319,8 +321,16 @@ export function DecisionGuide({
         <p className="guide-saved">Saved only in this browser, and shared with the site’s other cost tools.</p>
       </section>
 
+      </div>
+      <div className={styles.results}>
+      {data && <nav className={styles.navigation} aria-label="Guide answers">
+        <a href="#guide-afford-heading">Buying costs</a>
+        <a href="#guide-rent-heading">Rent or buy</a>
+        <a href="#guide-checks-heading">Before an offer</a>
+        <a href="#guide-inputs">Edit inputs ↑</a>
+      </nav>}
       <div className="wca-step-label"><span>3</span>The answers</div>
-      {!data ? <p className="wca-placeholder">Pick a place in step 1. Three answers show here: can you afford it, should you rent or buy, and what to check before an offer.</p> : <div className="guide-answers">
+      {!data ? <p className="wca-placeholder">Choose a place to explore buying costs, rent versus buy, and checks before an offer.</p> : <div className="guide-answers">
 
         <section className="guide-answer" aria-labelledby="guide-afford-heading">
           <div className="guide-answer-head">
@@ -335,7 +345,10 @@ export function DecisionGuide({
             <p className="guide-sub">
               {afford.price.basis === "reader" ? "Your purchase price of" : afford.price.basis === "index" ? "The typical home here," : "The median sale here,"} {usd(afford.price.value)}, with {downPct}% down at {ratePct.toFixed(2)}%. Upfront cash: {usd(afford.upfront.low)}–{usd(afford.upfront.high)}.
             </p>
-            <details className="guide-more"><summary>The cost breakdown and what it leaves out</summary>
+            <p className="guide-limit">A comparison estimate, not loan approval. HOA fees and flood insurance are included only if entered.
+              {afford.month.missing.length > 0 && ` Missing local inputs: ${afford.month.missing.join(" and ").toLowerCase()}.`}
+            </p>
+            <details className="guide-more"><summary>Cost breakdown, assumptions & sources</summary>
               <dl className="cost-lines">
                 {afford.month.lines.filter((line) => !line.conditional).map((line) => (
                   <div key={line.key} className={line.value === null ? "missing" : undefined}>
@@ -380,6 +393,7 @@ export function DecisionGuide({
             <p className="guide-figure">Over <b>{years} years</b>, all in: owning costs <b>{usd(choice.planned.net)}</b> after you sell · renting costs <b>{usd(choice.planned.rent ?? 0)}</b></p>
             <p className="guide-sub">Owning counts the mortgage, tax, insurance, upkeep and buying and selling costs, less what the sale returns. Renting is {choice.ownRent ? "your rent" : "the typical rent here"}, {usd(choice.rent)} a month{choice.breakEven === null ? `; owning doesn’t come out cheaper within ${MAX_YEARS} years` : ""}.</p>
           </>}
+          {choice && <p className="guide-limit">A scenario, not a forecast. Home prices {personal.appreciationPct ?? 0}% a year; rents {personal.rentGrowthPct ?? 0}% a year. Utilities and returns on the down payment are excluded.</p>}
           <details className="guide-more" open={!choice || undefined}><summary>Change the rent, years or price growth</summary>
             <div className="guide-fields">
               <label>
@@ -427,6 +441,7 @@ export function DecisionGuide({
         </section>
       </div>}
 
+      </div>
       <p className="guide-fineprint">Your numbers set against published local figures, by fixed calculations with sources and limits — not AI-written advice. <Link className="guide-help-shortcut" href="/help">Housing help ↗</Link></p>
     </div>
   );
