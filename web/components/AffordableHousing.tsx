@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "./SupportTools.module.css";
+
 import { Glossed } from "@/components/Glossed";
 import { regionPath } from "@/lib/placeRoutes";
 import { createContext, useCallback, useContext, type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -97,7 +99,8 @@ export function AffordableHousing({data, hideRoutes = false, tool = false, inven
     .filter((r) => !soon || reportedEnds(r, records).some((d) => soonAfterSnapshot(d, r.snapshot))), [records, program, query, soon]);
   const shown = properties.slice(page * 10, (page + 1) * 10);
 
-  return <section className="housing-assistance" data-tool={tool} aria-labelledby={`${id}-title`}>
+  return <section className={`housing-assistance ${tool ? styles.helpWorkspace : ""}`} data-tool={tool} aria-labelledby={`${id}-title`}>
+    <div className={tool ? styles.helpRoutes : styles.passThrough} id={tool ? "help-offices" : undefined} tabIndex={tool ? -1 : undefined}>
     {tool ? <>
       <div className="wca-step-label wca-step-first"><span>1</span>Which do I need?<em>Start here</em></div>
       <h3 id={`${id}-title`} className="visually-hidden">Choose your next step</h3>
@@ -115,6 +118,8 @@ export function AffordableHousing({data, hideRoutes = false, tool = false, inven
     </a>)}</div>}
     <p className="assistance-note">Links reviewed Oct 4, 2026. Open waiting lists, vacancies and eligibility are not verified here. Apply through the official administrator; an income check is not a qualification decision.</p>
     </>}
+    </div>
+    <div className={tool ? styles.helpInventory : styles.passThrough} id={tool ? "help-records" : undefined} tabIndex={tool ? -1 : undefined}>
     {!data ? <p className="assistance-note">No directly located inventory is loaded for this page. The official application routes above are still available. Town records are not allocated to ZIP codes.</p> : <>
       {!tool && <details open={programmeOpen !== null ? true : undefined}><summary>What towns report <span>Need, completed projects & trust funds</span></summary>
         <div className="assistance-facts">
@@ -138,7 +143,7 @@ export function AffordableHousing({data, hideRoutes = false, tool = false, inven
         </div>
         <p className="assistance-note">{tool ? "Properties that were built or funded as affordable. A listing here isn’t an opening — call the property or its office to ask." : "LIHTC’s bulk inventory is historical, not proof of a current restriction or vacancy. Inventories overlap; bedroom counts describe reported units, not available homes. Disability targeting does not establish physical accessibility."}</p>
         {data.county_inventory_region_id && <p className="assistance-note">HUD’s assisted-property file identifies counties, not municipalities. LIHTC records without a verified town also stay in the county or state inventory. <Link href={`${regionPath(data.county_inventory_region_id)}#housing-assistance`}>See this county’s inventory →</Link></p>}
-        <p className="assistance-result-count" role="status">{tool ? `${properties.length.toLocaleString("en-US")} properties` : `${properties.length} matching records · displayed separately, never added across programmes`}</p>
+        <p className="assistance-result-count" role="status">{tool ? `${properties.length.toLocaleString("en-US")} matching records · lists may overlap` : `${properties.length} matching records · displayed separately, never added across programmes`}</p>
         <ul className="assistance-properties">{shown.map((r) => <Property key={`${r.source_id}-${r.record_id}`} row={r} records={records} plain={tool} />)}</ul>
         {!shown.length && !loading && !error && inventory && <p>No records match. This does not establish that no affordable homes exist here.</p>}
         {properties.length > 10 && <nav aria-label="Property result pages" className="assistance-pages"><button disabled={page === 0} onClick={() => setPage(page - 1)}>Previous</button><span>{page + 1} / {Math.ceil(properties.length / 10)}</span><button disabled={(page + 1) * 10 >= properties.length} onClick={() => setPage(page + 1)}>Next</button></nav>}
@@ -148,6 +153,7 @@ export function AffordableHousing({data, hideRoutes = false, tool = false, inven
         <ul>{provenance.map((r) => <li key={`${r.source_id}-${r.kind}-${r.release_id}`}><a href={r.source_url} target="_blank" rel="noreferrer">{r.source_id} · {r.kind.replaceAll("_", " ")}</a> · snapshot {r.snapshot} · downloaded {r.fetched_at.slice(0, 10)} · release {r.release_id}</li>)}</ul>
       </details>
     </>}
+    </div>
   </section>;
 }
 

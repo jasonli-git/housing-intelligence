@@ -19,7 +19,6 @@
   .horizon-page.guide-page .kind::before { display: none; }
 
   /* One column of steps, replacing the old side-by-side setup and carousel. */
-  .guide-page .decision-guide.guide-steps-layout { display: block !important; }
   .guide-steps-layout > :is(.guide-place, .guide-household, .guide-answer, .wca-placeholder) { margin: 0; }
   .guide-steps-layout :is(.guide-place, .guide-household, .guide-answer) {
     padding: 1.2rem 1.4rem; background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 24px;

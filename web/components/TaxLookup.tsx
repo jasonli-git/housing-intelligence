@@ -14,6 +14,7 @@ import {
   placesFor,
   type StreetShard,
 } from "@/lib/addressSearch";
+import styles from "./SupportTools.module.css";
 import { PropertyDetails } from "@/components/PropertyDetails";
 import { countyLookup } from "@/lib/countyLookups";
 import { formatValue } from "@/lib/format";
@@ -366,6 +367,7 @@ function ParcelCard({
         </p>
       </header>
 
+      <div className={styles.taxOverview}>
       <div className="tax-hero">
         <p className="tax-hero-label">Property tax, {file.tax_year}</p>
         <p className="tax-hero-figure">{usd(parcel.tax)}<small> a year</small></p>
@@ -395,14 +397,8 @@ function ParcelCard({
         </p>
       )}
 
-      <PropertyDetails
-        parcel={parcel}
-        geoid={file.geoid}
-        town={town}
-        likelyValue={implied !== null && file.assessment_ratio ? Math.round(implied / 1000) * 1000 : null}
-        rate={rate}
-        artifactUrl={artifactUrl}
-      />
+      </div>
+      <div className={styles.taxContext}>
 
       <section className="tax-town" aria-labelledby="tax-town-heading">
         <h3 id="tax-town-heading">{town}’s assessments</h3>
@@ -446,6 +442,19 @@ function ParcelCard({
         {countyRecords && <li><a href={countyRecords} target="_blank" rel="noreferrer"><b>{file.county} County’s record</b><span>Can be newer than the state’s file</span></a></li>}
         <li><a href={CHAPTER_123} target="_blank" rel="noreferrer"><b>How appeals are judged</b><span>The state’s fair-value range for each town</span></a></li>
       </ul>
+      </div>
+      <details className={styles.propertyDetail}>
+        <summary>Ownership costs, lot details & nearby context</summary>
+      <PropertyDetails
+        parcel={parcel}
+        geoid={file.geoid}
+        town={town}
+        likelyValue={implied !== null && file.assessment_ratio ? Math.round(implied / 1000) * 1000 : null}
+        rate={rate}
+        artifactUrl={artifactUrl}
+      />
+
+      </details>
     </article>
   );
 }

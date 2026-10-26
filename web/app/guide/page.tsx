@@ -8,6 +8,7 @@ import { periodLabel } from "@/lib/periods";
 import "../tool-pages.css";
 import "../horizon-theme.css";
 import "../guide-horizon.css";
+import styles from "@/components/DecisionGuide.module.css";
 import { pageMetadata } from "@/lib/meta";
 
 export const metadata: Metadata = pageMetadata({
@@ -37,13 +38,9 @@ export default async function GuidePage() {
               here="Buyer’s guide"
             />
             <Kind kind="tool" />
-            <h1 className="page-title">Thinking of buying here?</h1>
-            <p className="meta">Three answers for any place in New Jersey.</p>
-            <ol className="guide-promise" aria-label="What the guide answers">
-              <li><a href="#guide-afford-heading"><small>01</small>Can I afford it?</a></li>
-              <li><a href="#guide-rent-heading"><small>02</small>Rent or buy?</a></li>
-              <li><a href="#guide-checks-heading"><small>03</small>Before an offer</a></li>
-            </ol>
+            <h1 className={`page-title ${styles.title}`}>Buyer’s guide</h1>
+            <p className="meta">Explore buying costs, compare renting, and check a home before an offer.</p>
+
           </div>
         </header>
         {rate ? (

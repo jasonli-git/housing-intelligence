@@ -1,0 +1,60 @@
+.passThrough { display:contents; }
+.helpRoutes,.helpInventory { scroll-margin-top:7rem; }
+.helpNavigation { display:flex; flex-wrap:wrap; gap:1.25rem; }
+.helpNavigation a { display:inline-flex; align-items:center; min-height:44px; font-size:14px; text-underline-offset:5px; }
+@media print { .helpNavigation { display:none; } }
+@media screen {
+  :global(#main-content) .title { font-size:clamp(34px,4vw,56px) !important; line-height:1.1 !important; }
+  :global(#main-content).taxPage > :global(.page-head) { text-align:left; }
+  .taxPage :global(.tax-intro) { margin-inline:0 !important; }
+  .taxPage :global(.tax-lookup) { max-width:none; margin-inline:0; }
+  .taxPage :global(.tax-lookup > .household-inputs) { max-width:52rem; }
+  :global(#main-content).taxPage :global(.tax-search-field) { border-radius:10px !important; box-shadow:none !important; }
+  :global(#main-content).taxPage :global(.tax-card-v2) { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:1.5rem 2rem; border-radius:12px !important; box-shadow:none !important; padding:1.25rem; }
+  .taxPage :global(.tax-card-head),.propertyDetail { grid-column:1/-1; }
+  :global(#main-content).taxPage :global(.tax-card-head .household-title) { font:400 clamp(26px,3vw,38px)/1.15 Georgia,serif !important; }
+  .taxOverview,.taxContext { min-width:0; }
+  .taxPage :global(.tax-hero) { margin-top:0; border-radius:8px; }
+  .taxPage :global(.tax-hero-figure) { font-size:clamp(36px,4.5vw,60px); }
+  .taxPage :global(.tax-values) { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .taxPage :global(.tax-values > div),.taxPage :global(.tax-town-stats > div),.taxPage :global(.tax-next a) { border-radius:8px; }
+  .taxPage :global(.tax-values dd) { white-space:normal; overflow-wrap:anywhere; }
+  .taxPage :global(.tax-town) { margin-top:0; padding-top:0; border-top:0; }
+  .taxPage :global(.tax-town-stats) { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .taxPage :global(.tax-next) { grid-template-columns:minmax(0,1fr); }
+  .taxPage :global(summary),.taxPage :global(.tax-places button) { min-height:44px; }
+  .propertyDetail { border-top:1px solid var(--plate-strong-rule); padding-top:.5rem; }
+  .propertyDetail > summary { display:flex; align-items:center; cursor:pointer; gap:.6rem; font-size:15px; }
+  .propertyDetail > summary::before { content:'+'; }
+  .propertyDetail[open] > summary::before { content:'−'; }
+  :global(#main-content).helpPage .helpWorkspace { display:grid; grid-template-columns:minmax(260px,320px) minmax(0,1fr); gap:2rem; padding:0; margin-top:1rem; border:0; background:none; }
+  .helpRoutes,.helpInventory { min-width:0; }
+  :global(#main-content).helpPage :global(.help-routes) { grid-template-columns:minmax(0,1fr); gap:.65rem; }
+  :global(#main-content).helpPage :global(.help-routes a) { padding:1rem; border-radius:10px; box-shadow:none; background:var(--glass) !important; border:1px solid var(--plate-strong-rule) !important; }
+  :global(#main-content).helpPage :global(.help-routes a:hover) { transform:none; }
+  :global(#main-content).helpPage :global(.help-when) { font-size:21px; }
+  :global(#main-content).helpPage :global(.help-routes .step-icon) { width:22px; height:22px; }
+  :global(#main-content).helpPage .helpWorkspace :global(.assistance-inventory) { border-radius:12px; box-shadow:none; padding:1rem; }
+  :global(#main-content).helpPage .helpWorkspace :global(.assistance-inventory > summary) { pointer-events:auto; cursor:pointer; min-height:44px; }
+  :global(#main-content).helpPage .helpWorkspace :global(.assistance-inventory > summary)::before { content:'− '; }
+  :global(#main-content).helpPage .helpWorkspace :global(.assistance-inventory:not([open]) > summary)::before { content:'+ '; }
+  :global(#main-content).helpPage :global(.assistance-inventory > summary span) { margin-left:0; }
+  :global(#main-content).helpPage :global(.assistance-filter) { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); padding:.8rem; }
+  :global(#main-content).helpPage :global(.assistance-filter label) { min-width:0; }
+  :global(#main-content).helpPage :global(.assistance-end-filter) { grid-column:1/-1; min-height:44px; }
+  :global(#main-content).helpPage :global(.assistance-properties) { display:grid; grid-template-columns:minmax(0,1fr); gap:0; }
+  :global(#main-content).helpPage .helpWorkspace :global(.assistance-property) { border:0; border-top:1px solid var(--plate-strong-rule); border-radius:0; background:none; padding:1rem 0; }
+  :global(#main-content).helpPage :global(.assistance-property footer a),:global(#main-content).helpPage :global(.assistance-method > summary),:global(#main-content).helpPage :global(.assistance-pages button) { display:inline-flex; align-items:center; min-height:44px; }
+  @media(max-width:960px) {
+    :global(#main-content).helpPage .helpWorkspace { grid-template-columns:minmax(0,1fr); gap:.5rem; }
+    :global(#main-content).helpPage :global(.help-routes) { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  }
+  @media(max-width:760px) {
+    :global(#main-content).taxPage :global(.tax-card-v2) { grid-template-columns:minmax(0,1fr); }
+    :global(#main-content).helpPage :global(.help-routes),:global(#main-content).helpPage :global(.assistance-filter) { grid-template-columns:minmax(0,1fr); }
+  }
+  @media(max-width:380px) { .taxPage :global(.tax-values),.taxPage :global(.tax-town-stats) { grid-template-columns:minmax(0,1fr); } }
+}
+@media print {
+  .propertyDetail::details-content { content-visibility:visible; display:block; height:auto; }
+}
