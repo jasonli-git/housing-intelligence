@@ -9,7 +9,8 @@ import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { StateOverview } from "@/components/StateOverview";
 import { CountyCabinet } from "@/components/CountyCabinet";
-import { SectionJump } from "@/components/SectionJump";
+import { PlaceSectionNav } from "@/components/PlaceSectionNav";
+import layout from "@/components/ExplorationResearch.module.css";
 import { StateContextExhibits } from "@/components/StateContextExhibits";
 import { HousingMosaic } from "@/components/HousingMosaic";
 import { statewideMosaicViews } from "@/lib/housingMosaic";
@@ -167,7 +168,7 @@ export default async function NewJerseyPage() {
   return (
     <>
       <Masthead affordability={{ kind: "local" }} />
-      <main id="main-content" tabIndex={-1} className="shell nj-page quiet-county quiet-state horizon-page" data-region-level="state">
+      <main id="main-content" tabIndex={-1} className={`shell nj-page quiet-county quiet-state horizon-page ${layout.statePage}`} data-region-level="state">
       <header className="page-head nj-head has-photo" data-kind="state">
         <GardenStateArtwork header />
         <div className="region-head-main">
@@ -187,14 +188,11 @@ export default async function NewJerseyPage() {
             <p className="state-nickname">The Garden State</p>
             <ComputedBadge />
           </div>
-          <nav className="state-title-navigation state-jump" aria-label="On this page">
-            <a href="#field-notes"><span>Field notes</span><i aria-hidden="true">↓</i></a>
-            <a href="#state-next-step-heading"><span>Your next step</span><i aria-hidden="true">↓</i></a>
-            <a href="#state-detailed-data"><span>Statewide evidence</span><i aria-hidden="true">↓</i></a>
-          </nav>
+
         </div>
         <PlacePhoto geoid="34" />
       </header>
+      <PlaceSectionNav label="State sections" sections={[{id:"state-county-navigation",label:"Counties"},{id:"state-overview",label:"Overview"},{id:"field-notes",label:"Market & context"},{id:"state-next-step-heading",label:"Next steps"},{id:"state-detailed-data",label:"Evidence"}]} />
       <div id="nj-explore"><CountyCabinet counties={(countyRegions?.items ?? []).map(county => ({ id:county.region_id, name:county.name }))} /></div>
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
         <HousingMosaic embedded statewide name="New Jersey" views={statewideMosaicViews(packet?.levels ?? [], constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter(r => r.preliminary).map(r => r.year))} />

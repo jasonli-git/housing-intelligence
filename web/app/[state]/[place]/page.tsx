@@ -446,6 +446,7 @@ export default async function RegionPage({
   const housingContext = quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
   const sections = [
     { id: "place-overview", label: "Overview" },
+    ...(countyTowns.length ? [{ id: "county-towns", label: "Towns" }] : []),
     { id: quiet ? "quiet-cost" : "place-costs", label: "Costs" },
     { id: "field-notes", label: "Market" },
     { id: "about-getting-around", label: "Getting around" },

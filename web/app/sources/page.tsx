@@ -1,3 +1,4 @@
+import layout from "@/components/ExplorationResearch.module.css";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -58,8 +59,9 @@ export default async function SourcesPage() {
           </div>
         </header>
 
-        {institutions.map((institution) => (
-          <section className="section source-institution" key={institution.publisher} aria-label={institution.publisher}>
+        <nav className={layout.publisherIndex} aria-label="Publishers"><h2>Find a publisher</h2>{institutions.map((institution,index) => <a key={institution.publisher} href={`#publisher-${index}`}>{institution.publisher}</a>)}</nav>
+        {institutions.map((institution,index) => (
+          <section id={`publisher-${index}`} tabIndex={-1} className="section source-institution" key={institution.publisher} aria-label={institution.publisher}>
             <h2>{institution.publisher}</h2>
             {institution.license && <p className="meta">{institution.license}</p>}
             <ul className="source-list">
