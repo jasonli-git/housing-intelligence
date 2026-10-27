@@ -977,3 +977,18 @@ There are many stylesheets with overlapping names. That justifies checking how s
 interact, but the count alone doesn't show that the design lacks a system.
 
 Do not implement yet.
+
+---
+
+## Place-linked visual stories
+
+**Status:** Exploratory — three-topic local Princeton pilot approved
+**Recorded:** 2026-10-27
+
+Explore turning place-page exhibits into place-aware stories, reusing existing stories
+where their questions align. Place pages could show a selected-view screenshot and a
+concise local finding linking into that story. Preserve geography, dates, coverage,
+sources and practical checks.
+
+The owner approved a local pilot covering one market topic, commute and water on
+Princeton. This does not approve migrating every component or rolling out to all places.

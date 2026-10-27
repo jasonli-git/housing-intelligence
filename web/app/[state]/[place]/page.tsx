@@ -9,6 +9,9 @@ import { PlacePhoto } from "@/components/PlacePhoto";
 import { PlaceSectionNav } from "@/components/PlaceSectionNav";
 import { PlaceMarketOpening } from "@/components/PlaceMarketOpening";
 import { marketPortraitData } from "@/lib/marketPortraitData";
+import { makePlaceStoryRecord } from "@/lib/placeStories";
+import { stampPlaceStory } from "@/lib/placeStoryData";
+import { PlaceStoryGallery } from "@/components/PlaceStoryGallery";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
 import "../../horizon-theme.css";
@@ -50,7 +53,7 @@ import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Masthead } from "@/components/Masthead";
 import { QuietAnchor, QuietCheckTopics, QuietDisclosure, QuietProfile } from "@/components/QuietCounty";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
-import { api, type PacketLevel, type Region, regionsWithData } from "@/lib/api";
+import { api, artifactUrl, type PacketLevel, type Region, regionsWithData } from "@/lib/api";
 import { indexedComparison } from "@/lib/chartInsights";
 import { costInputs, homePrice } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
@@ -327,6 +330,9 @@ export default async function RegionPage({
   // Deliberately one town for local review, not a platform-wide hierarchy decision.
   const marketFirst = region.state_code === "NJ" && region.geoid === "3402160900";
   const marketCohorts = marketFirst ? await marketPortraitData(region.state_code, packet.levels) : [];
+  const placeStoryRecords = marketFirst ? (["market", "commute", "water"] as const).map(topic => stampPlaceStory(makePlaceStoryRecord(topic,
+    { region_id: regionId, name: region.name, level: region.level, state_code: region.state_code }, packet.levels,
+    { metrics: topic === "market" ? packet.metrics : [], history: topic === "market" ? series : [], water: topic === "water" ? water : null, destinations: topic === "commute" ? workDestinations : null }))) : [];
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
   // (ARCHITECTURE #275), and a file published before then that still carries one is
@@ -454,8 +460,9 @@ export default async function RegionPage({
     ...(marketFirst ? [{ id: "place-market", label: "Market at a glance" }] : []),
     ...(countyTowns.length ? [{ id: "county-towns", label: "Towns" }] : []),
     { id: quiet ? "quiet-cost" : "place-costs", label: "Costs" },
+    ...(marketFirst ? [{ id: "place-story-gallery", label: "Local stories" }] : []),
     { id: "field-notes", label: marketFirst ? "Market exhibits" : "Market" },
-    { id: "about-getting-around", label: "Getting around" },
+    ...(!marketFirst ? [{ id: "about-getting-around", label: "Getting around" }] : []),
     { id: "about-living-there", label: "Living there" },
     ...(similar ? [{ id: "place-explore", label: "Alternatives" }] : []),
     { id: "sources-heading", label: "Sources" },
@@ -631,6 +638,7 @@ export default async function RegionPage({
       )}
       </ConsumerReading>
       </QuietAnchor>
+      {marketFirst && <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} />}
       <ExhibitGallery>
       <h3 className="exhibit-group-head" id="field-notes">The market</h3>
       {!quiet && homeChecks}
@@ -643,7 +651,7 @@ export default async function RegionPage({
         <div className="place-evidence-body">
       {persistence && <LearningExhibit kind="Against its own history"><HowUnusual name={name} data={persistence} interactive={quiet} /></LearningExhibit>}
       <div className="place-exhibit-pair">
-      {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Prices and income</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
+      {!marketFirst && quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Prices and income</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
       <StateContextExhibits concise topics={["lending"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
       </div>
 
@@ -667,7 +675,7 @@ export default async function RegionPage({
         levels={packet.levels}
       />
       </LearningExhibit>}
-      {hasIndexedComparison && (
+      {!marketFirst && hasIndexedComparison && (
         <section id="trends-exhibits" className="section" aria-labelledby="trends-heading" data-jump-label="Trends">
           <h2 id="trends-heading">Trends</h2>
           <IndexedComparison series={indexedInputs} />
@@ -675,12 +683,12 @@ export default async function RegionPage({
       )}
         </div>
       </details>
-      <StateContextExhibits concise topics={["work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
-      <LocalEvidenceCharts kind="work" name={name} level={region.level} levels={packet.levels} series={construction} />
+      {!marketFirst && <StateContextExhibits concise topics={["work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />}
+      {!marketFirst && <LocalEvidenceCharts kind="work" name={name} level={region.level} levels={packet.levels} series={construction} />}
       <details className="place-evidence-group" id="about-living-there">
-        <summary><h3>Living there</h3><span>Water, flood, services and community</span></summary>
+        <summary><h3>Living there</h3><span>{marketFirst ? "Sites, flood, services and community" : "Water, flood, services and community"}</span></summary>
         <div className="place-evidence-body">
-          <LearningExhibit kind="Ground & water"><GroundAndWater compact name={name} levels={packet.levels} water={water} /></LearningExhibit>
+          <LearningExhibit kind="Ground & water"><GroundAndWater compact name={name} levels={packet.levels} water={water} scope={marketFirst ? "sites" : "all"} /></LearningExhibit>
           <LearningExhibit kind="Flood context"><FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} /></LearningExhibit>
           <div id="local-property-evidence" className="property-exhibit-anchor"><LearningExhibit kind="Service providers"><Utilities data={utilities} bpuInquiry={bpuInquiry} /></LearningExhibit></div>
       <StateContextExhibits concise topics={["broadband"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />

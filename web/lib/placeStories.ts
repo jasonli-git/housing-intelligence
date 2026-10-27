@@ -1,0 +1,67 @@
+import type { Observation, PacketLevel, PacketMetric, Region, WaterSystems, WorkDestinations } from "./api";
+import { displayName } from "./names";
+import { formatMetric, formatValue } from "./format";
+import { marginLabel } from "./uncertainty";
+import { surveyYears } from "./periods";
+
+export const PLACE_STORIES = {
+  market: { slug: "income-and-home-value", title: "Prices & paychecks" },
+  commute: { slug: "the-long-commute-premium", title: "Getting around" },
+  water: { slug: "water-you-can-check", title: "Water you can check" },
+} as const;
+export type PlaceStoryTopic = keyof typeof PLACE_STORIES;
+export type PlaceStoryRecord = {
+  topic: PlaceStoryTopic;
+  place: Pick<Region, "region_id" | "name" | "level" | "state_code">;
+  levels: PacketLevel[];
+  metrics: PacketMetric[];
+  history: { metricId: string; observations: Observation[] }[];
+  water: WaterSystems | null;
+  destinations: WorkDestinations | null;
+  snapshot: string;
+};
+export type PlaceStorySummary = {
+  available: boolean; headline: string; period: string; source: string; qualifier: string;
+  rows: { label: string; value: number; formatted: string; margin?: string; aside?: string }[];
+};
+export const placeStoryHref = (topic: PlaceStoryTopic, id: number) => `/stories/${PLACE_STORIES[topic].slug}?place=${id}`;
+export function storyPlaceId(search: string): number | null {
+  const value = new URLSearchParams(search).get("place");
+  return value && /^[1-9]\d*$/.test(value) && Number.isSafeInteger(Number(value)) ? Number(value) : null;
+}
+export function makePlaceStoryRecord(topic: PlaceStoryTopic, place: PlaceStoryRecord["place"], levels: PacketLevel[], extra: Partial<Pick<PlaceStoryRecord, "metrics" | "history" | "water" | "destinations">> = {}): PlaceStoryRecord {
+  const keep = (id: string) => topic === "market" ? ["acs_median_home_value", "acs_median_hh_income", "zhvi_sfr", "zori_all"].includes(id)
+    : topic === "commute" ? /^(acs_(mean_commute|commute_|work_from_home)|lodes_|transit_)/.test(id) : id.startsWith("water_");
+  return { topic, place, levels: levels.filter(l => keep(l.metric_id)), metrics: extra.metrics ?? [], history: (extra.history ?? []).map(s => ({ metricId: s.metricId, observations: s.observations })),
+    water: extra.water?.region_id === place.region_id && Array.isArray(extra.water.systems) ? extra.water : null,
+    destinations: extra.destinations?.region_id === place.region_id && Array.isArray(extra.destinations.destinations) ? extra.destinations : null, snapshot: "" };
+}
+export function summarizePlaceStory(record: PlaceStoryRecord): PlaceStorySummary {
+  const unavailable: PlaceStorySummary = { available: false, headline: "Local records unavailable", period: "No matching period", source: "Coverage limited", qualifier: "Missing data is not a zero or a clean result.", rows: [] };
+  const row = (id: string) => record.levels.find(l => l.metric_id === id && Number.isFinite(l.value) && typeof l.period_start === "string" && typeof l.period_end === "string" && /^\d{4}-\d{2}-\d{2}$/.test(l.period_start) && /^\d{4}-\d{2}-\d{2}$/.test(l.period_end));
+  const chartRow = (l: PacketLevel, label: string) => ({ label, value: l.value, formatted: formatMetric(l.value, l.unit, l.metric_id), margin: marginLabel(l.value, l.margin_of_error ?? null, l.unit, l.metric_id) ?? undefined });
+  if (record.topic === "market") {
+    const home = row("acs_median_home_value"), income = row("acs_median_hh_income");
+    if (!home || !income || home.value <= 0 || income.value <= 0 || home.period_start !== income.period_start || home.period_end !== income.period_end) return unavailable;
+    return { available: true, headline: `${formatValue(home.value, "usd")} owner-reported home value`, period: surveyYears(home.period_start, home.period_end), source: "Census ACS",
+      qualifier: "Survey medians, not current asking prices or a personal affordability test. Margins shown are 90%.",
+      rows: [chartRow(home, "Owner-reported home value"), chartRow(income, "Annual household income, before tax")] };
+  }
+  if (record.topic === "commute") {
+    const mean = row("acs_mean_commute_minutes");
+    if (!mean || mean.value < 0) return unavailable;
+    const modes = [["acs_commute_drove_alone_share", "Drive alone"], ["acs_commute_transit_share", "Public transit"], ["acs_commute_walked_share", "Walk"], ["acs_work_from_home_share", "Work from home"]];
+    return { available: true, headline: `${Math.round(mean.value)}-minute average commute`, source: "Census ACS", period: surveyYears(mean.period_start, mean.period_end),
+      qualifier: `Mean one-way journey for people who travel to work—not your route. 90% margin: ${marginLabel(mean.value, mean.margin_of_error ?? null, mean.unit, mean.metric_id)}. Modes are shares of working residents; categories shown are not exhaustive.`,
+      rows: modes.flatMap(([id, label]) => { const l = row(id); return l && l.period_start === mean.period_start && l.period_end === mean.period_end && l.value >= 0 && l.value <= 1 ? [chartRow(l, label)] : []; }) };
+  }
+  const water = record.water;
+  if (!water || !water.systems.length) return unavailable;
+  if (water.region_id !== record.place.region_id || new Set(water.systems.map(s => s.pwsid)).size !== water.systems.length) return unavailable;
+  if (water.systems.some(s => !Number.isFinite(s.violations) || s.violations < 0 || !Number.isFinite(s.homes) || s.homes < 0)) return unavailable;
+  const systems = water.systems, violations = systems.filter(s => s.violations > 0).length;
+  return { available: true, headline: `${violations} of ${systems.length} water systems with past health-based violations`, period: `${water.first_year}–${water.last_year}`, source: "EPA / NJDEP",
+    qualifier: "System-wide history, not today’s tap water or affected-home counts. Bars show estimated homes served here; private wells are not covered.",
+    rows: [...systems].sort((a, b) => b.homes - a.homes).map(s => ({ label: s.name, value: s.homes, formatted: `${formatValue(s.homes, "count")} homes`, aside: `${s.violations} recorded violation${s.violations === 1 ? "" : "s"}` })) };
+}
+export const placeStoryName = (record: PlaceStoryRecord) => displayName(record.place);

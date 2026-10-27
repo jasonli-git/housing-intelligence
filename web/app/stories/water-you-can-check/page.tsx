@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 
 import { StackedBars } from "@/components/StackedBars";
 import { StoryShell } from "@/components/StoryShell";
-import { api, type WaterSystem } from "@/lib/api";
+import { api, artifactUrl, type WaterSystem } from "@/lib/api";
+import { initialPlaceStory } from "@/lib/placeStoryData";
+import { PlaceStoryFocus } from "@/components/PlaceStoryFocus";
 import { pageMetadata } from "@/lib/meta";
 import { each, storyTownRegions } from "@/lib/storyData";
 import "../../horizon-theme.css";
@@ -20,6 +22,7 @@ const KEEP = new Set(["NJ", "MUA", "MUD", "WD", "WC", "WU", "DPW", "UA", "SA", "
 const title = (s: string) => s.split(/\s+/).map((w) => (KEEP.has(w.toUpperCase()) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())).join(" ");
 
 export default async function WaterYouCanCheckPage() {
+  const initial = await initialPlaceStory("water");
   const towns = await storyTownRegions();
   const served = await each(towns, (t) => api.waterSystems(t.region_id));
   // A system serving several towns appears under each; keep it once, with the towns it serves.
@@ -49,6 +52,7 @@ export default async function WaterYouCanCheckPage() {
   return (
     <StoryShell
       title="Water you can check"
+      focus={<PlaceStoryFocus initial={initial} artifactUrl={artifactUrl} />}
       lede={<>{all.length} community water systems serve New Jersey&rsquo;s towns. Three things about them are public and checkable: whether a system broke a health-based rule, what its PFAS tests found, and how many lead pipes still connect its customers.</>}
       note={<>Violations: the EPA&rsquo;s Safe Drinking Water Information System, health-based violations {range} to {lastYear}. PFAS: the EPA&rsquo;s fifth Unregulated Contaminant Monitoring Rule samples, against the EPA&rsquo;s reference of 4 nanograms a litre, shown for PFOA and PFOS only. Compliance is judged on running annual averages, not the single highest result shown here. Lead: each system&rsquo;s service-line inventory as filed with the state; galvanized lines that were ever downstream of lead must be replaced too. A violation can be resolved; each system&rsquo;s town pages show when.</>}
     >
