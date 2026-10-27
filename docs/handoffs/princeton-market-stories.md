@@ -202,3 +202,38 @@ Verification:
   single string and added a server-render/hydrate regression that verifies no recovery
   and that the caption names Mercer County. Rebuilt and reran browser verification.
 - No full `make publish`, push, PR, deployment, ingestion or warehouse-writing tests.
+
+## Follow-up: inline county history instead of a gallery card
+
+The owner requested the real graph from the visual story on the place page, suggesting
+About this place. Removed the history preview card from Princeton's gallery (back to
+eight cards) and inserted `CountyHistoryContext` directly after the local interpretation
+and ranked-measures disclosure, inside About this place and before the gallery.
+
+- Reuses **HistoryExhibit**, the exact interactive component used by HowUnusual in the
+  selected story. It is live chart markup and a working year slider, not an image.
+- A restrained two-column desktop layout puts county identity/source information beside
+  the chart; mobile stacks it. Scope, period, historical-median definition, no-forecast
+  qualification and income uncertainty remain visible.
+- “Explore the full history” opens the existing story with the same record snapshot
+  and Princeton return context. No new calculation, route or data was introduced.
+- Other place pages and all eight gallery records/images remain unchanged. The history
+  story itself remains available. The capture script no longer generates a now-unused
+  history card; its earlier ignored local image files can remain as unused artifacts.
+
+Files: new `CountyHistoryContext.tsx`; place route; `PlaceStories.module.css`;
+capture/browser scripts; this handoff.
+
+Verification for this follow-up:
+
+- TypeScript passed; 821 tests in 137 files passed; publication tests: 5 passed.
+- Scoped production export: 1,198 routes passed.
+- Updated place-story browser regression checks the inline chart's About-this-place
+  placement, Mercer County identity, first/latest year slider positions, matching story
+  snapshot, full-story and return links, eight remaining previews, scoped axe and
+  existing selection/non-pilot regressions at 390/1440px in both themes.
+- Focused static-preview checks exercise the inline graph, slider, matching story,
+  return link, gallery card count, scoped axe, no overflow and no page errors in all
+  four viewport/theme combinations.
+- Visually reviewed mobile light and desktop light inline chart captures.
+- No full publication, warehouse writes, remote push, PR or deployment.

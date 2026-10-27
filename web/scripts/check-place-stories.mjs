@@ -11,10 +11,32 @@ try {
     const errors = []; page.on('pageerror', e => errors.push(e.message));
     await page.goto(`${origin}/nj/princeton`, { waitUntil: 'networkidle' });
     await page.evaluate(t => document.documentElement.dataset.theme = t, theme);
+    const history = page.locator('#county-market-history');
+    assert.equal(await page.locator('#place-understand #county-market-history').count(), 1, 'county graph is inline in About this place');
+    assert.equal(await history.getAttribute('data-county-history-id'), '11');
+    const historySnapshot = await history.getAttribute('data-history-snapshot');
+    const historySlider = history.getByRole('slider', { name: 'Explore a year' });
+    await historySlider.focus(); await historySlider.press('Home');
+    assert((await historySlider.getAttribute('aria-valuetext')).includes('1989'));
+    await historySlider.press('End');
+    assert((await historySlider.getAttribute('aria-valuetext')).includes('2024'));
+    assert((await history.innerText()).includes('County figures—not a town-level comparison'));
+    await history.getByRole('link', { name: 'Explore the full history' }).click();
+    const historyFocus = page.locator('[data-place-story-focus][data-selected="true"]');
+    await historyFocus.getByRole('heading', { name: 'Exploring Mercer County', exact: true }).waitFor();
+    assert.equal(await historyFocus.locator('[data-place-story-shot]').getAttribute('data-place-story-snapshot'), historySnapshot, 'same county data in inline graph and story');
+    const storySlider = historyFocus.getByRole('slider', { name: 'Explore a year' });
+    await storySlider.focus(); await storySlider.press('Home');
+    assert((await storySlider.getAttribute('aria-valuetext')).includes('1989'));
+    assert((await historyFocus.getByRole('link', { name: /Every figure, source and download for Mercer County/ }).getAttribute('href')).endsWith('/nj/mercer-county/report'));
+    await historyFocus.getByRole('link', { name: /Back to Princeton/ }).click();
+    await history.waitFor();
+    await history.screenshot({ path: `/tmp/princeton-county-history-${width}-${theme}.png` });
     const gallery = page.locator('#place-story-gallery');
     await gallery.scrollIntoViewIfNeeded();
-    const topics = ['market', 'past', 'sales', 'pressure', 'lending', 'building', 'migration', 'commute', 'water'];
+    const topics = ['market', 'sales', 'pressure', 'lending', 'building', 'migration', 'commute', 'water'];
     assert.equal(await gallery.locator('[data-preview-topic]').count(), topics.length);
+    assert.equal(await gallery.locator('[data-preview-topic="past"]').count(), 0, 'history card removed from gallery');
     for (const topic of topics) {
       const card = gallery.locator(`[data-preview-topic="${topic}"]`);
       await card.scrollIntoViewIfNeeded();
@@ -36,16 +58,6 @@ try {
       }
       if (topic === 'commute') assert(await focus.getByRole('heading', { name: 'How do people here get around?', exact: true }).isVisible());
       if (topic === 'water') assert(await focus.getByRole('heading', { name: 'Water systems and records', exact: true }).isVisible());
-      if (topic === 'past') {
-        assert(await focus.getByRole('heading', { name: 'Exploring Mercer County', exact: true }).isVisible());
-        assert((await chart.innerText()).includes('Mercer County'));
-        assert((await chart.innerText()).includes('not town-level price pressure'));
-        assert((await chart.innerText()).includes('1989–2024'));
-        const slider = focus.getByRole('slider', { name: 'Explore a year' });
-        await slider.focus(); await slider.press('Home');
-        assert((await slider.getAttribute('aria-valuetext')).includes('1989'));
-        assert((await focus.getByRole('link', { name: /Every figure, source and download for Mercer County/ }).getAttribute('href')).endsWith('/nj/mercer-county/report'));
-      }
       if (topic === 'sales') assert(await focus.getByRole('heading', { name: 'What did buyers actually pay?', exact: true }).isVisible());
       if (topic === 'lending') assert(await focus.getByRole('heading', { name: 'How do people here pay for homes?', exact: true }).isVisible());
       if (topic === 'building') {
@@ -69,7 +81,7 @@ try {
       await focus.getByRole('link', { name: /Back to Princeton/ }).click();
       await gallery.waitFor();
     }
-    const audit = await new AxeBuilder({ page }).include('#place-story-gallery').analyze();
+    const audit = await new AxeBuilder({ page }).include('#place-story-gallery').include('#county-market-history').analyze();
     assert.deepEqual(audit.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })), []);
     await page.locator('#about-living-there > summary').click();
     assert(await page.getByRole('heading', { name: 'Contaminated-site records', exact: true }).isVisible());
@@ -80,7 +92,7 @@ try {
     assert(await page.locator('#ground-water-heading').evaluate(el => Boolean(el.closest('[data-preview-topic="water"]'))));
     await gallery.screenshot({ path: `/tmp/place-story-gallery-${width}-${theme}.png` });
     assert.deepEqual(errors, []);
-    console.log(`${width}/${theme}: nine real shots, snapshot/headline identity, selected stories, county history/slider, interactions, return links, retained sites, no overflow and axe passed`);
+    console.log(`${width}/${theme}: inline county graph/story identity and sliders, eight gallery shots, selected stories, interactions, return links, retained sites, no overflow and axe passed`);
     await context.close();
   }
   const page = await browser.newPage();

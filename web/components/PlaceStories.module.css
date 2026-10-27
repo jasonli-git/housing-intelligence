@@ -38,6 +38,20 @@
 .historyPlot rect { fill: var(--focus-chart-accent); }
 .historyPlot line { stroke: var(--text-secondary); stroke-dasharray: 5 5; stroke-width: 1; }
 .historyPlot text { fill: var(--text-secondary); font: 12px var(--font-text); }
+.countyHistory { --atlas-accent: var(--series-1); display: grid; grid-template-columns: minmax(180px,.7fr) minmax(0,1.3fr); gap: 1.5rem; margin: 1.3rem 0 1.8rem; padding-block: 1.2rem; border-block: 1px solid var(--border); }
+.countyHistory header { min-width: 0; }
+.countyHistory h3 { margin: .4rem 0 .65rem; color: var(--text-primary); font: 400 24px/1.2 Georgia,serif; letter-spacing: -.02em; text-wrap: balance; }
+.countyHistory p { margin: .45rem 0; color: var(--text-secondary); font: 12px/1.55 var(--font-text); }
+.countyHistory .contextLabel { font-size: 11px; }
+.countyHistory a { display: inline-block; margin-top: .5rem; padding-block: .3rem; color: var(--plate-accent); font: 13px/1.5 var(--font-text); text-underline-offset: 3px; }
+.contextGraph { min-width: 0; }
+.contextGraph :global(.history-interactive) { margin: 0; }
+.contextGraph :global(.exhibit-history) { height: 125px; }
+.contextGraph :global(.exhibit-readout) { display: flex; align-items: baseline; flex-wrap: wrap; gap: .6rem; }
+.contextGraph :global(.exhibit-readout strong) { font: 400 30px/1.1 Georgia,serif; }
+.contextGraph :global(.exhibit-readout span) { margin: 0; }
+.contextGraph :global(figcaption) { color: var(--text-secondary); font: 12px/1.55 var(--font-text); }
+.countyHistory .contextUncertainty { font-size: 11px; }
 .bars { flex: 1; align-content: center; margin-block: 1rem; display: grid; gap: 1.2rem; }
 .row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: .15rem .8rem; font: 13px/1.4 var(--font-text); }
 .row b { font-weight: 500; }
@@ -66,3 +80,4 @@
 }
 @media(prefers-reduced-motion:reduce) { .card,.cover,.openArrow { transition: none; } .card:hover,.card:hover .cover,.card:hover .openArrow { transform: none; } }
 @media(max-width:900px) { .cards { grid-template-columns: minmax(0,1fr); } }
+@media(max-width:680px) { .countyHistory { grid-template-columns: minmax(0,1fr); gap: .9rem; } .countyHistory h3 { font-size: 22px; } }

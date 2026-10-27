@@ -12,6 +12,7 @@ import { marketPortraitData } from "@/lib/marketPortraitData";
 import { makePlaceStoryRecord, PLACE_STORIES, storyHistoryMetrics, type PlaceStoryTopic } from "@/lib/placeStories";
 import { stampPlaceStory } from "@/lib/placeStoryData";
 import { PlaceStoryGallery } from "@/components/PlaceStoryGallery";
+import { CountyHistoryContext } from "@/components/CountyHistoryContext";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
 import "../../horizon-theme.css";
@@ -338,6 +339,7 @@ export default async function RegionPage({
       history: topic === "market" ? series : topic === "building" ? storyHistoryMetrics(topic).map((metricId, i) => ({ metricId, observations: construction[i] })) : [],
       water: topic === "water" ? water : null, destinations: topic === "commute" ? workDestinations : null,
       pressure: topic === "pressure" ? pressure : null, migration: topic === "migration" ? migration : null, countyHistory: topic === "past" ? countyHistory : null }))) : [];
+  const countyHistoryStory = placeStoryRecords.find(record => record.topic === "past");
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
   // (ARCHITECTURE #275), and a file published before then that still carries one is
@@ -643,7 +645,8 @@ export default async function RegionPage({
       )}
       </ConsumerReading>
       </QuietAnchor>
-      {marketFirst && <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} />}
+      {countyHistoryStory && <CountyHistoryContext record={countyHistoryStory} />}
+      {marketFirst && <PlaceStoryGallery records={placeStoryRecords.filter(record => record.topic !== "past")} artifactUrl={artifactUrl} />}
       <ExhibitGallery>
       {!marketFirst && <>
       <h3 className="exhibit-group-head" id="field-notes">The market</h3>
