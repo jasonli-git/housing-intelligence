@@ -136,3 +136,24 @@ Other town/county/ZIP place pages keep their existing exhibits.
 - `git diff --check`: passed. API/artifact reads only, no warehouse-writing tests.
 
 Local review: `http://localhost:3002/nj/princeton#place-story-gallery`.
+
+## Follow-up: quieter topic labels and historical scope
+
+The owner requested stronger topic/headline hierarchy. The labels were already
+10px versus 23–27px headlines; uppercase, tracked, medium-weight monospace made
+them disproportionately prominent. Changed them to light sentence-case body type
+at 10px, reduced tracking and shrank the topic dot from 6px to 4px without its glow.
+Story headlines, screenshots, content and links are unchanged.
+
+Confirmed historical scope directly in `src/hip/analytics/persistence.py` and
+`src/hip/api/routers/persistence.py`: the current measure combines annual FHFA
+county/state price indices and SAIPE income, reads only county/state regions and
+requires at least ten matching years. Town/ZIP records are unsupported. Town
+trends already exist, but a town-level equivalent would need a separately reviewed
+method; no county history is relabeled as town history in this task.
+
+Verification for this CSS-only follow-up: TypeScript and `git diff --check` passed.
+Browser checks at 390/1440px in both themes verify every label is less than half
+its headline's font size, sentence case, no horizontal overflow and scoped axe.
+No new full-suite or production build run; those results above belong to the
+market-story expansion.
