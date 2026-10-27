@@ -202,6 +202,14 @@ export function CostToOwn({
     savePersonal(next);
   };
   const setField = (key: keyof HomeFields, text: string) => setFields({ ...fields, [key]: text });
+  const transferToGuide = () => {
+    if (guidePlaceId === undefined) return;
+    const home = Object.fromEntries([
+      ["price", parseAmount(fields.price)], ["taxYear", parseAmount(fields.tax)], ["hoaMonth", parseAmount(fields.hoa)],
+      ["floodYear", parseAmount(fields.flood)], ["movingCost", parseAmount(fields.moving)], ["repairsCost", parseAmount(fields.repairs)],
+    ].filter(([,value]) => value !== null));
+    writeGuideTransfer(guidePlaceId, home, parseAmount(fields.rent));
+  };
 
   const typedPrice = parseAmount(fields.price);
   const typedTax = parseAmount(fields.tax);
@@ -482,7 +490,7 @@ export function CostToOwn({
 
   const downControl = <label className="control">
             <span className="control-label">Down payment</span>
-            <select value={down} onChange={(event) => setPersonal("downPct", Number(event.target.value))}>
+            <select aria-label="Down payment" value={down} onChange={(event) => setPersonal("downPct", Number(event.target.value))}>
               {DOWN_PAYMENTS.map((pct) => (
                 <option key={pct} value={pct}>
                   {pct}%
@@ -526,24 +534,24 @@ export function CostToOwn({
   const fineTune = control && planning && (
         <details className="cost-yours">
           <summary>
-            <span className="cost-yours-title">{compactOverview ? "Adjust purchase price & assumptions" : "Fine-tune the costs"}</span>
-            <span className="cost-yours-hint">
+            <span className="cost-yours-title">{compactOverview ? "More assumptions" : "Fine-tune the costs"}</span>
+            {!compactOverview && <span className="cost-yours-hint">
               {own ? "Using your figures" : "Replace any figure with your own — a listing’s price, a quote"}
-            </span>
+            </span>}
           </summary>
           <div className="cost-yours-body">
-            <MonthlyBill current={month} baseline={baselineMonth} />
+            {!compactOverview && <MonthlyBill current={month} baseline={baselineMonth} />}
             <fieldset>
               <legend>This home <small>stays on this page</small></legend>
-              <Field label="Purchase price" value={fields.price} placeholder={money(home.value)} onChange={(t) => setField("price", t)} />
+              {!compactOverview && <Field label="Purchase price" value={fields.price} placeholder={money(home.value)} onChange={(t) => setField("price", t)} />}
               <Field label="Property tax a year" value={fields.tax} placeholder={tax ? money(tax.value) : "not published"} onChange={(t) => setField("tax", t)} />
               <Field label="HOA or condo fees a month" value={fields.hoa} placeholder="if any" onChange={(t) => setField("hoa", t)} />
               <Field label="Flood insurance a year" value={fields.flood} placeholder="if required" onChange={(t) => setField("flood", t)}>
                 <a href={FLOOD_MAP.url} target="_blank" rel="noreferrer">Check FEMA’s flood map</a>
               </Field>
               {!quiet && <Field label="Rent you’d pay instead, a month" value={fields.rent} placeholder={rent ? money(rent.value) : "not published"} onChange={(t) => setField("rent", t)} />}
-              <Field label="Moving" value={fields.moving} placeholder="optional" onChange={(t) => setField("moving", t)} />
-              <Field label="First repairs" value={fields.repairs} placeholder="optional" onChange={(t) => setField("repairs", t)} />
+              {!compactOverview && <><Field label="Moving" value={fields.moving} placeholder="optional" onChange={(t) => setField("moving", t)} />
+              <Field label="First repairs" value={fields.repairs} placeholder="optional" onChange={(t) => setField("repairs", t)} /></>}
             </fieldset>
             <fieldset>
               <legend>You <small>remembered on every page, in this browser</small></legend>
@@ -553,11 +561,11 @@ export function CostToOwn({
                 <NumberField label="Mortgage insurance, % of loan a year" value={personal.pmiPct} placeholder="your quote" onChange={(v) => setPersonal("pmiPct", v)} />
               )}
               <NumberField label="Upkeep, % of price a year" value={personal.upkeepPct} placeholder={String(UPKEEP_PCT)} onChange={(v) => setPersonal("upkeepPct", v)} />
-              <NumberField label="Closing costs, % of price" value={personal.closingPct} placeholder={`${CLOSING.low * 100}–${CLOSING.high * 100}`} onChange={(v) => setPersonal("closingPct", v)} />
+              {!compactOverview && <><NumberField label="Closing costs, % of price" value={personal.closingPct} placeholder={`${CLOSING.low * 100}–${CLOSING.high * 100}`} onChange={(v) => setPersonal("closingPct", v)} />
               <NumberField label="Years you’d stay" value={personal.years} placeholder={String(DEFAULT_YEARS)} onChange={(v) => setPersonal("years", v)} />
               <NumberField label="Home prices, % a year" value={personal.appreciationPct} placeholder="0, flat" onChange={(v) => setPersonal("appreciationPct", v)} />
               <NumberField label="Rents, % a year" value={personal.rentGrowthPct} placeholder="0, flat" onChange={(v) => setPersonal("rentGrowthPct", v)} />
-              <NumberField label="Selling commission, %" value={personal.commissionPct} placeholder={String(COMMISSION_PCT)} onChange={(v) => setPersonal("commissionPct", v)} />
+              <NumberField label="Selling commission, %" value={personal.commissionPct} placeholder={String(COMMISSION_PCT)} onChange={(v) => setPersonal("commissionPct", v)} /></>}
             </fieldset>
             <p className="cost-yours-note">
               What you enter changes this page’s arithmetic only — never this place’s published
@@ -672,7 +680,7 @@ export function CostToOwn({
             </p>
           )}
           <p className="cost-figure" aria-live="polite">
-            <b>{money(month.total)}</b>
+            <b key={compactOverview ? month.total : undefined} className={compactOverview ? "cost-updated-value" : undefined}>{money(month.total)}</b>
             <span>{compactOverview ? "estimated cash paid each month, including principal" : quiet ? <Glossed text="a month, including principal" /> : "a month, every cost below"}</span>
           </p>
           {month.loan.fha && (
@@ -751,6 +759,20 @@ export function CostToOwn({
             <Glossed text={`The monthly owning estimate leaves out ${listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.`} />
           </p>
         </aside>
+        {compactOverview && control && planning && <div className="cost-use-numbers" role="group" aria-label="Use your numbers">
+          <h3>Use your numbers</h3>
+          <div className="budget-inputs">
+            <label className="control"><span>Yearly household income before tax</span><input inputMode="decimal" value={household.income ?? ""} placeholder="e.g. 100000" onChange={event=>saveHousehold({...household,income:parseAmount(event.target.value)??undefined})}/></label>
+            {downControl}
+            <Field label="Purchase price" value={fields.price} placeholder={money(home.value)} onChange={t=>setField("price",t)}/>
+          </div>
+          <p className="cost-budget-result" aria-live="polite">{household.income && household.income>0 ? `Estimated payment uses ${Math.round(month.total/(household.income/12)*100)}% of your income before tax.` : "Add your income to compare it with the payment above."}{partial && ` Included costs only; missing: ${listed(month.missing)}.`}</p>
+          {fineTune}
+          <nav className="cost-planning-links" aria-label="Plan beyond this estimate">
+            {guidePlaceId!==undefined && <a href={`/guide?place=${guidePlaceId}`} onClick={transferToGuide}>Check upfront cash & rent vs. buy →</a>}
+            {comparePlaceId!==undefined && <a href={`/afford?county=all&place=${comparePlaceId}${household.income ? `&income=${household.income}`:""}`}>Find your fit →</a>}
+          </nav>
+        </div>}
       </div>
 
 
@@ -783,7 +805,7 @@ export function CostToOwn({
         </div>
       )}
 
-      {planning && <QuietToolGroup enabled={quiet}>
+      {planning && !compactOverview && <QuietToolGroup enabled={quiet}>
       {quiet && budgetFit}
       {compactOverview && fineTune}
       <div className={quiet ? "planning-preview-grid" : undefined}>

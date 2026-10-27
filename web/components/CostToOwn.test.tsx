@@ -46,7 +46,7 @@ describe("local monthly budget", () => {
   });
   it("groups compact scenario controls and resets edited costs to their starting figures", () => {
     const { container } = render(createElement(CostToOwn, { ...inputs, quiet: true, compactOverview: true }));
-    const group = screen.getByRole("group", { name: "Your household and buying plans" });
+    const group = screen.getByRole("group", { name: "Use your numbers" });
     expect(group.contains(screen.getByLabelText("Down payment"))).toBe(true);
     expect(group.contains(screen.getByLabelText("Purchase price"))).toBe(true);
     const total = container.querySelector(".cost-card .cost-figure b")?.textContent;
@@ -55,6 +55,24 @@ describe("local monthly budget", () => {
     fireEvent.click(screen.getByRole("button", { name: "Use the published figures" }));
     expect(container.querySelector(".cost-card .cost-figure b")?.textContent).toBe(total);
     expect(container.querySelectorAll(".cost-ownership-breakdown .gone-kept").length).toBe(1);
+  });
+  it("keeps compact controls visible and sends deeper planning to the tools",()=>{
+    const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,compactOverview:true,guidePlaceId:224,comparePlaceId:224}));
+    for(const label of ['Purchase price','Down payment','Yearly household income before tax'])expect(screen.getByLabelText(label).closest('details')).toBeNull();
+    expect(screen.queryByLabelText('Cash available for buying')).toBeNull();
+    expect(screen.queryByLabelText('Rent you’d pay instead, a month')).toBeNull();
+    expect(container.querySelector('.planning-preview-grid')).toBeNull();
+    expect(container.querySelector('.monthly-bill')).toBeNull();
+    expect(screen.getByText('More assumptions').closest('details')?.open).toBe(false);
+    fireEvent.change(screen.getByLabelText('Yearly household income before tax'),{target:{value:'100000'}});
+    expect(container.querySelector('.cost-budget-result')?.textContent).toContain('% of your income before tax');
+    expect(container.querySelector('.cost-budget-result')?.textContent).toContain('missing:');
+    expect(screen.getByRole('link',{name:'Find your fit →'}).getAttribute('href')).toContain('income=100000');
+    fireEvent.change(screen.getByLabelText('Purchase price'),{target:{value:'600000'}});
+    const link=screen.getByRole('link',{name:'Check upfront cash & rent vs. buy →'});
+    expect(link.getAttribute('href')).toBe('/guide?place=224');
+    fireEvent.click(link);
+    expect(JSON.parse(sessionStorage.getItem('hip.guide.home.v1')??'{}').home.price).toBe(600000);
   });
   it("updates monthly layers from existing inputs without changing the starting estimate", () => {
     const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,showHelp:false}));
