@@ -1,0 +1,30 @@
+.opening { margin: .3rem 0 1.8rem; color: var(--text-primary); }
+.heading { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem 1.5rem; flex-wrap: wrap; }
+.opening .heading h2 { margin: 0; padding: 0; font: 400 clamp(26px,3vw,36px)/1.2 Georgia,serif; letter-spacing: -.025em; }
+.opening .heading h2::before, .opening .heading h2::after { content: none; }
+.heading a, .next a { display: inline-flex; align-items: center; gap: .6rem; min-height: 44px; color: var(--plate-accent, var(--text-primary)); font: 500 13px/1.4 var(--font-text); text-underline-offset: 4px; }
+.lead { max-width: 85ch; font: 400 15px/1.55 var(--font-text); color: var(--text-secondary); margin: .6rem 0 1rem; }
+.findings { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); border-block: 1px solid var(--border); }
+.finding { min-width: 0; padding: 1rem 1.4rem 1rem 0; }
+.finding + .finding { border-left: 1px solid var(--border); padding-left: 1.4rem; padding-right: 0; }
+.opening .finding h3 { margin: 0 0 .35rem; font: 500 15px/1.4 var(--font-text); letter-spacing: 0; }
+.figure { margin: 0; font: 400 clamp(32px,4vw,46px)/1.15 Georgia,serif; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.figure > span { font: 400 13px/1.4 var(--font-text); letter-spacing: 0; color: var(--text-secondary); }
+.date { margin: .35rem 0 .5rem; font: 12px/1.5 var(--font-text); color: var(--text-secondary); }
+.definition { max-width: 48ch; margin: 0; font: 13px/1.5 var(--font-text); color: var(--text-secondary); }
+.comparison { display: grid; gap: .15rem; margin: .8rem 0; font: 13px/1.45 var(--font-text); }
+.comparison > span, .comparison small { color: var(--text-secondary); font-size: 12px; }
+.comparison b { font-weight: 500; }
+.rankNote { margin: .6rem 0; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
+.change { margin: .6rem 0 0; font: 13px/1.45 var(--font-text); }
+.change span { display: block; color: var(--text-secondary); font-size: 12px; }
+.stock { margin: .8rem 0 .3rem; font: 13px/1.5 var(--font-text); }
+.stock span { color: var(--text-secondary); }
+.next { display: flex; flex-wrap: wrap; gap: .2rem 1.8rem; }
+.next a:focus-visible, .heading a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+@media(max-width:600px) {
+  .findings { grid-template-columns: minmax(0,1fr); }
+  .finding { padding: 1rem 0; }
+  .finding + .finding { border-left: 0; border-top: 1px solid var(--border); padding-left: 0; }
+  .stock span { display: block; }
+}

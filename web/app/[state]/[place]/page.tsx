@@ -7,6 +7,7 @@ import { Term } from "@/components/Term";
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { PlacePhoto } from "@/components/PlacePhoto";
 import { PlaceSectionNav } from "@/components/PlaceSectionNav";
+import { PlaceMarketOpening } from "@/components/PlaceMarketOpening";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
 import "../../horizon-theme.css";
@@ -322,6 +323,8 @@ export default async function RegionPage({
 
   const name = displayName(region);
   const quiet = ["county", "municipality", "zip"].includes(region.level);
+  // Deliberately one town for local review, not a platform-wide hierarchy decision.
+  const marketFirst = region.state_code === "NJ" && region.geoid === "3402160900";
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
   // (ARCHITECTURE #275), and a file published before then that still carries one is
@@ -446,9 +449,10 @@ export default async function RegionPage({
   const housingContext = quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
   const sections = [
     { id: "place-overview", label: "Overview" },
+    ...(marketFirst ? [{ id: "place-market", label: "Market at a glance" }] : []),
     ...(countyTowns.length ? [{ id: "county-towns", label: "Towns" }] : []),
     { id: quiet ? "quiet-cost" : "place-costs", label: "Costs" },
-    { id: "field-notes", label: "Market" },
+    { id: "field-notes", label: marketFirst ? "Market exhibits" : "Market" },
     { id: "about-getting-around", label: "Getting around" },
     { id: "about-living-there", label: "Living there" },
     ...(similar ? [{ id: "place-explore", label: "Alternatives" }] : []),
@@ -496,8 +500,8 @@ export default async function RegionPage({
               line that named it once for the whole page is gone (Milestone 28). */}
           {(headline || lead || trade) && (
             <details className="verdict-details orientation-details">
-              <summary className="disclose">Market context and figures <span className="disclose-hint"><span className="when-closed">Details</span><span className="when-open">Hide</span></span></summary>
-              {headline && <p className="verdict region-orientation">{headline}</p>}
+              <summary className="disclose">{marketFirst ? "More market context" : "Market context and figures"} <span className="disclose-hint"><span className="when-closed">Details</span><span className="when-open">Hide</span></span></summary>
+              {!marketFirst && headline && <p className="verdict region-orientation">{headline}</p>}
               {lead && <p className="verdict-more">{lead}</p>}
               {trade && <p className="verdict-more">{trade}</p>}
             </details>
@@ -536,6 +540,14 @@ export default async function RegionPage({
       />}
 
       <div className="region-standard-content">
+
+      {marketFirst && <PlaceMarketOpening levels={packet.levels} metrics={packet.metrics}
+        uncertainties={uncertainties} peers={peers} headline={headline}
+        guideHref={`/guide?place=${regionId}`} reportHref={`${regionPath(regionId)}/report`}
+        revisions={new Map([...revisedBy].flatMap(([id, change]) => {
+          const row = packet.levels.find(l => l.metric_id === id && l.period_start === change.period_start);
+          return row ? [[id, { from: formatMetric(change.first_value, row.unit, id), on: change.last_revised_on }] as const] : [];
+        }))} />}
 
       <div id="place-costs" className="about-anchor" />
       <QuietAnchor enabled={quiet} id="quiet-cost">
