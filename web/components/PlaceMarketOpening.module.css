@@ -1,4 +1,4 @@
-.opening { margin: .3rem 0 1.8rem; color: var(--text-primary); }
+.opening { margin: .3rem 0 1.2rem; color: var(--text-primary); }
 .heading { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem 1.5rem; flex-wrap: wrap; }
 .opening .heading h2 { margin: 0; padding: 0; font: 400 clamp(26px,3vw,36px)/1.2 Georgia,serif; letter-spacing: -.025em; }
 .opening .heading h2::before, .opening .heading h2::after { content: none; }
@@ -6,12 +6,12 @@
 .instruction, .annotation { margin: .4rem 0; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
 .instruction kbd { font: inherit; }
 .findings { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); border-block: 1px solid var(--border); }
-.finding { min-width: 0; padding: 1rem 1.4rem 1rem 0; --portrait-colour: var(--plate-accent, var(--series-1)); }
+.finding { min-width: 0; padding: .6rem 1.4rem .6rem 0; --portrait-colour: var(--plate-accent, var(--series-1)); }
 .finding + .finding { border-left: 1px solid var(--border); padding-left: 1.4rem; padding-right: 0; --portrait-colour: var(--text-primary); }
 .opening .finding h3 { margin: 0 0 .35rem; font: 500 15px/1.4 var(--font-text); letter-spacing: 0; }
-.figure { margin: 0; font: 400 clamp(32px,4vw,46px)/1.15 Georgia,serif; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.figure { margin: 0; font: 400 clamp(30px,3vw,38px)/1.1 Georgia,serif; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
 .figure > span { font: 400 13px/1.4 var(--font-text); letter-spacing: 0; color: var(--text-secondary); }
-.date, .definition { margin: .25rem 0; font: 12px/1.5 var(--font-text); color: var(--text-secondary); }
+.date, .definition { margin: .15rem 0; font: 12px/1.4 var(--font-text); color: var(--text-secondary); }
 .chartLabel { display: flex; align-items: baseline; justify-content: space-between; gap: .4rem .8rem; flex-wrap: wrap; margin: .7rem 0 .15rem; font: 500 12px/1.5 var(--font-text); }
 .chartLabel > span { color: var(--text-secondary); font-weight: 400; }
 .chartLabel > b { color: var(--portrait-colour); font-size: 14px; font-weight: 500; }
@@ -41,16 +41,23 @@
 .trendDates { display: flex; justify-content: space-between; padding-left: 13.2%; padding-right: 3.6%; color: var(--text-secondary); font: 11px/1.4 var(--font-text); }
 .trendReading { display: block; margin: .2rem 0 0; min-height: 1.5em; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
 .trendReading b { margin-left: .4rem; color: var(--text-primary); font-weight: 500; }
-.stock { margin: .8rem 0 .25rem; }
+.stock { margin: .35rem 0 0; }
 .tenureLabels { display: flex; justify-content: space-between; gap: 1rem; font: 12px/1.5 var(--font-text); }
 .tenureLabels b { font-weight: 600; }
 .tenureBar { height: 9px; margin-block: .4rem; background: var(--text-secondary); border-radius: 3px; overflow: hidden; }
 .tenureBar > span { display: block; height: 100%; background: var(--plate-accent, var(--series-1)); border-right: 2px solid var(--plate-paper, var(--surface-card)); box-sizing: border-box; }
 .next { display: flex; flex-wrap: wrap; gap: .2rem 1.8rem; }
 .next a:focus-visible, .heading a:focus-visible, .peerReading a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.opening .chartLabel { margin-top: .3rem; margin-bottom: 0; }
+.opening .annotation { margin-block: .2rem; }
+/* Keep the trend and its dates together; the exact-value readout shares the date row. */
+.trend { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: baseline; column-gap: .5rem; }
+.trend .chartLabel, .trend .plotControl { grid-column: 1 / -1; }
+.trendDates { padding-right: 0; }
+.trendReading { margin: 0; font-size: 11px; }
 @media(max-width:600px) {
   .findings { grid-template-columns: minmax(0,1fr); }
-  .finding { padding: 1rem 0; }
+  .finding { padding: .6rem 0; }
   .finding + .finding { border-left: 0; border-top: 1px solid var(--border); padding-left: 0; }
   .chartLabel { margin-top: .5rem; }
   .axisText { font-size: 15px; }
