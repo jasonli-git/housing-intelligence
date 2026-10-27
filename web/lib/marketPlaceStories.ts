@@ -2,10 +2,19 @@ import type { PlaceStoryRecord, PlaceStorySummary } from "./placeStories";
 import { constructionYears } from "./construction";
 import { formatValue } from "./format";
 import { monthLabel } from "./periods";
+import { againstUsual } from "./persistence";
 
 const missing: PlaceStorySummary = { available: false, headline: "Local records unavailable", period: "No matching period", source: "Coverage limited", qualifier: "Missing records are not zero. No other place has been substituted.", rows: [] };
 export const PRESSURE_BANDS = ["Up to 30%", "Over 30–50%", "Over 50–80%", "Over 80–100%", "Over 100%"];
 export function marketStorySummary(record: PlaceStoryRecord): PlaceStorySummary | null {
+  if (record.topic === "past") {
+    const county = record.countyHistory, data = county?.data;
+    const unavailable = { ...missing, headline: "County history unavailable", qualifier: "No supported county history for this selection. A town-level series has not been substituted." };
+    if (!county || !data || data.withheld || data.vs_median === null || !Number.isFinite(data.vs_median) || !Array.isArray(data.series) || data.series.length < 10 || data.series.some(p => !Number.isFinite(p.year) || !Number.isFinite(p.vs_median))) return { ...unavailable, qualifier: data?.withheld ? `Comparison withheld: ${data.withheld}` : unavailable.qualifier };
+    const uncertainty = data.vs_median_low !== null && data.vs_median_high !== null ? ` Income uncertainty puts it between ${againstUsual(data.vs_median_low)} and ${againstUsual(data.vs_median_high)} the usual level.` : "";
+    return { available: true, headline: `${county.name}: prices against income ${againstUsual(data.vs_median)} its usual level`, source: "FHFA / Census SAIPE · County context", period: `${data.last_year} · History ${data.first_year}–${data.last_year}`,
+      qualifier: `${county.name} history, not town-level price pressure. Calculated from a price index and annual income; usual means the median of the observed years. Missing years are omitted. Historical comparison—not a forecast.${uncertainty}`, rows: [] };
+  }
   const row = (id: string) => record.levels.find(l => l.metric_id === id && Number.isFinite(l.value));
   const same = (a: NonNullable<ReturnType<typeof row>>, b: NonNullable<ReturnType<typeof row>>) => a.period_start === b.period_start && a.period_end === b.period_end;
   if (record.topic === "sales") {
@@ -64,6 +73,7 @@ export function marketStorySummary(record: PlaceStoryRecord): PlaceStorySummary 
 export function placeStoryPreviewNote(record: PlaceStoryRecord): string {
   if (!marketStorySummary(record)?.available && !["market", "commute", "water"].includes(record.topic)) return "Coverage limited · no substitute data.";
   switch (record.topic) {
+    case "past": return "County history—not a town-level comparison.";
     case "sales": return "Recorded 1–4-family sales—not asking prices.";
     case "pressure": {
       const first = record.pressure?.bands.filter(b => b.tenure === "renter" && b.share !== null && b.total > 0).sort((a,b) => a.band-b.band)[0];

@@ -33,6 +33,11 @@
 .kicker { font: 500 12px/1.4 var(--font-text); color: var(--text-secondary); }
 .chart figcaption strong { font: 400 clamp(23px,3vw,32px)/1.2 Georgia,serif; }
 .chart p { margin: .7rem 0 0; font: 12px/1.5 var(--font-text); color: var(--text-secondary); }
+.historyPlot { flex: 1; display: grid; align-content: center; padding-block: 1rem; }
+.historyPlot svg { display: block; width: 100%; height: auto; overflow: visible; }
+.historyPlot rect { fill: var(--focus-chart-accent); }
+.historyPlot line { stroke: var(--text-secondary); stroke-dasharray: 5 5; stroke-width: 1; }
+.historyPlot text { fill: var(--text-secondary); font: 12px var(--font-text); }
 .bars { flex: 1; align-content: center; margin-block: 1rem; display: grid; gap: 1.2rem; }
 .row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: .15rem .8rem; font: 13px/1.4 var(--font-text); }
 .row b { font-weight: 500; }

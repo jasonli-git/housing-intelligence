@@ -157,3 +157,48 @@ Browser checks at 390/1440px in both themes verify every label is less than half
 its headline's font size, sentence case, no horizontal overflow and scoped axe.
 No new full-suite or production build run; those results above belong to the
 market-story expansion.
+
+## Follow-up: Mercer County history on Princeton
+
+The owner approved the previously suggested, explicitly county-scoped historical
+card. This supersedes the earlier decision to defer adding county history to the
+Princeton gallery; no town-level historical measure was created.
+
+- Added a ninth card, **County market history**, after Prices & paychecks. Its
+  headline identifies Mercer County and the published 2024 comparison: roughly 22%
+  above its usual price-to-income level, with the 1989–2024 record labeled below.
+- Reused `/stories/is-today-unusual?place=224`. The selected origin remains Princeton,
+  and the view resolves its verified county rather than treating Princeton as a
+  supported historical geography. The story heading and chart caption name Mercer
+  County, a visible note says county context for Princeton, and Back to Princeton
+  returns to the gallery. The full-report link goes to Mercer County's report.
+- Reused HowUnusual with its historical year slider, uncertainty, definitions,
+  sources and no-forecast qualification. Existing statewide comparison stays below.
+- For other selections, an explicit county or the packet's verified county parent
+  determines the history. No county is guessed from town/ZIP names. Missing county
+  linkage, wrong-region records, withheld results and insufficient history do not
+  produce a replacement town history or silently use Mercer.
+- The shared selected-view screenshot chart places annual bars by calendar year,
+  preserving gaps for missing years and zero as the historical median. Positive
+  and negative values remain on their correct sides of the baseline. Existing
+  eight story records and screenshot identities are unchanged.
+
+Files: the place route; existing is-today-unusual route; shared record, server-data,
+summary, chart and focus modules; capture/browser scripts; summary tests and a new
+PlaceStoryChart hydration regression test. No backend/data/schema changes.
+
+Verification:
+
+- TypeScript passed; 821 frontend tests in 137 files passed; publication tests: 5 passed.
+- Scoped production export with the added existing story route: 1,198 routes passed.
+- Captured 18 selected images in both themes (598,376 bytes), plus the existing new
+  burden story's two generic library covers; final local run took 33.3 seconds.
+  Captures remain ignored local artifacts and no production pipeline was activated.
+- Browser checks cover all nine cards at 390/1440px in both themes, matching preview
+  and destination headlines/snapshots, explicit county scope, historical year slider,
+  correct county report and Princeton return links, scoped axe and no overflow.
+  Existing other-place selections, library and non-pilot checks remain in the script.
+- QA caught a hydration mismatch in a multi-part SVG title. Changed each title to a
+  single string and added a server-render/hydrate regression that verifies no recovery
+  and that the caption names Mercer County. Rebuilt and reran browser verification.
+- No full `make publish`, push, PR, deployment, ingestion or warehouse-writing tests.

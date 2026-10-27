@@ -16,6 +16,8 @@ export async function initialPlaceStory(topic: PlaceStoryTopic): Promise<PlaceSt
     topic === "migration" ? api.migration(id) : null,
   ]);
   if (!region || !packet) throw new Error("Princeton story pilot requires its published packet");
-  const place = { region_id: id, name: region.name, level: region.level, state_code: region.state_code, geoid: region.geoid };
-  return stampPlaceStory(makePlaceStoryRecord(topic, place, packet.levels, { metrics: topic === "market" ? packet.metrics : [], history, water, destinations, pressure, migration }));
+  const county = topic === "past" ? region.ancestors.find(a => a.level === "county") : undefined;
+  const countyHistory = county ? { region_id: county.region_id, name: `${county.name.replace(/ County$/, "")} County`, data: await api.persistence(county.region_id) } : null;
+  const place = { region_id: id, name: region.name, level: region.level, state_code: region.state_code, geoid: region.geoid, ...(county ? { county_id: county.region_id } : {}) };
+  return stampPlaceStory(makePlaceStoryRecord(topic, place, packet.levels, { metrics: topic === "market" ? packet.metrics : [], history, water, destinations, pressure, migration, countyHistory }));
 }

@@ -330,12 +330,14 @@ export default async function RegionPage({
   // Deliberately one town for local review, not a platform-wide hierarchy decision.
   const marketFirst = region.state_code === "NJ" && region.geoid === "3402160900";
   const marketCohorts = marketFirst ? await marketPortraitData(region.state_code, packet.levels) : [];
+  const storyCounty = marketFirst ? region.ancestors.find(a => a.level === "county") : undefined;
+  const countyHistory = storyCounty ? { region_id: storyCounty.region_id, name: `${storyCounty.name.replace(/ County$/, "")} County`, data: await api.persistence(storyCounty.region_id) } : null;
   const placeStoryRecords = marketFirst ? (Object.keys(PLACE_STORIES) as PlaceStoryTopic[]).map(topic => stampPlaceStory(makePlaceStoryRecord(topic,
-    { region_id: regionId, name: region.name, level: region.level, state_code: region.state_code, geoid: region.geoid }, packet.levels,
+    { region_id: regionId, name: region.name, level: region.level, state_code: region.state_code, geoid: region.geoid, ...(topic === "past" && storyCounty ? { county_id: storyCounty.region_id } : {}) }, packet.levels,
     { metrics: topic === "market" ? packet.metrics : [],
       history: topic === "market" ? series : topic === "building" ? storyHistoryMetrics(topic).map((metricId, i) => ({ metricId, observations: construction[i] })) : [],
       water: topic === "water" ? water : null, destinations: topic === "commute" ? workDestinations : null,
-      pressure: topic === "pressure" ? pressure : null, migration: topic === "migration" ? migration : null }))) : [];
+      pressure: topic === "pressure" ? pressure : null, migration: topic === "migration" ? migration : null, countyHistory: topic === "past" ? countyHistory : null }))) : [];
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
   // (ARCHITECTURE #275), and a file published before then that still carries one is

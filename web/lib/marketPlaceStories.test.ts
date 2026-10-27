@@ -1,7 +1,8 @@
 import { expect, it } from "vitest";
-import type { HousingPressure, Migration, Observation, PacketLevel } from "./api";
+import type { HousingPressure, Migration, Observation, PacketLevel, Persistence } from "./api";
 import { makePlaceStoryRecord, summarizePlaceStory } from "./placeStories";
 import { placeStoryPreviewNote } from "./marketPlaceStories";
+import { stampPlaceStory } from "./placeStoryData";
 const place = { region_id: 224, name: "Princeton", level: "municipality", state_code: "NJ" };
 const level = (metric_id: string, value: number, extra = {}) => ({ metric_id, value, unit: "usd", period_start: "2023-07-01", period_end: "2026-06-30", ...extra }) as PacketLevel;
 it("keeps recorded-sale quartiles on one window and describes transactions rather than all homes", () => {
@@ -41,4 +42,28 @@ it("retains county scope for parent migration, never calls it Princeton moves", 
   const summary=summarizePlaceStory(makePlaceStoryRecord("migration",place,[],{migration}));
   expect(summary.headline).toBe("Mercer County: 1,900 more tax returns leaving");expect(summary.qualifier).toContain("not town-level migration");expect(summary.period).toBe("2022–2023");
   expect(summarizePlaceStory(makePlaceStoryRecord("migration",place,[],{migration:{...migration,region_id:11}})).available).toBe(false);
+});
+
+const countyHistory = { region_id: 11, name: "Mercer County", data: { region_id: 11, first_year: 1989, last_year: 2024, vs_median: 22.00285, vs_median_low: 17.3, vs_median_high: 27.1, withheld: null, series: Array.from({length: 10}, (_,i) => ({year:2015+i, vs_median:i-4})) } as Persistence };
+it("keeps Mercer history bound to Princeton's verified county and labels index, date, uncertainty and forecast limits", () => {
+  const record=makePlaceStoryRecord("past",{...place,county_id:11},[],{countyHistory});
+  const summary=summarizePlaceStory(record);
+  expect(summary.headline).toBe("Mercer County: prices against income 22% above its usual level");
+  expect(summary.period).toBe("2024 · History 1989–2024");
+  expect(summary.qualifier).toContain("not town-level price pressure");expect(summary.qualifier).toContain("not a forecast");expect(summary.qualifier).toContain("17% above");
+  expect(placeStoryPreviewNote(record)).toContain("County history");expect(summary.rows).toEqual([]);
+  expect(stampPlaceStory({...record,countyHistory:{...countyHistory,data:{...countyHistory.data,vs_median:23}}}).snapshot).not.toBe(stampPlaceStory(record).snapshot);
+});
+it("refuses unverified or mismatched county history and does not use the pilot county for other places", () => {
+  expect(summarizePlaceStory(makePlaceStoryRecord("past",place,[],{countyHistory})).available).toBe(false);
+  expect(summarizePlaceStory(makePlaceStoryRecord("past",{...place,county_id:12},[],{countyHistory})).available).toBe(false);
+  expect(summarizePlaceStory(makePlaceStoryRecord("past",{...place,county_id:11},[],{countyHistory:{...countyHistory,data:{...countyHistory.data,region_id:12}}})).available).toBe(false);
+  expect(summarizePlaceStory(makePlaceStoryRecord("past",{...place,level:"county",region_id:11},[],{countyHistory})).available).toBe(true);
+});
+it("honors withheld history and rejects short or non-finite series", () => {
+  const make=(data:Persistence)=>summarizePlaceStory(makePlaceStoryRecord("past",{...place,county_id:11},[],{countyHistory:{...countyHistory,data}}));
+  expect(make({...countyHistory.data,withheld:"Publisher comparison disagrees"}).available).toBe(false);
+  expect(make({...countyHistory.data,withheld:"Publisher comparison disagrees"}).qualifier).toContain("Publisher comparison disagrees");
+  expect(make({...countyHistory.data,series:countyHistory.data.series.slice(0,3)}).available).toBe(false);
+  expect(make({...countyHistory.data,vs_median:NaN}).available).toBe(false);
 });

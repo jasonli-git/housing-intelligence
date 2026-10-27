@@ -1,4 +1,4 @@
-import type { HousingPressure, Migration, Observation, PacketLevel, PacketMetric, Region, WaterSystems, WorkDestinations } from "./api";
+import type { HousingPressure, Migration, Observation, PacketLevel, PacketMetric, Persistence, Region, WaterSystems, WorkDestinations } from "./api";
 import { displayName } from "./names";
 import { formatMetric, formatValue } from "./format";
 import { marginLabel } from "./uncertainty";
@@ -7,6 +7,7 @@ import { marketStorySummary } from "./marketPlaceStories";
 
 export const PLACE_STORIES = {
   market: { slug: "income-and-home-value", title: "Prices & paychecks" },
+  past: { slug: "is-today-unusual", title: "County market history" },
   sales: { slug: "price-ladder", title: "The homes that sold" },
   pressure: { slug: "who-feels-housing-costs", title: "Housing cost burden" },
   lending: { slug: "the-mortgage-market", title: "Buyer financing" },
@@ -18,7 +19,7 @@ export const PLACE_STORIES = {
 export type PlaceStoryTopic = keyof typeof PLACE_STORIES;
 export type PlaceStoryRecord = {
   topic: PlaceStoryTopic;
-  place: Pick<Region, "region_id" | "name" | "level" | "state_code"> & { geoid?: string };
+  place: Pick<Region, "region_id" | "name" | "level" | "state_code"> & { geoid?: string; county_id?: number };
   levels: PacketLevel[];
   metrics: PacketMetric[];
   history: { metricId: string; observations: Observation[] }[];
@@ -26,6 +27,7 @@ export type PlaceStoryRecord = {
   destinations: WorkDestinations | null;
   pressure?: HousingPressure | null;
   migration?: Migration | null;
+  countyHistory?: { region_id: number; name: string; data: Persistence | null } | null;
   snapshot: string;
 };
 export const STORY_HISTORY_METRICS = {
@@ -44,7 +46,8 @@ export function storyPlaceId(search: string): number | null {
   const value = new URLSearchParams(search).get("place");
   return value && /^[1-9]\d*$/.test(value) && Number.isSafeInteger(Number(value)) ? Number(value) : null;
 }
-export function makePlaceStoryRecord(topic: PlaceStoryTopic, place: PlaceStoryRecord["place"], levels: PacketLevel[], extra: Partial<Pick<PlaceStoryRecord, "metrics" | "history" | "water" | "destinations" | "pressure" | "migration">> = {}): PlaceStoryRecord {
+export function makePlaceStoryRecord(topic: PlaceStoryTopic, place: PlaceStoryRecord["place"], levels: PacketLevel[], extra: Partial<Pick<PlaceStoryRecord, "metrics" | "history" | "water" | "destinations" | "pressure" | "migration" | "countyHistory">> = {}): PlaceStoryRecord {
+  const countyHistory = extra.countyHistory;
   const keep = (id: string) => topic === "market" ? ["acs_median_home_value", "acs_median_hh_income", "zhvi_sfr", "zori_all"].includes(id)
     : topic === "commute" ? /^(acs_(mean_commute|commute_|work_from_home)|lodes_|transit_)/.test(id)
     : topic === "sales" ? /^(sr1a_|nj_director_ratio$|nj_revaluation_year$|sale_price_to_income$)/.test(id)
@@ -55,7 +58,8 @@ export function makePlaceStoryRecord(topic: PlaceStoryTopic, place: PlaceStoryRe
     water: extra.water?.region_id === place.region_id && Array.isArray(extra.water.systems) ? extra.water : null,
     destinations: extra.destinations?.region_id === place.region_id && Array.isArray(extra.destinations.destinations) ? extra.destinations : null,
     ...(topic === "pressure" ? { pressure: extra.pressure?.region_id === place.region_id && Array.isArray(extra.pressure.bands) ? extra.pressure : null } : {}),
-    ...(topic === "migration" ? { migration: extra.migration?.region_id === place.region_id && Array.isArray(extra.migration.years) ? extra.migration : null } : {}), snapshot: "" };
+    ...(topic === "migration" ? { migration: extra.migration?.region_id === place.region_id && Array.isArray(extra.migration.years) ? extra.migration : null } : {}),
+    ...(topic === "past" ? { countyHistory: countyHistory && countyHistory.region_id === (place.level === "county" ? place.region_id : place.county_id) && countyHistory.data?.region_id === countyHistory.region_id ? countyHistory : null } : {}), snapshot: "" };
 }
 export function summarizePlaceStory(record: PlaceStoryRecord): PlaceStorySummary {
   const unavailable: PlaceStorySummary = { available: false, headline: "Local records unavailable", period: "No matching period", source: "Coverage limited", qualifier: "Missing data is not a zero or a clean result.", rows: [] };
