@@ -34,7 +34,7 @@ try {
     await history.screenshot({ path: `/tmp/princeton-county-history-${width}-${theme}.png` });
     const gallery = page.locator('#place-story-gallery');
     await gallery.scrollIntoViewIfNeeded();
-    const topics = ['market', 'sales', 'pressure', 'lending', 'building', 'migration', 'commute', 'water'];
+    const topics = ['market', 'sales', 'pressure', 'lending', 'building', 'migration', 'commute', 'water','flood','sites','utilities','broadband'];
     assert.equal(await gallery.locator('[data-preview-topic]').count(), topics.length);
     assert.equal(await gallery.locator('[data-preview-topic="past"]').count(), 0, 'history card removed from gallery');
     for (const topic of topics) {
@@ -47,7 +47,7 @@ try {
       assert((await card.getAttribute('href')).endsWith('?place=224'));
       await card.click();
       const focus = page.locator('[data-place-story-focus][data-selected="true"]');
-      await focus.waitFor();
+      await focus.waitFor().catch(error=>{throw new Error(`${width}/${theme}/${topic}: expected selected story at ${page.url()}`,{cause:error});});
       const chart = focus.locator('[data-place-story-shot]');
       assert.equal(await chart.getAttribute('data-place-story-id'), '224');
       assert.equal(await chart.getAttribute('data-place-story-snapshot'), snapshot, 'same data/wording identity as preview');
@@ -58,6 +58,26 @@ try {
       }
       if (topic === 'commute') assert(await focus.getByRole('heading', { name: 'How do people here get around?', exact: true }).isVisible());
       if (topic === 'water') assert(await focus.getByRole('heading', { name: 'Water systems and records', exact: true }).isVisible());
+      if(topic==='sites')assert(await focus.getByRole('heading',{name:'Contaminated-site records',exact:true}).isVisible());
+      if(topic==='flood'){
+        assert(await focus.getByRole('heading',{name:'Is it at risk of flooding?',exact:true}).isVisible());
+        assert((await chart.innerText()).includes('Outside a mapped zone is not safe'));
+      }
+      if(topic==='utilities'){
+        const explorer=focus.locator('[aria-labelledby="outage-explorer-heading"]');
+        await explorer.getByRole('button',{name:'Major-event days excluded',exact:true}).click();
+        assert(await explorer.getByText('42.6 min',{exact:true}).isVisible());
+        assert((await chart.innerText()).includes('not town outages'));
+      }
+      if(topic==='broadband'){
+        assert((await chart.innerText()).includes('98.9%'));
+        await focus.getByRole('button',{name:'Published area units',exact:true}).click();
+        await focus.getByRole('heading',{name:'Mercer County · published county units',exact:true}).waitFor({state:'visible'});
+        assert(await focus.getByText('County context—not this town’s location count or availability.',{exact:true}).isVisible());
+        await focus.getByRole('button',{name:'Mapped locations',exact:true}).click();
+        await focus.locator('.broadband-place').waitFor({state:'visible'});
+        assert((await focus.locator('.broadband-place').innerText()).includes('6,903'));
+      }
       if (topic === 'sales') assert(await focus.getByRole('heading', { name: 'What did buyers actually pay?', exact: true }).isVisible());
       if (topic === 'lending') assert(await focus.getByRole('heading', { name: 'How do people here pay for homes?', exact: true }).isVisible());
       if (topic === 'building') {
@@ -84,7 +104,13 @@ try {
     const audit = await new AxeBuilder({ page }).include('#place-story-gallery').include('#county-market-history').analyze();
     assert.deepEqual(audit.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })), []);
     await page.locator('#about-living-there > summary').click();
-    assert(await page.getByRole('heading', { name: 'Contaminated-site records', exact: true }).isVisible());
+    const remaining=page.locator('#about-living-there');
+    assert(await remaining.getByRole('heading',{name:'Schools around here',exact:true}).isVisible());
+    assert(await remaining.getByRole('heading',{name:'Public-safety reporting context',exact:true}).isVisible());
+    assert(await remaining.getByRole('heading',{name:'Health context—not a home’s diagnosis',exact:true}).isVisible());
+    assert.equal(await remaining.locator('.ground-water,.flood-risk,.utility-context,.community-broadband').count(),0,'moved living topics are not duplicated');
+    for(const [id,topic] of [['ground-sites-heading','sites'],['flood-risk-heading','flood'],['utilities-heading','utilities'],['community-broadband-heading','broadband']])assert(await page.locator(`#${id}`).evaluate((el,t)=>Boolean(el.closest(`[data-preview-topic="${t}"]`)),topic),'legacy links still reach their topic');
+    assert((await page.getByRole('link',{name:'Open the address checklist'}).getAttribute('href')).endsWith('/guide?place=224#guide-checks-heading'));
     assert.equal(await page.locator('.exhibit-gallery .indexed-comparison').count(), 0, 'moved trends do not remain duplicated');
     assert.equal(await page.locator('.exhibit-gallery #more-market-evidence, .exhibit-gallery #sales-heading, .exhibit-gallery .income-pressure, .exhibit-gallery .who-is-moving, .exhibit-gallery .homes-added').count(), 0, 'market exhibits have moved, not been duplicated');
     assert(await page.locator('#sales-heading').evaluate(el => Boolean(el.closest('[data-preview-topic="sales"]'))), 'existing property-tax and guide sale links still land on sales');
@@ -92,7 +118,7 @@ try {
     assert(await page.locator('#ground-water-heading').evaluate(el => Boolean(el.closest('[data-preview-topic="water"]'))));
     await gallery.screenshot({ path: `/tmp/place-story-gallery-${width}-${theme}.png` });
     assert.deepEqual(errors, []);
-    console.log(`${width}/${theme}: inline county graph/story identity and sliders, eight gallery shots, selected stories, interactions, return links, retained sites, no overflow and axe passed`);
+    console.log(`${width}/${theme}: inline county graph, twelve true story covers, selected data/controls, retained schools/safety/health, address checklist, no duplication/overflow and axe passed`);
     await context.close();
   }
   const page = await browser.newPage();
@@ -122,7 +148,7 @@ try {
     await page.locator('[data-place-story-focus] [role="status"]').filter({ hasText: suffix.includes('bad') ? 'Invalid place selection' : 'could not be loaded' }).waitFor();
     assert.equal(await page.locator('[data-place-story-focus] [data-place-story-shot]').count(), 0, 'invalid/unavailable selection does not fall back to Princeton');
   }
-  for (const slug of ['is-today-unusual', 'price-ladder', 'the-mortgage-market', 'is-new-jersey-building', 'who-moves-in', 'who-feels-housing-costs']) {
+  for (const slug of ['is-today-unusual', 'price-ladder', 'the-mortgage-market', 'is-new-jersey-building', 'who-moves-in', 'who-feels-housing-costs','the-flood-claims-calendar','sites-and-cleanup','when-the-power-goes-out','where-internet-reaches']) {
     await page.goto(`${origin}/stories/${slug}?place=11`, { waitUntil: 'networkidle' });
     const focus = page.locator('[data-place-story-focus][data-selected="true"]');
     await focus.getByRole('heading', { name: 'Exploring Mercer County', exact: true }).waitFor();
@@ -138,6 +164,13 @@ try {
   const libraryCard = page.locator('a.library-card[href="/stories/who-feels-housing-costs"]');
   await libraryCard.waitFor();
   await libraryCard.locator('img:visible').evaluate(async img => { await img.decode(); });
+  for(const [slug,title] of [['sites-and-cleanup','Sites and cleanup'],['when-the-power-goes-out','When the power goes out'],['where-internet-reaches','Where internet reaches']]){
+    await page.getByRole('searchbox',{name:'Search stories'}).fill(title);
+    const card=page.locator(`a.library-card[href="/stories/${slug}"]`);await card.waitFor();await card.locator('img:visible').evaluate(async img=>{await img.decode();});
+  }
+  await page.goto(`${origin}/nj/princeton`);await page.getByRole('link',{name:'Open the address checklist'}).click();
+  await page.waitForURL(url=>url.pathname==='/guide'&&url.searchParams.get('place')==='224');
+  assert.equal(new URL(page.url()).searchParams.get('place'),'224');await page.locator('#guide-checks-heading').waitFor({state:'visible'});
   for (const route of ['/nj/hoboken', '/nj/mercer-county', '/nj/zip-08540']) {
     await page.goto(origin + route);
     assert.equal(await page.locator('#place-story-gallery').count(), 0);

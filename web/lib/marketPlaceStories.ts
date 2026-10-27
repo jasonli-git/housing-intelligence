@@ -86,4 +86,5 @@ export function placeStoryPreviewNote(record: PlaceStoryRecord): string {
     case "commute": return "One-way mean—not your route.";
     case "water": return "System history—not today’s tap water.";
   }
+  return "Explore this place’s records.";
 }

@@ -59,7 +59,7 @@ import { indexedComparison } from "@/lib/chartInsights";
 import { costInputs, homePrice } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
 import { pageMetadata, regionTitle } from "@/lib/meta";
-import { hasUnplaced, ownClaimsUsable } from "@/lib/hazards";
+import { loadFloodStory } from "@/lib/placeFloodStory";
 import type { Term as GlossaryTerm } from "@/lib/glossary";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, surveyYears } from "@/lib/periods";
@@ -234,8 +234,6 @@ export default async function RegionPage({
   // Flood claims: exact by county and ZIP code; a town's estimated from FEMA's block
   // groups (#354), and its county's instead where FEMA's codes leave too many of its
   // claims unplaceable between it and a neighbour (`ownClaimsUsable`).
-  const claimsOf = async (id: number, metricIds: string[]) =>
-    Promise.all(metricIds.map(async (m) => (await api.observations(id, m))?.observations ?? []));
   const floodClaimsFor = async () => {
     const county = region.ancestors.find((a) => a.level === "county") ?? null;
     // The dataset's newest year, still filling, is the state's: a county, town or ZIP code
@@ -247,34 +245,7 @@ export default async function RegionPage({
         : (region.ancestors.find((a) => a.level === "state")?.region_id ??
           (await api.regions(`level=state`))?.items.find((r) => r.state_code === region.state_code)?.region_id ??
           null);
-    const newestYear = async () => {
-      const id = await stateId();
-      const observations = id === null ? [] : ((await api.observations(id, "fema_flood_claims"))?.observations ?? []);
-      return observations.length ? Math.max(...observations.map((o) => Number(o.period_end.slice(0, 4)))) : null;
-    };
-    if (region.level === "municipality") {
-      const [[claims, paid, unplaced], newest] = await Promise.all([
-        claimsOf(regionId, ["fema_flood_claims", "fema_flood_claims_paid", "fema_flood_claims_unplaced"]),
-        newestYear(),
-      ]);
-      if (ownClaimsUsable(claims, unplaced) || !county) {
-        return { claims, paid, unplaced, newest, place: null, unseparable: false };
-      }
-      const [countyClaims, countyPaid] = await claimsOf(county.region_id, ["fema_flood_claims", "fema_flood_claims_paid"]);
-      return {
-        claims: countyClaims,
-        paid: countyPaid,
-        unplaced: [],
-        newest,
-        place: displayName(county),
-        unseparable: hasUnplaced(unplaced),
-      };
-    }
-    const [[claims, paid], newest] = await Promise.all([
-      claimsOf(regionId, ["fema_flood_claims", "fema_flood_claims_paid"]),
-      newestYear(),
-    ]);
-    return { claims, paid, unplaced: [], newest, place: null, unseparable: false };
+    return loadFloodStory(region,county?{region_id:county.region_id,name:displayName(county)}:null,await stateId(),async(id,metric)=>(await api.observations(id,metric))?.observations??[]);
   };
   // BPU's reports came by public-records request (#370); the note says so beside them.
   const bpuInquiry = (await api.freshness())?.sources.find((s) => s.source_id === "nj_bpu_reports")?.inquiries?.at(-1);
@@ -338,7 +309,8 @@ export default async function RegionPage({
     { metrics: topic === "market" ? packet.metrics : [],
       history: topic === "market" ? series : topic === "building" ? storyHistoryMetrics(topic).map((metricId, i) => ({ metricId, observations: construction[i] })) : [],
       water: topic === "water" ? water : null, destinations: topic === "commute" ? workDestinations : null,
-      pressure: topic === "pressure" ? pressure : null, migration: topic === "migration" ? migration : null, countyHistory: topic === "past" ? countyHistory : null }))) : [];
+      pressure: topic === "pressure" ? pressure : null, migration: topic === "migration" ? migration : null, countyHistory: topic === "past" ? countyHistory : null,
+      flood:topic === "flood" ? floodClaims:null, utilities:topic === "utilities" ? utilities:null, utilityInquiry:topic === "utilities" ? bpuInquiry:null, community:topic === "broadband" ? community:null }))) : [];
   const countyHistoryStory = placeStoryRecords.find(record => record.topic === "past");
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
@@ -647,6 +619,7 @@ export default async function RegionPage({
       </QuietAnchor>
       {countyHistoryStory && <CountyHistoryContext record={countyHistoryStory} />}
       {marketFirst && <PlaceStoryGallery records={placeStoryRecords.filter(record => record.topic !== "past")} artifactUrl={artifactUrl} />}
+      {marketFirst && <section className={styles.addressChecks} aria-labelledby="place-address-checks-heading"><div><h3 id="place-address-checks-heading">Check the actual home</h3><p>Area figures don’t establish one home’s risk, school assignment or service.</p></div><Link href={`/guide?place=${regionId}#guide-checks-heading`}>Open the address checklist <span aria-hidden="true">↗</span></Link></section>}
       <ExhibitGallery>
       {!marketFirst && <>
       <h3 className="exhibit-group-head" id="field-notes">The market</h3>
@@ -696,13 +669,15 @@ export default async function RegionPage({
       {!marketFirst && <StateContextExhibits concise topics={["work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />}
       {!marketFirst && <LocalEvidenceCharts kind="work" name={name} level={region.level} levels={packet.levels} series={construction} />}
       <details className="place-evidence-group" id="about-living-there">
-        <summary><h3>Living there</h3><span>{marketFirst ? "Sites, flood, services and community" : "Water, flood, services and community"}</span></summary>
+        <summary><h3>Living there</h3><span>{marketFirst ? "Schools, public safety and health" : "Water, flood, services and community"}</span></summary>
         <div className="place-evidence-body">
+          {!marketFirst && <>
           <LearningExhibit kind="Ground & water"><GroundAndWater compact name={name} levels={packet.levels} water={water} scope={marketFirst ? "sites" : "all"} /></LearningExhibit>
           <LearningExhibit kind="Flood context"><FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} /></LearningExhibit>
           <div id="local-property-evidence" className="property-exhibit-anchor"><LearningExhibit kind="Service providers"><Utilities data={utilities} bpuInquiry={bpuInquiry} /></LearningExhibit></div>
       <StateContextExhibits concise topics={["broadband"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
-          <CommunityContext exhibits data={community} level={region.level} supporting hideBroadband={region.level === "county"} />
+          </>}
+          <CommunityContext exhibits data={community} level={region.level} supporting hideBroadband={marketFirst || region.level === "county"} />
         </div>
       </details>
       </ExhibitGallery>

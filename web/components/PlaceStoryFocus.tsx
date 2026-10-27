@@ -14,9 +14,15 @@ import { MortgageLending } from "./MortgageLending";
 import { HomesAdded } from "./HomesAdded";
 import { WhoIsMoving } from "./WhoIsMoving";
 import { HowUnusual } from "./HowUnusual";
+import { FloodRisk } from "./FloodRisk";
+import { Utilities } from "./Utilities";
+import { BroadbandStoryExplorer, UtilityOutageExplorer } from "./LivingStoryExplorers";
+import { loadFloodStory } from "@/lib/placeFloodStory";
+import { coveredState } from "@/lib/states";
+import { displayName } from "@/lib/names";
 import { regionPath } from "@/lib/placeRoutes";
 import { makePlaceStoryRecord, placeStoryName, storyHistoryMetrics, storyPlaceId, type PlaceStoryRecord } from "@/lib/placeStories";
-import type { HousingPressure, Migration, Packet, Observation, Persistence, WaterSystems, WorkDestinations } from "@/lib/api";
+import type { CommunityContext as CommunityData, HousingPressure, Inquiry, Migration, Packet, Observation, Persistence, Utilities as UtilityData, WaterSystems, WorkDestinations } from "@/lib/api";
 import type { SearchEntry } from "@/lib/search";
 import styles from "./PlaceStories.module.css";
 
@@ -45,13 +51,16 @@ export function PlaceStoryFocus({ initial, artifactUrl }: { initial: PlaceStoryR
       if (id === initial.place.region_id) next = initial;
       else {
         const base = `${artifactUrl}/regions/${id}`;
-        const [packet, water, destinations, observations, pressure, migration] = await Promise.all([
+        const [packet, water, destinations, observations, pressure, migration, utilities, freshness, community] = await Promise.all([
           optionalJson<Packet>(`${base}/packet/5y.json`, abort.signal),
           initial.topic === "water" ? optionalJson<WaterSystems>(`${base}/water-systems.json`, abort.signal) : null,
           initial.topic === "commute" ? optionalJson<WorkDestinations>(`${base}/work-destinations.json`, abort.signal) : null,
           storyHistoryMetrics(initial.topic).length ? optionalJson<{ total: number; observations: Observation[] }>(`${base}/metrics.json`, abort.signal) : null,
           initial.topic === "pressure" ? optionalJson<HousingPressure>(`${base}/housing-pressure.json`, abort.signal) : null,
           initial.topic === "migration" ? optionalJson<Migration>(`${base}/migration.json`, abort.signal) : null,
+          initial.topic === "utilities" ? optionalJson<UtilityData>(`${base}/utilities.json`, abort.signal) : null,
+          initial.topic === "utilities" ? optionalJson<{sources:{source_id:string;inquiries?:Inquiry[]}[]}>(`${artifactUrl}/freshness.json`,abort.signal):null,
+          initial.topic === "broadband" ? optionalJson<CommunityData>(`${base}/community.json`,abort.signal):null,
         ]);
         if (!packet || packet.region?.region_id !== id || !Array.isArray(packet.levels) || !["county", "municipality", "zip"].includes(packet.region.level)) throw new Error("No supported place packet");
         // Only an explicit county selection or a verified county parent supplies
@@ -59,9 +68,17 @@ export function PlaceStoryFocus({ initial, artifactUrl }: { initial: PlaceStoryR
         const county = initial.topic === "past" ? packet.region.level === "county" ? { region_id: id, name: packet.region.name }
           : packet.region.parent?.level === "county" ? packet.region.parent : null : null;
         const countyHistory = county ? { region_id: county.region_id, name: `${county.name.replace(/ County$/, "")} County`, data: await optionalJson<Persistence>(`${artifactUrl}/regions/${county.region_id}/persistence.json`, abort.signal) } : null;
+        const metricFiles=new Map<number,Promise<{total:number;observations:Observation[]}|null>>();
+        const read=async(regionId:number,metric:string)=>{
+          if(!metricFiles.has(regionId))metricFiles.set(regionId,optionalJson<{total:number;observations:Observation[]}>(`${artifactUrl}/regions/${regionId}/metrics.json`,abort.signal));
+          const file=await metricFiles.get(regionId);
+          if(!file||!Array.isArray(file.observations)||file.total!==file.observations.length)throw new Error("Incomplete flood observations");
+          return file.observations.filter(o=>o.metric_id===metric);
+        };
+        const flood=initial.topic==="flood"?await loadFloodStory({region_id:id,level:packet.region.level},packet.region.parent?.level==="county"?{region_id:packet.region.parent.region_id,name:displayName(packet.region.parent)}:null,coveredState(packet.region.state_code)?.regionId??null,read):null;
         const history = observations && Array.isArray(observations.observations) && observations.total === observations.observations.length
           ? storyHistoryMetrics(initial.topic).map(metricId => ({ metricId, observations: observations.observations.filter(o => o.metric_id === metricId) })) : [];
-        next = makePlaceStoryRecord(initial.topic, { region_id: id, name: packet.region.name, level: packet.region.level, state_code: packet.region.state_code, geoid: packet.region.geoid, ...(county ? { county_id: county.region_id } : {}) }, packet.levels, { metrics: initial.topic === "market" ? packet.metrics : [], history, water, destinations, pressure, migration, countyHistory });
+        next = makePlaceStoryRecord(initial.topic, { region_id: id, name: packet.region.name, level: packet.region.level, state_code: packet.region.state_code, geoid: packet.region.geoid, ...(county ? { county_id: county.region_id } : {}) }, packet.levels, { metrics: initial.topic === "market" ? packet.metrics : [], history, water, destinations, pressure, migration, countyHistory, flood,utilities,utilityInquiry:freshness?.sources.find(s=>s.source_id==="nj_bpu_reports")?.inquiries?.at(-1)??null,community });
       }
       if (token !== request.current) return;
       setRecord(next); setMessage("");
@@ -96,6 +113,10 @@ export function PlaceStoryFocus({ initial, artifactUrl }: { initial: PlaceStoryR
       <div className={styles.focusBody}>
         {record.topic === "commute" && <GettingAround name={name} level={record.place.level} levels={record.levels} destinations={record.destinations} />}
         {record.topic === "water" && <GroundAndWater name={name} levels={record.levels} water={record.water} scope="water" />}
+        {record.topic === "sites" && <GroundAndWater name={name} levels={record.levels} water={null} scope="sites"/>}
+        {record.topic === "utilities" && <><UtilityOutageExplorer key={record.place.region_id} data={record.utilities??null}/><Utilities data={record.utilities??null} bpuInquiry={record.utilityInquiry??undefined}/></>}
+        {record.topic === "broadband" && <BroadbandStoryExplorer key={record.place.region_id} data={record.community??null} level={record.place.level}/>}
+        {record.topic === "flood" && <FloodRisk name={name} levels={record.levels} claims={record.flood?.claims??[]} paid={record.flood?.paid??[]} unplaced={record.flood?.unplaced??[]} newestYear={record.flood?.newest??null} claimsPlace={record.flood?.place??null} estimated={record.flood?.estimated??false} unseparable={record.flood?.unseparable??false}/>}
         {record.topic === "sales" && <HomeSales name={name} level={record.place.level} geoid={record.place.geoid ?? ""} levels={record.levels} showLookup={false} portrait />}
         {record.topic === "pressure" && <IncomePressure data={record.pressure ?? null} />}
         {record.topic === "lending" && <MortgageLending name={name} levels={record.levels} />}

@@ -7,6 +7,8 @@
 .card[data-preview-topic="water"] { --preview-accent: var(--series-2); }
 .card[data-preview-topic="sales"], .card[data-preview-topic="building"] { --preview-accent: var(--series-2); }
 .card[data-preview-topic="pressure"], .card[data-preview-topic="migration"] { --preview-accent: var(--series-3); }
+.card[data-preview-topic="sites"] { --preview-accent: var(--series-2); }
+.card[data-preview-topic="utilities"] { --preview-accent: var(--series-3); }
 .card::before { content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--preview-accent) 8%,transparent),transparent 65%),linear-gradient(135deg,color-mix(in srgb,var(--surface-card) 98%,transparent),color-mix(in srgb,var(--surface-card) 93%,transparent) 45%,color-mix(in srgb,var(--surface-card) 78%,transparent) 75%,color-mix(in srgb,var(--surface-card) 97%,transparent)); }
 .card h3 { margin: .15rem 0 0; color: var(--text-primary); font: 400 clamp(23px,2vw,27px)/1.15 Georgia,serif; letter-spacing: -.025em; text-wrap: pretty; }
 .card p { margin: 0; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
@@ -29,6 +31,8 @@
 .chart[data-topic="water"] { --focus-chart-accent: var(--series-2); }
 .chart[data-topic="sales"], .chart[data-topic="building"] { --focus-chart-accent: var(--series-2); }
 .chart[data-topic="pressure"], .chart[data-topic="migration"] { --focus-chart-accent: var(--series-3); }
+.chart[data-topic="sites"] { --focus-chart-accent: var(--series-2); }
+.chart[data-topic="utilities"] { --focus-chart-accent: var(--series-3); }
 .chart figcaption { display: grid; gap: .4rem; }
 .kicker { font: 500 12px/1.4 var(--font-text); color: var(--text-secondary); }
 .chart figcaption strong { font: 400 clamp(23px,3vw,32px)/1.2 Georgia,serif; }
@@ -52,6 +56,20 @@
 .contextGraph :global(.exhibit-readout span) { margin: 0; }
 .contextGraph :global(figcaption) { color: var(--text-secondary); font: 12px/1.55 var(--font-text); }
 .countyHistory .contextUncertainty { font-size: 11px; }
+.livingExplorer { margin-block: 1.2rem; }
+.livingExplorer h2 { font: 400 23px/1.25 Georgia,serif; }
+.livingExplorer p { color: var(--text-secondary); font: 13px/1.6 var(--font-text); }
+.explorerTabs { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: .8rem; }
+.explorerTabs button { min-height: 44px; padding: .5rem .8rem; border: 1px solid var(--border); border-radius: 7px; color: var(--text-primary); background: var(--surface-card); font: 13px/1.4 var(--font-text); cursor: pointer; }
+.explorerTabs button[aria-pressed="true"] { border-color: var(--series-1); background: color-mix(in srgb,var(--series-1) 12%,var(--surface-card)); }
+.explorerTabs button:disabled { opacity: .5; cursor: default; }
+.explorerTabs button:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.explorerRows { display: grid; gap: 1.1rem; margin-block: 1rem; }
+.explorerRows > div { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: .25rem .7rem; font: 13px/1.4 var(--font-text); }
+.explorerRows b { font-weight: 500; }
+.explorerRows i { grid-column: 1/-1; height: 9px; background: var(--border); border-radius: 3px; }
+.explorerRows i span { display: block; height: 100%; background: var(--series-3); border-radius: inherit; }
+.explorerRows small { grid-column: 1/-1; color: var(--text-secondary); font-size: 11px; }
 .bars { flex: 1; align-content: center; margin-block: 1rem; display: grid; gap: 1.2rem; }
 .row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: .15rem .8rem; font: 13px/1.4 var(--font-text); }
 .row b { font-weight: 500; }
@@ -66,6 +84,7 @@
 .focus a, .focus button, .gallery a { text-underline-offset: 3px; }
 .focus button { min-height: 44px; border: 1px solid var(--border); border-radius: 5px; padding: .4rem .8rem; color: var(--text-primary); background: var(--surface-card); cursor: pointer; }
 .focus a { color: var(--plate-accent); }
+.focus a[href^="http://"], .focus a[href^="https://"], .livingExplorer a[href^="http://"], .livingExplorer a[href^="https://"] { color: var(--kind-state); }
 .focusBody { margin-top: 1rem; }
 .focusBody :global(.section) { margin-top: 1.5rem; }
 .focusBody :global(.chart-kicker) { color: var(--text-secondary); }

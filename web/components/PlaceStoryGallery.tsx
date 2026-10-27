@@ -5,6 +5,7 @@ import { useState } from "react";
 import { PLACE_STORIES, placeStoryHref, placeStoryName, summarizePlaceStory, type PlaceStoryRecord } from "@/lib/placeStories";
 import { PlaceStoryChart } from "./PlaceStoryChart";
 import { placeStoryPreviewNote } from "@/lib/marketPlaceStories";
+import { livingPreviewNote } from "@/lib/livingPlaceStories";
 import styles from "./PlaceStories.module.css";
 
 function PreviewImage({ src, className }: { src: string; className: string }) {
@@ -21,11 +22,11 @@ export function PlaceStoryGallery({ records, artifactUrl }: { records: PlaceStor
     <div className={styles.cards}>{records.map(record => {
       const summary = summarizePlaceStory(record);
       const prefix = `${artifactUrl}/screenshots/place-stories/${record.place.region_id}-${record.topic}-${record.snapshot}`;
-      return <Link key={record.topic} id={record.topic === "commute" ? "about-getting-around" : `story-${record.topic}-preview`} className={styles.card} href={placeStoryHref(record.topic, record.place.region_id)} prefetch={false} data-preview-topic={record.topic} data-preview-snapshot={record.snapshot}>
+      return <Link key={record.topic} id={record.topic === "commute" ? "about-getting-around" : record.topic === "utilities" ? "local-property-evidence" : `story-${record.topic}-preview`} className={styles.card} href={placeStoryHref(record.topic, record.place.region_id)} prefetch={false} data-preview-topic={record.topic} data-preview-snapshot={record.snapshot}>
         <div className={styles.cover} aria-hidden="true"><PlaceStoryChart record={record} /><PreviewImage key={`${prefix}-light`} className={styles.light} src={`${prefix}-light.jpg`} /><PreviewImage key={`${prefix}-dark`} className={styles.dark} src={`${prefix}-dark.jpg`} /></div>
         <p className={styles.topic}><span className={styles.topicName}>{PLACE_STORIES[record.topic].title}</span><span className={styles.openArrow} aria-hidden="true">↗</span></p>
-        <h3 id={({ water: "ground-water-heading", commute: "getting-around-heading", sales: "sales-heading", lending: "state-loans-exhibit", building: "homes-added-heading", migration: "who-is-moving-heading", pressure: "income-pressure-heading" } as Partial<Record<string,string>>)[record.topic]}>{summary.headline}</h3>
-        <p className={styles.qualifier}>{placeStoryPreviewNote(record)}</p>
+        <h3 id={({ water: "ground-water-heading", commute: "getting-around-heading", sales: "sales-heading", lending: "state-loans-exhibit", building: "homes-added-heading", migration: "who-is-moving-heading", pressure: "income-pressure-heading",sites:"ground-sites-heading",flood:"flood-risk-heading",utilities:"utilities-heading",broadband:"community-broadband-heading" } as Partial<Record<string,string>>)[record.topic]}>{summary.headline}</h3>
+        <p className={styles.qualifier}>{livingPreviewNote(record) ?? placeStoryPreviewNote(record)}</p>
         <div className={styles.previewMeta}>
           <p>{summary.source} · {summary.period}</p>
         </div>
