@@ -1,25 +1,40 @@
-import type { Observation, PacketLevel, PacketMetric, Region, WaterSystems, WorkDestinations } from "./api";
+import type { HousingPressure, Migration, Observation, PacketLevel, PacketMetric, Region, WaterSystems, WorkDestinations } from "./api";
 import { displayName } from "./names";
 import { formatMetric, formatValue } from "./format";
 import { marginLabel } from "./uncertainty";
 import { surveyYears } from "./periods";
+import { marketStorySummary } from "./marketPlaceStories";
 
 export const PLACE_STORIES = {
   market: { slug: "income-and-home-value", title: "Prices & paychecks" },
+  sales: { slug: "price-ladder", title: "The homes that sold" },
+  pressure: { slug: "who-feels-housing-costs", title: "Housing cost burden" },
+  lending: { slug: "the-mortgage-market", title: "Buyer financing" },
+  building: { slug: "is-new-jersey-building", title: "Building & demolition" },
+  migration: { slug: "who-moves-in", title: "County arrivals & departures" },
   commute: { slug: "the-long-commute-premium", title: "Getting around" },
   water: { slug: "water-you-can-check", title: "Water you can check" },
 } as const;
 export type PlaceStoryTopic = keyof typeof PLACE_STORIES;
 export type PlaceStoryRecord = {
   topic: PlaceStoryTopic;
-  place: Pick<Region, "region_id" | "name" | "level" | "state_code">;
+  place: Pick<Region, "region_id" | "name" | "level" | "state_code"> & { geoid?: string };
   levels: PacketLevel[];
   metrics: PacketMetric[];
   history: { metricId: string; observations: Observation[] }[];
   water: WaterSystems | null;
   destinations: WorkDestinations | null;
+  pressure?: HousingPressure | null;
+  migration?: Migration | null;
   snapshot: string;
 };
+export const STORY_HISTORY_METRICS = {
+  market: ["zhvi_sfr", "zori_all", "acs_median_hh_income"],
+  building: ["permits_total_units", "nj_units_certified", "nj_units_demolished", "nj_net_units_added"],
+} as const;
+export function storyHistoryMetrics(topic: PlaceStoryTopic): readonly string[] {
+  return topic === "market" || topic === "building" ? STORY_HISTORY_METRICS[topic] : [];
+}
 export type PlaceStorySummary = {
   available: boolean; headline: string; period: string; source: string; qualifier: string;
   rows: { label: string; value: number; formatted: string; margin?: string; aside?: string }[];
@@ -29,17 +44,25 @@ export function storyPlaceId(search: string): number | null {
   const value = new URLSearchParams(search).get("place");
   return value && /^[1-9]\d*$/.test(value) && Number.isSafeInteger(Number(value)) ? Number(value) : null;
 }
-export function makePlaceStoryRecord(topic: PlaceStoryTopic, place: PlaceStoryRecord["place"], levels: PacketLevel[], extra: Partial<Pick<PlaceStoryRecord, "metrics" | "history" | "water" | "destinations">> = {}): PlaceStoryRecord {
+export function makePlaceStoryRecord(topic: PlaceStoryTopic, place: PlaceStoryRecord["place"], levels: PacketLevel[], extra: Partial<Pick<PlaceStoryRecord, "metrics" | "history" | "water" | "destinations" | "pressure" | "migration">> = {}): PlaceStoryRecord {
   const keep = (id: string) => topic === "market" ? ["acs_median_home_value", "acs_median_hh_income", "zhvi_sfr", "zori_all"].includes(id)
-    : topic === "commute" ? /^(acs_(mean_commute|commute_|work_from_home)|lodes_|transit_)/.test(id) : id.startsWith("water_");
+    : topic === "commute" ? /^(acs_(mean_commute|commute_|work_from_home)|lodes_|transit_)/.test(id)
+    : topic === "sales" ? /^(sr1a_|nj_director_ratio$|nj_revaluation_year$|sale_price_to_income$)/.test(id)
+    : topic === "lending" ? id.startsWith("hmda_")
+    : topic === "building" ? /^(permits_|nj_units_|nj_net_|nj_certificates_|nj_demolitions_)/.test(id)
+    : topic === "water" && id.startsWith("water_");
   return { topic, place, levels: levels.filter(l => keep(l.metric_id)), metrics: extra.metrics ?? [], history: (extra.history ?? []).map(s => ({ metricId: s.metricId, observations: s.observations })),
     water: extra.water?.region_id === place.region_id && Array.isArray(extra.water.systems) ? extra.water : null,
-    destinations: extra.destinations?.region_id === place.region_id && Array.isArray(extra.destinations.destinations) ? extra.destinations : null, snapshot: "" };
+    destinations: extra.destinations?.region_id === place.region_id && Array.isArray(extra.destinations.destinations) ? extra.destinations : null,
+    ...(topic === "pressure" ? { pressure: extra.pressure?.region_id === place.region_id && Array.isArray(extra.pressure.bands) ? extra.pressure : null } : {}),
+    ...(topic === "migration" ? { migration: extra.migration?.region_id === place.region_id && Array.isArray(extra.migration.years) ? extra.migration : null } : {}), snapshot: "" };
 }
 export function summarizePlaceStory(record: PlaceStoryRecord): PlaceStorySummary {
   const unavailable: PlaceStorySummary = { available: false, headline: "Local records unavailable", period: "No matching period", source: "Coverage limited", qualifier: "Missing data is not a zero or a clean result.", rows: [] };
   const row = (id: string) => record.levels.find(l => l.metric_id === id && Number.isFinite(l.value) && typeof l.period_start === "string" && typeof l.period_end === "string" && /^\d{4}-\d{2}-\d{2}$/.test(l.period_start) && /^\d{4}-\d{2}-\d{2}$/.test(l.period_end));
   const chartRow = (l: PacketLevel, label: string) => ({ label, value: l.value, formatted: formatMetric(l.value, l.unit, l.metric_id), margin: marginLabel(l.value, l.margin_of_error ?? null, l.unit, l.metric_id) ?? undefined });
+  const additional = marketStorySummary(record);
+  if (additional) return additional;
   if (record.topic === "market") {
     const home = row("acs_median_home_value"), income = row("acs_median_hh_income");
     if (!home || !income || home.value <= 0 || income.value <= 0 || home.period_start !== income.period_start || home.period_end !== income.period_end) return unavailable;

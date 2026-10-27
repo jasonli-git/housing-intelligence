@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { api } from "./api";
-import { makePlaceStoryRecord, summarizePlaceStory, type PlaceStoryRecord, type PlaceStoryTopic } from "./placeStories";
+import { makePlaceStoryRecord, storyHistoryMetrics, summarizePlaceStory, type PlaceStoryRecord, type PlaceStoryTopic } from "./placeStories";
 
 export function stampPlaceStory(record: PlaceStoryRecord): PlaceStoryRecord {
   // Include derived wording too; bump the version when changing chart-only semantics.
@@ -8,12 +8,14 @@ export function stampPlaceStory(record: PlaceStoryRecord): PlaceStoryRecord {
 }
 export async function initialPlaceStory(topic: PlaceStoryTopic): Promise<PlaceStoryRecord> {
   const id = 224; // Explicit local pilot, not a default for other readers' selections.
-  const [region, packet, water, destinations, history] = await Promise.all([
+  const [region, packet, water, destinations, history, pressure, migration] = await Promise.all([
     api.region(id), api.packet(id, "5y"), topic === "water" ? api.waterSystems(id) : null,
     topic === "commute" ? api.workDestinations(id) : null,
-    topic === "market" ? Promise.all(["zhvi_sfr", "zori_all", "acs_median_hh_income"].map(async metricId => ({ metricId, observations: (await api.observations(id, metricId))?.observations ?? [] }))) : [],
+    Promise.all(storyHistoryMetrics(topic).map(async metricId => ({ metricId, observations: (await api.observations(id, metricId))?.observations ?? [] }))),
+    topic === "pressure" ? api.housingPressure(id) : null,
+    topic === "migration" ? api.migration(id) : null,
   ]);
   if (!region || !packet) throw new Error("Princeton story pilot requires its published packet");
-  const place = { region_id: id, name: region.name, level: region.level, state_code: region.state_code };
-  return stampPlaceStory(makePlaceStoryRecord(topic, place, packet.levels, { metrics: topic === "market" ? packet.metrics : [], history, water, destinations }));
+  const place = { region_id: id, name: region.name, level: region.level, state_code: region.state_code, geoid: region.geoid };
+  return stampPlaceStory(makePlaceStoryRecord(topic, place, packet.levels, { metrics: topic === "market" ? packet.metrics : [], history, water, destinations, pressure, migration }));
 }

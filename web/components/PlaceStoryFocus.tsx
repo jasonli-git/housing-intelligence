@@ -8,9 +8,14 @@ import { GroundAndWater } from "./GroundAndWater";
 import { GettingAround } from "./GettingAround";
 import { IndexedComparison } from "./IndexedComparison";
 import { PaycheckExhibit } from "./ExhibitCharts";
+import { HomeSales } from "./HomeSales";
+import { IncomePressure } from "./IncomePressure";
+import { MortgageLending } from "./MortgageLending";
+import { HomesAdded } from "./HomesAdded";
+import { WhoIsMoving } from "./WhoIsMoving";
 import { regionPath } from "@/lib/placeRoutes";
-import { makePlaceStoryRecord, placeStoryName, storyPlaceId, type PlaceStoryRecord } from "@/lib/placeStories";
-import type { Packet, Observation, WaterSystems, WorkDestinations } from "@/lib/api";
+import { makePlaceStoryRecord, placeStoryName, storyHistoryMetrics, storyPlaceId, type PlaceStoryRecord } from "@/lib/placeStories";
+import type { HousingPressure, Migration, Packet, Observation, WaterSystems, WorkDestinations } from "@/lib/api";
 import type { SearchEntry } from "@/lib/search";
 import styles from "./PlaceStories.module.css";
 
@@ -39,16 +44,18 @@ export function PlaceStoryFocus({ initial, artifactUrl }: { initial: PlaceStoryR
       if (id === initial.place.region_id) next = initial;
       else {
         const base = `${artifactUrl}/regions/${id}`;
-        const [packet, water, destinations, observations] = await Promise.all([
+        const [packet, water, destinations, observations, pressure, migration] = await Promise.all([
           optionalJson<Packet>(`${base}/packet/5y.json`, abort.signal),
           initial.topic === "water" ? optionalJson<WaterSystems>(`${base}/water-systems.json`, abort.signal) : null,
           initial.topic === "commute" ? optionalJson<WorkDestinations>(`${base}/work-destinations.json`, abort.signal) : null,
-          initial.topic === "market" ? optionalJson<{ total: number; observations: Observation[] }>(`${base}/metrics.json`, abort.signal) : null,
+          storyHistoryMetrics(initial.topic).length ? optionalJson<{ total: number; observations: Observation[] }>(`${base}/metrics.json`, abort.signal) : null,
+          initial.topic === "pressure" ? optionalJson<HousingPressure>(`${base}/housing-pressure.json`, abort.signal) : null,
+          initial.topic === "migration" ? optionalJson<Migration>(`${base}/migration.json`, abort.signal) : null,
         ]);
         if (!packet || packet.region?.region_id !== id || !Array.isArray(packet.levels) || !["county", "municipality", "zip"].includes(packet.region.level)) throw new Error("No supported place packet");
         const history = observations && Array.isArray(observations.observations) && observations.total === observations.observations.length
-          ? ["zhvi_sfr", "zori_all", "acs_median_hh_income"].map(metricId => ({ metricId, observations: observations.observations.filter(o => o.metric_id === metricId) })) : [];
-        next = makePlaceStoryRecord(initial.topic, { region_id: id, name: packet.region.name, level: packet.region.level, state_code: packet.region.state_code }, packet.levels, { metrics: packet.metrics, history, water, destinations });
+          ? storyHistoryMetrics(initial.topic).map(metricId => ({ metricId, observations: observations.observations.filter(o => o.metric_id === metricId) })) : [];
+        next = makePlaceStoryRecord(initial.topic, { region_id: id, name: packet.region.name, level: packet.region.level, state_code: packet.region.state_code, geoid: packet.region.geoid }, packet.levels, { metrics: initial.topic === "market" ? packet.metrics : [], history, water, destinations, pressure, migration });
       }
       if (token !== request.current) return;
       setRecord(next); setMessage("");
@@ -81,6 +88,15 @@ export function PlaceStoryFocus({ initial, artifactUrl }: { initial: PlaceStoryR
       <div className={styles.focusBody}>
         {record.topic === "commute" && <GettingAround name={name} level={record.place.level} levels={record.levels} destinations={record.destinations} />}
         {record.topic === "water" && <GroundAndWater name={name} levels={record.levels} water={record.water} scope="water" />}
+        {record.topic === "sales" && <HomeSales name={name} level={record.place.level} geoid={record.place.geoid ?? ""} levels={record.levels} showLookup={false} portrait />}
+        {record.topic === "pressure" && <IncomePressure data={record.pressure ?? null} />}
+        {record.topic === "lending" && <MortgageLending name={name} levels={record.levels} />}
+        {record.topic === "building" && <HomesAdded name={name} level={record.place.level} levels={record.levels} exhibit
+          permitted={record.history.find(s => s.metricId === "permits_total_units")?.observations ?? []}
+          completed={record.history.find(s => s.metricId === "nj_units_certified")?.observations ?? []}
+          demolished={record.history.find(s => s.metricId === "nj_units_demolished")?.observations ?? []}
+          net={record.history.find(s => s.metricId === "nj_net_units_added")?.observations ?? []} />}
+        {record.topic === "migration" && record.migration && <WhoIsMoving name={name} data={record.migration} exhibit />}
         {record.topic === "market" && <>
           <h2>Prices and paychecks over time</h2>
           <PaycheckExhibit metrics={record.metrics} />

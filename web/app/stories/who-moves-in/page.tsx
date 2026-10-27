@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { StoryShell } from "@/components/StoryShell";
+import { PlaceStoryFocus } from "@/components/PlaceStoryFocus";
+import { initialPlaceStory } from "@/lib/placeStoryData";
+import { artifactUrl } from "@/lib/api";
 import { api } from "@/lib/api";
 import { formatValue } from "@/lib/format";
 import { pageMetadata } from "@/lib/meta";
@@ -25,6 +28,7 @@ const NYC = /^(Kings|New York|Bronx|Queens|Richmond) County, NY$/;
 const PHILADELPHIA = "Philadelphia County, PA";
 
 export default async function WhoMovesInPage() {
+  const initial = await initialPlaceStory("migration");
   const [counties, map] = await Promise.all([storyCounties(), storyShapes("county", MAP_W)]);
   const moves = await Promise.all([...counties.keys()].map((id) => api.migration(id)));
   const centres = new Map(map.shapes.map((s) => [s.id, s.centre]));
@@ -56,6 +60,7 @@ export default async function WhoMovesInPage() {
   return (
     <StoryShell
       title="Who’s moving in"
+      focus={<PlaceStoryFocus initial={initial} artifactUrl={artifactUrl} />}
       lede="Each arc is households moving into a county in one year: from another New Jersey county, from New York City, or from Philadelphia. Below, whether the households arriving earn more than the ones who stayed."
       note={<>Moves: the IRS&rsquo;s county-to-county migration data, counted in tax returns (roughly households) that changed county between filing years, {year ? `${year - 1} to ${year}` : "latest year"}. Flows under {SHOWN.toLocaleString("en-US")} returns are left off the map. Incomes: adjusted gross income per return. The IRS suppresses flows of fewer than 20 returns.</>}
     >

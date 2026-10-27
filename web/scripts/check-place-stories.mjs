@@ -13,8 +13,9 @@ try {
     await page.evaluate(t => document.documentElement.dataset.theme = t, theme);
     const gallery = page.locator('#place-story-gallery');
     await gallery.scrollIntoViewIfNeeded();
-    assert.equal(await gallery.locator('[data-preview-topic]').count(), 3);
-    for (const topic of ['market', 'commute', 'water']) {
+    const topics = ['market', 'sales', 'pressure', 'lending', 'building', 'migration', 'commute', 'water'];
+    assert.equal(await gallery.locator('[data-preview-topic]').count(), topics.length);
+    for (const topic of topics) {
       const card = gallery.locator(`[data-preview-topic="${topic}"]`);
       await card.scrollIntoViewIfNeeded();
       await card.locator('img:visible').evaluate(async img => { await img.decode(); });
@@ -35,6 +36,23 @@ try {
       }
       if (topic === 'commute') assert(await focus.getByRole('heading', { name: 'How do people here get around?', exact: true }).isVisible());
       if (topic === 'water') assert(await focus.getByRole('heading', { name: 'Water systems and records', exact: true }).isVisible());
+      if (topic === 'sales') assert(await focus.getByRole('heading', { name: 'What did buyers actually pay?', exact: true }).isVisible());
+      if (topic === 'lending') assert(await focus.getByRole('heading', { name: 'How do people here pay for homes?', exact: true }).isVisible());
+      if (topic === 'building') {
+        assert(await focus.getByRole('heading', { name: 'Are we adding homes—or losing them?', exact: true }).isVisible());
+        assert((await chart.innerText()).includes('Preliminary'));
+      }
+      if (topic === 'migration') {
+        assert((await chart.innerText()).includes('Mercer County'));
+        assert((await chart.innerText()).includes('not town-level migration'));
+        await focus.getByRole('button', { name: 'Where leavers went', exact: true }).click();
+        assert(await focus.getByRole('button', { name: 'Where leavers went', exact: true }).getAttribute('aria-pressed') === 'true');
+      }
+      if (topic === 'pressure') {
+        await focus.getByRole('button', { name: 'Owners', exact: true }).click();
+        await focus.getByRole('button', { name: 'Over 30–50%', exact: true }).click();
+        assert((await focus.locator('#income-band-explanation').innerText()).includes('household size'));
+      }
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'no horizontal overflow');
       const audit = await new AxeBuilder({ page }).include('[data-place-story-focus]').analyze();
       assert.deepEqual(audit.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })), []);
@@ -46,11 +64,13 @@ try {
     await page.locator('#about-living-there > summary').click();
     assert(await page.getByRole('heading', { name: 'Contaminated-site records', exact: true }).isVisible());
     assert.equal(await page.locator('.exhibit-gallery .indexed-comparison').count(), 0, 'moved trends do not remain duplicated');
+    assert.equal(await page.locator('.exhibit-gallery #more-market-evidence, .exhibit-gallery #sales-heading, .exhibit-gallery .income-pressure, .exhibit-gallery .who-is-moving, .exhibit-gallery .homes-added').count(), 0, 'market exhibits have moved, not been duplicated');
+    assert(await page.locator('#sales-heading').evaluate(el => Boolean(el.closest('[data-preview-topic="sales"]'))), 'existing property-tax and guide sale links still land on sales');
     assert.equal(await page.locator('#ground-water-heading').count(), 1, 'existing drinking-water links retain one correct target');
     assert(await page.locator('#ground-water-heading').evaluate(el => Boolean(el.closest('[data-preview-topic="water"]'))));
     await gallery.screenshot({ path: `/tmp/place-story-gallery-${width}-${theme}.png` });
     assert.deepEqual(errors, []);
-    console.log(`${width}/${theme}: three real shots, snapshot/headline identity, selected stories, return links, retained sites, no overflow and axe passed`);
+    console.log(`${width}/${theme}: eight real shots, snapshot/headline identity, selected stories, interactions, return links, retained sites, no overflow and axe passed`);
     await context.close();
   }
   const page = await browser.newPage();
@@ -80,10 +100,26 @@ try {
     await page.locator('[data-place-story-focus] [role="status"]').filter({ hasText: suffix.includes('bad') ? 'Invalid place selection' : 'could not be loaded' }).waitFor();
     assert.equal(await page.locator('[data-place-story-focus] [data-place-story-shot]').count(), 0, 'invalid/unavailable selection does not fall back to Princeton');
   }
+  for (const slug of ['price-ladder', 'the-mortgage-market', 'is-new-jersey-building', 'who-moves-in', 'who-feels-housing-costs']) {
+    await page.goto(`${origin}/stories/${slug}?place=11`, { waitUntil: 'networkidle' });
+    const focus = page.locator('[data-place-story-focus][data-selected="true"]');
+    await focus.getByRole('heading', { name: 'Exploring Mercer County', exact: true }).waitFor();
+    assert.equal(await focus.locator('[data-place-story-shot]').getAttribute('data-place-story-id'), '11');
+    assert(!(await focus.locator('[data-place-story-shot] figcaption').innerText()).includes('Princeton'));
+  }
+  await page.goto(`${origin}/stories/who-feels-housing-costs`, { waitUntil: 'networkidle' });
+  assert.equal(await page.locator('[data-place-story-focus] [data-place-story-shot]').count(), 0, 'new story has no implicit Princeton selection');
+  assert(await page.locator('[data-story-shot] #state-income-pressure-heading').isVisible(), 'statewide burden chart remains visible without a selection');
+  await page.goto(`${origin}/stories`);
+  await page.getByRole('button', { name: /All stories/ }).click();
+  await page.getByRole('searchbox', { name: 'Search stories' }).fill('Who feels housing costs');
+  const libraryCard = page.locator('a.library-card[href="/stories/who-feels-housing-costs"]');
+  await libraryCard.waitFor();
+  await libraryCard.locator('img:visible').evaluate(async img => { await img.decode(); });
   for (const route of ['/nj/hoboken', '/nj/mercer-county', '/nj/zip-08540']) {
     await page.goto(origin + route);
     assert.equal(await page.locator('#place-story-gallery').count(), 0);
     assert.equal(await page.locator('.ground-water').count(), 1, 'other places retain original sections');
   }
-  console.log('Place picker, county/ZIP identity, back/reload, invalid/missing selection and non-pilot place regressions passed');
+  console.log('Place picker, new-topic county selections, county/ZIP identity, back/reload, invalid/missing selection, new library cover and non-pilot place regressions passed');
 } finally { await browser.close(); }

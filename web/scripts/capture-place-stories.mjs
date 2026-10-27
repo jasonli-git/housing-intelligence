@@ -1,11 +1,11 @@
-// Local pilot only: three selected views, two themes. No place × story export matrix.
+// Local Princeton pilot only: selected views, two themes. No place × story export matrix.
 import { mkdir, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
 
 const origin = process.env.SITE_URL ?? 'http://localhost:3002';
 const output = resolve(process.env.PLACE_STORY_SHOT_DIR ?? '../dist/artifacts/screenshots/place-stories');
-const stories = { market: 'income-and-home-value', commute: 'the-long-commute-premium', water: 'water-you-can-check' };
+const stories = { market: 'income-and-home-value', sales: 'price-ladder', pressure: 'who-feels-housing-costs', lending: 'the-mortgage-market', building: 'is-new-jersey-building', migration: 'who-moves-in', commute: 'the-long-commute-premium', water: 'water-you-can-check' };
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch();
 const start = performance.now(), files = [];
@@ -26,6 +26,14 @@ try {
       await shot.screenshot({ path: file, type: 'jpeg', quality: 80, animations: 'disabled' });
       files.push({ topic, theme, fingerprint, bytes: (await stat(file)).size });
     }
+    // New story's library cover: capture its actual unselected statewide view too.
+    await page.goto(`${origin}/stories/who-feels-housing-costs`, { waitUntil: 'networkidle' });
+    await page.evaluate(t => document.documentElement.dataset.theme = t, theme);
+    await page.evaluate(() => document.fonts.ready);
+    await page.addStyleTag({ content: 'nextjs-portal{display:none!important} *,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
+    const library = resolve(output, '../stories');
+    await mkdir(library, { recursive: true });
+    await page.locator('[data-story-shot]').screenshot({ path: resolve(library, `who-feels-housing-costs-${theme}.jpg`), type: 'jpeg', quality: 80, animations: 'disabled' });
     await page.close();
   }
 } finally { await browser.close(); }

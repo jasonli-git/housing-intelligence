@@ -3,6 +3,9 @@ import Link from "next/link";
 
 import { StoryLines } from "@/components/StoryLines";
 import { StoryShell } from "@/components/StoryShell";
+import { PlaceStoryFocus } from "@/components/PlaceStoryFocus";
+import { initialPlaceStory } from "@/lib/placeStoryData";
+import { artifactUrl } from "@/lib/api";
 import { pageMetadata } from "@/lib/meta";
 import { regionPath } from "@/lib/placeRoutes";
 import { latestFor, seriesFor, storyCounties } from "@/lib/storyData";
@@ -23,6 +26,7 @@ const MEASURES = [
 const n = (v: number) => Math.round(v).toLocaleString("en-US");
 
 export default async function IsNewJerseyBuildingPage() {
+  const initial = await initialPlaceStory("building");
   const counties = await storyCounties();
   const ids = [...counties.keys()];
   const [series, net] = await Promise.all([
@@ -47,6 +51,7 @@ export default async function IsNewJerseyBuildingPage() {
   return (
     <StoryShell
       title="Is New Jersey building?"
+      focus={<PlaceStoryFocus initial={initial} artifactUrl={artifactUrl} />}
       lede="Homes permitted are plans; homes completed are homes; homes demolished come off the count. Statewide over the years first, then each county's latest year, ordered by net homes added for every 1,000 it already had."
       note={<>Permits: the Census Bureau&rsquo;s Building Permits Survey. Completions and demolitions: certificates of occupancy and demolition permits reported to the New Jersey Department of Community Affairs, which not every town reports every year, so a county&rsquo;s totals can run low. Net homes added: completions less demolitions, per 1,000 existing homes.</>}
     >

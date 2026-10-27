@@ -6,6 +6,7 @@
 
 /** The visual stories (Director Note "Visualizing the data", 2026-10-22). */
 export const STORIES = [
+  { href: "/stories/who-feels-housing-costs", title: "Who feels housing costs most?", blurb: "Renters and owners spending over 30% of income on housing, grouped by their HUD area family-income band, with survey uncertainty and local place selection." },
   { href: "/stories/pricier-towns", title: "What goes with pricier towns", blurb: "Working from home, owning, detached houses, a train nearby: which traits go with higher home values, against similar towns in the same county." },
   { href: "/stories/price-ladder", title: "The price ladder", blurb: "Every town's starter home, typical home and recent sales on one scale, so the spread and the gaps show." },
   { href: "/stories/priciest-and-cheapest", title: "Priciest and cheapest in each county", blurb: "The most and least expensive town and ZIP code in every county, widest gap first." },

@@ -5,6 +5,8 @@
 .card { --preview-accent: var(--series-1); position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; gap: .65rem; min-width: 0; min-height: 232px; box-sizing: border-box; padding: 1.1rem 1.15rem; color: var(--text-primary); text-decoration: none; border: 1px solid color-mix(in srgb,var(--preview-accent) 20%,var(--border)); border-radius: 16px; background: var(--surface-card); box-shadow: 0 8px 24px -22px var(--text-primary); transition: transform 220ms ease,box-shadow 220ms ease,border-color 220ms ease; }
 .card[data-preview-topic="commute"] { --preview-accent: var(--series-3); }
 .card[data-preview-topic="water"] { --preview-accent: var(--series-2); }
+.card[data-preview-topic="sales"], .card[data-preview-topic="building"] { --preview-accent: var(--series-2); }
+.card[data-preview-topic="pressure"], .card[data-preview-topic="migration"] { --preview-accent: var(--series-3); }
 .card::before { content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--preview-accent) 8%,transparent),transparent 65%),linear-gradient(135deg,color-mix(in srgb,var(--surface-card) 98%,transparent),color-mix(in srgb,var(--surface-card) 93%,transparent) 45%,color-mix(in srgb,var(--surface-card) 78%,transparent) 75%,color-mix(in srgb,var(--surface-card) 97%,transparent)); }
 .card h3 { margin: .15rem 0 0; color: var(--text-primary); font: 400 clamp(23px,2vw,27px)/1.15 Georgia,serif; letter-spacing: -.025em; text-wrap: pretty; }
 .card p { margin: 0; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
@@ -25,6 +27,8 @@
 .chart { display: flex; flex-direction: column; min-height: 360px; margin: 0; padding: 1.2rem; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border); border-radius: 10px; --focus-chart-accent: var(--series-1); }
 .chart[data-topic="commute"] { --focus-chart-accent: var(--series-3); }
 .chart[data-topic="water"] { --focus-chart-accent: var(--series-2); }
+.chart[data-topic="sales"], .chart[data-topic="building"] { --focus-chart-accent: var(--series-2); }
+.chart[data-topic="pressure"], .chart[data-topic="migration"] { --focus-chart-accent: var(--series-3); }
 .chart figcaption { display: grid; gap: .4rem; }
 .kicker { font: 500 12px/1.4 var(--font-text); color: var(--text-secondary); }
 .chart figcaption strong { font: 400 clamp(23px,3vw,32px)/1.2 Georgia,serif; }
@@ -46,6 +50,7 @@
 .focusBody { margin-top: 1rem; }
 .focusBody :global(.section) { margin-top: 1.5rem; }
 .focusBody :global(.chart-kicker) { color: var(--text-secondary); }
+.focusBody :global(.story-link) { display: none; }
 .notice, .safety { font: 13px/1.6 var(--font-text); color: var(--text-secondary); }
 .safety a { color: var(--plate-accent); }
 .card:focus-visible, .focus button:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }

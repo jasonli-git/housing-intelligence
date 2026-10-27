@@ -9,7 +9,7 @@ import { PlacePhoto } from "@/components/PlacePhoto";
 import { PlaceSectionNav } from "@/components/PlaceSectionNav";
 import { PlaceMarketOpening } from "@/components/PlaceMarketOpening";
 import { marketPortraitData } from "@/lib/marketPortraitData";
-import { makePlaceStoryRecord } from "@/lib/placeStories";
+import { makePlaceStoryRecord, PLACE_STORIES, storyHistoryMetrics, type PlaceStoryTopic } from "@/lib/placeStories";
 import { stampPlaceStory } from "@/lib/placeStoryData";
 import { PlaceStoryGallery } from "@/components/PlaceStoryGallery";
 import { photoFor } from "@/lib/photos";
@@ -330,9 +330,12 @@ export default async function RegionPage({
   // Deliberately one town for local review, not a platform-wide hierarchy decision.
   const marketFirst = region.state_code === "NJ" && region.geoid === "3402160900";
   const marketCohorts = marketFirst ? await marketPortraitData(region.state_code, packet.levels) : [];
-  const placeStoryRecords = marketFirst ? (["market", "commute", "water"] as const).map(topic => stampPlaceStory(makePlaceStoryRecord(topic,
-    { region_id: regionId, name: region.name, level: region.level, state_code: region.state_code }, packet.levels,
-    { metrics: topic === "market" ? packet.metrics : [], history: topic === "market" ? series : [], water: topic === "water" ? water : null, destinations: topic === "commute" ? workDestinations : null }))) : [];
+  const placeStoryRecords = marketFirst ? (Object.keys(PLACE_STORIES) as PlaceStoryTopic[]).map(topic => stampPlaceStory(makePlaceStoryRecord(topic,
+    { region_id: regionId, name: region.name, level: region.level, state_code: region.state_code, geoid: region.geoid }, packet.levels,
+    { metrics: topic === "market" ? packet.metrics : [],
+      history: topic === "market" ? series : topic === "building" ? storyHistoryMetrics(topic).map((metricId, i) => ({ metricId, observations: construction[i] })) : [],
+      water: topic === "water" ? water : null, destinations: topic === "commute" ? workDestinations : null,
+      pressure: topic === "pressure" ? pressure : null, migration: topic === "migration" ? migration : null }))) : [];
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
   // (ARCHITECTURE #275), and a file published before then that still carries one is
@@ -461,7 +464,7 @@ export default async function RegionPage({
     ...(countyTowns.length ? [{ id: "county-towns", label: "Towns" }] : []),
     { id: quiet ? "quiet-cost" : "place-costs", label: "Costs" },
     ...(marketFirst ? [{ id: "place-story-gallery", label: "Local stories" }] : []),
-    { id: "field-notes", label: marketFirst ? "Market exhibits" : "Market" },
+    ...(!marketFirst ? [{ id: "field-notes", label: "Market" }] : []),
     ...(!marketFirst ? [{ id: "about-getting-around", label: "Getting around" }] : []),
     { id: "about-living-there", label: "Living there" },
     ...(similar ? [{ id: "place-explore", label: "Alternatives" }] : []),
@@ -640,6 +643,7 @@ export default async function RegionPage({
       </QuietAnchor>
       {marketFirst && <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} />}
       <ExhibitGallery>
+      {!marketFirst && <>
       <h3 className="exhibit-group-head" id="field-notes">The market</h3>
       {!quiet && homeChecks}
       <LearningExhibit kind="The homes that sold">
@@ -683,6 +687,7 @@ export default async function RegionPage({
       )}
         </div>
       </details>
+      </>}
       {!marketFirst && <StateContextExhibits concise topics={["work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />}
       {!marketFirst && <LocalEvidenceCharts kind="work" name={name} level={region.level} levels={packet.levels} series={construction} />}
       <details className="place-evidence-group" id="about-living-there">
