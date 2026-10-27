@@ -123,3 +123,23 @@ not the retained contaminated-sites section.
 - `git diff --check`: passed. API and artifact reads only; no warehouse-writing tests.
 
 Local review: `http://localhost:3002/nj/princeton#place-story-gallery`.
+
+## Follow-up: headline-first previews
+
+At the owner's request, reduced screenshot emphasis in the Princeton gallery.
+Each card now leads with its topic and a larger headline, followed by the reading
+qualifier. A 112 × 70px thumbnail sits beside the source/date at the bottom. The
+whole screenshot fits inside the thumbnail without cropping or centering on a
+particular chart detail. Removed the repeated “Explore Princeton” line; the topic's
+arrow and whole-card link retain the navigation cue. Sources, dates, qualifications,
+anchors, selected-story URLs and existing screenshot identities are unchanged.
+
+Files: `PlaceStoryGallery.tsx`, `PlaceStories.module.css`, this handoff.
+
+Verification: TypeScript passed; the two existing story-data and ground/water test
+files passed (12 tests). `node scripts/check-place-stories.mjs` passed at 390/1440px
+in both themes, including scoped axe, screenshot/headline identity, links,
+county/ZIP selection, back/reload and non-pilot regressions. Visually reviewed the
+desktop light and mobile dark gallery captures. `git diff --check` passed. No fresh
+production build or full test suite was run for this presentation-only follow-up;
+the build and full-suite results above belong to the initial pilot commit.
