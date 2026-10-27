@@ -32,6 +32,10 @@ it("keeps prices, rents, dates, interpretation limits and statewide cohorts visi
   expect(container.textContent).toContain("not a sale price or appraisal");
   expect(container.textContent).toContain("not existing tenants’ bills");
   expect(container.querySelector("details")).toBeNull();
+  expect(container.querySelectorAll('[data-distribution="box-range"]')).toHaveLength(2);
+  expect(container.querySelector('[data-portrait="peers"] circle')).toBeNull();
+  expect(container.textContent).toContain("Box: middle half of towns");
+  expect(container.textContent).toContain("Observed town range");
   expect(screen.getByRole("link", { name: /Figures & sources/ }).getAttribute("href")).toBe("/nj/princeton/report#report-measures");
   expect(screen.getByRole("link", { name: /living here cost/ }).getAttribute("href")).toBe("#quiet-cost");
 });
@@ -72,6 +76,14 @@ it("browses actual peer values with keyboard controls and offers the selected co
   expect(screen.getByRole("link", { name: /Compare/ }).getAttribute("href")).toBe("/compare?places=224,2");
   fireEvent.keyDown(plot, { key: "Home" });
   expect(plot.getAttribute("aria-valuetext")).toBe("Lower Town: $300,000");
+});
+
+it("collapses equal town values without invented spread or invalid coordinates",()=>{
+ const cohorts=props.cohorts.map(c=>({...c,points:c.points.map(p=>({...p,value:c.metricId==='zhvi_sfr'?500000:2400}))}));
+ const {container}=render(createElement(PlaceMarketOpening,{...props,cohorts}));
+ const box=container.querySelector('[data-distribution="box-range"] rect');expect(box?.getAttribute('width')).toBe('0');
+ expect(container.innerHTML).not.toMatch(/NaN|Infinity/);
+ const plot=screen.getByRole('slider',{name:/Explore typical home value across/});fireEvent.keyDown(plot,{key:'End'});expect(plot.getAttribute('aria-valuetext')).toContain('$500,000');
 });
 
 it("does not show an undated, mismatched-month or mismatched-value peer chart", () => {

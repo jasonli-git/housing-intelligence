@@ -1,8 +1,18 @@
 import { describe, expect, it } from "vitest";
 import type { Observation, PacketLevel, Region } from "./api";
-import { marketHistory, marketLine, matchedMarketPeers } from "./marketPortrait";
+import { marketDistribution, marketHistory, marketLine, matchedMarketPeers } from "./marketPortrait";
 
 const regions = [{ region_id: 1, name: "One", level: "municipality", state_code: "NJ" }, { region_id: 2, name: "Two", level: "municipality", state_code: "NJ" }] as Region[];
+describe("measured-town distribution",()=>{
+  it("interpolates quartiles without mutating the source and retains actual extrema",()=>{
+    const values=[400,100,300,200];expect(marketDistribution(values)).toEqual({min:100,q1:175,median:250,q3:325,max:400});expect(values).toEqual([400,100,300,200]);
+    expect(marketDistribution([100,200,300,400,10000])?.max).toBe(10000);
+  });
+  it("handles ties and refuses missing or invalid values rather than inventing zero",()=>{
+    expect(marketDistribution([500,500,500])).toEqual({min:500,q1:500,median:500,q3:500,max:500});
+    for(const values of [[],[1],[1,NaN],[1,Infinity],[0,2],[-1,2]])expect(marketDistribution(values)).toBeNull();
+  });
+});
 describe("same-month values, not latest ranks", () => {
   it("keeps only registered towns and the exact requested month on the actual dollar scale", () => {
     const points = matchedMarketPeers({ regions: [

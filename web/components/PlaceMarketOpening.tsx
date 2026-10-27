@@ -48,7 +48,7 @@ export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownI
 
   return <section className={styles.opening} id="place-market" aria-labelledby="place-market-heading">
     <div className={styles.heading}><h2 id="place-market-heading">The housing market</h2><Link href={`${reportHref}#report-measures`}>Figures & sources <span aria-hidden="true">↗</span></Link></div>
-    <p className={styles.instruction}>Each dot is a town. Hover, drag or use <kbd>←</kbd> <kbd>→</kbd> to explore.</p>
+    <p className={styles.instruction}>Box: middle half of towns · line: median · ends: min–max. Hover, drag or use <kbd>←</kbd> <kbd>→</kbd> to explore towns.</p>
     <div className={styles.findings}>
       {finding(home, price?.basis === "transactions" ? "Median recorded sale price" : "Typical home value", "No current home-value index or recent qualifying sale-price median is available.", price?.basis === "transactions" ? "Qualifying sales—not the value of every home." : "Modeled value—not a sale price or appraisal.")}
       {finding(rent, "Typical market rent", "No current market-rent index available; survey rents are not asking rents.", "Market benchmark, not existing tenants’ bills. Utilities extra.")}

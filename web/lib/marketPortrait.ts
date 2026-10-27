@@ -5,6 +5,16 @@ export type MarketPoint = { date: string; value: number };
 export type MarketCohort = { metricId: string; period: string; total: number; points: MarketPeer[] };
 export type MarketComparison = { regions: { region_id: number; series: { period_start: string; value: number }[] }[] };
 
+export type MarketDistribution = { min:number; q1:number; median:number; q3:number; max:number };
+/** Linear interpolation at (n−1)p; whiskers show observed min/max, not 1.5×IQR.
+ * This describes the measured towns' values, not individual home prices or uncertainty. */
+export function marketDistribution(values:number[]):MarketDistribution|null {
+  if(values.length<2||values.some(v=>!Number.isFinite(v)||v<=0))return null;
+  const sorted=[...values].sort((a,b)=>a-b);
+  const quantile=(p:number)=>{const at=(sorted.length-1)*p,lo=Math.floor(at),hi=Math.ceil(at);return sorted[lo]+(sorted[hi]-sorted[lo])*(at-lo);};
+  return {min:sorted[0],q1:quantile(.25),median:quantile(.5),q3:quantile(.75),max:sorted.at(-1)!};
+}
+
 /** A value axis needs same-period observations, not the latest-value ranking. */
 export function matchedMarketPeers(data: MarketComparison, regions: Region[], period: string, counties: Region[] = []): MarketPeer[] {
   const registry = new Map(regions.map(r => [r.region_id, r]));

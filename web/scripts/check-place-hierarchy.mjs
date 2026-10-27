@@ -25,7 +25,11 @@ try {
     assert.equal(await opening.locator('[data-portrait="peers"]').count(), 2);
     assert.equal(await opening.locator('[data-portrait="trend"]').count(), 2);
     for (const plot of await opening.locator('[data-portrait="peers"]').all()) {
-      const count = await plot.locator('circle[data-peer-id]').count();
+      const count = Number(await plot.getAttribute('data-peer-count'));
+      assert(count>1);
+      assert.equal(await plot.locator('[data-distribution="box-range"]').count(),1);
+      assert.equal(await plot.locator('circle').count(),0,'peer distribution uses a box and markers, not dot clutter');
+      assert((await plot.innerText()).includes('Middle 50%:'));
       assert((await plot.innerText()).includes(`${count} of 564 NJ towns`), 'coverage matches the actual plotted cohort');
       const control = plot.getByRole('slider');
       const value = await control.getAttribute('aria-valuetext');
@@ -39,6 +43,7 @@ try {
       assert.notEqual(await control.getAttribute('aria-valuenow'), '0', 'pointer/touch explores a real point');
     }
     for (const plot of await opening.locator('[data-portrait="trend"]').all()) {
+      const svg=plot.locator('svg');assert.equal(await svg.getAttribute('viewBox'),'0 0 440 68','line chart is 28% shorter than its previous 94-unit height');
       const control = plot.getByRole('slider');
       const before = await plot.locator('output').innerText();
       await control.focus(); await page.keyboard.press('Home');
