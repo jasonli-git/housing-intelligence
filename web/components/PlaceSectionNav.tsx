@@ -6,7 +6,7 @@ import styles from "./PlaceSectionNav.module.css";
 export type PlaceSection = { id: string; label: string };
 
 /** One set of destinations for desktop anchors, the phone picker and scroll position. */
-export function PlaceSectionNav({ sections }: { sections: PlaceSection[] }) {
+export function PlaceSectionNav({ sections, label = "Place sections" }: { sections: PlaceSection[]; label?: string }) {
   const nav = useRef<HTMLElement>(null);
   const [available, setAvailable] = useState(sections);
   const [current, setCurrent] = useState(sections[0]?.id ?? "");
@@ -81,10 +81,10 @@ export function PlaceSectionNav({ sections }: { sections: PlaceSection[] }) {
     go(id);
   }
 
-  return <nav ref={nav} className={styles.navigation} aria-label="Place sections">
+  return <nav ref={nav} className={styles.navigation} aria-label={label}>
     <div className={styles.links}>{available.map(section => <a key={section.id} href={`#${section.id}`}
       aria-current={current === section.id ? "location" : undefined} onClick={event => follow(event, section.id)}>{section.label}</a>)}</div>
-    <label className={styles.picker}><span>On this page</span><select aria-label="Jump to a place section" value={current}
+    <label className={styles.picker}><span>On this page</span><select aria-label={label === "Place sections" ? "Jump to a place section" : `Jump to ${label.toLowerCase()}`} value={current}
       onChange={event => go(event.target.value)}>{available.map(section => <option key={section.id} value={section.id}>{section.label}</option>)}</select></label>
   </nav>;
 }

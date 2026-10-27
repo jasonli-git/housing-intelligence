@@ -13,7 +13,8 @@ import { DataDownload } from "@/components/DataDownload";
 import { KindTag } from "@/components/KindTag";
 import { Masthead } from "@/components/Masthead";
 import { PrintButton } from "@/components/PrintButton";
-import { SectionJump } from "@/components/SectionJump";
+import { PlaceSectionNav } from "@/components/PlaceSectionNav";
+import layout from "@/components/ExplorationResearch.module.css";
 import { StandOuts } from "@/components/StandOuts";
 import { api, artifactUrl, type Packet, regionsWithData } from "@/lib/api";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
@@ -133,7 +134,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
     return (
       <>
         <Masthead affordability={{ kind: "route" }} />
-        <main id="main-content" tabIndex={-1} className="shell report">
+        <main id="main-content" tabIndex={-1} className={`shell report ${layout.report}`}>
           <h1 className="page-title">No report</h1>
           <p className="meta">
             Region {regionId} has no analytics for the {WINDOW} window, or the API is unreachable.{" "}
@@ -188,7 +189,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
   return (
     <>
       <Masthead affordability={{ kind: "route" }} />
-      <main id="main-content" tabIndex={-1} className="shell report">
+      <main id="main-content" tabIndex={-1} className={`shell report ${layout.report}`}>
       <header className="page-head" data-kind="report">
         <div>
           <Crumbs
@@ -227,7 +228,6 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
           )}
         </div>
         <div className="actions print-hide">
-          <SectionJump />
           <PrintButton />
           {/*
             The published artifact path, not the API's. A static file cannot vary on
@@ -254,6 +254,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
         </div>
       </header>
 
+      <PlaceSectionNav label="Report sections" sections={[{id:"report-measures",label:"Change over time"},{id:"report-current",label:"Current values"},{id:"report-history",label:"History"},{id:"report-sources",label:"Sources"}]} />
       {cost && <CostToOwn {...cost} control={false} />}
 
       <StandOuts
@@ -431,8 +432,8 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
           <h2>Historical values</h2>
           <p className="meta">The latest 24 readings of each, newest first.</p>
           {history.map(({ metricId, meta, observations }) => (
-            <section key={metricId} className="report-history-table">
-              <h3>{meta?.label ?? metricId}</h3>
+            <details key={metricId} className={`report-history-table ${layout.history}`}>
+              <summary>{meta?.label ?? metricId} <span>{Math.min(24, observations.length)} readings</span></summary>
               <div className="scroll-x" tabIndex={0} role="region" aria-label={`${meta?.label ?? metricId}, scroll horizontally`}>
                 <table>
                   <thead><tr><th scope="col">Period</th><th scope="col">Value</th><th scope="col">Source</th><th scope="col">Matched by</th></tr></thead>
@@ -446,7 +447,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
                   ))}</tbody>
                 </table>
               </div>
-            </section>
+            </details>
           ))}
         </section>
       )}
