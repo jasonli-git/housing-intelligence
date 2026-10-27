@@ -2,16 +2,17 @@
 .gallery span.legacyAnchor { display: block; height: 0; margin: 0 !important; padding: 0 !important; }
 .gallery h2 { font: 400 30px/1.2 Georgia,serif; margin: 0 0 1rem; }
 .cards { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1rem; }
-.card { display: flex; flex-direction: column; gap: .6rem; min-width: 0; padding: 1rem; color: var(--text-primary); text-decoration: none; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-card); }
+.card { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; gap: .6rem; min-width: 0; min-height: 232px; box-sizing: border-box; padding: 1rem; color: var(--text-primary); text-decoration: none; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-card); }
+.card::before { content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none; background: linear-gradient(160deg,color-mix(in srgb,var(--surface-card) 96%,transparent),color-mix(in srgb,var(--surface-card) 88%,transparent) 45%,color-mix(in srgb,var(--surface-card) 72%,transparent) 75%,color-mix(in srgb,var(--surface-card) 94%,transparent)); }
 .card h3 { margin: 0; font: 400 clamp(22px,2vw,26px)/1.2 Georgia,serif; text-wrap: pretty; }
 .card p { margin: 0; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
 .card .topic { display: flex; align-items: center; justify-content: space-between; gap: .8rem; color: var(--plate-accent); font-weight: 500; }
 .topic span { font-size: 18px; }
 .card .qualifier { margin-bottom: .3rem; }
-.previewMeta { display: flex; align-items: center; gap: .7rem; margin-top: auto; }
-.cover { flex: 0 0 112px; position: relative; width: 112px; height: 70px; overflow: hidden; border-radius: 4px; background: var(--surface-1); }
-.cover .chart { padding: 1rem; transform-origin: top left; width: 800px; height: 500px; min-height: 0; box-sizing: border-box; transform: scale(.14); }
-.cover > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.previewMeta { margin-top: auto; padding-top: 1.2rem; }
+.cover { position: absolute; z-index: -2; inset: -4px; overflow: hidden; background: var(--surface-1); filter: blur(2px); }
+.cover .chart { position: absolute; inset: 0; padding: 1rem; width: 100%; height: 100%; min-height: 0; box-sizing: border-box; }
+.cover > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .dark { display: none; }
 :global(html[data-theme="dark"]) .light { display: none; }
 :global(html[data-theme="dark"]) .dark { display: block; }

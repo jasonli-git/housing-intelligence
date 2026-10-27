@@ -143,3 +143,23 @@ county/ZIP selection, back/reload and non-pilot regressions. Visually reviewed t
 desktop light and mobile dark gallery captures. `git diff --check` passed. No fresh
 production build or full test suite was run for this presentation-only follow-up;
 the build and full-suite results above belong to the initial pilot commit.
+
+## Follow-up: screenshot-backed cards
+
+The owner approved testing full-card screenshots with all text overlaid. Replaced
+the small thumbnail row with a full-card, slightly blurred screenshot background.
+A translucent gradient uses the current theme's card surface, with stronger coverage
+behind the headline and source line. The topic, headline, qualifier, source/date and
+arrow remain live text above that background. Keep the three-column/stacked layouts
+and compact 232px minimum height; text can grow without clipping. No screenshot
+recapture or data change: identities, links and the real-data image fallback remain.
+
+Files: `PlaceStoryGallery.tsx`, `PlaceStories.module.css`, this handoff.
+
+Verification: TypeScript and the same two targeted test files passed (12 tests).
+`node scripts/check-place-stories.mjs` passed all four 390/1440px light/dark cases,
+including scoped axe, image/headline identities, no overflow and navigation. The
+county/ZIP, back/reload, invalid selection and non-pilot regressions also passed.
+Visually reviewed mobile light/dark and desktop light captures. `git diff --check`
+passed. No fresh production build or full test suite for this presentation-only
+follow-up.
