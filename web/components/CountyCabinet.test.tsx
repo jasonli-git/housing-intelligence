@@ -10,17 +10,28 @@ it("links each county directly without a preview panel", () => {
   expect(screen.getByRole("link", { name:"Explore Somerset County" }).getAttribute("href")).toBe("/nj/somerset-county");
   expect(screen.getAllByRole("link")).toHaveLength(2);
   expect(screen.queryByText("Housing costs, the local picture and the figures behind it.")).toBeNull();
-  expect(screen.getByRole("button", {name:"Scroll counties right"})).toBeTruthy();
+  expect(screen.getByRole("searchbox")).toBeTruthy();
 });
-it("supports directional keyboard browsing without navigating", () => {
+it("filters destinations while preserving direct links", () => {
   render(<CountyCabinet counties={counties} />);
-  const first=screen.getByRole("link",{name:"Explore Atlantic County"});
-  const last=screen.getByRole("link",{name:"Explore Somerset County"});
-  last.scrollIntoView=()=>{}; first.scrollIntoView=()=>{};
-  first.focus(); fireEvent.keyDown(first,{key:"End"}); expect(document.activeElement).toBe(last);
-  fireEvent.keyDown(last,{key:"Home"}); expect(document.activeElement).toBe(first);
+  fireEvent.change(screen.getByRole("searchbox"), {target:{value:"somerset"}});
+  expect(screen.getAllByRole("link")).toHaveLength(1);
+  expect(screen.getByRole("link",{name:"Explore Somerset County"}).getAttribute("href")).toBe("/nj/somerset-county");
+  fireEvent.change(screen.getByRole("searchbox"), {target:{value:"no such county"}});
+  expect(screen.getByText(/No matching places/)).toBeTruthy();
 });
 it("renders no empty navigation", () => {
   const { container } = render(<CountyCabinet counties={[]} />);
   expect(container.innerHTML).toBe("");
+});
+it("searches beyond the collapsed preview and restores the directory when cleared", () => {
+  const many = Array.from({length:9},(_,i)=>({id:i+1,name:`County ${i+1}`}));
+  render(<CountyCabinet counties={many} />);
+  expect(screen.getByRole("button",{name:"Show all 9 places"}).getAttribute("aria-expanded")).toBe("false");
+  fireEvent.change(screen.getByRole("searchbox"),{target:{value:"County 9"}});
+  expect(screen.getAllByRole("link")).toHaveLength(1);
+  expect(screen.getByRole("link",{name:"Explore County 9"}).closest("li")?.className).toBe("");
+  fireEvent.change(screen.getByRole("searchbox"),{target:{value:""}});
+  fireEvent.click(screen.getByRole("button",{name:"Show all 9 places"}));
+  expect(screen.getByRole("button",{name:"Show fewer places"}).getAttribute("aria-expanded")).toBe("true");
 });

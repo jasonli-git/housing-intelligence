@@ -104,15 +104,12 @@ describe("stand-out carousels", () => {
   });
 });
 
-describe("the county's town strip", () => {
-  it("pages most of a width at a time in either direction", () => {
-    widths(2000, 500);
+describe("the county's town directory", () => {
+  it("filters towns without changing their destination", () => {
     render(<TownRow name="Mercer County" towns={[{ id: 1, name: "Ewing", href: "/nj/ewing" }, { id: 2, name: "Trenton", href: "/nj/trenton" }]} />);
-    fireEvent.click(screen.getByRole("button", { name: "Scroll towns right" }));
-    expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: 350 }));
-    fireEvent.click(screen.getByRole("button", { name: "Scroll towns left" }));
-    expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: -350 }));
-    expect(screen.getByRole("link", { name: "Trenton" }).getAttribute("href")).toBe("/nj/trenton");
+    fireEvent.change(screen.getByRole("searchbox"), {target:{value:"Trenton"}});
+    expect(screen.queryByRole("link", {name:"Ewing"})).toBeNull();
+    expect(screen.getByRole("link", {name:"Trenton"}).getAttribute("href")).toBe("/nj/trenton");
   });
 });
 
