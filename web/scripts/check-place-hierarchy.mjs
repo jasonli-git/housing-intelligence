@@ -6,7 +6,7 @@ const origin = process.env.SITE_URL ?? 'http://localhost:3002';
 const browser = await chromium.launch();
 try {
   for (const width of [320, 390, 768, 1024, 1440]) for (const theme of ['light', 'dark']) {
-    const context = await browser.newContext({ viewport: { width, height: 1000 }, colorScheme: theme, reducedMotion: 'reduce' });
+    const context = await browser.newContext({ viewport: { width, height: 1000 }, colorScheme: theme, reducedMotion: 'reduce', hasTouch: width <= 760 });
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
@@ -15,12 +15,38 @@ try {
     const opening = page.getByRole('region', { name: 'The housing market', exact: true });
     assert(await opening.isVisible());
     assert.equal(await opening.locator('details').count(), 0, 'all primary findings and qualifications are visible');
-    assert.equal(await page.locator('.orientation-details .region-orientation').count(), 0, 'promoted summary is not duplicated');
+    assert.equal(await page.locator('.orientation-details .region-orientation').count(), 1, 'full prose retained only in supporting context');
     assert(await opening.evaluate(el => Boolean(el.compareDocumentPosition(document.getElementById('quiet-cost')) & Node.DOCUMENT_POSITION_FOLLOWING)), 'market before household costs');
     assert(await opening.getByText('Typical home value', { exact: true }).isVisible());
     assert(await opening.getByText('Typical market rent', { exact: true }).isVisible());
     const text = await opening.innerText();
-    for (const qualification of ['Zillow ·', 'modeled value', 'not a sale price or an appraisal', 'not what every existing tenant pays', 'over five years', 'municipalities with data', 'not a nearby-place comparison', 'Census ACS', '90% margin:']) assert(text.includes(qualification), qualification);
+    for (const qualification of ['Zillow ·', 'Modeled value', 'not a sale price or appraisal', 'not existing tenants’ bills', 'not just nearby towns', 'Census ACS', '90% margin:', 'not inflation-adjusted']) assert(text.includes(qualification), qualification);
+    assert(!text.includes('Typical home values in Princeton are'), 'no introductory paragraph before the visual evidence');
+    assert.equal(await opening.locator('[data-portrait="peers"]').count(), 2);
+    assert.equal(await opening.locator('[data-portrait="trend"]').count(), 2);
+    for (const plot of await opening.locator('[data-portrait="peers"]').all()) {
+      const count = await plot.locator('circle[data-peer-id]').count();
+      assert((await plot.innerText()).includes(`${count} of 564 NJ towns`), 'coverage matches the actual plotted cohort');
+      const control = plot.getByRole('slider');
+      const value = await control.getAttribute('aria-valuetext');
+      await control.focus(); await page.keyboard.press('End');
+      assert.notEqual(await control.getAttribute('aria-valuetext'), value);
+      assert((await plot.getByRole('link', { name: /Compare/ }).getAttribute('href')).startsWith('/compare?places=224,'));
+      await page.keyboard.press('Home');
+      const bounds = await control.boundingBox();
+      if (width <= 760) await page.touchscreen.tap(bounds.x + bounds.width * .6, bounds.y + bounds.height / 2);
+      else await page.mouse.move(bounds.x + bounds.width * .6, bounds.y + bounds.height / 2);
+      assert.notEqual(await control.getAttribute('aria-valuenow'), '0', 'pointer/touch explores a real point');
+    }
+    for (const plot of await opening.locator('[data-portrait="trend"]').all()) {
+      const control = plot.getByRole('slider');
+      const before = await plot.locator('output').innerText();
+      await control.focus(); await page.keyboard.press('Home');
+      assert.notEqual(await plot.locator('output').innerText(), before);
+      await page.keyboard.press('End');
+      assert.equal(await plot.locator('output').innerText(), before);
+    }
+    assert(await opening.getByRole('img', { name: /owner-occupied.*rented/ }).isVisible());
     assert(!text.includes('/mo / month'), 'rent unit appears only once');
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'no horizontal overflow');
     const box = await opening.boundingBox();
@@ -29,7 +55,7 @@ try {
     if (width <= 760) await nav.getByRole('combobox').selectOption('place-market');
     else await nav.getByRole('link', { name: 'Market at a glance', exact: true }).click();
     assert.equal(new URL(page.url()).hash, '#place-market');
-    await opening.getByRole('link', { name: /cost per month/ }).click();
+    await opening.getByRole('link', { name: /living here cost/ }).click();
     assert.equal(new URL(page.url()).hash, '#quiet-cost');
     const cost = page.locator('.place-cost-overview');
     assert(await cost.isVisible());
@@ -59,4 +85,23 @@ try {
     assert(await page.locator('.orientation-details').count() > 0);
     console.log(`${path}: original opening retained`);
   }
+  await page.goto(`${origin}/nj/princeton`, { waitUntil: 'networkidle' });
+  const peer = page.locator('[data-portrait="peers"]').first();
+  await peer.getByRole('slider').focus(); await page.keyboard.press('End');
+  const href = await peer.getByRole('link', { name: /Compare/ }).getAttribute('href');
+  await peer.getByRole('link', { name: /Compare/ }).click();
+  await page.getByRole('heading', { name: 'Compare places', exact: true }).waitFor();
+  assert.equal(new URL(page.url()).search, new URL(href, origin).search);
+  await page.locator('.compare-table thead a').nth(1).waitFor();
+  assert.equal(await page.locator('.compare-table thead a').count(), 2, 'both selected place packets loaded');
+  await page.goBack(); await page.locator('#place-market').waitFor();
+  console.log('Selected-peer comparison link and back navigation passed');
+  const noScript = await browser.newContext({ javaScriptEnabled: false });
+  const staticPage = await noScript.newPage();
+  await staticPage.goto(`${origin}/nj/princeton`);
+  assert(await staticPage.locator('[data-market-metric="zhvi_sfr"] > h3').isVisible());
+  assert.equal(await staticPage.locator('#place-market svg').count(), 4, 'real plotted evidence remains in server-rendered HTML');
+  assert(await staticPage.getByRole('img', { name: /owner-occupied.*rented/ }).isVisible());
+  await noScript.close();
+  console.log('No-script primary figures and four server-rendered charts passed (interactions require JavaScript)');
 } finally { await browser.close(); }

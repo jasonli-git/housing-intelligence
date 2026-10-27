@@ -1,5 +1,82 @@
 # Place-page information hierarchy — local Princeton prototype
 
+## Approved follow-up: visual market portrait — 2026-10-27
+
+Replaces the text-led prototype rather than adding another section. The opening
+paragraph and numbered ranking text are no longer in the portrait; the original
+deterministic headline remains available inside More market context. Primary dates,
+price/rent definitions, coverage and survey uncertainty stay visible.
+
+### What changed
+
+- Home-value and rent distributions plot actual dollars, not ranks or percentiles.
+  Each dot represents one municipality. Princeton stays highlighted while hover,
+  touch or arrow keys select another town; Compare carries both ids into the existing
+  comparison page. A dashed marker names the median across the plotted town values,
+  not an official statewide median across homes. Vertical dot offsets separate marks;
+  they encode no additional variable. Towns are not weighted by homes or population.
+- Two historical lines use existing monthly observations. Scrub with mouse/touch or
+  arrow keys; exact dated values remain readable. Lines break across missing months.
+  Growth badges appear only when the displayed series and packet change agree on
+  starting/ending dates and values. Figures are explicitly nominal dollars.
+- A single, directly labeled owner/renter split replaces the tenure paragraph. It
+  retains the occupied-home denominator, ACS period and 90% margin.
+- No autoplay, new disclosures, new sources, ingestion or backend changes. Cost
+  controls/reset and the rest of the page are retained. Still Princeton only.
+
+### Files and implementation
+
+- `PlaceMarketOpening.tsx` / `.module.css`: composition, visible qualifications and
+  tenure bar; server-rendered primary evidence with scoped styles.
+- `MarketPortraitCharts.tsx`: small client islands for town selection and history
+  scrubbing. No browser fetch; keyboard sliders expose exact names, dates and values.
+  The complete charts and starting readings are present in static HTML.
+- `lib/marketPortrait.ts`: pure same-month matching, historical binding and gap-aware
+  SVG paths. Nonfinite/missing values are not turned into zero; duplicates fail loudly.
+- `lib/marketPortraitData.ts`, `lib/api.ts`: build-time reads from existing `/regions`
+  and date-bounded `/compare` endpoints, in batches of at most 100 town ids. Reject
+  registry truncation; withhold a cohort if a batch is absent. No new API endpoint.
+- Place route: request these cohorts only inside the existing Princeton prototype guard.
+- Tests: `PlaceMarketOpening.test.tsx`, `lib/marketPortrait.test.ts`,
+  `lib/marketPortraitData.test.ts`, and extended `check-place-hierarchy.mjs`.
+
+### Coverage finding
+
+For September 2026, the API supplies 388 of 564 NJ town home-value indexes and 190 of
+564 rent indexes. The old latest-value rent ranking used 238 towns with differing
+latest months. Its numbers cannot form a same-date distribution. This portrait
+therefore displays **190**, not 238, for September rent coverage. Each metric uses its
+own exact displayed month; the cohort size can change on a later build. Names that
+repeat across counties include their county where the registry resolves one.
+
+### Verification and limitations
+
+- Final frontend suite: **801 tests in 134 files passed**; TypeScript passed; five
+  publication tests passed. Added guards for period/source/value alignment, missing
+  history, gaps, invalid values, duplicate months, batch completeness, keyboard
+  selection, revision marks and tenure uncertainty.
+- Scoped production build (place-page dynamic route, guide, compare, search/state
+  JSON routes): passed, generating 1,189 static routes. Not a full `make publish`.
+- Development and built-static checks: ten width/theme cases each at
+  320/390/768/1024/1440px, light and dark. Distribution selection, history scrubbing,
+  touch, keyboard, costs/reset, no overflow, scoped axe and no page errors passed.
+- Three negative route checks per run retain the original Mercer County, ZIP 08540
+  and Hoboken openings. Comparison click-through/back passed; an additional check
+  loaded both actual comparison packets (Princeton and Deal) in development/static.
+- No-script checks passed for primary figures, four server-rendered charts and the
+  tenure bar in both environments. Interactive selection still requires JavaScript;
+  source/report links remain available.
+- Visual review: 390px dark and 1440px light portrait captures. Tight rent-axis labels
+  now use exact dollars rather than rounding both bounds to `$3k`.
+- `git diff --check`: passed. Initial focused tests needed updating for the new props,
+  duplicate headline/selected-readout values and visual copy; final suite passes.
+- This reduces paragraph reading, not necessarily height: four plots occupy more
+  vertical space than the preceding text prototype, especially on phones. No claim
+  that reader comprehension improved; matched reader testing is still outstanding.
+- No production, physical-device, assistive-technology or full-report print audit.
+  No remote push, PR or deployment. Handoff sections below describe the first version
+  and are retained as experiment history, not the current portrait specification.
+
 ## What changed
 
 Implement the owner's local-build approval for the Director Note recorded 2026-10-27.

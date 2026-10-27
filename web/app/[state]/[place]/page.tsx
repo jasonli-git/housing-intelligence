@@ -8,6 +8,7 @@ import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { PlacePhoto } from "@/components/PlacePhoto";
 import { PlaceSectionNav } from "@/components/PlaceSectionNav";
 import { PlaceMarketOpening } from "@/components/PlaceMarketOpening";
+import { marketPortraitData } from "@/lib/marketPortraitData";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
 import "../../horizon-theme.css";
@@ -325,6 +326,7 @@ export default async function RegionPage({
   const quiet = ["county", "municipality", "zip"].includes(region.level);
   // Deliberately one town for local review, not a platform-wide hierarchy decision.
   const marketFirst = region.state_code === "NJ" && region.geoid === "3402160900";
+  const marketCohorts = marketFirst ? await marketPortraitData(region.state_code, packet.levels) : [];
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
   // (ARCHITECTURE #275), and a file published before then that still carries one is
@@ -501,7 +503,7 @@ export default async function RegionPage({
           {(headline || lead || trade) && (
             <details className="verdict-details orientation-details">
               <summary className="disclose">{marketFirst ? "More market context" : "Market context and figures"} <span className="disclose-hint"><span className="when-closed">Details</span><span className="when-open">Hide</span></span></summary>
-              {!marketFirst && headline && <p className="verdict region-orientation">{headline}</p>}
+              {headline && <p className="verdict region-orientation">{headline}</p>}
               {lead && <p className="verdict-more">{lead}</p>}
               {trade && <p className="verdict-more">{trade}</p>}
             </details>
@@ -542,7 +544,7 @@ export default async function RegionPage({
       <div className="region-standard-content">
 
       {marketFirst && <PlaceMarketOpening levels={packet.levels} metrics={packet.metrics}
-        uncertainties={uncertainties} peers={peers} headline={headline}
+        uncertainties={uncertainties} peers={peers} ownId={regionId} cohorts={marketCohorts} histories={series}
         guideHref={`/guide?place=${regionId}`} reportHref={`${regionPath(regionId)}/report`}
         revisions={new Map([...revisedBy].flatMap(([id, change]) => {
           const row = packet.levels.find(l => l.metric_id === id && l.period_start === change.period_start);

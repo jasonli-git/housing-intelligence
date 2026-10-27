@@ -3,28 +3,49 @@
 .opening .heading h2 { margin: 0; padding: 0; font: 400 clamp(26px,3vw,36px)/1.2 Georgia,serif; letter-spacing: -.025em; }
 .opening .heading h2::before, .opening .heading h2::after { content: none; }
 .heading a, .next a { display: inline-flex; align-items: center; gap: .6rem; min-height: 44px; color: var(--plate-accent, var(--text-primary)); font: 500 13px/1.4 var(--font-text); text-underline-offset: 4px; }
-.lead { max-width: 85ch; font: 400 15px/1.55 var(--font-text); color: var(--text-secondary); margin: .6rem 0 1rem; }
+.instruction, .annotation { margin: .4rem 0; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
+.instruction kbd { font: inherit; }
 .findings { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); border-block: 1px solid var(--border); }
-.finding { min-width: 0; padding: 1rem 1.4rem 1rem 0; }
-.finding + .finding { border-left: 1px solid var(--border); padding-left: 1.4rem; padding-right: 0; }
+.finding { min-width: 0; padding: 1rem 1.4rem 1rem 0; --portrait-colour: var(--plate-accent, var(--series-1)); }
+.finding + .finding { border-left: 1px solid var(--border); padding-left: 1.4rem; padding-right: 0; --portrait-colour: var(--text-primary); }
 .opening .finding h3 { margin: 0 0 .35rem; font: 500 15px/1.4 var(--font-text); letter-spacing: 0; }
 .figure { margin: 0; font: 400 clamp(32px,4vw,46px)/1.15 Georgia,serif; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
 .figure > span { font: 400 13px/1.4 var(--font-text); letter-spacing: 0; color: var(--text-secondary); }
-.date { margin: .35rem 0 .5rem; font: 12px/1.5 var(--font-text); color: var(--text-secondary); }
-.definition { max-width: 48ch; margin: 0; font: 13px/1.5 var(--font-text); color: var(--text-secondary); }
-.comparison { display: grid; gap: .15rem; margin: .8rem 0; font: 13px/1.45 var(--font-text); }
-.comparison > span, .comparison small { color: var(--text-secondary); font-size: 12px; }
-.comparison b { font-weight: 500; }
-.rankNote { margin: .6rem 0; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
-.change { margin: .6rem 0 0; font: 13px/1.45 var(--font-text); }
-.change span { display: block; color: var(--text-secondary); font-size: 12px; }
-.stock { margin: .8rem 0 .3rem; font: 13px/1.5 var(--font-text); }
-.stock span { color: var(--text-secondary); }
+.date, .definition { margin: .25rem 0; font: 12px/1.5 var(--font-text); color: var(--text-secondary); }
+.chartLabel { display: flex; align-items: baseline; justify-content: space-between; gap: .4rem .8rem; flex-wrap: wrap; margin: .7rem 0 .15rem; font: 500 12px/1.5 var(--font-text); }
+.chartLabel > span { color: var(--text-secondary); font-weight: 400; }
+.chartLabel > b { color: var(--portrait-colour); font-size: 14px; font-weight: 500; }
+.plotControl { touch-action: pan-y; cursor: crosshair; border-radius: 4px; }
+.plotControl svg { display: block; width: 100%; height: auto; overflow: visible; }
+.plotControl:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+.axis { stroke: var(--border); stroke-width: 1; }
+.axisText { fill: var(--text-secondary); font: 11px var(--font-text); }
+.peerDot { fill: var(--text-secondary); opacity: .75; }
+.ownLine { stroke: var(--portrait-colour); stroke-width: 1.5; }
+.ownDot { fill: var(--portrait-colour); stroke: var(--plate-paper, var(--surface-card)); stroke-width: 1.5; }
+.selectedDot { fill: var(--plate-paper, var(--surface-card)); stroke: var(--portrait-colour); stroke-width: 2; }
+.peerReading { display: flex; justify-content: space-between; align-items: center; gap: .75rem; min-height: 44px; font: 12px/1.4 var(--font-text); }
+.peerReading > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.peerReading b { font-weight: 500; margin-left: .4rem; white-space: nowrap; }
+.peerReading a { flex: none; display: inline-flex; align-items: center; min-height: 44px; color: var(--plate-accent); }
+.trend { border-top: 1px solid var(--border); }
+.trendLine { fill: none; stroke: var(--portrait-colour); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.cursor { stroke: var(--text-secondary); stroke-width: 1; stroke-dasharray: 3 4; }
+.trendDates { display: flex; justify-content: space-between; padding-left: 13.2%; padding-right: 3.6%; color: var(--text-secondary); font: 11px/1.4 var(--font-text); }
+.trendReading { display: block; margin: .35rem 0 0; min-height: 1.5em; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
+.trendReading b { margin-left: .4rem; color: var(--text-primary); font-weight: 500; }
+.stock { margin: .8rem 0 .25rem; }
+.tenureLabels { display: flex; justify-content: space-between; gap: 1rem; font: 12px/1.5 var(--font-text); }
+.tenureLabels b { font-weight: 600; }
+.tenureBar { height: 9px; margin-block: .4rem; background: var(--text-secondary); border-radius: 3px; overflow: hidden; }
+.tenureBar > span { display: block; height: 100%; background: var(--plate-accent, var(--series-1)); border-right: 2px solid var(--plate-paper, var(--surface-card)); box-sizing: border-box; }
 .next { display: flex; flex-wrap: wrap; gap: .2rem 1.8rem; }
-.next a:focus-visible, .heading a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.next a:focus-visible, .heading a:focus-visible, .peerReading a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 @media(max-width:600px) {
   .findings { grid-template-columns: minmax(0,1fr); }
   .finding { padding: 1rem 0; }
   .finding + .finding { border-left: 0; border-top: 1px solid var(--border); padding-left: 0; }
-  .stock span { display: block; }
+  .chartLabel { margin-top: .5rem; }
+  .axisText { font-size: 15px; }
 }
+@media print { .peerReading a, .instruction { display: none; } }
