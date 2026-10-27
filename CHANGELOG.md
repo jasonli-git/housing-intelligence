@@ -13,6 +13,9 @@ are not yet recorded here.
 
 ### Added
 
+- **State, county and research pages reworked** (ARCHITECTURE #450): searchable directories of
+  counties and towns replace the swipe strips; reports gain section navigation, sticky table
+  headings and expandable history; the sources page gains a publisher index.
 - **The Buyer's guide, Property tax lookup and Housing help reworked** (ARCHITECTURE #449):
   setup sits beside the results on desktop, caveats beside the figures; the tax lookup leads
   with the annual bill and next steps; Housing help pairs assistance routes with the records.

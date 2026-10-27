@@ -53,14 +53,15 @@ Each is registered only once its file lands (a manual source with no file fails
 - Who solar actually reaches — the Clean Energy Program's Installation Data (.xlsx)
   into `data/manual/njcep_solar/` (cleanenergy.nj.gov refuses scripts).
 
-### Place pages and tools after #448 and #449
+### Place pages and tools after #448–#450
 
 - **Reader testing.** Nobody outside the project has tried finding a place, comparing
   alternatives, adjusting a budget, planning a purchase or looking up a tax bill on the
   reworked pages; do it before further
   structural changes.
 - **Duplicate named landmark** in the place pages' ground/water evidence (axe best practice).
-- **Property tax print view.** The disclosure is printed open (#449) but no print preview was checked.
+- **Print views.** The tax disclosure (#449) and report history series (#450) print open, but no
+  print preview was checked.
 - **Theme CSS consolidation.** Guide and support-tool modules override cross-page theme rules
   with scoped selectors; folding those rules together is separate work.
 
