@@ -910,3 +910,70 @@ Open questions recorded when it was raised:
   The real cost is a national packet, its own evaluation cases and a weekly regeneration.
 - **Terms.** Freddie Mac forbids "alteration" of its content; whether a sentence about
   the rate counts needs the owner's reading.
+
+---
+
+## Place-page information hierarchy
+
+**Status:** Exploratory — not approved for implementation
+**Recorded:** 2026-10-27
+
+This came from outside design advice, reviewed in conversation and again by Codex. The
+dissatisfaction with the place pages is real. The diagnosis and the remedy are
+hypotheses.
+
+The idea is that repeated visual redesigns may not be what's missing. The place pages
+may lack a settled order of importance, and polish keeps standing in for that decision.
+
+### Open question: what should a place page lead with?
+
+Place pages currently bring costs forward (ARCHITECTURE #448, 2026-10-26). That change
+was made without a reader study. Meanwhile the header's market summary sits inside a
+collapsed "Market context and figures" disclosure.
+
+Candidate hypothesis: place pages could lead with a concise picture of the local
+housing market, with prices and rents prominent, followed by household cost and a clear
+route into the affordability tools. Test whether this helps visitors understand the
+place while keeping common cost questions easy to answer.
+
+This is about the place page's opening, not the whole platform's positioning.
+`SPEC.md` already centers understanding housing markets and includes comparison and
+affordability. Parts of the current cost-first approach may turn out to deserve to
+stay.
+
+### Possible approach
+
+- Leave the homepage as it is. It's in a good place.
+- For the length of this exploration, prefer holding off on major changes to Budget
+  Explorer, Compare and Atlas. Small fixes are fine.
+- Rank visitor questions before choosing facts. Examples: "What do homes and rentals
+  typically cost?", "How does that compare with nearby places?", "What has changed?",
+  "What kind of housing is here?" Then pick the smallest set of facts that answers
+  them.
+- Aim to answer those questions in the first view and a short scroll, without opening
+  disclosures. Avoid a fixed above-the-fold count, which could crowd mobile.
+- Disclosures: keep primary findings visible, along with the qualifications needed to
+  read them correctly (date, comparison group, margin, asking vs. existing-tenant
+  rent). Use disclosures for supporting detail, extended methodology and additional
+  measures. A finding can be a clearly labeled number or a small chart.
+- Start with one town (e.g. Princeton). Later, check the result against a contrasting
+  town with different housing or thinner data.
+- Keep existing data, calculations and capabilities. Order, grouping and visibility are
+  free to change.
+- If a hierarchy works, consider adapting it for county and state pages, which may
+  answer different questions.
+- Let specialized tools keep their own layouts. Consistency would come from shared
+  design language, not identical structure.
+
+### Reader testing
+
+- Test the current page first, then the candidate, using the same concrete tasks.
+- Success means people find the answer, read it correctly, and understand its limits.
+  Watch for confident misreadings, as the earlier reader-testing note warns.
+
+### Also noted
+
+There are many stylesheets with overlapping names. That justifies checking how styles
+interact, but the count alone doesn't show that the design lacks a system.
+
+Do not implement yet.
