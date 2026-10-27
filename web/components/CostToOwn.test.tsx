@@ -27,6 +27,23 @@ describe("a state whose rules are not held", () => {
   });
 });
 describe("local monthly budget", () => {
+  it("keeps cash as the compact headline and explains equity only inside the breakdown", () => {
+    const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,compactOverview:true}));
+    expect(container.querySelector('.cost-card .cost-figure')?.textContent).toContain('estimated cash paid each month, including principal');
+    expect(container.querySelector('.place-cost-overview > .cost-monthly-headline')).toBeNull();
+    const bridge=screen.getByRole('group',{name:'Ownership cost after principal',hidden:true});
+    const panel=container.querySelector('.shared-calculation') as HTMLElement;
+    expect(panel.contains(bridge)).toBe(true);
+    expect(panel.hidden).toBe(true);
+    fireEvent.click(screen.getByRole('button',{name:'See the breakdown'}));
+    expect(panel.hidden).toBe(false);
+    expect(bridge.textContent).toContain('This is not the cash needed each month');
+    const headline=container.querySelector('.cost-card .cost-figure b')?.textContent;
+    fireEvent.change(screen.getByLabelText('Purchase price'),{target:{value:'600000'}});
+    expect(container.querySelector('.cost-card .cost-figure b')?.textContent).not.toBe(headline);
+    fireEvent.click(screen.getByRole('button',{name:'Use the published figures'}));
+    expect(container.querySelector('.cost-card .cost-figure b')?.textContent).toBe(headline);
+  });
   it("groups compact scenario controls and resets edited costs to their starting figures", () => {
     const { container } = render(createElement(CostToOwn, { ...inputs, quiet: true, compactOverview: true }));
     const group = screen.getByRole("group", { name: "Your household and buying plans" });

@@ -517,8 +517,9 @@ export function CostToOwn({
       </aside>
       </QuietDisclosure> : null;
 
-  const monthlyComparison = control && cashComparison ? <div className="cost-monthly-headline" role="group" aria-label="Monthly cash comparison">
-    <p className="cost-evidence-label">Monthly cash</p>
+  const monthlyComparison = control && cashComparison ? <div className="cost-monthly-headline" role="group" aria-label={compactOverview ? "Ownership cost after principal" : "Monthly cash comparison"}>
+    <p className="cost-evidence-label">{compactOverview ? "After principal builds equity" : "Monthly cash"}</p>
+    {compactOverview && <p className="calculation-note">A secondary comparison: principal reduces your loan balance but still leaves your bank account. This is not the cash needed each month.</p>}
     {quiet && rentMonth !== null && against ? <DifferenceBridge own={goneNoUtilities} rent={rentMonth} principal={kept} kind={against.kind} gap={against.gap} missing={missingBeyondUtilities}/> : <p className="cost-monthly-headline-copy" aria-live="polite">{cashComparison}</p>}
   </div> : null;
 
@@ -672,7 +673,7 @@ export function CostToOwn({
           )}
           <p className="cost-figure" aria-live="polite">
             <b>{money(month.total)}</b>
-            <span>{quiet ? <Glossed text="a month, including principal" /> : "a month, every cost below"}</span>
+            <span>{compactOverview ? "estimated cash paid each month, including principal" : quiet ? <Glossed text="a month, including principal" /> : "a month, every cost below"}</span>
           </p>
           {month.loan.fha && (
             <p className="cost-basis">
@@ -736,6 +737,7 @@ export function CostToOwn({
         {quiet && <>
           {calculationToggle}
           <section id={id+"-calculation"} className="shared-calculation" hidden={!calculationOpen} aria-label="Owning and renting calculation">
+            {compactOverview && monthlyComparison}
             <div><h4>Owning</h4><p className="calculation-note">Cash payment includes principal and included utilities. Money spent includes utilities here; the bridge excludes them.</p>{owningLedger}</div>
             <div><h4>Renting</h4>{rentingLedger ?? <p>No rent figure. {planning ? "Enter one under ‘Your numbers’ to compare." : "Enter your rent in the buyer’s guide to compare."}</p>}</div>
           </section>
@@ -753,7 +755,6 @@ export function CostToOwn({
 
 
       {compactOverview && overviewContext && <div className="place-overview-context">{overviewContext}</div>}
-      {compactOverview && monthlyComparison}
 
       {control && (
         <div className="cost-strip cost-evidence">

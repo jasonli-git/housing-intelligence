@@ -23,9 +23,9 @@
 .page.page :global(.place-cost-overview > .cost-yours) { grid-row: 4; margin: 0; }
 .page.page :global(.place-cost-overview > .cost-cards) { grid-row: 3; margin: 0; align-self: start; border-radius: 10px; }
 .page :global(.place-overview-context) { grid-row: 3; }
-.page.page :global(.place-cost-overview > .cost-monthly-headline) { grid-row: 5; margin: 0; }
-.page.page :global(.place-cost-overview > .cost-evidence) { grid-row: 6; margin: 0; }
-.page.page :global(.place-cost-overview > .quiet-tool-group) { grid-row: 7; margin-top: .8rem; }
+.page :global(.place-cost-overview .shared-calculation > .cost-monthly-headline) { grid-column: 1 / -1; margin: 0; border-radius: 0; border: 0; padding: 0; }
+.page.page :global(.place-cost-overview > .cost-evidence) { grid-row: 5; margin: 0; }
+.page.page :global(.place-cost-overview > .quiet-tool-group) { grid-row: 6; margin-top: .8rem; }
 .page.page :global(.place-cost-overview .cost-card) { padding: 1.1rem; }
 .page.page :global(.place-cost-overview .cost-figure b) { font-size: clamp(30px, 3.4vw, 44px); }
 .page :global(.cost-ownership-breakdown) { grid-column: 1 / -1; padding: 1rem 1.1rem; border-top: 1px solid var(--border); }
