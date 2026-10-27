@@ -163,3 +163,27 @@ county/ZIP, back/reload, invalid selection and non-pilot regressions also passed
 Visually reviewed mobile light/dark and desktop light captures. `git diff --check`
 passed. No fresh production build or full test suite for this presentation-only
 follow-up.
+
+## Follow-up: gallery aesthetic pass
+
+Refined the screenshot-backed cards with existing theme/chart tokens: blue market,
+green commute and copper water accents on the topic marker, fine border and quiet
+corner tint. Added compact monospace topic labels, circular arrow treatments,
+neutral high-contrast serif headlines, softer 16px corners and an aligned source
+footer. Adjusted the screenshot scrim to reduce competing ghost text while retaining
+the real chart shapes. The 232px minimum height and existing responsive layout remain.
+
+Fine-pointer hover adds a small lift and slow background zoom. Touch devices do not
+receive persistent hover styling; reduced-motion disables the transforms and
+transitions. Keyboard focus keeps its visible outline. No content, data, link,
+screenshot capture or selection changes.
+
+Files: `PlaceStoryGallery.tsx`, `PlaceStories.module.css`, this handoff.
+
+Verification: TypeScript and the two targeted test files passed (12 tests).
+`node scripts/check-place-stories.mjs` passed all four mobile/desktop light/dark
+cases with scoped axe and the full existing selection/navigation regressions.
+Additional browser checks passed at 320/768/1024px for text containment and horizontal
+overflow, plus normal hover, reduced-motion suppression and keyboard focus. Visually
+reviewed mobile light and desktop dark captures. No fresh production build or full
+test suite for this style-only follow-up.
