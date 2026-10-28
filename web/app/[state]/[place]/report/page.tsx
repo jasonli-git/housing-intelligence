@@ -1,3 +1,4 @@
+import { CommunityContext } from "@/components/CommunityContext";
 import { Glossed } from "@/components/Glossed";
 import { stateCrumbs } from "@/lib/states";
 import { Term } from "@/components/Term";
@@ -147,6 +148,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
 
   const { region, window, comparisons } = packet;
   const name = displayName(region);
+  const community = packet.region.geoid === "3402160900" && packet.region.state_code === "NJ" ? await api.community(regionId) : null;
   const measureSections = groupRows(packet.metrics);
   const levelSections = groupRows(packet.levels);
   const placement = placeCaveats(
@@ -254,7 +256,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
         </div>
       </header>
 
-      <PlaceSectionNav label="Report sections" sections={[{id:"report-measures",label:"Change over time"},{id:"report-current",label:"Current values"},{id:"report-history",label:"History"},{id:"report-sources",label:"Sources"}]} />
+      <PlaceSectionNav label="Report sections" sections={[{id:"report-measures",label:"Change over time"},{id:"report-current",label:"Current values"},{id:"report-history",label:"History"},...(community?[{id:"report-community",label:"Schools & reporting"}]:[]),{id:"report-sources",label:"Sources"}]} />
       {cost && <CostToOwn {...cost} control={false} />}
 
       <StandOuts
@@ -451,6 +453,8 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
           ))}
         </section>
       )}
+
+      {community && <section className="section" id="report-community" data-jump-label="Schools & reporting"><h2>Schools & public-safety reporting</h2><CommunityContext data={community} level={region.level} topics={["schools","crime"]} supporting expanded /></section>}
 
       <section className="section" id="report-sources" data-jump-label="Sources">
         <h2>Sources</h2>

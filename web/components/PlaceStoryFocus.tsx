@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PlacePicker } from "./PlacePicker";
 import { PlaceStoryChart } from "./PlaceStoryChart";
+import { CommunityContext } from "./CommunityContext";
 import { GroundAndWater } from "./GroundAndWater";
 import { GettingAround } from "./GettingAround";
 import { IndexedComparison } from "./IndexedComparison";
@@ -60,7 +61,7 @@ export function PlaceStoryFocus({ initial, artifactUrl }: { initial: PlaceStoryR
           initial.topic === "migration" ? optionalJson<Migration>(`${base}/migration.json`, abort.signal) : null,
           initial.topic === "utilities" ? optionalJson<UtilityData>(`${base}/utilities.json`, abort.signal) : null,
           initial.topic === "utilities" ? optionalJson<{sources:{source_id:string;inquiries?:Inquiry[]}[]}>(`${artifactUrl}/freshness.json`,abort.signal):null,
-          initial.topic === "broadband" ? optionalJson<CommunityData>(`${base}/community.json`,abort.signal):null,
+          (initial.topic === "broadband" || initial.topic === "health") ? optionalJson<CommunityData>(`${base}/community.json`,abort.signal):null,
         ]);
         if (!packet || packet.region?.region_id !== id || !Array.isArray(packet.levels) || !["county", "municipality", "zip"].includes(packet.region.level)) throw new Error("No supported place packet");
         // Only an explicit county selection or a verified county parent supplies
@@ -113,6 +114,7 @@ export function PlaceStoryFocus({ initial, artifactUrl }: { initial: PlaceStoryR
       <div className={styles.focusBody}>
         {record.topic === "commute" && <GettingAround name={name} level={record.place.level} levels={record.levels} destinations={record.destinations} />}
         {record.topic === "water" && <GroundAndWater name={name} levels={record.levels} water={record.water} scope="water" />}
+        {record.topic === "health" && <CommunityContext data={record.community??null} level={record.place.level} topics={["health"]}/>}
         {record.topic === "sites" && <GroundAndWater name={name} levels={record.levels} water={null} scope="sites"/>}
         {record.topic === "utilities" && <><UtilityOutageExplorer key={record.place.region_id} data={record.utilities??null}/><Utilities data={record.utilities??null} bpuInquiry={record.utilityInquiry??undefined}/></>}
         {record.topic === "broadband" && <BroadbandStoryExplorer key={record.place.region_id} data={record.community??null} level={record.place.level}/>}

@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 
 const origin = process.env.SITE_URL ?? 'http://localhost:3002';
 const output = resolve(process.env.PLACE_STORY_SHOT_DIR ?? '../dist/artifacts/screenshots/place-stories');
-const stories = { market: 'income-and-home-value', sales: 'price-ladder', pressure: 'who-feels-housing-costs', lending: 'the-mortgage-market', building: 'is-new-jersey-building', migration: 'who-moves-in', commute: 'the-long-commute-premium', water: 'water-you-can-check',flood:'the-flood-claims-calendar',sites:'sites-and-cleanup',utilities:'when-the-power-goes-out',broadband:'where-internet-reaches' };
+const stories = { health:'health-in-context', market: 'income-and-home-value', sales: 'price-ladder', pressure: 'who-feels-housing-costs', lending: 'the-mortgage-market', building: 'is-new-jersey-building', migration: 'who-moves-in', commute: 'the-long-commute-premium', water: 'water-you-can-check',flood:'the-flood-claims-calendar',sites:'sites-and-cleanup',utilities:'when-the-power-goes-out',broadband:'where-internet-reaches' };
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch();
 const start = performance.now(), files = [];
@@ -27,7 +27,7 @@ try {
       files.push({ topic, theme, fingerprint, bytes: (await stat(file)).size });
     }
     // New stories' library covers: actual unselected statewide views.
-    for(const slug of ['who-feels-housing-costs','sites-and-cleanup','when-the-power-goes-out','where-internet-reaches']){
+    for(const slug of ['health-in-context','who-feels-housing-costs','sites-and-cleanup','when-the-power-goes-out','where-internet-reaches']){
     await page.goto(`${origin}/stories/${slug}`, { waitUntil: 'networkidle' });
     await page.evaluate(t => document.documentElement.dataset.theme = t, theme);
     await page.evaluate(() => document.fonts.ready);

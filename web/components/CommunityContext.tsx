@@ -14,7 +14,7 @@ function ContextExhibit({enabled,kind,children}:{enabled:boolean;kind:string;chi
 }
 
 /** Compact components, not a neighbourhood grade, a school assignment or a safety verdict. */
-export function CommunityContext({ data, level, supporting = false, hideBroadband = false, exhibits = false, topics = ["schools","broadband","crime","health"], idPrefix="" }: { data: CommunityData | null; level: string; supporting?: boolean; hideBroadband?:boolean; exhibits?:boolean; topics?:readonly ("schools"|"broadband"|"crime"|"health")[]; idPrefix?:string }) {
+export function CommunityContext({ data, level, supporting = false, hideBroadband = false, exhibits = false, topics = ["schools","broadband","crime","health"], idPrefix="", expanded=false }: { data: CommunityData | null; level: string; supporting?: boolean; hideBroadband?:boolean; exhibits?:boolean; topics?:readonly ("schools"|"broadband"|"crime"|"health")[]; idPrefix?:string; expanded?:boolean }) {
   if (!data) return null;
   const complete = data.crime.filter((r) => r.payload.complete).length;
   const broadband = data.broadband ?? [];
@@ -26,7 +26,7 @@ export function CommunityContext({ data, level, supporting = false, hideBroadban
     {topics.includes("schools") && <ContextExhibit enabled={exhibits} kind="Schools"><section className="section sales community-schools" aria-labelledby="community-schools-heading">
       <div className="section-head"><h2 id="community-schools-heading">Schools around here</h2></div>
       <p className="sales-note">A district is not a school assignment. Confirm the address, grade and enrollment rules with the district.</p>
-      {districts.length ? <ReaderDetails title={`${districts.length} district association${districts.length === 1 ? "" : "s"} · see the figures`}>
+      {districts.length ? <ReaderDetails defaultOpen={expanded} title={`${districts.length} district association${districts.length === 1 ? "" : "s"} · see the figures`}>
         <p className="sales-note">Approximate overlaps of NJOGIS district boundaries with 2020 home-bearing census blocks. Elementary, secondary and unified districts can overlap; these are not pupil shares or legal boundaries.</p>
         {districts.map(({ boundary, performance, status, formerly }) => {
           const results = districtResults(boundary.payload.district_id, performance, status);
@@ -69,7 +69,7 @@ export function CommunityContext({ data, level, supporting = false, hideBroadban
     {topics.includes("crime") && <ContextExhibit enabled={exhibits} kind="Public safety"><section className="section sales community-crime" aria-labelledby="community-crime-heading">
       <div className="section-head"><h2 id="community-crime-heading">{supporting ? "Public-safety reporting context" : "Crime records, with reporting coverage"}</h2></div>
       <p className="sales-note">These records cannot tell you whether a home or neighborhood is safe.</p>
-      {data.crime.length ? <ReaderDetails title={supporting ? "Recorded offences & reporting completeness" : `${data.crime[0].payload.year} · ${data.crime_county} agency chapter · ${complete}/${data.crime.length} listed agencies reported 12 months`}>
+      {data.crime.length ? <ReaderDetails defaultOpen={expanded} title={supporting ? "Recorded offences & reporting completeness" : `${data.crime[0].payload.year} · ${data.crime_county} agency chapter · ${complete}/${data.crime.length} listed agencies reported 12 months`}>
         {supporting && <p className="sales-note">{data.crime[0].payload.year} · {data.crime_county} agency chapter · {complete}/{data.crime.length} listed agencies reported all 12 months.</p>}
         <p className="sales-note">NJSP’s annual index-crime workbook, published April 2025. County chapter context{level === "municipality" ? ", not this town’s crime rate" : ""}. The denominator is agencies listed in this workbook, not every agency or every resident. State Police’s separate chapter is not added here.</p>
         <div className="scroll-x" tabIndex={0} role="region" aria-label="Agency crime reporting table, scroll horizontally">

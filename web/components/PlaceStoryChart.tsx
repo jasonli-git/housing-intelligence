@@ -5,7 +5,7 @@ import { againstUsual } from "@/lib/persistence";
 /** This exact selected-view graphic is used for both the destination and its capture. */
 export function PlaceStoryChart({ record }: { record: PlaceStoryRecord }) {
   const summary = summarizePlaceStory(record);
-  const max = Math.max(1, ...summary.rows.map(r => r.value));
+  const max = record.topic === "health" ? 100 : Math.max(1, ...summary.rows.map(r => r.value));
   const past = record.topic === "past" && summary.available ? record.countyHistory?.data : null;
   const span = Math.max(1, ...(past?.series.map(p => Math.abs(p.vs_median)) ?? []));
   const yearSpan = past ? Math.max(1, past.last_year-past.first_year+1) : 1;
@@ -19,6 +19,7 @@ export function PlaceStoryChart({ record }: { record: PlaceStoryRecord }) {
       })}
       <text x="24" y="174">{past.first_year}</text><text x="776" y="174" textAnchor="end">{past.last_year}</text><text x="24" y="13">% from the historical median · zero line = usual</text>
     </svg></div>}
+    {record.topic === "health" && summary.available && <p>Percent of each measure’s named adult population · bars use a fixed 0–100% scale.</p>}
     {summary.available && summary.rows.length > 0 && <div className={styles.bars} role="img" aria-label={summary.rows.map(r => `${r.label}: ${r.formatted}${r.margin ? `, ${r.margin}` : ""}${r.aside ? `, ${r.aside}` : ""}`).join("; ")}>
       {summary.rows.map((r, i) => <div className={styles.row} key={`${r.label}-${i}`}><span>{r.label}</span><b>{r.formatted}</b><i aria-hidden="true"><span style={{ width: `${r.value / max * 100}%` }} /></i>{(r.margin || r.aside) && <small>{r.aside ?? `90% margin: ${r.margin}`}</small>}</div>)}
     </div>}

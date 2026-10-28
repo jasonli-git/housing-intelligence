@@ -57,6 +57,7 @@ export function livingStorySummary(record:PlaceStoryRecord):PlaceStorySummary|nu
 }
 export function livingPreviewNote(record:PlaceStoryRecord):string|null {
   switch(record.topic){
+    case "health":return record.community?.health_level==="county"&&record.place.level==="municipality"?"County estimates—not measurements of this town.":"Modeled estimates—not a diagnosis or local headcount.";
     case "sites":return "Site records—not a property’s exposure or safety.";
     case "flood":return "Mapped homes—not an address-specific risk assessment.";
     case "utilities":return "Utility-wide—not this town’s outage record.";

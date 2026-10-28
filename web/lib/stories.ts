@@ -6,6 +6,7 @@
 
 /** The visual stories (Director Note "Visualizing the data", 2026-10-22). */
 export const STORIES = [
+  { href:"/stories/health-in-context",title:"Health in context",blurb:"CDC PLACES health estimates with geography, adult populations and uncertainty. Choose a place; county estimates are not town measurements." },
   { href:"/stories/sites-and-cleanup",title:"Sites and cleanup",blurb:"Open cleanups, sites managed with controls and heating-oil tank records, from NJDEP. Choose a place; a site count is not an address-level exposure or safety finding." },
   { href:"/stories/when-the-power-goes-out",title:"When the power goes out",blurb:"Annual utility-wide minutes without power, with and without major-event days. Explore the reporting basis and matched local suppliers without pretending it is a town's own outage record." },
   { href:"/stories/where-internet-reaches",title:"Where internet reaches",blurb:"FCC fiber and wired offers by mapped location and published area units. Choose a town, county or ZIP and inspect which geography, denominator and reporting dates the figures actually describe." },

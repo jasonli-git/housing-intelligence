@@ -34,7 +34,7 @@ try {
     await history.screenshot({ path: `/tmp/princeton-county-history-${width}-${theme}.png` });
     const gallery = page.locator('#place-story-gallery');
     await gallery.scrollIntoViewIfNeeded();
-    const topics = ['market', 'sales', 'pressure', 'lending', 'building', 'migration', 'commute', 'water','flood','sites','utilities','broadband'];
+    const topics = ['market', 'sales', 'pressure', 'lending', 'building', 'migration', 'commute', 'water','flood','sites','utilities','broadband','health'];
     assert.equal(await gallery.locator('[data-preview-topic]').count(), topics.length);
     assert.equal(await gallery.locator('[data-preview-topic="past"]').count(), 0, 'history card removed from gallery');
     for (const topic of topics) {
@@ -103,12 +103,10 @@ try {
     }
     const audit = await new AxeBuilder({ page }).include('#place-story-gallery').include('#county-market-history').analyze();
     assert.deepEqual(audit.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })), []);
-    await page.locator('#about-living-there > summary').click();
-    const remaining=page.locator('#about-living-there');
-    assert(await remaining.getByRole('heading',{name:'Schools around here',exact:true}).isVisible());
-    assert(await remaining.getByRole('heading',{name:'Public-safety reporting context',exact:true}).isVisible());
-    assert(await remaining.getByRole('heading',{name:'Health context—not a home’s diagnosis',exact:true}).isVisible());
-    assert.equal(await remaining.locator('.ground-water,.flood-risk,.utility-context,.community-broadband').count(),0,'moved living topics are not duplicated');
+    assert.equal(await page.locator('#about-living-there').count(),0,'retired pilot wrapper');
+    assert(await page.getByRole('heading',{name:'Check the school district',exact:true}).isVisible());
+    assert.equal(await page.locator('.community-crime,.community-health').count(),0,'reporting and health no longer duplicated on profile');
+    assert(await page.locator('#community-schools-heading').innerText().then(t=>t.includes('not school assignments')));
     for(const [id,topic] of [['ground-sites-heading','sites'],['flood-risk-heading','flood'],['utilities-heading','utilities'],['community-broadband-heading','broadband']])assert(await page.locator(`#${id}`).evaluate((el,t)=>Boolean(el.closest(`[data-preview-topic="${t}"]`)),topic),'legacy links still reach their topic');
     assert((await page.getByRole('link',{name:'Open the address checklist'}).getAttribute('href')).endsWith('/guide?place=224#guide-checks-heading'));
     assert.equal(await page.locator('.exhibit-gallery .indexed-comparison').count(), 0, 'moved trends do not remain duplicated');
@@ -118,7 +116,7 @@ try {
     assert(await page.locator('#ground-water-heading').evaluate(el => Boolean(el.closest('[data-preview-topic="water"]'))));
     await gallery.screenshot({ path: `/tmp/place-story-gallery-${width}-${theme}.png` });
     assert.deepEqual(errors, []);
-    console.log(`${width}/${theme}: inline county graph, twelve true story covers, selected data/controls, retained schools/safety/health, address checklist, no duplication/overflow and axe passed`);
+    console.log(`${width}/${theme}: inline county graph, thirteen true story covers, selected data/controls, compact school check and retired Living there wrapper, address checklist, no duplication/overflow and axe passed`);
     await context.close();
   }
   const page = await browser.newPage();

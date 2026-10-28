@@ -6,7 +6,7 @@ export const COLLECTIONS = [
   { id: "money", title: "What your money buys", description: "Beyond the asking price.", stories: ["twin-towns", "the-true-monthly-cost", "price-ladder", "same-house-different-tax-bill", "priciest-and-cheapest", "income-and-home-value", "who-feels-housing-costs", "pricier-towns", "the-mortgage-market", "your-towns-time-machine", "is-today-unusual"] },
   { id: "place", title: "The feel of a place", description: "Trees, streets, space and quiet.", stories: ["the-leafy-premium", "what-quiet-costs", "where-you-can-see-the-stars", "what-a-house-buys-in-land", "what-the-housing-is", "how-big-the-houses-are", "the-long-commute-premium"] },
   { id: "motion", title: "Places in motion", description: "People move. Towns change.", stories: ["who-moves-in", "where-the-workday-goes", "is-new-jersey-building", "how-long-homes-sit", "when-the-town-was-built"] },
-  { id: "surface", title: "Look beneath the surface", description: "The patterns you might otherwise miss.", stories: ["the-flood-claims-calendar", "sites-and-cleanup", "when-the-power-goes-out", "where-internet-reaches", "water-you-can-check", "living-higher", "the-hottest-counties", "pavement-or-lawn", "how-data-gets-rewritten"] },
+  { id: "surface", title: "Look beneath the surface", description: "The patterns you might otherwise miss.", stories: ["health-in-context", "the-flood-claims-calendar", "sites-and-cleanup", "when-the-power-goes-out", "where-internet-reaches", "water-you-can-check", "living-higher", "the-hottest-counties", "pavement-or-lawn", "how-data-gets-rewritten"] },
 ] as const;
 
 export type CollectionId = (typeof COLLECTIONS)[number]["id"];
@@ -22,6 +22,7 @@ export const storySlug = (story: Story) => story.href.split("/").at(-1)!;
 
 /** Short library previews; full story descriptions and search vocabulary stay intact. */
 export const STORY_PREVIEWS: Record<string, string> = {
+  "health-in-context":"Health estimates, with their actual geography and uncertainty.",
   "sites-and-cleanup":"What cleanup records say about a place—and what they cannot say about a home.",
   "when-the-power-goes-out":"Annual outages, with and without major events. Utility records, not town rankings.",
   "where-internet-reaches":"Fiber and wired offers. Different places, dates and denominators.",

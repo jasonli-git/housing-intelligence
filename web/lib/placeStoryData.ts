@@ -19,7 +19,7 @@ export async function initialPlaceStory(topic: PlaceStoryTopic): Promise<PlaceSt
     topic === "migration" ? api.migration(id) : null,
     topic === "utilities" ? api.utilities(id):null,
     topic === "utilities" ? api.freshness().then(f=>f?.sources.find(s=>s.source_id==="nj_bpu_reports")?.inquiries?.at(-1)??null):null,
-    topic === "broadband" ? api.community(id):null,
+    (topic === "broadband" || topic === "health") ? api.community(id):null,
   ]);
   if (!region || !packet) throw new Error("Princeton story pilot requires its published packet");
   const county = topic === "past" ? region.ancestors.find(a => a.level === "county") : undefined;

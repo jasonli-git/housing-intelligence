@@ -4,6 +4,7 @@ import { formatMetric, formatValue } from "./format";
 import { marginLabel } from "./uncertainty";
 import { surveyYears } from "./periods";
 import { marketStorySummary } from "./marketPlaceStories";
+import { healthStorySummary } from "./healthPlaceStory";
 import { livingStorySummary } from "./livingPlaceStories";
 import type { FloodStoryData } from "./placeFloodStory";
 
@@ -20,6 +21,7 @@ export const PLACE_STORIES = {
   flood: { slug: "the-flood-claims-calendar", title: "Flood exposure & claims" },
   sites: { slug: "sites-and-cleanup", title: "Sites & cleanup" },
   utilities: { slug: "when-the-power-goes-out", title: "Power & reliability" },
+  health: { slug: "health-in-context", title: "Health in context" },
   broadband: { slug: "where-internet-reaches", title: "Internet availability" },
 } as const;
 export type PlaceStoryTopic = keyof typeof PLACE_STORIES;
@@ -74,12 +76,14 @@ export function makePlaceStoryRecord(topic: PlaceStoryTopic, place: PlaceStoryRe
     ...(topic === "past" ? { countyHistory: countyHistory && countyHistory.region_id === (place.level === "county" ? place.region_id : place.county_id) && countyHistory.data?.region_id === countyHistory.region_id ? countyHistory : null } : {}),
     ...(topic === "flood" ? { flood:extra.flood?.region_id === place.region_id ? extra.flood : null } : {}),
     ...(topic === "utilities" ? { utilities:extra.utilities?.region_id === place.region_id ? extra.utilities : null, utilityInquiry:extra.utilityInquiry ?? null } : {}),
+    ...(topic === "health" ? {community:extra.community?.region_id===place.region_id ? {...extra.community,districts:[],crime:[],broadband:[],broadband_place:null} : null} : {}),
     ...(topic === "broadband" ? { community:extra.community?.region_id === place.region_id ? {...extra.community,districts:[],health:[],crime:[]} : null } : {}), snapshot: "" };
 }
 export function summarizePlaceStory(record: PlaceStoryRecord): PlaceStorySummary {
   const unavailable: PlaceStorySummary = { available: false, headline: "Local records unavailable", period: "No matching period", source: "Coverage limited", qualifier: "Missing data is not a zero or a clean result.", rows: [] };
   const row = (id: string) => record.levels.find(l => l.metric_id === id && Number.isFinite(l.value) && typeof l.period_start === "string" && typeof l.period_end === "string" && /^\d{4}-\d{2}-\d{2}$/.test(l.period_start) && /^\d{4}-\d{2}-\d{2}$/.test(l.period_end));
   const chartRow = (l: PacketLevel, label: string) => ({ label, value: l.value, formatted: formatMetric(l.value, l.unit, l.metric_id), margin: marginLabel(l.value, l.margin_of_error ?? null, l.unit, l.metric_id) ?? undefined });
+  if(record.topic === "health") return healthStorySummary(record);
   const additional = marketStorySummary(record);
   if (additional) return additional;
   const living = livingStorySummary(record);
