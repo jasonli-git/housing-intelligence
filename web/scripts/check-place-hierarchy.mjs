@@ -16,7 +16,7 @@ try {
     assert(await opening.isVisible());
     assert.equal(await opening.locator('details').count(), 0, 'all primary findings and qualifications are visible');
     assert.equal(await page.locator('.orientation-details').count(), 0, 'no market disclosure in the header');
-    assert(await opening.getByText(/most expensive of/).isVisible(), 'ranked market sentence visible in the market section');
+    assert(await opening.getByText(/most expensive of the 388/).isVisible(), 'ranked market sentence visible in the market section');
     assert(await opening.evaluate(el => Boolean(el.compareDocumentPosition(document.getElementById('quiet-cost')) & Node.DOCUMENT_POSITION_FOLLOWING)), 'market before household costs');
     assert(await opening.getByText('Typical home value', { exact: true }).isVisible());
     assert(await opening.getByText('Typical market rent', { exact: true }).isVisible());

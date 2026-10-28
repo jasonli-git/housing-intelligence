@@ -40,7 +40,8 @@ try {
     assert.equal(await page.locator('.place-overview-context').count(),0,'duplicate cost sidebar removed');
     assert.equal(await ranks.locator('a a').count(),0,'revision links are not nested in measure links');
     for(const notice of await ranks.locator('.figure-updated a').all()) assert.equal(await notice.getAttribute('href'),'/changes');
-    assert.equal(await ranks.locator('li').count(),5);
+    assert.equal(await ranks.locator('li').count(),1,'only the standout: the property tax bill');
+    assert.equal(await ranks.getByRole('button',{name:'Next ranked measures'}).count(),0,'a single standout is a plain row, not a carousel');
     assert((await ranks.locator('ul').boundingBox()).height<230);
     assert(await ranks.evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('#place-story-gallery'))&Node.DOCUMENT_POSITION_FOLLOWING)));
     // The rail lists only standout measures; carousel motion needs two or more.

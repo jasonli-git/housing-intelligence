@@ -28,7 +28,7 @@ export function CompactAlternatives({name,data}:{name:string;data:SimilarPlaces|
     </li>)}</ul>:<p className={styles.note}>No qualifying lower-price match for {name}. Missing prices are not treated as zero.</p>}
     <p className={styles.note}>{zip?"Typical home-value estimates":"Median qualifying sales"}{priceWindow(data)?` · ${priceWindow(data)}`:""}{!zip?` · at least ${data.min_sales} sales per town`:""}. {matches.length>3?`Three highlights; all ${matches.length} matches below.`:""}</p>
     {matches.length>0&&<>
-      <h4 className={styles.matchHeading}>The match, side by side</h4>
+      <h3 className={styles.matchHeading}>The match, side by side</h3>
       <p className={styles.note}>At least {Math.round((1-data.cheaper_by)*100)}% lower prices; commute no more than {data.commute_minutes} minutes longer. Similarity uses the housing measures below—not schools or safety.</p>
       <div className={styles.matchScroll} tabIndex={0} role="region" aria-label={`Compare matching characteristics with ${name}`}>
         <table className={styles.matchTable}>
