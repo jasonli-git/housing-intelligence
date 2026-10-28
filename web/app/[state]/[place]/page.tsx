@@ -528,8 +528,6 @@ export default async function RegionPage({
 
       <div className="region-standard-content">
 
-      {marketFirst && <CompactHousingProfile items={profile} peers={peerNoun(peer_level)} />}
-
       {marketFirst && <PlaceMarketOpening levels={packet.levels} metrics={packet.metrics}
         uncertainties={uncertainties} peers={peers} ownId={regionId} cohorts={marketCohorts} histories={series}
         reportHref={`${regionPath(regionId)}/report`}
@@ -620,7 +618,10 @@ export default async function RegionPage({
       </ConsumerReading>
       </QuietAnchor>
       {marketFirst && <div className={styles.placeData}>
+        <div className={styles.aboutMeasures}>
+        <CompactHousingProfile items={profile} peers={peerNoun(peer_level)} />
         <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`} revisions={new Map(profile.flatMap(item=>item.updated?[[item.metric_id,item.updated] as const]:[]))}/>
+        </div>
         <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} />
       </div>}
       <ExhibitGallery>

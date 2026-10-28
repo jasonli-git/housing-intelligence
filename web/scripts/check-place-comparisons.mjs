@@ -12,7 +12,7 @@ try {
     const ranks=page.locator('section[aria-labelledby="place-comparisons-heading"]');
     const alternatives=page.locator('section[aria-labelledby="similar-places-heading"]');
     const spacing=await page.evaluate(()=>{
-      const selectors=['nav[aria-label="Place sections"]','#place-housing-profile','#place-market','#quiet-cost > section','#place-understand','#place-explore > section'];
+      const selectors=['nav[aria-label="Place sections"]','#place-market','#quiet-cost > section','#place-understand','#place-explore > section'];
       const boxes=selectors.map(s=>document.querySelector(s).getBoundingClientRect());
       return {expected:parseFloat(getComputedStyle(document.querySelector('#quiet-cost')).marginTop),gaps:boxes.slice(1).map((box,i)=>box.top-boxes[i].bottom)};
     });
@@ -28,7 +28,9 @@ try {
     const profile=page.locator('#place-housing-profile');
     assert.equal(await profile.locator('[data-profile-primary] article').count(),3);
     assert.equal(await profile.locator('[data-profile-more]').count(),1);
-    assert(await profile.evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('#place-market'))&Node.DOCUMENT_POSITION_FOLLOWING)));
+    assert.equal(await page.locator('#place-about-frame #place-housing-profile').count(),1);
+    assert(await profile.evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('#place-comparisons-heading'))&Node.DOCUMENT_POSITION_FOLLOWING)));
+    if(width>1000) assert((await profile.boundingBox()).x<(await ranks.boundingBox()).x,'profile sits left of ranked measures');
     await profile.getByText('More about the housing here',{exact:false}).click();
     assert(await profile.locator('[data-profile-more] article').count()>0);
     await profile.getByText('More about the housing here',{exact:false}).click();

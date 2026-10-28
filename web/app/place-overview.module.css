@@ -68,6 +68,13 @@
 .page.page :global(.place-overview-context .quiet-profile-more summary) { min-height: 44px; font-size: 12px; }
 .page.page :global(.local-understand-group) { margin-top: 2rem; }
 .placeData { margin-top: .8rem; }
+.aboutMeasures { display: grid; grid-template-columns: minmax(0,1fr); gap: 1.25rem; margin-bottom: 1rem; }
+.aboutMeasures > section { min-width: 0; margin: 0; }
+@media(min-width:1001px) {
+  .aboutMeasures { grid-template-columns: minmax(290px,1fr) minmax(0,2fr); gap: 1.5rem; align-items: start; }
+  .aboutMeasures > section:first-child { padding-right: 1.5rem; border-right: 1px solid var(--border); }
+}
+@media print { .aboutMeasures { display: block; } }
 .placeData > section { margin: 0; }
 .placeData > section + section { margin-top: 1rem; }
 .page :global(#place-about-frame) { padding: clamp(.85rem,2vw,1.25rem); border: 1px solid color-mix(in srgb,var(--border) 75%,transparent); border-radius: 14px; background: linear-gradient(145deg,color-mix(in srgb,var(--plate-accent) 3%,transparent),transparent 65%),color-mix(in srgb,var(--surface-card) 35%,transparent); }

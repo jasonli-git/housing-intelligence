@@ -16,7 +16,7 @@ export function CompactHousingProfile({items,peers}:{items:ProfileItem[];peers:s
     {item.updated&&<div className={styles.revision}><UpdatedMark updated={item.updated}/></div>}
   </article>)}</div>;
   return <section id="place-housing-profile" className={styles.profile} aria-labelledby="place-housing-profile-heading">
-    <h2 id="place-housing-profile-heading">Housing at a glance</h2>
+    <h3 id="place-housing-profile-heading">Housing profile</h3>
     <div data-profile-primary>{figures(picked)}</div>
     {rest.length>0&&<details className={styles.more} data-profile-more>
       <summary>More about the housing here <span aria-hidden="true">+</span></summary>

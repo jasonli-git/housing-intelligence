@@ -29,7 +29,7 @@ export function PlaceComparisonRail({name,peers,levels,uncertainties,reportHref,
   };
   if(!items.length)return null;
   return <section className={styles.comparisons} aria-labelledby="place-comparisons-heading">
-    <header><h3 id="place-comparisons-heading">How it compares</h3><Link href={`${reportHref}#report-current`}>All measures →</Link></header>
+    <header><h3 id="place-comparisons-heading">Ranked measures</h3><Link href={`${reportHref}#report-current`}>All measures →</Link></header>
     <p className={styles.note}>Current-value rank among {peers} · lower → higher. This is a rank scale, not a value scale; bands include ties and 90% survey rank ranges.</p>
     <div className={railStyles.rail}>
     <button type="button" className={`${railStyles.railArrow} ${railStyles.previous}`} aria-label="Previous ranked measures" aria-controls={trackId} disabled={edges.start} onClick={()=>move(-1)}>‹</button>
