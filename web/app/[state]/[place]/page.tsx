@@ -55,6 +55,7 @@ import { IndexedComparison } from "@/components/IndexedComparison";
 import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Masthead } from "@/components/Masthead";
 import { QuietAnchor, QuietCheckTopics, QuietDisclosure, QuietProfile } from "@/components/QuietCounty";
+import { CompactHousingProfile } from "@/components/CompactHousingProfile";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
 import { api, artifactUrl, type PacketLevel, type Region, regionsWithData } from "@/lib/api";
 import { indexedComparison } from "@/lib/chartInsights";
@@ -527,10 +528,7 @@ export default async function RegionPage({
 
       <div className="region-standard-content">
 
-      {marketFirst && profile.length > 0 && <section id="place-housing-profile" className={styles.housingProfile} aria-labelledby="place-housing-profile-heading">
-        <h2 id="place-housing-profile-heading">Housing at a glance</h2>
-        <QuietProfile items={profile} peers={peerNoun(peer_level)} />
-      </section>}
+      {marketFirst && <CompactHousingProfile items={profile} peers={peerNoun(peer_level)} />}
 
       {marketFirst && <PlaceMarketOpening levels={packet.levels} metrics={packet.metrics}
         uncertainties={uncertainties} peers={peers} ownId={regionId} cohorts={marketCohorts} histories={series}

@@ -37,3 +37,11 @@
 - Visually inspected mobile and desktop profile captures; adjusted inherited portrait styles to keep the restored block compact.
 - `NEXT_PUBLIC_ARTIFACT_URL=http://localhost:8093 npx next build --debug-build-paths='app/[state]/[place]/page.tsx,app/compare/page.tsx,app/search.json/route.ts,app/states.json/route.ts'`: passed, 1,188 static routes. This is a scoped export, not a full-site build.
 - `git diff --check`: passed.
+
+## Follow-up: compact aesthetic pass
+
+- Replaced the pilot's nested QuietProfile presentation with `CompactHousingProfile.tsx` and its own CSS module. The profile now has an open editorial-strip layout, a quiet uppercase heading, three aligned desktop columns and a slim disclosure row. Mobile pairs labels/context on the left with values/margins on the right.
+- Preserved the original primary selection, remaining figures, definitions, context ranks, margins and revision links from `housingProfile`. Ranked measures and other place pages are unchanged.
+- Removed the previous profile-specific override block from `place-overview.module.css`; the new component avoids inheriting portrait cards, decorative dots and nested rounded surfaces.
+- Updated the browser harness's profile selectors for the new component. All eight responsive/theme cases passed, including profile expansion, consistent section gaps, scoped axe, overflow and the existing carousel/alternatives navigation; nonpilot Hoboken passed. Visually reviewed 390px and 1440px captures.
+- `npm run typecheck` and all 852 web tests passed. The same scoped production export command above passed with 1,188 routes; `git diff --check` passed. No new data, numeric or matching changes; local only.

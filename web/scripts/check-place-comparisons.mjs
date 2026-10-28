@@ -26,11 +26,11 @@ try {
     assert.equal(await page.locator('#place-about-frame #place-story-gallery').count(),1);
     assert.equal(await page.locator('#place-about-frame #community-schools-heading').count(),0,'practical school check remains outside the exploration frame');
     const profile=page.locator('#place-housing-profile');
-    assert.equal(await profile.locator('.quiet-profile > .quiet-profile-grid article').count(),3);
-    assert.equal(await profile.locator('.quiet-profile-more').count(),1);
+    assert.equal(await profile.locator('[data-profile-primary] article').count(),3);
+    assert.equal(await profile.locator('[data-profile-more]').count(),1);
     assert(await profile.evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('#place-market'))&Node.DOCUMENT_POSITION_FOLLOWING)));
     await profile.getByText('More about the housing here',{exact:false}).click();
-    assert(await profile.locator('.quiet-profile-more article').count()>0);
+    assert(await profile.locator('[data-profile-more] article').count()>0);
     await profile.getByText('More about the housing here',{exact:false}).click();
     assert.equal(await ranks.locator('details').count(),0);
     assert.equal(await page.locator('.standouts-disclosure').count(),0);

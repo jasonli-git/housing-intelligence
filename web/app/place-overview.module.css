@@ -208,20 +208,3 @@
 .fiveSections :global(#quiet-cost > section),.fiveSections :global(#place-explore > section) { margin: 0; padding-top: 0; border-top: 0; }
 .fiveSections :global(#quiet-cost > section > .section-head) { padding-top: 0; }
 .fiveSections :global(#place-understand > :last-child) { margin-bottom: 0; }
-
-/* The housing profile orients the reader before market prices; ranks remain below. */
-.housingProfile { margin: 0 0 var(--place-section-gap); padding: .85rem 1rem; border: 1px solid var(--border); border-radius: 10px; background: var(--glass); }
-:global(body:has(.horizon-page)) main:global(#main-content).page .housingProfile > h2 { margin: 0 !important; padding: 0 !important; font: 500 14px/1.4 var(--font-text) !important; letter-spacing: 0 !important; }
-.housingProfile > h2::before,.housingProfile > h2::after { content: none !important; }
-.housingProfile :global(.quiet-profile) { margin: 0; padding: 0; }
-.housingProfile :global(.quiet-profile > .quiet-label),.housingProfile :global(.quiet-portrait-dots),.housingProfile :global(.quiet-portrait-house) { display: none; }
-:global(body:has(.horizon-page)) main:global(#main-content).page .housingProfile.housingProfile :global(.quiet-profile-grid) { grid-template-columns: repeat(3,minmax(0,1fr)); gap: .75rem 1rem; margin: .7rem 0 0; padding: 0; border: 0; border-radius: 0; background: transparent !important; box-shadow: none; }
-:global(body:has(.horizon-page)) main:global(#main-content).page .housingProfile :global(.quiet-profile-grid article) { display: block; grid-row: auto; grid-column: auto; padding: 0; border: 0; }
-.housingProfile :global(.quiet-profile-grid article + article) { padding-left: 1rem; border-left: 1px solid var(--border); }
-:global(body:has(.horizon-page)) main:global(#main-content).page .housingProfile :global(.quiet-profile-grid strong) { font-size: 25px; line-height: 1.15; }
-.housingProfile :global(.quiet-profile-more) { margin-top: .4rem; }
-.housingProfile :global(.quiet-profile-more > summary) { display: flex; align-items: center; gap: .4rem; min-height: 44px; padding: 0; font: 12px/1.4 var(--font-text); }
-@media(max-width:600px) {
-  :global(body:has(.horizon-page)) main:global(#main-content).page .housingProfile.housingProfile :global(.quiet-profile-grid) { grid-template-columns: minmax(0,1fr); gap: .65rem; }
-  .housingProfile :global(.quiet-profile-grid article + article) { padding: .65rem 0 0; border-left: 0; border-top: 1px solid var(--border); }
-}
