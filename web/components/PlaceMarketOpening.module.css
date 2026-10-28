@@ -64,4 +64,5 @@
   .axisText { font-size: 15px; }
 }
 @media print { .peerReading a, .instruction { display: none; } }
-.standing { max-width: 75ch; margin: .9rem 0 0; color: var(--text-secondary); font: 13px/1.55 var(--font-text); }
+/* The section's lede: the one ranked sentence, set as reading text under the title. */
+.standing { max-width: 62ch; margin: .5rem 0 .9rem; padding-left: 1rem; border-left: 2px solid var(--plate-accent,var(--series-1)); color: var(--plate-ink,var(--text-primary)); font: 400 clamp(17px,1.6vw,20px)/1.45 Georgia,serif; letter-spacing: -.01em; text-wrap: pretty; }

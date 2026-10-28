@@ -51,6 +51,7 @@ export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownI
 
   return <section className={styles.opening} id="place-market" aria-labelledby="place-market-heading">
     <div className={styles.heading}><h2 id="place-market-heading">The housing market</h2><Link href={`${reportHref}#report-measures`}>Figures & sources <span aria-hidden="true">↗</span></Link></div>
+    {standing.map((sentence) => <p key={sentence} className={styles.standing}>{sentence}</p>)}
     <p className={styles.instruction}>Box: middle half of towns · line: median · ends: min–max. Hover, drag or use <kbd>←</kbd> <kbd>→</kbd> to explore towns.</p>
     <div className={styles.findings}>
       {finding(home, price?.basis === "transactions" ? "Median recorded sale price" : "Typical home value", "No current home-value index or recent qualifying sale-price median is available.", price?.basis === "transactions" ? "Qualifying sales—not the value of every home." : "Modeled value—not a sale price or appraisal.")}
@@ -62,6 +63,5 @@ export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownI
       <div className={styles.tenureBar} role="img" aria-label={`${formatMetric(occupied.value, occupied.unit, occupied.metric_id)} owner-occupied; ${formatMetric(1 - occupied.value, occupied.unit, occupied.metric_id)} rented, among occupied homes`}><span style={{ width: `${occupied.value * 100}%` }} /></div>
       <p className={styles.annotation}>Occupied homes · Census ACS {surveyYears(occupied.period_start, occupied.period_end)} · 90% margin: {marginLabel(occupied.value, uncertainties.value.get(occupied.metric_id)?.margin ?? null, occupied.unit, occupied.metric_id)}</p>
     </div>}
-    {standing.map((sentence) => <p key={sentence} className={styles.standing}>{sentence}</p>)}
   </section>;
 }
