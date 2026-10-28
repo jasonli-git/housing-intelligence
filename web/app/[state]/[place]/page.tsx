@@ -619,7 +619,6 @@ export default async function RegionPage({
       </QuietAnchor>
       {countyHistoryStory && <CountyHistoryContext record={countyHistoryStory} />}
       {marketFirst && <PlaceStoryGallery records={placeStoryRecords.filter(record => record.topic !== "past")} artifactUrl={artifactUrl} />}
-      {marketFirst && <section className={styles.addressChecks} aria-labelledby="place-address-checks-heading"><div><h3 id="place-address-checks-heading">Check the actual home</h3><p>Area figures don’t establish one home’s risk, school assignment or service.</p></div><Link href={`/guide?place=${regionId}#guide-checks-heading`}>Open the address checklist <span aria-hidden="true">↗</span></Link></section>}
       <ExhibitGallery>
       {!marketFirst && <>
       <h3 className="exhibit-group-head" id="field-notes">The market</h3>
@@ -681,6 +680,7 @@ export default async function RegionPage({
         </div>
       </details>
       </ExhibitGallery>
+      {marketFirst && <section className={styles.addressChecks} aria-labelledby="place-address-checks-heading"><div><h3 id="place-address-checks-heading">Check the actual home</h3><p>Area figures don’t establish one home’s risk, school assignment or service.</p></div><Link href={`/guide?place=${regionId}#guide-checks-heading`}>Open the address checklist <span aria-hidden="true">↗</span></Link></section>}
       </section>
       <div id="place-explore">
       <SimilarPlaces name={name} state={region.state_code} data={similar} />
