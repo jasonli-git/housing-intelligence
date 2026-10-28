@@ -9,7 +9,14 @@ export function CompactHousingProfile({items,peers}:{items:ProfileItem[];peers:s
   const primary=items.filter(item=>["acs_median_hh_income","acs_renter_cost_burden","modiv_median_year_built"].includes(item.metric_id));
   const picked=primary.length?primary:items.slice(0,3);
   const rest=items.filter(item=>!picked.includes(item));
-  const figures=(rows:ProfileItem[])=><div className={styles.figures}>{rows.map(item=><article key={item.metric_id} className={styles.figure} data-metric={item.metric_id}>
+  const figures=(rows:ProfileItem[],portrait=false)=><div className={`${styles.figures}${portrait?` ${styles.portrait}`:""}`}>{rows.map(item=><article key={item.metric_id} className={styles.figure} data-metric={item.metric_id}>
+    {/* The earlier "Housing, at a glance" portrait's marks (QuietProfile): decoration only. */}
+    {portrait&&item.metric_id==="acs_renter_cost_burden"&&/^\d+(\.\d+)?%$/.test(item.value)&&<div className={styles.dots} aria-hidden="true">
+      {Array.from({length:100},(_,i)=><i key={i} className={i<Math.round(Number.parseFloat(item.value))?styles.filled:undefined}/>)}
+    </div>}
+    {portrait&&item.metric_id==="modiv_median_year_built"&&<svg className={styles.house} aria-hidden="true" viewBox="0 0 240 120" fill="none">
+      <path d="M5 110H235M30 110V56L88 14L146 56V110M20 63L88 14L156 63M146 110V72L188 43L229 72V110M68 110V76H99V110M43 64H61V82H43ZM111 64H129V82H111ZM171 77H193V94H171ZM71 27V8H82V19"/>
+    </svg>}
     <div className={styles.label}><Term id={item.metric_id} definition={item.definition} why={null}>{item.label}</Term></div>
     <p className={styles.value}><strong>{item.value}</strong>{item.margin&&<span>{item.margin}</span>}</p>
     {item.context&&<p className={styles.context}>{item.context.words}{item.context.rank&&<> · {item.context.rank.best!==undefined&&item.context.rank.worst!==undefined?`${item.context.rank.best}–${item.context.rank.worst}`:item.context.rank.value} of {item.context.rank.of} {peers}</>}</p>}
@@ -17,7 +24,7 @@ export function CompactHousingProfile({items,peers}:{items:ProfileItem[];peers:s
   </article>)}</div>;
   return <section id="place-housing-profile" className={styles.profile} aria-labelledby="place-housing-profile-heading">
     <h3 id="place-housing-profile-heading">Housing profile</h3>
-    <div data-profile-primary>{figures(picked)}</div>
+    <div data-profile-primary>{figures(picked,true)}</div>
     {rest.length>0&&<details className={styles.more} data-profile-more>
       <summary>More about the housing here <span aria-hidden="true">+</span></summary>
       {figures(rest)}

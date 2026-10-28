@@ -1,16 +1,33 @@
-.profile { min-width: 0; margin: 0; padding: .85rem 1rem .2rem; border: 1px solid var(--glass-edge,var(--border)); border-radius: 12px; background: var(--glass); }
-:global(body:has(.horizon-page)) main:global(#main-content) .profile > h3 { margin: 0 0 .8rem !important; padding: 0 !important; font: 500 14px/1.4 var(--font-text) !important; letter-spacing: 0 !important; color: var(--text-primary); }
+/* One column at every width: on desktop the profile is the About section's side panel. */
+.profile { position: relative; min-width: 0; margin: 0; padding: 1rem 1.1rem .2rem; overflow: hidden; isolation: isolate; border: 1px solid var(--glass-edge,var(--border)); border-radius: 14px; background: radial-gradient(ellipse at 0% 0%,color-mix(in srgb,var(--plate-accent) 10%,transparent),transparent 60%),var(--glass); }
+.profile::before { content: ""; position: absolute; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg,transparent,var(--plate-accent),transparent); opacity: .8; }
+:global(body:has(.horizon-page)) main:global(#main-content) .profile > h3 { margin: 0 0 .4rem !important; padding: 0 !important; color: var(--plate-accent); font: 600 11px/1.4 var(--font-mono) !important; letter-spacing: .16em !important; text-transform: uppercase; }
 .profile > h3::before,.profile > h3::after { content: none !important; }
-.figures { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1.5rem; }
-.figure { min-width: 0; padding: 0 0 .85rem; }
-.figure + .figure { padding-left: 1.5rem; border-left: 1px solid var(--border); }
-.label { color: var(--text-secondary); font: 400 12px/1.4 var(--font-text); }
-.value { display: flex; align-items: baseline; flex-wrap: wrap; gap: .4rem; margin: .35rem 0; }
-.value strong { color: var(--text-primary); font: 400 clamp(24px,2.5vw,30px)/1.1 Georgia,serif; letter-spacing: -.035em; }
+
+.figures { display: grid; grid-template-columns: minmax(0,1fr); }
+.figure { position: relative; min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: baseline; gap: .2rem .8rem; padding: .7rem 0; }
+.figure + .figure { border-top: 1px solid var(--border); }
+.label { grid-column: 1; color: var(--text-secondary); font: 400 12px/1.4 var(--font-text); }
+.value { grid-column: 2; grid-row: 1 / 3; align-self: center; display: flex; flex-direction: column; align-items: flex-end; gap: .2rem; margin: 0; text-align: right; }
+.value strong { color: var(--text-primary); font: 400 25px/1.1 Georgia,serif; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
 .value > span { color: var(--text-secondary); font: 10px/1.4 var(--font-text); white-space: nowrap; }
-.context { margin: .25rem 0 0; color: var(--text-secondary); font: 11px/1.45 var(--font-text); }
-.revision { margin-top: .35rem; color: var(--text-secondary); font: 10px/1.45 var(--font-text); }
+.context { grid-column: 1; margin: 0; color: var(--text-secondary); font: 10px/1.45 var(--font-text); }
+.revision { grid-column: 1 / -1; margin: .15rem 0 0; color: var(--text-secondary); font: 10px/1.45 var(--font-text); }
 .revision :global(.figure-updated) { display: block; font: inherit; }
+
+/* The three headline figures, as the earlier portrait drew them: income large on the
+   accent wash, renter burden as 100 households, the year built over a line-drawn house. */
+.portrait .figure { grid-template-columns: minmax(0,1fr); padding: .9rem 0; }
+.portrait :is(.label,.value,.context,.revision) { grid-column: 1; grid-row: auto; }
+.portrait .value { flex-direction: row; align-items: baseline; flex-wrap: wrap; gap: .45rem; text-align: left; }
+.portrait .value strong { font-size: 32px; }
+.portrait .figure[data-metric="acs_median_hh_income"] .value strong { font-size: clamp(38px,3.6vw,46px); letter-spacing: -.05em; }
+.portrait .figure[data-metric="acs_renter_cost_burden"] { padding-right: 5.6rem; }
+.dots { position: absolute; top: 1rem; right: 0; display: grid; grid-template-columns: repeat(10,4px); gap: 4px; }
+.dots i { width: 4px; height: 4px; border-radius: 50%; background: color-mix(in srgb,var(--plate-accent) 18%,transparent); }
+.dots .filled { background: color-mix(in srgb,var(--plate-accent) 75%,transparent); }
+.house { position: absolute; right: -.25rem; bottom: 0; z-index: -1; width: 58%; height: 100%; stroke: var(--plate-accent); stroke-width: 1; opacity: .18; pointer-events: none; }
+
 .more { border-top: 1px solid var(--border); }
 .more > summary { display: flex; align-items: center; justify-content: space-between; min-height: 44px; gap: 1rem; cursor: pointer; list-style: none; color: var(--text-secondary); font: 12px/1.4 var(--font-text); }
 .more > summary::-webkit-details-marker { display: none; }
@@ -18,14 +35,5 @@
 .more > summary > span { font: 300 20px/1 var(--font-text); transition: transform 150ms ease; }
 .more[open] > summary > span { transform: rotate(45deg); }
 .more > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
-.more .figures { padding-top: .65rem; row-gap: 1rem; }
-
-  .figures { grid-template-columns: minmax(0,1fr); gap: 0; }
-  .figure { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: baseline; gap: .2rem .8rem; padding: .65rem 0; }
-  .figure + .figure { padding: .65rem 0; border-left: 0; border-top: 1px solid var(--border); }
-  .value { grid-column: 2; grid-row: 1 / 3; align-self: center; align-items: flex-end; flex-direction: column; gap: .2rem; margin: 0; text-align: right; }
-  .value strong { font-size: 25px; }
-  .context { grid-column: 1; margin: 0; font-size: 10px; }
-  .revision { grid-column: 1 / -1; margin: .15rem 0 0; }
-  .profile > h3 { margin-bottom: .3rem !important; }
 @media(prefers-reduced-motion:reduce) { .more > summary > span { transition: none; } }
+@media print { .dots,.house { display: none; } }
