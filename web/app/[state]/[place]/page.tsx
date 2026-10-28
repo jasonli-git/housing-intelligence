@@ -12,6 +12,8 @@ import { marketPortraitData } from "@/lib/marketPortraitData";
 import { makePlaceStoryRecord, PLACE_STORIES, storyHistoryMetrics, type PlaceStoryTopic } from "@/lib/placeStories";
 import { stampPlaceStory } from "@/lib/placeStoryData";
 import { PlaceStoryGallery } from "@/components/PlaceStoryGallery";
+import { PlaceComparisonRail } from "@/components/PlaceComparisonRail";
+import { CompactAlternatives } from "@/components/CompactAlternatives";
 import { SchoolCheck } from "@/components/SchoolCheck";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
@@ -575,7 +577,7 @@ export default async function RegionPage({
       <div id="about-picture" className="about-anchor" />
       <QuietAnchor enabled={quiet} id="quiet-highlights">
       <ConsumerReading reading={consumer} section="what_stands_out" heading={quiet ? "The local picture" : `What stands out in ${name}`} annotation={editorialAnnotation} paperNote={quiet}>
-      {standing.length > 0 && (
+      {!marketFirst && standing.length > 0 && (
         <details className="standouts-disclosure">
           <summary>
             <span className="standouts-disclosure-copy">
@@ -613,6 +615,7 @@ export default async function RegionPage({
       )}
       </ConsumerReading>
       </QuietAnchor>
+      {marketFirst && <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`}/>}
       {marketFirst && <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} />}
       <ExhibitGallery>
       {!marketFirst && <>
@@ -678,7 +681,7 @@ export default async function RegionPage({
       {marketFirst && <div className={styles.homeChecks}><SchoolCheck data={community} reportHref={`${regionPath(regionId)}/report`}/><section className={styles.addressChecks} aria-labelledby="place-address-checks-heading"><div><h3 id="place-address-checks-heading">Check the actual home</h3><p>Area figures don’t establish one home’s risk, school assignment or service.</p></div><Link href={`/guide?place=${regionId}#guide-checks-heading`}>Open the address checklist <span aria-hidden="true">↗</span></Link></section><p><Link href={`${regionPath(regionId)}/report#report-community`}>Public-safety reporting & sources →</Link></p></div>}
       </section>
       <div id="place-explore">
-      <SimilarPlaces name={name} state={region.state_code} data={similar} />
+      {marketFirst ? <CompactAlternatives name={name} data={similar}/> : <SimilarPlaces name={name} state={region.state_code} data={similar} />}
       </div>
 
       <p className="place-report-line" id="region-detailed-data">

@@ -1,0 +1,37 @@
+.comparisons,.alternatives { min-width: 0; margin: 1.2rem 0; }
+.comparisons header,.alternatives header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .25rem 1rem; }
+.comparisons header h3,.alternatives header h3 { margin: 0; font: 500 18px/1.3 var(--font-text); letter-spacing: -.02em; }
+.comparisons header a,.alternatives header a { display: inline-flex; align-items: center; min-height: 44px; color: var(--plate-accent); font: 12px/1.4 var(--font-text); }
+.note { margin: .2rem 0 .6rem; color: var(--text-secondary); font: 11px/1.5 var(--font-text); }
+.rail { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 2rem) / 4.2); gap: .65rem; margin: 0; padding: 3px 3px 10px; list-style: none; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.rail li { min-width: 0; display: flex; scroll-snap-align: start; }
+.tile { flex: 1; min-width: 0; padding: .65rem .75rem; border: 1px solid var(--border); border-radius: 9px; background: color-mix(in srgb,var(--surface-card) 60%,transparent); display: flex; flex-direction: column; gap: .3rem; color: var(--text-primary); text-decoration: none; }
+.label { font: 500 11px/1.4 var(--font-text); }
+.value { font: 400 23px/1.15 Georgia,serif; font-variant-numeric: tabular-nums; }
+.value small { color: var(--text-secondary); font: 10px/1.4 var(--font-text); white-space: nowrap; }
+.rank { color: var(--text-secondary); font: 11px/1.4 var(--font-text); }
+.position { position: relative; display: block; height: 4px; margin: .2rem 2px; background: var(--border); border-radius: 2px; }
+.position i { position: absolute; height: 4px; background: color-mix(in srgb,var(--plate-accent) 40%,var(--surface-card)); }
+.position b { position: absolute; top: -2px; width: 3px; height: 8px; transform: translateX(-50%); background: var(--plate-accent); }
+.period { margin-top: auto; color: var(--text-secondary); font: 10px/1.4 var(--font-text); }
+.alternatives { padding-block: 1rem; border-block: 1px solid var(--border); }
+.alternatives ul { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1rem; list-style: none; padding: 0; margin: .3rem 0 .75rem; }
+.alternatives li { min-width: 0; padding: .7rem 0; }
+.alternatives li > a { display: inline-flex; align-items: center; min-height: 44px; font: 500 16px/1.3 var(--font-text); color: var(--kind-town); }
+.alternatives li > a:global(.destination-zip) { color: var(--kind-zip); }
+.alternatives li p { margin: .1rem 0 .3rem; font: 13px/1.4 var(--font-text); }
+.alternatives li small { color: var(--text-secondary); font: 11px/1.5 var(--font-text); }
+.method { color: var(--text-secondary); font: 11px/1.5 var(--font-text); }
+.method summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: .4rem; }
+.method summary::before { content: "+"; }
+.method[open] summary::before { content: "−"; }
+.tile:focus-visible,.rail:focus-visible,.method summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.tile:hover { border-color: var(--plate-accent); }
+:global(body:has(.horizon-page)) main:global(#main-content) .comparisons a.tile { border-radius: 9px; color: var(--text-primary); }
+:global(body:has(.horizon-page)) main:global(#main-content) .alternatives :global(#similar-places-heading) { position: static; margin: 0 !important; padding: 0; border: 0; font: 500 18px/1.3 var(--font-text) !important; letter-spacing: -.02em !important; }
+:global(body:has(.horizon-page)) main:global(#main-content) .alternatives :global(#similar-places-heading)::before,
+:global(body:has(.horizon-page)) main:global(#main-content) .alternatives :global(#similar-places-heading)::after { content: none; }
+.method a { color: var(--kind-town); }
+@media(max-width:900px) { .rail { grid-auto-columns: calc((100% - 1rem)/3.1); } }
+@media(max-width:600px) { .rail { grid-auto-columns: 78%; } .alternatives ul { grid-template-columns: minmax(0,1fr); gap: 0; } .alternatives li + li { border-top: 1px solid var(--border); } }
+@media print { .rail { grid-auto-flow: row; grid-template-columns: repeat(2,minmax(0,1fr)); grid-auto-columns: auto; overflow: visible; } }
