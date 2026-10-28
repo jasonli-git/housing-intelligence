@@ -19,10 +19,12 @@ type Props = {
   histories: { metricId: string; observations: Observation[] }[];
   reportHref: string;
   revisions?: Map<string, { from: string; on: string }>;
+  /** The page's ranked sentences ("79th most expensive of 388…"): the ranks the charts do not show. */
+  standing?: string[];
 };
 
 /** Visual evidence replaces the paragraph/rank/change stack; Princeton only for now. */
-export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownId, cohorts, histories, reportHref, revisions }: Props) {
+export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownId, cohorts, histories, reportHref, revisions, standing = [] }: Props) {
   const price = homePrice(levels);
   const home = price ? levels.find(l => l.metric_id === (price.basis === "index" ? "zhvi_sfr" : "sr1a_median_sale_price")) : undefined;
   const rent = levels.find(l => l.metric_id === "zori_all");
@@ -60,5 +62,6 @@ export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownI
       <div className={styles.tenureBar} role="img" aria-label={`${formatMetric(occupied.value, occupied.unit, occupied.metric_id)} owner-occupied; ${formatMetric(1 - occupied.value, occupied.unit, occupied.metric_id)} rented, among occupied homes`}><span style={{ width: `${occupied.value * 100}%` }} /></div>
       <p className={styles.annotation}>Occupied homes · Census ACS {surveyYears(occupied.period_start, occupied.period_end)} · 90% margin: {marginLabel(occupied.value, uncertainties.value.get(occupied.metric_id)?.margin ?? null, occupied.unit, occupied.metric_id)}</p>
     </div>}
+    {standing.map((sentence) => <p key={sentence} className={styles.standing}>{sentence}</p>)}
   </section>;
 }

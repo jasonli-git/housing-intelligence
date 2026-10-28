@@ -64,3 +64,4 @@
   .axisText { font-size: 15px; }
 }
 @media print { .peerReading a, .instruction { display: none; } }
+.standing { max-width: 75ch; margin: .9rem 0 0; color: var(--text-secondary); font: 13px/1.55 var(--font-text); }

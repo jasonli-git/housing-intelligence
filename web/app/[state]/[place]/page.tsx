@@ -485,7 +485,8 @@ export default async function RegionPage({
           </div>
           {/* Every rank names its own cohort now — "12th of 21 NJ counties" — so the
               line that named it once for the whole page is gone (Milestone 28). */}
-          {(headline || lead || trade) && (
+          {/* The pilot's market section carries these sentences itself. */}
+          {!marketFirst && (headline || lead || trade) && (
             <details className="verdict-details orientation-details">
               <summary className="disclose">{marketFirst ? "More market context" : "Market context and figures"} <span className="disclose-hint"><span className="when-closed">Details</span><span className="when-open">Hide</span></span></summary>
               {headline && <p className="verdict region-orientation">{headline}</p>}
@@ -531,6 +532,7 @@ export default async function RegionPage({
       {marketFirst && <PlaceMarketOpening levels={packet.levels} metrics={packet.metrics}
         uncertainties={uncertainties} peers={peers} ownId={regionId} cohorts={marketCohorts} histories={series}
         reportHref={`${regionPath(regionId)}/report`}
+        standing={[lead || headline, trade].filter((sentence): sentence is string => Boolean(sentence))}
         revisions={new Map([...revisedBy].flatMap(([id, change]) => {
           const row = packet.levels.find(l => l.metric_id === id && l.period_start === change.period_start);
           return row ? [[id, { from: formatMetric(change.first_value, row.unit, id), on: change.last_revised_on }] as const] : [];
