@@ -43,13 +43,23 @@ try {
       assert.notEqual(await control.getAttribute('aria-valuenow'), '0', 'pointer/touch explores a real point');
     }
     for (const plot of await opening.locator('[data-portrait="trend"]').all()) {
-      const svg=plot.locator('svg');assert.equal(await svg.getAttribute('viewBox'),'0 0 440 68','line chart is 28% shorter than its previous 94-unit height');
+      const svg=plot.locator('svg');assert.equal(await svg.getAttribute('viewBox'),'0 0 160 48','trend is a miniature chart beside the headline value');
       const control = plot.getByRole('slider');
-      const before = await plot.locator('output').innerText();
+      assert(await plot.evaluate(el => {
+        const value=el.parentElement.firstElementChild.getBoundingClientRect(),chart=el.getBoundingClientRect();
+        return chart.x>=value.right && chart.width<=161 && chart.y<value.bottom && chart.bottom>value.y;
+      }),'miniature trend sits beside its headline');
+      const before = await plot.locator('output').textContent();
       await control.focus(); await page.keyboard.press('Home');
-      assert.notEqual(await plot.locator('output').innerText(), before);
+      assert.notEqual(await plot.locator('output').textContent(), before);
       await page.keyboard.press('End');
-      assert.equal(await plot.locator('output').innerText(), before);
+      assert.equal(await plot.locator('output').textContent(), before);
+      await control.scrollIntoViewIfNeeded();
+      const bounds=await control.boundingBox();
+      if(width<=760) await page.touchscreen.tap(bounds.x+bounds.width*.5,bounds.y+bounds.height/2);
+      else await page.mouse.move(bounds.x+bounds.width*.5,bounds.y+bounds.height/2);
+      const selected=Number(await control.getAttribute('aria-valuenow'));
+      assert(selected>0 && selected<Number(await control.getAttribute('aria-valuemax')),'miniature pointer/touch uses its own coordinate scale');
     }
     assert(await opening.getByRole('img', { name: /owner-occupied.*rented/ }).isVisible());
     assert(!text.includes('/mo / month'), 'rent unit appears only once');

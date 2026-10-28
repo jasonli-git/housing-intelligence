@@ -33,13 +33,17 @@
 .peerReading > span:first-child { min-width: 0; overflow-wrap: anywhere; }
 .peerReading b { font-weight: 500; margin-left: .4rem; white-space: nowrap; }
 .peerReading a { flex: none; display: inline-flex; align-items: center; min-height: 44px; color: var(--plate-accent); }
-.trend { border-top: 1px solid var(--border); }
+.valueAndTrend { display: grid; grid-template-columns: minmax(0,1fr) minmax(86px,.75fr); align-items: center; gap: .75rem; max-width: 330px; }
+.trend { position: relative; min-width: 0; width: 100%; max-width: 160px; justify-self: end; }
 .trend .plotControl { min-height: 44px; }
-.trend .chartLabel { margin-top: .45rem; }
+.trend .plotControl svg { height: 44px; }
+.sparkChange { margin: 0; min-height: 14px; text-align: right; color: var(--portrait-colour); font: 500 11px/1.3 var(--font-text); }
+.sparkChange b { font-weight: 500; }
 .trendLine { fill: none; stroke: var(--portrait-colour); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .cursor { stroke: var(--text-secondary); stroke-width: 1; stroke-dasharray: 3 4; }
-.trendDates { display: flex; justify-content: space-between; padding-left: 13.2%; padding-right: 3.6%; color: var(--text-secondary); font: 11px/1.4 var(--font-text); }
-.trendReading { display: block; margin: .2rem 0 0; min-height: 1.5em; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
+.trendDates { display: flex; justify-content: space-between; padding-inline: 5%; color: var(--text-secondary); font: 10px/1.4 var(--font-text); }
+.trendReading { position: absolute; top: 100%; right: 0; z-index: 3; visibility: hidden; pointer-events: none; margin: 0; padding: .35rem .5rem; white-space: nowrap; background: var(--surface-card); border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); font: 11px/1.5 var(--font-text); }
+.trend:hover .trendReading, .trend:focus-within .trendReading { visibility: visible; }
 .trendReading b { margin-left: .4rem; color: var(--text-primary); font-weight: 500; }
 .stock { margin: .35rem 0 0; }
 .tenureLabels { display: flex; justify-content: space-between; gap: 1rem; font: 12px/1.5 var(--font-text); }
@@ -50,11 +54,7 @@
 .next a:focus-visible, .heading a:focus-visible, .peerReading a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 .opening .chartLabel { margin-top: .3rem; margin-bottom: 0; }
 .opening .annotation { margin-block: .2rem; }
-/* Keep the trend and its dates together; the exact-value readout shares the date row. */
-.trend { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: baseline; column-gap: .5rem; }
-.trend .chartLabel, .trend .plotControl { grid-column: 1 / -1; }
-.trendDates { padding-right: 0; }
-.trendReading { margin: 0; font-size: 11px; }
+@media(max-width:380px) { .valueAndTrend { grid-template-columns: minmax(0,1fr) 96px; gap: .5rem; } }
 @media(max-width:600px) {
   .findings { grid-template-columns: minmax(0,1fr); }
   .finding { padding: .6rem 0; }

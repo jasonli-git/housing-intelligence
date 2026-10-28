@@ -16,9 +16,9 @@ function step(event: KeyboardEvent, current: number, length: number, set: (n: nu
     : ["ArrowLeft", "ArrowDown"].includes(event.key) ? Math.max(0, current - 1) : null;
   if (next !== null) { event.preventDefault(); set(next); }
 }
-function pointerX(event: PointerEvent<HTMLDivElement>) {
+function pointerX(event: PointerEvent<HTMLDivElement>, width=W) {
   const rect = event.currentTarget.getBoundingClientRect();
-  return (event.clientX - rect.left) / rect.width * W;
+  return (event.clientX - rect.left) / rect.width * width;
 }
 
 export function MarketPeerPlot({ cohort, ownId, value, label, scope }: { cohort?: MarketCohort; ownId: number; value: number; label: string; scope: string }) {
@@ -66,23 +66,24 @@ export function MarketTrend({ points, label, change }: { points: MarketPoint[]; 
   if (points.length < 2) return <p className={styles.annotation}>Comparable history unavailable.</p>;
   const start = points[0], end = points.at(-1)!, selected = points[index] ?? end;
   const low = Math.min(...points.map(p => p.value)), high = Math.max(...points.map(p => p.value));
-  const x = (date: string) => 58 + (Date.parse(date) - Date.parse(start.date)) / (Date.parse(end.date) - Date.parse(start.date) || 1) * (W - 74);
-  const y = (value: number) => high===low?32:12+(high-value)/(high-low)*40;
-  const pick = (e: PointerEvent<HTMLDivElement>) => { const px = pointerX(e); setIndex(points.reduce((best, p, i) => Math.abs(x(p.date) - px) < Math.abs(x(points[best].date) - px) ? i : best, 0)); };
+  const x = (date: string) => 8 + (Date.parse(date) - Date.parse(start.date)) / (Date.parse(end.date) - Date.parse(start.date) || 1) * 144;
+  const y = (value: number) => high===low?24:8+(high-value)/(high-low)*32;
+  const pick = (e: PointerEvent<HTMLDivElement>) => { const px = pointerX(e,160); setIndex(points.reduce((best, p, i) => Math.abs(x(p.date) - px) < Math.abs(x(points[best].date) - px) ? i : best, 0)); };
   return <div className={styles.trend} data-portrait="trend">
-    <p className={styles.chartLabel}>How it moved {change !== undefined && <b>{formatChange(change)}</b>}</p>
+    <p className={styles.sparkChange}><span className="visually-hidden">How it moved </span>{change !== undefined && <b>{formatChange(change)}</b>}</p>
     <div className={styles.plotControl} role="slider" tabIndex={0} aria-label={`Explore ${label} history`}
       aria-valuemin={0} aria-valuemax={points.length - 1} aria-valuenow={index} aria-valuetext={`${periodLabel(selected.date, "zori_all")}: ${money(selected.value)}`}
       onKeyDown={e => step(e, index, points.length, setIndex)} onPointerMove={e => { if (e.pointerType === "mouse" || e.buttons) pick(e); }}
       onPointerDown={e => { e.currentTarget.focus({ preventScroll: true }); pick(e); }}>
-      <svg viewBox={`0 0 ${W} 68`} aria-hidden="true">
-        {[...new Set([low, high])].map((v, i) => <g key={i}><line x1="58" x2={W - 16} y1={y(v)} y2={y(v)} className={styles.axis} /><text x="48" y={y(v) + 4} textAnchor="end" className={styles.axisText}>{shortMoney(v)}</text></g>)}
+      <svg viewBox="0 0 160 48" aria-hidden="true">
+        <line x1="8" x2="152" y1="40" y2="40" className={styles.axis}/>
         <path d={marketLine(points, x, y)} className={styles.trendLine} />
-        <line x1={x(selected.date)} x2={x(selected.date)} y1="8" y2="58" className={styles.cursor} />
+        <line x1={x(selected.date)} x2={x(selected.date)} y1="4" y2="44" className={styles.cursor} />
         <circle cx={x(selected.date)} cy={y(selected.value)} r="4" className={styles.ownDot} />
       </svg>
     </div>
-    <div className={styles.trendDates}><span>{periodLabel(start.date, "zori_all")}</span><span>{periodLabel(end.date, "zori_all")}</span></div>
+    <div className={styles.trendDates} title={`${periodLabel(start.date,"zori_all")}–${periodLabel(end.date,"zori_all")}`}><span>{start.date.slice(0,4)}</span><span>{end.date.slice(0,4)}</span></div>
+    <span className="visually-hidden">Trend from {periodLabel(start.date,"zori_all")} to {periodLabel(end.date,"zori_all")}; {money(low)} to {money(high)}. Each chart uses its own vertical scale.</span>
     <output className={styles.trendReading} aria-live="polite">{periodLabel(selected.date, "zori_all")} <b>{money(selected.value)}</b></output>
   </div>;
 }

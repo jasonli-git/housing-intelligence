@@ -36,11 +36,13 @@ export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownI
     return <article className={styles.finding} data-market-metric={row?.metric_id}>
       <h3>{label}</h3>
       {row ? <>
-        <p className={styles.figure}>{formatMetric(row.value, row.unit === "usd_month" ? "usd" : row.unit, row.metric_id)}{row.unit === "usd_month" && <span> / month</span>}</p>
+        <div className={styles.valueAndTrend}>
+          <p className={styles.figure}>{formatMetric(row.value, row.unit === "usd_month" ? "usd" : row.unit, row.metric_id)}{row.unit === "usd_month" && <span> / month</span>}</p>
+          <MarketTrend points={history} label={label.toLowerCase()} change={growth} />
+        </div>
         <p className={styles.date}>{row.metric_id.startsWith("z") ? "Zillow" : "Recorded sales"} · {row.metric_id === "sr1a_median_sale_price" ? windowLabel(row.period_start, row.period_end, row.metric_id) : periodLabel(row.period_end, row.metric_id)}</p>
         <p className={styles.definition}>{definition}</p>
         <MarketPeerPlot cohort={cohorts.find(c => c.metricId === row.metric_id && c.period === row.period_start)} ownId={ownId} value={row.value} label={label.toLowerCase()} scope={peers.scope === "New Jersey" ? "NJ" : peers.scope} />
-        <MarketTrend points={history} label={label.toLowerCase()} change={growth} />
         {revisions?.get(row.metric_id) && <UpdatedMark updated={revisions.get(row.metric_id)!} />}
       </> : <p className={styles.definition}>{missing}</p>}
     </article>;
@@ -53,7 +55,7 @@ export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownI
       {finding(home, price?.basis === "transactions" ? "Median recorded sale price" : "Typical home value", "No current home-value index or recent qualifying sale-price median is available.", price?.basis === "transactions" ? "Qualifying sales—not the value of every home." : "Modeled value—not a sale price or appraisal.")}
       {finding(rent, "Typical market rent", "No current market-rent index available; survey rents are not asking rents.", "Market benchmark, not existing tenants’ bills. Utilities extra.")}
     </div>
-    <p className={styles.annotation}>Same-month statewide comparisons—not just nearby towns. Trends use nominal dollars, not inflation-adjusted.</p>
+    <p className={styles.annotation}>Same-month statewide comparisons—not just nearby towns. Trends use separate scales and nominal dollars, not inflation-adjusted.</p>
     {occupied && occupied.value >= 0 && occupied.value <= 1 && <div className={styles.stock} data-portrait="tenure">
       <div className={styles.tenureLabels}><span><b>{formatMetric(occupied.value, occupied.unit, occupied.metric_id)}</b> Owner-occupied</span><span>Rented <b>{formatMetric(1 - occupied.value, occupied.unit, occupied.metric_id)}</b></span></div>
       <div className={styles.tenureBar} role="img" aria-label={`${formatMetric(occupied.value, occupied.unit, occupied.metric_id)} owner-occupied; ${formatMetric(1 - occupied.value, occupied.unit, occupied.metric_id)} rented, among occupied homes`}><span style={{ width: `${occupied.value * 100}%` }} /></div>
