@@ -64,5 +64,9 @@
   .axisText { font-size: 15px; }
 }
 @media print { .peerReading a, .instruction { display: none; } }
-/* The section's lede: the one ranked sentence, set as reading text under the title. */
-.standing { max-width: 62ch; margin: .5rem 0 .9rem; padding-left: 1rem; border-left: 2px solid var(--plate-accent,var(--series-1)); color: var(--plate-ink,var(--text-primary)); font: 400 clamp(17px,1.6vw,20px)/1.45 Georgia,serif; letter-spacing: -.01em; text-wrap: pretty; }
+/* The section's lede as an editorial card: the story cards' topic dot and accent glow. */
+.standing { max-width: 64ch; margin: .6rem 0 1rem; padding: .85rem 1.1rem 1rem; border: 1px solid var(--glass-edge,var(--border)); border-radius: 12px; background: radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--plate-accent,var(--series-1)) 9%,transparent),transparent 65%),var(--glass,var(--surface-card)); }
+.standingLabel { display: inline-flex; align-items: center; gap: .5rem; margin-bottom: .4rem; color: var(--text-secondary); font: 400 11px/1.4 var(--font-text); letter-spacing: .01em; }
+.standingLabel::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--plate-accent,var(--series-1)); }
+.standing p { margin: 0; color: var(--plate-ink,var(--text-primary)); font: 400 clamp(15px,1.3vw,17px)/1.5 Georgia,serif; letter-spacing: -.005em; text-wrap: pretty; }
+.standing p + p { margin-top: .5rem; }
