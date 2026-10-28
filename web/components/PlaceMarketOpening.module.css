@@ -64,9 +64,14 @@
   .axisText { font-size: 15px; }
 }
 @media print { .peerReading a, .instruction { display: none; } }
-/* The section's lede as an editorial card: the story cards' topic dot and accent glow. */
-.standing { max-width: 64ch; margin: .6rem 0 1rem; padding: .85rem 1.1rem 1rem; border: 1px solid var(--glass-edge,var(--border)); border-radius: 12px; background: radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--plate-accent,var(--series-1)) 9%,transparent),transparent 65%),var(--glass,var(--surface-card)); }
-.standingLabel { display: inline-flex; align-items: center; gap: .5rem; margin-bottom: .4rem; color: var(--text-secondary); font: 400 11px/1.4 var(--font-text); letter-spacing: .01em; }
+/* The section's lede as an editorial card (the story cards' topic dot and accent glow):
+   a serif headline beside the full ranked sentence, one short band on wide screens. */
+.standing { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.25fr); align-items: center; gap: .4rem 1.75rem; margin: .6rem 0 1rem; padding: .75rem 1.1rem; border: 1px solid var(--glass-edge,var(--border)); border-radius: 12px; background: radial-gradient(ellipse at 0% 0%,color-mix(in srgb,var(--plate-accent,var(--series-1)) 10%,transparent),transparent 60%),var(--glass,var(--surface-card)); }
+.standingHead, .standingBody { min-width: 0; }
+.standingLabel { display: inline-flex; align-items: center; gap: .5rem; color: var(--text-secondary); font: 400 11px/1.4 var(--font-text); letter-spacing: .01em; }
 .standingLabel::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--plate-accent,var(--series-1)); }
-.standing p { margin: 0; color: var(--plate-ink,var(--text-primary)); font: 400 clamp(15px,1.3vw,17px)/1.5 Georgia,serif; letter-spacing: -.005em; text-wrap: pretty; }
-.standing p + p { margin-top: .5rem; }
+.standing .standingTitle { margin: .2rem 0 0; color: var(--plate-ink,var(--text-primary)); font: 400 clamp(19px,1.9vw,23px)/1.2 Georgia,serif; letter-spacing: -.02em; text-wrap: balance; }
+.standingBody p { margin: 0; color: var(--text-secondary); font: 12px/1.55 var(--font-text); text-wrap: pretty; }
+.standingBody p + p { margin-top: .35rem; }
+.standingBody:only-child { grid-column: 1 / -1; }
+@media(max-width:760px) { .standing { grid-template-columns: minmax(0,1fr); } }

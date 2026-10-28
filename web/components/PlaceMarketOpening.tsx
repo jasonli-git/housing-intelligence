@@ -21,10 +21,12 @@ type Props = {
   revisions?: Map<string, { from: string; on: string }>;
   /** The page's ranked sentences ("79th most expensive of 388…"): the ranks the charts do not show. */
   standing?: string[];
+  /** Its short headline, "The 79th most expensive of 388, rising at about the typical pace". */
+  standingTitle?: string | null;
 };
 
 /** Visual evidence replaces the paragraph/rank/change stack; Princeton only for now. */
-export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownId, cohorts, histories, reportHref, revisions, standing = [] }: Props) {
+export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownId, cohorts, histories, reportHref, revisions, standing = [], standingTitle = null }: Props) {
   const price = homePrice(levels);
   const home = price ? levels.find(l => l.metric_id === (price.basis === "index" ? "zhvi_sfr" : "sr1a_median_sale_price")) : undefined;
   const rent = levels.find(l => l.metric_id === "zori_all");
@@ -51,7 +53,7 @@ export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownI
 
   return <section className={styles.opening} id="place-market" aria-labelledby="place-market-heading">
     <div className={styles.heading}><h2 id="place-market-heading">The housing market</h2><Link href={`${reportHref}#report-measures`}>Figures & sources <span aria-hidden="true">↗</span></Link></div>
-    {standing.length > 0 && <aside className={styles.standing} aria-label="Where it ranks"><span className={styles.standingLabel}>Where it ranks</span>{standing.map((sentence) => <p key={sentence}>{sentence}</p>)}</aside>}
+    {standing.length > 0 && <aside className={styles.standing} aria-label="Where it ranks"><div className={styles.standingHead}><span className={styles.standingLabel}>Where it ranks</span>{standingTitle && <p className={styles.standingTitle}>{standingTitle}</p>}</div><div className={styles.standingBody}>{standing.map((sentence) => <p key={sentence}>{sentence}</p>)}</div></aside>}
     <p className={styles.instruction}>Box: middle half of towns · line: median · ends: min–max. Hover, drag or use <kbd>←</kbd> <kbd>→</kbd> to explore towns.</p>
     <div className={styles.findings}>
       {finding(home, price?.basis === "transactions" ? "Median recorded sale price" : "Typical home value", "No current home-value index or recent qualifying sale-price median is available.", price?.basis === "transactions" ? "Qualifying sales—not the value of every home." : "Modeled value—not a sale price or appraisal.")}
