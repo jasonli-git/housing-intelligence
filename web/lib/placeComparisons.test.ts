@@ -21,3 +21,11 @@ it("preserves the sidebar's property-record home age with survey age only as a f
  expect(comparisonMeasures([survey,parcel],empty).map(i=>i.row.metric_id)).toEqual(['modiv_median_year_built']);
  expect(comparisonMeasures([survey],empty)[0].row.metric_id).toBe('acs_median_year_built');
 });
+it("places the audited income marker at its point rank, inside the supplied rank interval",()=>{
+ const income={...row('acs_median_hh_income',58),of:562,value:192079,margin_of_error:24402};
+ const [item]=comparisonMeasures([income],{value:new Map([['acs_median_hh_income',{best:17,worst:107,margin:24402}]]),change:new Map()});
+ expect(item.position).toBeCloseTo(1-57/561);
+ expect(item.low).toBeCloseTo(1-106/561);expect(item.high).toBeCloseTo(1-16/561);
+ expect(item.position).toBeGreaterThan(item.low);expect(item.position).toBeLessThan(item.high);
+ expect(item.margin).toBe(24402);
+});

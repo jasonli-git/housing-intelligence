@@ -10,4 +10,7 @@ it("retains a supplied revision notice alongside its current-value comparison",(
   expect(html).toContain('first published as 33.3%');
   expect(html).not.toContain('unrelated');
   expect(html).toContain('href="/nj/princeton/report#report-current"');
+  const container=document.createElement('div');container.innerHTML=html;
+  expect(container.querySelector('.figure-updated')?.closest('[data-comparison-card]')?.getAttribute('data-comparison-card')).toBe(level.metric_id);
 });
+// @vitest-environment jsdom

@@ -2,7 +2,7 @@ import type {PacketLevel} from "./api";
 import type {Uncertainties} from "./uncertainty";
 
 export const COMPARISON_MEASURES=[
-  ["acs_median_hh_income","Household income"],
+  ["acs_median_hh_income","Median household income"],
   ["acs_renter_cost_burden","Renters paying >30% of income"],
   ["acs_homeownership_rate","Owner-occupied homes"],
   ["acs_mean_commute_minutes","One-way commute"],

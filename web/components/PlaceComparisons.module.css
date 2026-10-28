@@ -6,10 +6,11 @@
 .note { margin: .2rem 0 .6rem; color: var(--text-secondary); font: 11px/1.5 var(--font-text); }
 .rail { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 2rem) / 4.2); gap: .65rem; margin: -4px; padding: 4px 4px 12px; list-style: none; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 .rail li { min-width: 0; display: flex; flex-direction: column; scroll-snap-align: start; }
-.revision { margin-top: .3rem; font: 11px/1.4 var(--font-text); color: var(--text-secondary); }
+.revision { font: 11px/1.4 var(--font-text); color: var(--text-secondary); }
 .revision :global(.figure-updated) { display: block; font: inherit; }
 .revision a { color: var(--plate-accent); }
 .tile { flex: 1; min-width: 0; padding: .65rem .75rem; border: 1px solid var(--border); border-radius: 9px; background: color-mix(in srgb,var(--surface-card) 60%,transparent); display: flex; flex-direction: column; gap: .3rem; color: var(--text-primary); text-decoration: none; }
+.measureLink { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: .3rem; text-decoration: none; }
 .label { font: 500 11px/1.4 var(--font-text); }
 .value { font: 400 23px/1.15 Georgia,serif; font-variant-numeric: tabular-nums; }
 .value small { color: var(--text-secondary); font: 10px/1.4 var(--font-text); white-space: nowrap; }
@@ -29,14 +30,28 @@
 .method summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: .4rem; }
 .method summary::before { content: "+"; }
 .method[open] summary::before { content: "−"; }
-.tile:focus-visible,.rail:focus-visible,.method summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.measureLink:focus-visible,.rail:focus-visible,.method summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .tile:hover { border-color: var(--plate-accent); }
-:global(body:has(.horizon-page)) main:global(#main-content) .comparisons a.tile { border-radius: 6px; border-color: transparent; background: transparent; color: var(--text-primary); }
-:global(body:has(.horizon-page)) main:global(#main-content) .comparisons a.tile:is(:hover,:focus-visible) { border-color: var(--plate-accent); }
+:global(body:has(.horizon-page)) main:global(#main-content) .comparisons .tile { border-radius: 6px; border-color: transparent; background: transparent; color: var(--text-primary); }
+:global(body:has(.horizon-page)) main:global(#main-content) .comparisons a.measureLink { color: var(--text-primary); }
+:global(body:has(.horizon-page)) main:global(#main-content) .comparisons .tile:is(:hover,:focus-within) { border-color: var(--plate-accent); }
 :global(body:has(.horizon-page)) main:global(#main-content) .alternatives :global(#similar-places-heading) { position: static; margin: 0 !important; padding: 0; border: 0; font: 400 clamp(26px,3vw,36px)/1.2 Georgia,serif !important; letter-spacing: -.025em !important; }
 :global(body:has(.horizon-page)) main:global(#main-content) .alternatives :global(#similar-places-heading)::before,
 :global(body:has(.horizon-page)) main:global(#main-content) .alternatives :global(#similar-places-heading)::after { content: none; }
 .method a { color: var(--kind-town); }
+.matchHeading { margin: .8rem 0 .25rem; font: 500 14px/1.4 var(--font-text); }
+.matchScroll { max-width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+.matchScroll:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.matchTable { width: 100%; min-width: 690px; margin: 0; border-collapse: separate; border-spacing: 0; font: 12px/1.4 var(--font-text); }
+.matchTable th,.matchTable td { padding: .55rem .7rem; border-bottom: 1px solid var(--border); text-align: right; font-variant-numeric: tabular-nums; }
+.matchTable thead th { font-weight: 500; vertical-align: bottom; }
+.matchTable th:first-child { position: sticky; left: 0; z-index: 1; width: 25%; min-width: 170px; text-align: left; background: var(--plate-paper,var(--surface-card)); font-weight: 500; }
+.matchTable :is(th,td):nth-child(2) { background: color-mix(in srgb,var(--surface-card) 45%,transparent); }
+.matchTable small { display: block; margin-top: .15rem; color: var(--text-secondary); font: 10px/1.4 var(--font-text); }
+.matchTable a { display: inline-flex; min-height: 44px; align-items: center; color: var(--kind-town); }
+:global(body:has(.horizon-page)) main:global(#main-content) .alternatives .matchTable a { color: var(--kind-town); }
+.matchTable tr:last-child :is(th,td) { border-bottom: 0; }
+@media print { .matchScroll { overflow: visible; } .matchTable { min-width: 0; } }
 @media(max-width:900px) { .rail { grid-auto-columns: calc((100% - 1rem)/3.1); } }
 @media(max-width:600px) { .rail { grid-auto-columns: 78%; } .alternatives ul { grid-template-columns: minmax(0,1fr); gap: 0; } .alternatives li + li { border-top: 1px solid var(--border); } }
 @media print { .rail { grid-auto-flow: row; grid-template-columns: repeat(2,minmax(0,1fr)); grid-auto-columns: auto; overflow: visible; } }

@@ -31,7 +31,7 @@ try {
     assert.equal(await ranks.locator('a a').count(),0,'revision links are not nested in measure links');
     for(const notice of await ranks.locator('.figure-updated a').all()) assert.equal(await notice.getAttribute('href'),'/changes');
     assert.equal(await ranks.locator('li').count(),5);
-    assert((await ranks.locator('ul').boundingBox()).height<180);
+    assert((await ranks.locator('ul').boundingBox()).height<230);
     assert(await ranks.evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('#place-story-gallery'))&Node.DOCUMENT_POSITION_FOLLOWING)));
     await ranks.hover();
     const next=ranks.getByRole('button',{name:'Next ranked measures'});
@@ -39,14 +39,17 @@ try {
     await next.click();
     await page.waitForFunction(()=>!document.querySelector('[aria-label="Previous ranked measures"]').disabled);
     await ranks.getByRole('button',{name:'Previous ranked measures'}).click();
-    const links=ranks.locator('ul > li > a');
+    const links=ranks.locator('ul a[data-comparison-measure]');
     await links.first().focus();await page.keyboard.press('End');
     assert(await links.last().evaluate(e=>e===document.activeElement));
     await page.waitForFunction(()=>document.querySelector('[aria-label="Next ranked measures"]').disabled);
     await page.keyboard.press('Home');
     assert(await links.first().evaluate(e=>e===document.activeElement));
     assert.equal(await alternatives.locator('ul > li').count(),3);
-    assert.equal(await alternatives.locator('table').count(),0);
+    assert.equal(await alternatives.locator('table').count(),1);
+    assert.equal(await alternatives.locator('tbody tr').count(),6,'price, four matching traits and commute stay visible');
+    assert.equal(await alternatives.locator('thead th').count(),5,'baseline place plus three candidates');
+    for(const notice of await ranks.locator('.figure-updated').all()) assert(await notice.evaluate(el=>!!el.closest('[data-comparison-card]')),'revision notice is inside its card');
     assert((await alternatives.innerText()).includes('not schools or safety'));
     const alternativesFont=await page.locator('#similar-places-heading').evaluate(e=>{const s=getComputedStyle(e);return [s.fontFamily,s.fontSize,s.fontWeight,s.lineHeight];});
     assert.deepEqual(alternativesFont,headingFonts[1],'Alternatives matches About this place');
