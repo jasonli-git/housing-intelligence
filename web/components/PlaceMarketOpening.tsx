@@ -17,13 +17,12 @@ type Props = {
   ownId: number;
   cohorts: MarketCohort[];
   histories: { metricId: string; observations: Observation[] }[];
-  guideHref: string;
   reportHref: string;
   revisions?: Map<string, { from: string; on: string }>;
 };
 
 /** Visual evidence replaces the paragraph/rank/change stack; Princeton only for now. */
-export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownId, cohorts, histories, guideHref, reportHref, revisions }: Props) {
+export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownId, cohorts, histories, reportHref, revisions }: Props) {
   const price = homePrice(levels);
   const home = price ? levels.find(l => l.metric_id === (price.basis === "index" ? "zhvi_sfr" : "sr1a_median_sale_price")) : undefined;
   const rent = levels.find(l => l.metric_id === "zori_all");
@@ -61,6 +60,5 @@ export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownI
       <div className={styles.tenureBar} role="img" aria-label={`${formatMetric(occupied.value, occupied.unit, occupied.metric_id)} owner-occupied; ${formatMetric(1 - occupied.value, occupied.unit, occupied.metric_id)} rented, among occupied homes`}><span style={{ width: `${occupied.value * 100}%` }} /></div>
       <p className={styles.annotation}>Occupied homes · Census ACS {surveyYears(occupied.period_start, occupied.period_end)} · 90% margin: {marginLabel(occupied.value, uncertainties.value.get(occupied.metric_id)?.margin ?? null, occupied.unit, occupied.metric_id)}</p>
     </div>}
-    <nav className={styles.next} aria-label="From the market to your budget"><a href="#quiet-cost">What would living here cost you? <span aria-hidden="true">↓</span></a><Link href={guideHref}>Explore your buying plans <span aria-hidden="true">↗</span></Link></nav>
   </section>;
 }

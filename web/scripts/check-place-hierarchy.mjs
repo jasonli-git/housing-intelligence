@@ -71,7 +71,8 @@ try {
     if (width <= 760) await nav.getByRole('combobox').selectOption('place-market');
     else await nav.getByRole('link', { name: 'Market at a glance', exact: true }).click();
     assert.equal(new URL(page.url()).hash, '#place-market');
-    await opening.getByRole('link', { name: /living here cost/ }).click();
+    if(width<=760) await nav.getByRole('combobox').selectOption('quiet-cost');
+    else await nav.getByRole('link',{name:'Costs',exact:true}).click();
     assert.equal(new URL(page.url()).hash, '#quiet-cost');
     const cost = page.locator('.place-cost-overview');
     assert(await cost.isVisible());
@@ -85,7 +86,7 @@ try {
     assert.notEqual(await cost.locator('.cost-figure').first().innerText(), before);
     await cost.getByRole('button', { name: 'Use the published figures', exact: true }).click();
     assert.equal(await cost.locator('.cost-figure').first().innerText(), before);
-    assert.equal(await opening.getByRole('link', { name: /buying plans/ }).getAttribute('href'), '/guide?place=224');
+    assert.equal(await opening.getByRole('navigation',{name:'From the market to your budget'}).count(),0);
     const audit = await new AxeBuilder({ page }).include('#place-market').include('nav[aria-label="Place sections"]').analyze();
     assert.deepEqual(audit.violations.map(v => ({ id: v.id, targets: v.nodes.map(n => n.target) })), []);
     await page.mouse.move(0, 0);

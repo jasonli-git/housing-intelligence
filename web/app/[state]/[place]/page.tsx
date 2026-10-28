@@ -529,7 +529,7 @@ export default async function RegionPage({
 
       {marketFirst && <PlaceMarketOpening levels={packet.levels} metrics={packet.metrics}
         uncertainties={uncertainties} peers={peers} ownId={regionId} cohorts={marketCohorts} histories={series}
-        guideHref={`/guide?place=${regionId}`} reportHref={`${regionPath(regionId)}/report`}
+        reportHref={`${regionPath(regionId)}/report`}
         revisions={new Map([...revisedBy].flatMap(([id, change]) => {
           const row = packet.levels.find(l => l.metric_id === id && l.period_start === change.period_start);
           return row ? [[id, { from: formatMetric(change.first_value, row.unit, id), on: change.last_revised_on }] as const] : [];

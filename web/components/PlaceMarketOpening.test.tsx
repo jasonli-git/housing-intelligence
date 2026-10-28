@@ -19,7 +19,7 @@ const props = {
     { metricId: "zori_all", period: "2026-09-01", total: 20, points: [{ id: 1, name: "Lower Town", value: 1800 }, { id: 224, name: "Princeton", value: 2400 }] },
   ],
   histories: [] as { metricId: string; observations: Observation[] }[],
-  guideHref: "/guide?place=224", reportHref: "/nj/princeton/report",
+  reportHref: "/nj/princeton/report",
 };
 
 it("keeps prices, rents, dates, interpretation limits and statewide cohorts visible without disclosures", () => {
@@ -37,7 +37,8 @@ it("keeps prices, rents, dates, interpretation limits and statewide cohorts visi
   expect(container.textContent).toContain("Box: middle half of towns");
   expect(container.textContent).toContain("Observed town range");
   expect(screen.getByRole("link", { name: /Figures & sources/ }).getAttribute("href")).toBe("/nj/princeton/report#report-measures");
-  expect(screen.getByRole("link", { name: /living here cost/ }).getAttribute("href")).toBe("#quiet-cost");
+  expect(screen.queryByRole("link", { name: /living here cost/ })).toBeNull();
+  expect(screen.queryByRole("link", { name: /Explore your buying plans/ })).toBeNull();
 });
 
 it("shows only an existing change whose end matches the displayed figure", () => {
