@@ -13,7 +13,6 @@ import { makePlaceStoryRecord, PLACE_STORIES, storyHistoryMetrics, type PlaceSto
 import { stampPlaceStory } from "@/lib/placeStoryData";
 import { PlaceStoryGallery } from "@/components/PlaceStoryGallery";
 import { SchoolCheck } from "@/components/SchoolCheck";
-import { CountyHistoryContext } from "@/components/CountyHistoryContext";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
 import "../../horizon-theme.css";
@@ -303,16 +302,13 @@ export default async function RegionPage({
   // Deliberately one town for local review, not a platform-wide hierarchy decision.
   const marketFirst = region.state_code === "NJ" && region.geoid === "3402160900";
   const marketCohorts = marketFirst ? await marketPortraitData(region.state_code, packet.levels) : [];
-  const storyCounty = marketFirst ? region.ancestors.find(a => a.level === "county") : undefined;
-  const countyHistory = storyCounty ? { region_id: storyCounty.region_id, name: `${storyCounty.name.replace(/ County$/, "")} County`, data: await api.persistence(storyCounty.region_id) } : null;
-  const placeStoryRecords = marketFirst ? (Object.keys(PLACE_STORIES) as PlaceStoryTopic[]).map(topic => stampPlaceStory(makePlaceStoryRecord(topic,
-    { region_id: regionId, name: region.name, level: region.level, state_code: region.state_code, geoid: region.geoid, ...(topic === "past" && storyCounty ? { county_id: storyCounty.region_id } : {}) }, packet.levels,
+  const placeStoryRecords = marketFirst ? (Object.keys(PLACE_STORIES) as PlaceStoryTopic[]).filter(topic => topic !== "past").map(topic => stampPlaceStory(makePlaceStoryRecord(topic,
+    { region_id: regionId, name: region.name, level: region.level, state_code: region.state_code, geoid: region.geoid }, packet.levels,
     { metrics: topic === "market" ? packet.metrics : [],
       history: topic === "market" ? series : topic === "building" ? storyHistoryMetrics(topic).map((metricId, i) => ({ metricId, observations: construction[i] })) : [],
       water: topic === "water" ? water : null, destinations: topic === "commute" ? workDestinations : null,
-      pressure: topic === "pressure" ? pressure : null, migration: topic === "migration" ? migration : null, countyHistory: topic === "past" ? countyHistory : null,
+      pressure: topic === "pressure" ? pressure : null, migration: topic === "migration" ? migration : null,
       flood:topic === "flood" ? floodClaims:null, utilities:topic === "utilities" ? utilities:null, utilityInquiry:topic === "utilities" ? bpuInquiry:null, community:(topic === "broadband" || topic === "health") ? community:null }))) : [];
-  const countyHistoryStory = placeStoryRecords.find(record => record.topic === "past");
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
   // (ARCHITECTURE #275), and a file published before then that still carries one is
@@ -618,8 +614,7 @@ export default async function RegionPage({
       )}
       </ConsumerReading>
       </QuietAnchor>
-      {countyHistoryStory && <CountyHistoryContext record={countyHistoryStory} />}
-      {marketFirst && <PlaceStoryGallery records={placeStoryRecords.filter(record => record.topic !== "past")} artifactUrl={artifactUrl} />}
+      {marketFirst && <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} />}
       <ExhibitGallery>
       {!marketFirst && <>
       <h3 className="exhibit-group-head" id="field-notes">The market</h3>
