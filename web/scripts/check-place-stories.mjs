@@ -32,7 +32,7 @@ try {
       const card = gallery.locator(`[data-preview-topic="${topic}"]`);
       await card.scrollIntoViewIfNeeded();
       await card.locator('img:visible').evaluate(async img => { await img.decode(); });
-      const headline = await card.locator('h3').innerText();
+      const headline = await card.locator('h4').innerText();
       const snapshot = await card.getAttribute('data-preview-snapshot');
       assert((await card.locator('img:visible').getAttribute('src')).includes(snapshot));
       assert((await card.getAttribute('href')).endsWith('?place=224'));

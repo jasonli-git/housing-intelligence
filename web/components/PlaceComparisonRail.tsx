@@ -10,7 +10,7 @@ import styles from "./PlaceComparisons.module.css";
 export function PlaceComparisonRail({name,peers,levels,uncertainties,reportHref}:{name:string;peers:string;levels:PacketLevel[];uncertainties:Uncertainties;reportHref:string}){
   const items=comparisonMeasures(levels,uncertainties);if(!items.length)return null;
   return <section className={styles.comparisons} aria-labelledby="place-comparisons-heading">
-    <header><h3 id="place-comparisons-heading">How {name} compares</h3><Link href={`${reportHref}#report-current`}>All measures →</Link></header>
+    <header><h3 id="place-comparisons-heading">How it compares</h3><Link href={`${reportHref}#report-current`}>All measures →</Link></header>
     <p className={styles.note}>Current values · {peers}. Lower → higher values; bands include ties and 90% survey rank ranges.</p>
     <ul className={styles.rail} tabIndex={0} aria-label={`Current-value comparisons for ${name}`}>
       {items.map(({row,label,best,worst,position,low,high,margin,rangeMissing})=><li key={row.metric_id}>

@@ -438,7 +438,7 @@ export default async function RegionPage({
     ...(marketFirst ? [{ id: "place-market", label: "Market at a glance" }] : []),
     ...(countyTowns.length ? [{ id: "county-towns", label: "Towns" }] : []),
     { id: quiet ? "quiet-cost" : "place-costs", label: "Costs" },
-    ...(marketFirst ? [{ id: "place-story-gallery", label: "Local stories" }] : []),
+    ...(marketFirst ? [{ id: "place-understand", label: "About this place" }] : []),
     ...(!marketFirst ? [{ id: "field-notes", label: "Market" }] : []),
     ...(!marketFirst ? [{ id: "about-getting-around", label: "Getting around" }] : []),
     ...(marketFirst ? [{id:"place-address-checks-heading",label:"Check a home"}] : [{ id: "about-living-there", label: "Living there" }]),
@@ -615,8 +615,10 @@ export default async function RegionPage({
       )}
       </ConsumerReading>
       </QuietAnchor>
-      {marketFirst && <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`}/>}
-      {marketFirst && <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} />}
+      {marketFirst && <div className={styles.placeData}>
+        <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`}/>
+        <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} />
+      </div>}
       <ExhibitGallery>
       {!marketFirst && <>
       <h3 className="exhibit-group-head" id="field-notes">The market</h3>

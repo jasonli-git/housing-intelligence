@@ -67,6 +67,9 @@
 .page.page :global(.place-overview-context .quiet-profile-more) { margin-top: .5rem; }
 .page.page :global(.place-overview-context .quiet-profile-more summary) { min-height: 44px; font-size: 12px; }
 .page.page :global(.local-understand-group) { margin-top: 2rem; }
+.placeData { margin-top: .8rem; }
+.placeData > section { margin: 0; }
+.placeData > section + section { margin-top: 1rem; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group > h2) { margin-top: 0 !important; padding-top: 1rem !important; font-size: 32px !important; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group > h2)::before { content: none; }
 .page.page :global(.exhibit-gallery > .exhibit-group-head) { margin-top: 1.4rem; padding-top: 1rem; font-size: 27px; }
