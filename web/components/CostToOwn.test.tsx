@@ -39,6 +39,7 @@ describe("local monthly budget", () => {
     expect(panel.hidden).toBe(false);
     expect(bridge.textContent).toContain('This is not the cash needed each month');
     const headline=container.querySelector('.cost-card .cost-figure b')?.textContent;
+    fireEvent.click(container.querySelector('.cost-use-numbers > summary')!);
     fireEvent.change(screen.getByLabelText('Purchase price'),{target:{value:'600000'}});
     expect(container.querySelector('.cost-card .cost-figure b')?.textContent).not.toBe(headline);
     fireEvent.click(screen.getByRole('button',{name:'Use the published figures'}));
@@ -47,6 +48,7 @@ describe("local monthly budget", () => {
   it("groups compact scenario controls and resets edited costs to their starting figures", () => {
     const { container } = render(createElement(CostToOwn, { ...inputs, quiet: true, compactOverview: true }));
     const group = screen.getByRole("group", { name: "Use your numbers" });
+    fireEvent.click(group.querySelector('summary')!);
     expect(group.contains(screen.getByLabelText("Down payment"))).toBe(true);
     expect(group.contains(screen.getByLabelText("Purchase price"))).toBe(true);
     const total = container.querySelector(".cost-card .cost-figure b")?.textContent;
@@ -56,9 +58,14 @@ describe("local monthly budget", () => {
     expect(container.querySelector(".cost-card .cost-figure b")?.textContent).toBe(total);
     expect(container.querySelectorAll(".cost-ownership-breakdown .gone-kept").length).toBe(1);
   });
-  it("keeps compact controls visible and sends deeper planning to the tools",()=>{
+  it("collapses compact controls by default and sends deeper planning to the tools",()=>{
     const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,compactOverview:true,guidePlaceId:224,comparePlaceId:224}));
-    for(const label of ['Purchase price','Down payment','Yearly household income before tax'])expect(screen.getByLabelText(label).closest('details')).toBeNull();
+    const disclosure=container.querySelector('.cost-use-numbers') as HTMLDetailsElement;
+    expect(disclosure.open).toBe(false);
+    expect(disclosure.parentElement?.firstElementChild).toBe(disclosure);
+    fireEvent.click(disclosure.querySelector('summary')!);
+    expect(disclosure.open).toBe(true);
+    for(const label of ['Purchase price','Down payment','Yearly household income before tax'])expect(screen.getByLabelText(label).closest('details')).toBe(disclosure);
     expect(screen.queryByLabelText('Cash available for buying')).toBeNull();
     expect(screen.queryByLabelText('Rent you’d pay instead, a month')).toBeNull();
     expect(container.querySelector('.planning-preview-grid')).toBeNull();

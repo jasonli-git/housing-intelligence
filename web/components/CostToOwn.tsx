@@ -661,8 +661,9 @@ export function CostToOwn({
       {!compactOverview && monthlyComparison}
 
       <div className="cost-cards">
-        {compactOverview && control && planning && <div className="cost-use-numbers" role="group" aria-label="Use your numbers">
-          <h3>Use your numbers</h3>
+        {compactOverview && control && planning && <details className="cost-use-numbers" role="group" aria-label="Use your numbers">
+          <summary>Use your numbers <span>{own ? "Using your figures" : "Adjust the estimate"}</span></summary>
+          <div className="cost-use-numbers-body">
           <div className="budget-inputs">
             <label className="control"><span>Yearly household income before tax</span><input inputMode="decimal" value={household.income ?? ""} placeholder="e.g. 100000" onChange={event=>saveHousehold({...household,income:parseAmount(event.target.value)??undefined})}/></label>
             {downControl}
@@ -674,7 +675,8 @@ export function CostToOwn({
             {guidePlaceId!==undefined && <a href={`/guide?place=${guidePlaceId}`} onClick={transferToGuide}>Check upfront cash & rent vs. buy →</a>}
             {comparePlaceId!==undefined && <a href={`/afford?county=all&place=${comparePlaceId}${household.income ? `&income=${household.income}`:""}`}>Find your fit →</a>}
           </nav>
-        </div>}
+          </div>
+        </details>}
         <article className="cost-card">
           <h3 className="cost-card-label">
             <Term entry={terms.own}>

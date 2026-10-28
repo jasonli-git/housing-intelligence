@@ -66,6 +66,8 @@ try {
     assert(await cost.isVisible());
     // The prototype must not change the existing budget model or hide its controls.
     const before = await cost.locator('.cost-figure').first().innerText();
+    const numbers = cost.locator('.cost-use-numbers');
+    if (!(await numbers.evaluate(el => el.open))) await numbers.locator(':scope > summary').click();
     const assumptions = cost.locator('.cost-yours');
     if (!(await assumptions.evaluate(el => el.open))) await assumptions.locator(':scope > summary').click();
     await cost.getByLabel('Purchase price', { exact: true }).fill('500000');

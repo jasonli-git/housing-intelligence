@@ -37,3 +37,7 @@ No automatic navigation or scrolling on edits. The shared household preferences 
 ## Follow-up: controls at the top
 
 Moved the existing control group to the first child of the cost card, ahead of the monthly figures, in both DOM and visual order. Changed its separator to the bottom edge. No inputs, calculations or tool links changed. Typecheck and CostToOwn component tests rerun; desktop/mobile light/dark browser checks verify placement, input operation and overflow.
+
+## Follow-up: compact expandable controls
+
+At the user's request, Use your numbers is now a native details disclosure, initially closed, at the top of the card. Its summary keeps the title and either Adjust the estimate or Using your figures visible. Inputs and tool links remain inside; closing does not reset edits. Updated the component assertions and hierarchy browser harness for the explicit expansion step. Verification: typecheck, 14 cost component tests, and 390/1440px light/dark browser checks for collapsed height, keyboard expansion, retained edits, closing, no overflow and scoped axe.

@@ -30,14 +30,17 @@
 .page.page :global(.place-cost-overview .cost-figure b) { font-size: clamp(30px, 3.4vw, 44px); }
 .page :global(.cost-ownership-breakdown) { grid-column: 1 / -1; padding: 1rem 1.1rem; border-top: 1px solid var(--border); }
 .page :global(.cost-ownership-breakdown > h4) { margin: 0 0 .6rem; font: 500 14px/1.5 var(--font-text); }
-.page :global(.cost-use-numbers) { grid-column: 1 / -1; padding: 1rem 1.1rem; border-bottom: 1px solid var(--border); }
-.page :global(.cost-use-numbers > h3) { margin: 0 0 .7rem; font: 500 16px/1.4 var(--font-text); }
+.page :global(.cost-use-numbers) { grid-column: 1 / -1; padding: 0; border-bottom: 1px solid var(--border); }
+.page :global(.cost-use-numbers > summary) { box-sizing: border-box; min-height: 44px; padding: .65rem 1.1rem; cursor: pointer; font: 500 14px/1.4 var(--font-text); }
+.page :global(.cost-use-numbers > summary > span) { margin-left: .6rem; color: var(--text-secondary); font-size: 12px; font-weight: 400; }
+.page :global(.cost-use-numbers > summary:focus-visible) { outline: 2px solid var(--focus); outline-offset: -3px; }
+.page :global(.cost-use-numbers-body) { padding: .3rem 1.1rem 1rem; }
 .page.page :global(.cost-use-numbers .budget-inputs) { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .8rem; }
 .page :global(.cost-use-numbers .control) { min-width: 0; }
 .page :global(.cost-use-numbers .budget-inputs > label) { display: grid; align-content: start; gap: .4rem; min-width: 0; font: 13px/1.4 var(--font-text); }
 .page.page :global(.cost-use-numbers .budget-inputs input) { box-sizing: border-box; width: 100%; min-height: 44px; padding: .6rem .7rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-card); color: var(--text-primary); font: inherit; }
 .page :global(.cost-budget-result) { font: 12px/1.5 var(--font-text); color: var(--text-secondary); margin: .65rem 0; }
-.page.page :global(.cost-use-numbers > .cost-yours) { margin: 0; padding: 0; background: transparent; border: 0; border-radius: 0; }
+.page.page :global(.cost-use-numbers-body > .cost-yours) { margin: 0; padding: 0; background: transparent; border: 0; border-radius: 0; }
 .page :global(.cost-planning-links) { display: flex; flex-wrap: wrap; gap: .2rem 1.5rem; }
 .page :global(.cost-planning-links a) { display: inline-flex; align-items: center; min-height: 44px; font: 500 13px/1.4 var(--font-text); }
 .page :global(.cost-planning-links a[href^="/guide"]) { color: var(--kind-guide); }
