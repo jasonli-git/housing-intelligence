@@ -233,3 +233,8 @@
 .placeData :global(.school-line strong) { color: var(--text-primary); font-weight: 500; }
 .placeData :global(.school-line span) { font-size: 12px; }
 .placeData :global(.school-line a) { color: var(--plate-accent); text-underline-offset: 3px; }
+/* A tighter opening: less air in the header and before the first section, so the market
+   starts higher; the wider gap is kept between the sections themselves. */
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections > :global(header#place-overview) { padding-top: .6rem; padding-bottom: .75rem; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(.page-title) { margin-block: .2rem; }
+.fiveSections > :global(.region-standard-content) { padding-top: clamp(1.5rem,3vw,2.25rem); }

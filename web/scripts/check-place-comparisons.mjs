@@ -16,7 +16,9 @@ try {
       const boxes=selectors.map(s=>document.querySelector(s).getBoundingClientRect());
       return {expected:parseFloat(getComputedStyle(document.querySelector('#quiet-cost')).marginTop),gaps:boxes.slice(1).map((box,i)=>box.top-boxes[i].bottom)};
     });
-    assert(spacing.gaps.every(gap=>Math.abs(gap-spacing.expected)<1),'one consistent main-section gap');
+    // The first gap (navigator to market) is deliberately tighter; the four sections share one.
+    assert(spacing.gaps.slice(1).every(gap=>Math.abs(gap-spacing.expected)<1),'one consistent main-section gap');
+    assert(spacing.gaps[0]>0&&spacing.gaps[0]<spacing.expected,'a tighter opening before the market');
     const headingFonts=await page.evaluate(()=>['#place-market-heading','#place-about-heading'].map(selector=>{
       const style=getComputedStyle(document.querySelector(selector));
       return [style.fontFamily,style.fontSize,style.fontWeight,style.lineHeight];

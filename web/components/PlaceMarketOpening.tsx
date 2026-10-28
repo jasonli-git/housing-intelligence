@@ -54,11 +54,12 @@ export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownI
   return <section className={styles.opening} id="place-market" aria-labelledby="place-market-heading">
     <div className={styles.heading}><h2 id="place-market-heading">The housing market</h2><Link href={`${reportHref}#report-measures`}>Figures & sources <span aria-hidden="true">↗</span></Link></div>
     {standing.length > 0 && <aside className={styles.standing} aria-label="Where it ranks"><div className={styles.standingHead}><span className={styles.standingLabel}>Where it ranks</span>{standingTitle && <p className={styles.standingTitle}>{standingTitle}</p>}</div><div className={styles.standingBody}>{standing.map((sentence) => <p key={sentence}>{sentence}</p>)}</div></aside>}
-    <p className={styles.instruction}>Box: middle half of towns · line: median · ends: min–max. Hover, drag or use <kbd>←</kbd> <kbd>→</kbd> to explore towns.</p>
     <div className={styles.findings}>
       {finding(home, price?.basis === "transactions" ? "Median recorded sale price" : "Typical home value", "No current home-value index or recent qualifying sale-price median is available.", price?.basis === "transactions" ? "Qualifying sales—not the value of every home." : "Modeled value—not a sale price or appraisal.")}
       {finding(rent, "Typical market rent", "No current market-rent index available; survey rents are not asking rents.", "Market benchmark, not existing tenants’ bills. Utilities extra.")}
     </div>
+    {/* The chart key reads after the charts it explains, with their other notes. */}
+    <p className={styles.instruction}>Box: middle half of towns · line: median · ends: min–max. Hover, drag or use <kbd>←</kbd> <kbd>→</kbd> to explore towns.</p>
     <p className={styles.annotation}>Same-month statewide comparisons—not just nearby towns. Trends use separate scales and nominal dollars, not inflation-adjusted.</p>
     {occupied && occupied.value >= 0 && occupied.value <= 1 && <div className={styles.stock} data-portrait="tenure">
       <div className={styles.tenureLabels}><span><b>{formatMetric(occupied.value, occupied.unit, occupied.metric_id)}</b> Owner-occupied</span><span>Rented <b>{formatMetric(1 - occupied.value, occupied.unit, occupied.metric_id)}</b></span></div>
