@@ -38,9 +38,7 @@ try {
       const navBox = await nav.boundingBox();
       const barBox = await page.locator('.bar').boundingBox();
       assert(Math.abs(navBox.y - barBox.height) < 2, `Navigator should stay under masthead: ${navBox.y}, ${barBox.height}`);
-      if (width <= 760) {
-        await nav.getByRole('combobox').selectOption('sources-heading');
-      } else {
+      {
         await nav.getByRole('link', { name: 'Sources', exact: true }).click();
       }
       assert(await page.locator('.footer-provenance').evaluate(d => d.open));

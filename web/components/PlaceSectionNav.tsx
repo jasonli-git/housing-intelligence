@@ -5,9 +5,10 @@ import styles from "./PlaceSectionNav.module.css";
 
 export type PlaceSection = { id: string; label: string };
 
-/** One set of destinations for desktop anchors, the phone picker and scroll position. */
+/** One row of section links at every width: it scrolls sideways on phones, keeping the current one in view. */
 export function PlaceSectionNav({ sections, label = "Place sections" }: { sections: PlaceSection[]; label?: string }) {
   const nav = useRef<HTMLElement>(null);
+  const row = useRef<HTMLDivElement>(null);
   const [available, setAvailable] = useState(sections);
   const [current, setCurrent] = useState(sections[0]?.id ?? "");
 
@@ -16,6 +17,8 @@ export function PlaceSectionNav({ sections, label = "Place sections" }: { sectio
     const update = () => {
       const bar = document.querySelector(".bar")?.getBoundingClientRect().height ?? 0;
       nav.current?.style.setProperty("--place-nav-top", `${bar}px`);
+      // Glass only once it sticks under the masthead; in the header it sits on the page.
+      if (nav.current) nav.current.toggleAttribute("data-stuck", nav.current.getBoundingClientRect().top <= bar + 1 && window.scrollY > 0);
       const offset = bar + (nav.current?.getBoundingClientRect().height ?? 0) + 24;
       const present = sections.filter(section => {
         const target = document.getElementById(section.id);
@@ -57,6 +60,15 @@ export function PlaceSectionNav({ sections, label = "Place sections" }: { sectio
     };
   }, [sections]);
 
+  // On a narrow row, bring the current link into view without moving the page.
+  useEffect(() => {
+    const scroller = row.current;
+    const link = scroller?.querySelector<HTMLElement>('a[aria-current]');
+    if (!scroller || !link || scroller.scrollWidth <= scroller.clientWidth) return;
+    const left = link.offsetLeft - (scroller.clientWidth - link.offsetWidth) / 2;
+    scroller.scrollTo({ left: Math.max(0, left), behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+  }, [current]);
+
   function go(id: string, recordHistory = true) {
     const target = document.getElementById(id);
     if (!target) return;
@@ -82,9 +94,7 @@ export function PlaceSectionNav({ sections, label = "Place sections" }: { sectio
   }
 
   return <nav ref={nav} className={styles.navigation} aria-label={label}>
-    <div className={styles.links}>{available.map(section => <a key={section.id} href={`#${section.id}`}
+    <div ref={row} className={styles.links}>{available.map(section => <a key={section.id} href={`#${section.id}`}
       aria-current={current === section.id ? "location" : undefined} onClick={event => follow(event, section.id)}>{section.label}</a>)}</div>
-    <label className={styles.picker}><span>On this page</span><select aria-label={label === "Place sections" ? "Jump to a place section" : `Jump to ${label.toLowerCase()}`} value={current}
-      onChange={event => go(event.target.value)}>{available.map(section => <option key={section.id} value={section.id}>{section.label}</option>)}</select></label>
   </nav>;
 }

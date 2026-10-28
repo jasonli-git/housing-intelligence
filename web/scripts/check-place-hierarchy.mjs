@@ -69,11 +69,9 @@ try {
     const box = await opening.boundingBox();
     assert(box.y < 650, 'market starts near the opening, not after the cost model');
     const nav = page.getByRole('navigation', { name: 'Place sections' });
-    if (width <= 760) await nav.getByRole('combobox').selectOption('place-market');
-    else await nav.getByRole('link', { name: 'The market', exact: true }).click();
+    await nav.getByRole('link', { name: 'The market', exact: true }).click();
     assert.equal(new URL(page.url()).hash, '#place-market');
-    if(width<=760) await nav.getByRole('combobox').selectOption('quiet-cost');
-    else await nav.getByRole('link',{name:'Costs',exact:true}).click();
+    await nav.getByRole('link',{name:'Costs',exact:true}).click();
     assert.equal(new URL(page.url()).hash, '#quiet-cost');
     const cost = page.locator('.place-cost-overview');
     assert(await cost.isVisible());

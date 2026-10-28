@@ -52,8 +52,7 @@ try {
         assert(await migration.getByText(/county-to-county migration data/).isVisible());
       }
       const nav=page.getByRole('navigation',{name:'Place sections'});
-      if(width<=760) await nav.getByRole('combobox').selectOption('about-living-there');
-      else await nav.getByRole('link',{name:'Living there',exact:true}).click();
+      await nav.getByRole('link',{name:'Living there',exact:true}).click();
       assert(await page.locator('#about-living-there').evaluate(n=>n.open));
       assert(await page.locator('#about-living-there > summary').evaluate(n=>n===document.activeElement));
       await scan('expanded');

@@ -1,14 +1,17 @@
-.navigation { position: sticky; top: var(--place-nav-top, 60px); z-index: 30; margin: 0 0 1.2rem; border-block: 1px solid var(--border); background: var(--plate-paper, var(--surface-card)); color: var(--text-primary); }
-.links { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem 1.3rem; }
-.links a { display: inline-flex; align-items: center; min-height: 48px; padding: .25rem 0; border-bottom: 2px solid transparent; color: var(--text-secondary); font: 500 13px/1.4 var(--font-text); text-decoration: none; }
-.links a[aria-current] { border-bottom-color: var(--plate-accent, var(--state-blue)); color: var(--text-primary); }
-.links a:hover { color: var(--plate-accent, var(--state-blue)); }
-.navigation :is(a,select):focus-visible { outline: 2px solid var(--plate-accent, var(--state-blue)); outline-offset: 3px; }
-.picker { display: none; }
+/* Colours are !important against main.atlas-local's long in-page-link selector.
+   A light glass bar of pill links, the same at every width; on phones the row scrolls
+   sideways with a soft fade at its edge instead of collapsing into a dropdown. */
+.navigation { position: sticky; top: var(--place-nav-top, 60px); z-index: 30; margin: 0 0 1.2rem; border-bottom: 1px solid transparent; background: transparent; color: var(--text-primary); transition: background 150ms ease, border-color 150ms ease; }
+.navigation[data-stuck] { border-bottom-color: color-mix(in srgb,var(--border) 60%,transparent); background: color-mix(in srgb,var(--plate-paper, var(--surface-card)) 80%,transparent); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); }
+.links { display: flex; align-items: center; gap: .35rem; padding: .45rem 0; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: none; }
+.links::-webkit-scrollbar { display: none; }
+.links a { flex: none; display: inline-flex; align-items: center; min-height: 36px; padding: 0 .85rem; border: 1px solid transparent; border-radius: 999px; color: var(--text-secondary) !important; font: 500 13px/1.3 var(--font-text); text-decoration: none; white-space: nowrap; transition: background 150ms ease, color 150ms ease, border-color 150ms ease; }
+.links a:hover { color: var(--text-primary) !important; background: color-mix(in srgb,var(--plate-ink, var(--text-primary)) 6%,transparent); }
+.links a[aria-current] { border-color: color-mix(in srgb,var(--plate-accent, var(--state-blue)) 45%,transparent); background: color-mix(in srgb,var(--plate-accent, var(--state-blue)) 14%,transparent); color: var(--text-primary) !important; }
+.navigation a:focus-visible { outline: 2px solid var(--plate-accent, var(--state-blue)); outline-offset: 2px; }
 @media(max-width:760px) {
-  .links { display: none; }
-  .picker { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .25rem 0; font: 13px/1.4 var(--font-text); }
-  .picker > span { flex: none; color: var(--text-secondary); }
-  .picker select { min-width: 0; width: min(65%, 22rem); min-height: 44px; padding: .4rem 1.8rem .4rem .7rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-card); color: var(--text-primary); font: 400 16px/1.4 var(--font-text); }
+  .links { gap: .25rem; padding: .4rem 0; -webkit-mask-image: linear-gradient(90deg,currentColor calc(100% - 2rem),transparent); mask-image: linear-gradient(90deg,currentColor calc(100% - 2rem),transparent); }
+  .links a { min-height: 40px; padding: 0 .75rem; }
 }
+@media(prefers-reduced-motion:reduce) { .navigation,.links a { transition: none; } }
 @media print { .navigation { display: none; } }
