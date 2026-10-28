@@ -194,3 +194,13 @@
 }
 
 .homeGuide a { display: inline-flex; align-items: center; min-height: 44px; color: var(--kind-guide); font: 500 13px/1.4 var(--font-text); text-underline-offset: 3px; }
+
+/* One boundary rhythm for the five-section Princeton pilot; internal spacing stays local. */
+.fiveSections { --place-section-gap: clamp(2rem,4vw,3rem); }
+.fiveSections > :global(nav[aria-label="Place sections"]) { margin-bottom: 0; }
+.fiveSections > :global(.region-standard-content) { display: flow-root; padding-top: var(--place-section-gap); }
+.fiveSections :global(#place-market) { margin: 0; }
+.fiveSections :global(#quiet-cost),.fiveSections :global(#place-understand),.fiveSections :global(#place-explore) { display: flow-root; margin: var(--place-section-gap) 0 0 !important; padding: 0; }
+.fiveSections :global(#quiet-cost > section),.fiveSections :global(#place-explore > section) { margin: 0; padding-top: 0; border-top: 0; }
+.fiveSections :global(#quiet-cost > section > .section-head) { padding-top: 0; }
+.fiveSections :global(#place-understand > :last-child) { margin-bottom: 0; }

@@ -11,6 +11,12 @@ try {
     await page.evaluate(t=>document.documentElement.dataset.theme=t,theme);
     const ranks=page.locator('section[aria-labelledby="place-comparisons-heading"]');
     const alternatives=page.locator('section[aria-labelledby="similar-places-heading"]');
+    const spacing=await page.evaluate(()=>{
+      const selectors=['nav[aria-label="Place sections"]','#place-market','#quiet-cost > section','#place-understand','#place-explore > section'];
+      const boxes=selectors.map(s=>document.querySelector(s).getBoundingClientRect());
+      return {expected:parseFloat(getComputedStyle(document.querySelector('#quiet-cost')).marginTop),gaps:boxes.slice(1).map((box,i)=>box.top-boxes[i].bottom)};
+    });
+    assert(spacing.gaps.every(gap=>Math.abs(gap-spacing.expected)<1),'one consistent main-section gap');
     const headingFonts=await page.evaluate(()=>['#place-market-heading','#place-understand > h2'].map(selector=>{
       const style=getComputedStyle(document.querySelector(selector));
       return [style.fontFamily,style.fontSize,style.fontWeight,style.lineHeight];

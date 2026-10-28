@@ -449,7 +449,7 @@ export default async function RegionPage({
     <>
       <Masthead affordability={affordabilityControl} />
       <AffordForward placeId={region.level === "zip" ? null : regionId} />
-      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local horizon-page ${styles.page}${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
+      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local horizon-page ${styles.page}${quiet ? " quiet-county" : ""}${marketFirst ? ` ${styles.fiveSections}` : ""}`} data-region-level={region.level}>
       <header id="place-overview" className={`page-head${photo ? " has-photo" : ""}`} data-kind={kindOf(region.level)}>
         {quiet && region.state_code === "NJ" && <GardenStateArtwork header />}
         <div className="region-head-main">
