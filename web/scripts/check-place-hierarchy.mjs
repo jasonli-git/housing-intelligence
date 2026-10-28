@@ -47,9 +47,9 @@ try {
       const control = plot.getByRole('slider');
       assert(await plot.evaluate(el => {
         const value=el.parentElement.firstElementChild.getBoundingClientRect(),chart=el.getBoundingClientRect();
-        return chart.x>=value.right && chart.width<=81 && chart.y<value.bottom && chart.bottom>value.y;
-      }),'miniature trend sits beside its headline');
-      assert.equal((await svg.boundingBox()).height,20,'sparkline matches the homepage metric-chart height');
+        return chart.x<=value.x+1 && chart.right>=value.right-1 && chart.y<=value.y && chart.bottom>=value.bottom;
+      }),'wide trend sits behind its overlaid headline');
+      assert.equal((await svg.boundingBox()).height,48,'wide background sparkline keeps a compact height');
       const before = await plot.locator('output').textContent();
       await control.focus(); await page.keyboard.press('Home');
       assert.notEqual(await plot.locator('output').textContent(), before);

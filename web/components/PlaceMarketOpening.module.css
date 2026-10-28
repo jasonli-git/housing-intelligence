@@ -33,10 +33,13 @@
 .peerReading > span:first-child { min-width: 0; overflow-wrap: anywhere; }
 .peerReading b { font-weight: 500; margin-left: .4rem; white-space: nowrap; }
 .peerReading a { flex: none; display: inline-flex; align-items: center; min-height: 44px; color: var(--plate-accent); }
-.valueAndTrend { display: grid; grid-template-columns: minmax(0,1fr) 80px; align-items: center; gap: .75rem; max-width: 270px; }
-.trend { position: relative; min-width: 0; width: 80px; height: 44px; justify-self: end; }
-.trend .plotControl { height: 44px; min-height: 44px; display: flex; align-items: end; padding-bottom: 9px; box-sizing: border-box; }
-.trend .plotControl svg { height: 20px; }
+.valueAndTrend { position: relative; isolation: isolate; display: flex; align-items: center; min-height: 72px; }
+.valueAndTrend .figure { position: relative; z-index: 1; pointer-events: none; text-shadow: 0 0 5px var(--plate-paper,var(--surface-card)),0 0 12px var(--plate-paper,var(--surface-card)); }
+.valueAndTrend > .annotation { margin-left: auto; max-width: 45%; }
+.trend { position: absolute; inset: 0; min-width: 0; width: 100%; height: 72px; }
+.trend .plotControl { height: 72px; min-height: 44px; display: flex; align-items: center; box-sizing: border-box; }
+.trend .plotControl svg { height: 48px; }
+.trend .plotControl :is(path,circle,line) { opacity: .3; }
 .sparkChange { position: absolute; top: 0; right: 0; pointer-events: none; margin: 0; text-align: right; color: var(--portrait-colour); font: 500 10px/1.3 var(--font-text); }
 .sparkChange b { font-weight: 500; }
 .trendLine { fill: none; stroke: var(--portrait-colour); stroke-width: 1.4; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
