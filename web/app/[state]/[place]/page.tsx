@@ -567,6 +567,8 @@ export default async function RegionPage({
       {!cost && housingContext}
 
       <section id="place-understand" className="local-understand-group" aria-label="About this place">
+      <QuietAnchor enabled={marketFirst} id="place-about-layout">
+      {marketFirst && <CompactHousingProfile items={profile} peers={peerNoun(peer_level)} />}
       <QuietAnchor enabled={marketFirst} id="place-about-frame">
       <h2>About this place</h2>
 
@@ -618,10 +620,7 @@ export default async function RegionPage({
       </ConsumerReading>
       </QuietAnchor>
       {marketFirst && <div className={styles.placeData}>
-        <div className={styles.aboutMeasures}>
-        <CompactHousingProfile items={profile} peers={peerNoun(peer_level)} />
         <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`} revisions={new Map(profile.flatMap(item=>item.updated?[[item.metric_id,item.updated] as const]:[]))}/>
-        </div>
         <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} />
       </div>}
       <ExhibitGallery>
@@ -685,6 +684,7 @@ export default async function RegionPage({
         </div>
       </details>}
       </ExhibitGallery>
+      </QuietAnchor>
       </QuietAnchor>
       {marketFirst && <div className={styles.homeChecks}>
         <SchoolCheck data={community} reportHref={`${regionPath(regionId)}/report`}/>

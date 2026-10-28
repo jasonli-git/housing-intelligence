@@ -45,3 +45,10 @@
 - At the user's request, the profile now has its own glass surface, subtle border, 12px corners and internal padding, echoing the former Costs sidebar while remaining left of the ranked carousel inside About this place.
 - Removed the column-divider rule; the card boundary provides the separation. Figures, definitions, revision notice, disclosure and carousel behavior are unchanged.
 - Changed only the two layout/style modules. Visually reviewed 390px and 1440px captures. TypeScript and all 852 web tests passed. All eight responsive/theme browser cases plus nonpilot Hoboken passed, including scoped axe, overflow and interactions. The scoped production export passed (1,188 routes). `git diff --check` passed. Local only.
+
+## Correction: profile outside the About card
+
+- The user clarified that the profile should be a sibling card, outside the About this place frame. Moved it into a shared `place-about-layout` grid: profile left, About card right, top aligned. On smaller screens the independent profile card appears before the About card.
+- Ranked measures and Local stories remain inside the About card. Profile contents and all calculations are unchanged. The school check remains beneath the grid, as before.
+- The conditional layout wrapper is a fragment on nonpilot pages, preserving their DOM structure. The browser regression now explicitly asserts that the profile is outside the About frame and that both cards share a parent.
+- Visually reviewed the desktop sibling-card layout. TypeScript and 852 tests passed. All eight responsive/theme browser cases and nonpilot Hoboken passed, including scoped axe, overflow and navigation. The same scoped production export passed (1,188 routes); `git diff --check` passed. Local only.

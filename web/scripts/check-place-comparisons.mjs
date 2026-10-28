@@ -28,7 +28,8 @@ try {
     const profile=page.locator('#place-housing-profile');
     assert.equal(await profile.locator('[data-profile-primary] article').count(),3);
     assert.equal(await profile.locator('[data-profile-more]').count(),1);
-    assert.equal(await page.locator('#place-about-frame #place-housing-profile').count(),1);
+    assert.equal(await page.locator('#place-about-frame #place-housing-profile').count(),0,'profile is outside the About card');
+    assert(await profile.evaluate(e=>e.parentElement===document.querySelector('#place-about-frame').parentElement),'profile and About card are siblings');
     assert(await profile.evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('#place-comparisons-heading'))&Node.DOCUMENT_POSITION_FOLLOWING)));
     if(width>1000) assert((await profile.boundingBox()).x<(await ranks.boundingBox()).x,'profile sits left of ranked measures');
     await profile.getByText('More about the housing here',{exact:false}).click();
