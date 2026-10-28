@@ -29,7 +29,7 @@
 .tile:focus-visible,.rail:focus-visible,.method summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .tile:hover { border-color: var(--plate-accent); }
 :global(body:has(.horizon-page)) main:global(#main-content) .comparisons a.tile { border-radius: 9px; color: var(--text-primary); }
-:global(body:has(.horizon-page)) main:global(#main-content) .alternatives :global(#similar-places-heading) { position: static; margin: 0 !important; padding: 0; border: 0; font: 500 18px/1.3 var(--font-text) !important; letter-spacing: -.02em !important; }
+:global(body:has(.horizon-page)) main:global(#main-content) .alternatives :global(#similar-places-heading) { position: static; margin: 0 !important; padding: 0; border: 0; font: 400 clamp(26px,3vw,36px)/1.2 Georgia,serif !important; letter-spacing: -.025em !important; }
 :global(body:has(.horizon-page)) main:global(#main-content) .alternatives :global(#similar-places-heading)::before,
 :global(body:has(.horizon-page)) main:global(#main-content) .alternatives :global(#similar-places-heading)::after { content: none; }
 .method a { color: var(--kind-town); }

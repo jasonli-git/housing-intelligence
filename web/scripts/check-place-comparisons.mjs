@@ -36,7 +36,8 @@ try {
     assert.equal(await alternatives.locator('ul > li').count(),3);
     assert.equal(await alternatives.locator('table').count(),0);
     assert((await alternatives.innerText()).includes('not schools or safety'));
-    assert.equal(await page.locator('#similar-places-heading').evaluate(e=>getComputedStyle(e).fontSize),'18px');
+    const alternativesFont=await page.locator('#similar-places-heading').evaluate(e=>{const s=getComputedStyle(e);return [s.fontFamily,s.fontSize,s.fontWeight,s.lineHeight];});
+    assert.deepEqual(alternativesFont,headingFonts[1],'Alternatives matches About this place');
     await alternatives.locator('summary').click();
     assert((await alternatives.innerText()).includes('Other matches:'));
     await alternatives.locator('summary').click();
