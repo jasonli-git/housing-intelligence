@@ -87,7 +87,8 @@
     .quiet-county > header.page-head.has-photo:has(> .town-pills) > .place-photo::after { content: ""; position: absolute; inset: 55% 0 0; background: linear-gradient(180deg, transparent, var(--photo-shade)); pointer-events: none; }
     .quiet-county > header.page-head.has-photo:has(> .town-pills) > .place-photo figcaption { position: absolute; left: 1rem; right: 1rem; bottom: .8rem; z-index: 1; margin: 0; text-align: left; color: var(--photo-ink-soft); text-shadow: 0 1px 2px var(--photo-shade); }
     .quiet-county > header.page-head.has-photo:has(> .town-pills) > .place-photo .place-photo-caption { color: var(--photo-ink); }
-    .quiet-county > header.page-head.has-photo:has(> .town-pills) .state-place-artwork-header { display: none; }
+    /* The New Jersey artwork sits in the open space right of the title, beside the photo. */
+    .quiet-county > header.page-head.has-photo:has(> .town-pills) .state-place-artwork-header { right: calc(47.5% + 1rem); top: .2rem; width: clamp(180px, 20vw, 250px); opacity: .55; }
   }
   /* A taller band behind the title on a phone. */
   @media (max-width: 760px) {
