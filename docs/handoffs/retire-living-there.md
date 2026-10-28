@@ -43,3 +43,9 @@ The health story's interaction is place selection; no unsupported town health me
 - Refreshed health selected-view and library covers in both themes after adding the explicit fixed-scale caption; visually inspected the health chart and mobile school/checklist section.
 - `npm run publication:test`: all 5 passed. No data publication or deployment.
 - Final scoped production export passed: 2,372 routes including all place pages/reports and the new health story. `git diff --check` passed. No full backend suite or warehouse rebuild was needed or run.
+
+## Follow-up: retire the separate Check a home card
+
+Removed the standalone Check the actual home card and its section-navigation entry in the Princeton pilot. Kept the visible school-district check with one small “Checking a specific home? Open the buyer’s guide” link underneath. Preserved the old home-check fragment on that link's paragraph for existing URLs. Moved the public-safety report link beside the full-report shortcut at the bottom. Removed unused card CSS and updated the story regression harness's guide-link label. No source content or destination routes removed.
+
+Verification: TypeScript and two SchoolCheck tests passed; 390/1440px light/dark checks verify the removed heading/navigation entry, retained school check, place-aware guide link, relocated report link, no overflow and scoped axe. No full suite/build rerun for this link/card simplification.

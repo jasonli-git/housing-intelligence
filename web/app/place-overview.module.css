@@ -129,15 +129,10 @@
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group):has(.placeData) > h2::after { content: none; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.exhibit-gallery > .exhibit-group-head) { margin: 1rem 0 0; padding: .9rem 0 0; border-top: 1px solid var(--border); font: 600 15px/1.4 var(--font-text); letter-spacing: 0; }
 .page.page :global(.exhibit-group-head)::before { content: none !important; }
-.addressChecks { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: 10px; background: var(--glass); }
-.addressChecks h3 { margin: 0 0 .3rem; font: 500 15px/1.4 var(--font-text); }
-.addressChecks p { margin: 0; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
-.addressChecks a { min-height: 44px; display: inline-flex; align-items: center; gap: .4rem; color: var(--kind-guide); font: 13px/1.4 var(--font-text); text-underline-offset: 3px; }
 .homeChecks { margin: 1.5rem 0; padding: 1rem 1.1rem; border: 1px solid var(--border); border-radius: 12px; }
 .homeChecks h3 { margin: 0 0 .4rem; font: 500 16px/1.4 var(--font-text); }
 .homeChecks p { margin: .35rem 0; font: 13px/1.5 var(--font-text); color: var(--text-secondary); }
 .homeChecks > section > p:first-of-type { color: var(--text-primary); }
-.homeChecks .addressChecks { border: 0; border-top: 1px solid var(--border); border-radius: 0; padding: 1rem 0 0; margin: .75rem 0 0; }
 .homeChecks a[href*="/report"] { color: var(--plate-accent); }
 .page.page :global(.standouts-disclosure) { margin: 0 0 .5rem; border: 0; }
 .page.page :global(.standouts-disclosure > summary) { min-height: 44px; padding: .4rem 0; font-size: 13px; }
@@ -197,3 +192,5 @@
 @media print {
   .page :global(.place-evidence-group)::details-content { content-visibility: visible !important; height: auto !important; }
 }
+
+.homeGuide a { display: inline-flex; align-items: center; min-height: 44px; color: var(--kind-guide); font: 500 13px/1.4 var(--font-text); text-underline-offset: 3px; }

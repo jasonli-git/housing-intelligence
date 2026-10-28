@@ -99,7 +99,7 @@ try {
     assert.equal(await page.locator('.community-crime,.community-health').count(),0,'reporting and health no longer duplicated on profile');
     assert(await page.locator('#community-schools-heading').innerText().then(t=>t.includes('not school assignments')));
     for(const [id,topic] of [['ground-sites-heading','sites'],['flood-risk-heading','flood'],['utilities-heading','utilities'],['community-broadband-heading','broadband']])assert(await page.locator(`#${id}`).evaluate((el,t)=>Boolean(el.closest(`[data-preview-topic="${t}"]`)),topic),'legacy links still reach their topic');
-    assert((await page.getByRole('link',{name:'Open the address checklist'}).getAttribute('href')).endsWith('/guide?place=224#guide-checks-heading'));
+    assert((await page.getByRole('link',{name:'Open the buyer’s guide'}).getAttribute('href')).endsWith('/guide?place=224#guide-checks-heading'));
     assert.equal(await page.locator('.exhibit-gallery .indexed-comparison').count(), 0, 'moved trends do not remain duplicated');
     assert.equal(await page.locator('.exhibit-gallery #more-market-evidence, .exhibit-gallery #sales-heading, .exhibit-gallery .income-pressure, .exhibit-gallery .who-is-moving, .exhibit-gallery .homes-added').count(), 0, 'market exhibits have moved, not been duplicated');
     assert(await page.locator('#sales-heading').evaluate(el => Boolean(el.closest('[data-preview-topic="sales"]'))), 'existing property-tax and guide sale links still land on sales');
@@ -157,7 +157,7 @@ try {
     await page.getByRole('searchbox',{name:'Search stories'}).fill(title);
     const card=page.locator(`a.library-card[href="/stories/${slug}"]`);await card.waitFor();await card.locator('img:visible').evaluate(async img=>{await img.decode();});
   }
-  await page.goto(`${origin}/nj/princeton`);await page.getByRole('link',{name:'Open the address checklist'}).click();
+  await page.goto(`${origin}/nj/princeton`);await page.getByRole('link',{name:'Open the buyer’s guide'}).click();
   await page.waitForURL(url=>url.pathname==='/guide'&&url.searchParams.get('place')==='224');
   assert.equal(new URL(page.url()).searchParams.get('place'),'224');await page.locator('#guide-checks-heading').waitFor({state:'visible'});
   for (const route of ['/nj/hoboken', '/nj/mercer-county', '/nj/zip-08540']) {

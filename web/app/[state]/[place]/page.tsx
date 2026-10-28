@@ -441,7 +441,7 @@ export default async function RegionPage({
     ...(marketFirst ? [{ id: "place-understand", label: "About this place" }] : []),
     ...(!marketFirst ? [{ id: "field-notes", label: "Market" }] : []),
     ...(!marketFirst ? [{ id: "about-getting-around", label: "Getting around" }] : []),
-    ...(marketFirst ? [{id:"place-address-checks-heading",label:"Check a home"}] : [{ id: "about-living-there", label: "Living there" }]),
+    ...(!marketFirst ? [{ id: "about-living-there", label: "Living there" }] : []),
     ...(similar ? [{ id: "place-explore", label: "Alternatives" }] : []),
   ];
 
@@ -680,7 +680,10 @@ export default async function RegionPage({
         </div>
       </details>}
       </ExhibitGallery>
-      {marketFirst && <div className={styles.homeChecks}><SchoolCheck data={community} reportHref={`${regionPath(regionId)}/report`}/><section className={styles.addressChecks} aria-labelledby="place-address-checks-heading"><div><h3 id="place-address-checks-heading">Check the actual home</h3><p>Area figures don’t establish one home’s risk, school assignment or service.</p></div><Link href={`/guide?place=${regionId}#guide-checks-heading`}>Open the address checklist <span aria-hidden="true">↗</span></Link></section><p><Link href={`${regionPath(regionId)}/report#report-community`}>Public-safety reporting & sources →</Link></p></div>}
+      {marketFirst && <div className={styles.homeChecks}>
+        <SchoolCheck data={community} reportHref={`${regionPath(regionId)}/report`}/>
+        <p id="place-address-checks-heading" className={styles.homeGuide}>Checking a specific home? <Link href={`/guide?place=${regionId}#guide-checks-heading`}>Open the buyer’s guide →</Link></p>
+      </div>}
       </section>
       <div id="place-explore">
       {marketFirst ? <CompactAlternatives name={name} data={similar}/> : <SimilarPlaces name={name} state={region.state_code} data={similar} />}
@@ -688,6 +691,7 @@ export default async function RegionPage({
 
       <p className="place-report-line" id="region-detailed-data">
         Want every figure? <Link href={`${regionPath(regionId)}/report`}>The full report</Link> has each measure ranked, its history, sources and downloads.
+        {marketFirst && <> <Link href={`${regionPath(regionId)}/report#report-community`}>Public-safety reporting & sources →</Link></>}
         {" "}Something look wrong? <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a>.
       </p>
       </div>
