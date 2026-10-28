@@ -40,6 +40,7 @@ export function PlaceComparisonRail({name,peers,levels,uncertainties,reportHref,
       event.preventDefault();
       const next=event.key==="Home"?0:event.key==="End"?links.length-1:Math.max(0,Math.min(links.length-1,index+(event.key==="ArrowRight"?1:-1)));
       links[next]?.focus();
+      if(event.key==="Home"||event.key==="End") event.currentTarget.scrollTo({left:event.key==="Home"?0:event.currentTarget.scrollWidth-event.currentTarget.clientWidth,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
     }}>
       {items.map(({row,label,best,worst,position,low,high,margin,rangeMissing})=><li key={row.metric_id}>
         <Link href={`${reportHref}#report-current`} className={styles.tile}>
