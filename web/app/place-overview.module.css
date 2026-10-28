@@ -70,6 +70,10 @@
 .placeData { margin-top: .8rem; }
 .placeData > section { margin: 0; }
 .placeData > section + section { margin-top: 1rem; }
+.page :global(#place-about-frame) { padding: clamp(.85rem,2vw,1.25rem); border: 1px solid color-mix(in srgb,var(--border) 75%,transparent); border-radius: 14px; background: linear-gradient(145deg,color-mix(in srgb,var(--plate-accent) 3%,transparent),transparent 65%),color-mix(in srgb,var(--surface-card) 35%,transparent); }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-about-frame > h2) { margin: 0 0 .7rem !important; padding: 0 !important; border: 0 !important; font: 400 clamp(26px,3vw,36px)/1.2 Georgia,serif !important; letter-spacing: -.025em !important; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-about-frame > h2)::before,
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-about-frame > h2)::after { content: none; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group > h2) { margin-top: 0 !important; padding-top: 1rem !important; font-size: 32px !important; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group > h2)::before { content: none; }
 .page.page :global(.exhibit-gallery > .exhibit-group-head) { margin-top: 1.4rem; padding-top: 1rem; font-size: 27px; }

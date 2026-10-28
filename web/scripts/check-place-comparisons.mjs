@@ -17,11 +17,14 @@ try {
       return {expected:parseFloat(getComputedStyle(document.querySelector('#quiet-cost')).marginTop),gaps:boxes.slice(1).map((box,i)=>box.top-boxes[i].bottom)};
     });
     assert(spacing.gaps.every(gap=>Math.abs(gap-spacing.expected)<1),'one consistent main-section gap');
-    const headingFonts=await page.evaluate(()=>['#place-market-heading','#place-understand > h2'].map(selector=>{
+    const headingFonts=await page.evaluate(()=>['#place-market-heading','#place-about-frame > h2'].map(selector=>{
       const style=getComputedStyle(document.querySelector(selector));
       return [style.fontFamily,style.fontSize,style.fontWeight,style.lineHeight];
     }));
     assert.deepEqual(headingFonts[0],headingFonts[1],'About this place matches the market heading');
+    assert.equal(await page.locator('#place-about-frame section[aria-labelledby="place-comparisons-heading"]').count(),1);
+    assert.equal(await page.locator('#place-about-frame #place-story-gallery').count(),1);
+    assert.equal(await page.locator('#place-about-frame #community-schools-heading').count(),0,'practical school check remains outside the exploration frame');
     assert.equal(await ranks.locator('details').count(),0);
     assert.equal(await page.locator('.standouts-disclosure').count(),0);
     assert.equal(await page.locator('.place-overview-context').count(),0,'duplicate cost sidebar removed');

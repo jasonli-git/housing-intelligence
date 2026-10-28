@@ -4,7 +4,7 @@
 .comparisons header h3 { font: 500 14px/1.4 var(--font-text); letter-spacing: 0; }
 .comparisons header a,.alternatives header a { display: inline-flex; align-items: center; min-height: 44px; color: var(--plate-accent); font: 12px/1.4 var(--font-text); }
 .note { margin: .2rem 0 .6rem; color: var(--text-secondary); font: 11px/1.5 var(--font-text); }
-.rail { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 2rem) / 4.2); gap: .65rem; margin: 0; padding: 3px 3px 10px; list-style: none; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.rail { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 2rem) / 4.2); gap: .65rem; margin: -4px; padding: 4px 4px 12px; list-style: none; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 .rail li { min-width: 0; display: flex; flex-direction: column; scroll-snap-align: start; }
 .revision { margin-top: .3rem; font: 11px/1.4 var(--font-text); color: var(--text-secondary); }
 .revision :global(.figure-updated) { display: block; font: inherit; }
@@ -31,7 +31,8 @@
 .method[open] summary::before { content: "−"; }
 .tile:focus-visible,.rail:focus-visible,.method summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .tile:hover { border-color: var(--plate-accent); }
-:global(body:has(.horizon-page)) main:global(#main-content) .comparisons a.tile { border-radius: 9px; color: var(--text-primary); }
+:global(body:has(.horizon-page)) main:global(#main-content) .comparisons a.tile { border-radius: 6px; border-color: transparent; background: transparent; color: var(--text-primary); }
+:global(body:has(.horizon-page)) main:global(#main-content) .comparisons a.tile:is(:hover,:focus-visible) { border-color: var(--plate-accent); }
 :global(body:has(.horizon-page)) main:global(#main-content) .alternatives :global(#similar-places-heading) { position: static; margin: 0 !important; padding: 0; border: 0; font: 400 clamp(26px,3vw,36px)/1.2 Georgia,serif !important; letter-spacing: -.025em !important; }
 :global(body:has(.horizon-page)) main:global(#main-content) .alternatives :global(#similar-places-heading)::before,
 :global(body:has(.horizon-page)) main:global(#main-content) .alternatives :global(#similar-places-heading)::after { content: none; }

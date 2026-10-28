@@ -566,6 +566,7 @@ export default async function RegionPage({
       {!cost && housingContext}
 
       <section id="place-understand" className="local-understand-group" aria-label="About this place">
+      <QuietAnchor enabled={marketFirst} id="place-about-frame">
       <h2>About this place</h2>
 
       {!quiet && householdContent}
@@ -680,6 +681,7 @@ export default async function RegionPage({
         </div>
       </details>}
       </ExhibitGallery>
+      </QuietAnchor>
       {marketFirst && <div className={styles.homeChecks}>
         <SchoolCheck data={community} reportHref={`${regionPath(regionId)}/report`}/>
         <p id="place-address-checks-heading" className={styles.homeGuide}>Checking a specific home? <Link href={`/guide?place=${regionId}#guide-checks-heading`}>Open the buyer’s guide →</Link></p>
