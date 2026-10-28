@@ -29,3 +29,9 @@ it("places the audited income marker at its point rank, inside the supplied rank
  expect(item.position).toBeGreaterThan(item.low);expect(item.position).toBeLessThan(item.high);
  expect(item.margin).toBe(24402);
 });
+it("ranks the supplied standout measures under their packet labels instead of the curated five",()=>{
+ const tax={...row('modiv_median_tax_bill',8),label:'Annual property tax bill, typical home',survey:false};
+ const items=comparisonMeasures([row('acs_median_hh_income'),tax],empty,['modiv_median_tax_bill','not_in_packet']);
+ expect(items.map(i=>[i.row.metric_id,i.label])).toEqual([['modiv_median_tax_bill','Annual property tax bill, typical home']]);
+ expect(comparisonMeasures([row('acs_median_hh_income')],empty,[])).toEqual([]);
+});

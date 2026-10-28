@@ -43,6 +43,8 @@ try {
     assert.equal(await ranks.locator('li').count(),5);
     assert((await ranks.locator('ul').boundingBox()).height<230);
     assert(await ranks.evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('#place-story-gallery'))&Node.DOCUMENT_POSITION_FOLLOWING)));
+    // The rail lists only standout measures; carousel motion needs two or more.
+    if(await ranks.locator('ul a[data-comparison-measure]').count()>1){
     await ranks.hover();
     const next=ranks.getByRole('button',{name:'Next ranked measures'});
     assert.equal(await next.evaluate(e=>e.className),await page.getByRole('button',{name:'Next local stories'}).evaluate(e=>e.className),'shared frosted-glass arrow styling');
@@ -55,6 +57,7 @@ try {
     await page.waitForFunction(()=>document.querySelector('[aria-label="Next ranked measures"]').disabled);
     await page.keyboard.press('Home');
     assert(await links.first().evaluate(e=>e===document.activeElement));
+    }
     assert.equal(await alternatives.locator('ul > li').count(),3);
     assert.equal(await alternatives.locator('table').count(),1);
     assert.equal(await alternatives.locator('tbody tr').count(),6,'price, four matching traits and commute stay visible');

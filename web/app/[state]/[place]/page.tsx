@@ -620,7 +620,7 @@ export default async function RegionPage({
       </ConsumerReading>
       </QuietAnchor>
       {marketFirst && <div className={styles.placeData}>
-        <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`} revisions={new Map(profile.flatMap(item=>item.updated?[[item.metric_id,item.updated] as const]:[]))}/>
+        <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`} revisions={new Map(profile.flatMap(item=>item.updated?[[item.metric_id,item.updated] as const]:[]))} measures={[...new Set(standing.filter(item=>item.group==="value").map(item=>item.metric_id))]}/>
         <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} />
       </div>}
       <ExhibitGallery>
