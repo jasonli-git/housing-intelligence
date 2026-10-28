@@ -125,6 +125,8 @@
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.exhibit-kicker) { margin: 0 0 .6rem; padding: 0; border: 0; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.exhibit-kicker > span:first-child) { padding: 0 !important; border: 0 !important; border-radius: 0; background: transparent !important; color: var(--text-secondary) !important; font: 500 12px/1.4 var(--font-text) !important; letter-spacing: 0; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group > h2) { margin: 0 0 .7rem !important; padding: 0 !important; font: 500 18px/1.4 var(--font-text) !important; border: 0 !important; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group):has(.placeData) > h2 { font: 400 clamp(26px,3vw,36px)/1.2 Georgia,serif !important; letter-spacing: -.025em !important; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group):has(.placeData) > h2::after { content: none; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.exhibit-gallery > .exhibit-group-head) { margin: 1rem 0 0; padding: .9rem 0 0; border-top: 1px solid var(--border); font: 600 15px/1.4 var(--font-text); letter-spacing: 0; }
 .page.page :global(.exhibit-group-head)::before { content: none !important; }
 .addressChecks { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: 10px; background: var(--glass); }

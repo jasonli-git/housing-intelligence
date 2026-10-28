@@ -27,3 +27,13 @@ No push/deploy. Existing local-only Princeton pilot scope remains.
 - No full suite/build rerun for this heading/spacing refinement.
 - Story headlines now use h4 beneath the Local stories h3; their visual styling and deep-link IDs remain unchanged. Updated the story browser harness headline selector accordingly.
 - Typecheck and five focused tests passed. All four width/theme hierarchy/navigation/axe checks passed after correcting an initial harness assertion that counted both responsive navigation representations as two entries. Final story-heading styling/axe check run separately.
+
+## Follow-up: main heading and shared rail arrows
+
+Promoted About this place to the same responsive Georgia size/weight/line-height as The housing market, scoped to the Princeton grouped-data pilot. Added previous/next controls to the ranked-measure rail using the exact CSS module classes from Local stories: same frosted-glass surface, hover/focus fade, touch visibility, edge disabling, 85%-viewport paging and reduced-motion handling. The measure rail also supports ArrowLeft/ArrowRight/Home/End on its focused links.
+
+The comparison rail is now a client component for measured scroll/resize state, with cleanup of its listener/observer. Existing packet/uncertainty Maps remain serializable across the React server/client boundary; verified by the production export and local hydration checks. No ranking/calculation changes.
+
+Verification: TypeScript and all 847 web tests passed; scoped production export passed (1,188 routes). Extended the comparison browser harness to check exact heading-font parity, shared control classes and forward/back/keyboard edge behavior. Initial custom check sampled the previous-button state before the asynchronous scroll event updated it; final harness waits for the edge state before asserting. Final browser outcomes appended on completion.
+
+The final `check-place-comparisons.mjs` run passed at 320/390/768/1440px in both themes, including heading parity, shared arrows/edge states/keyboard, comparison navigation/back, overflow and scoped axe; nonpilot Hoboken retained its prior layout. `git diff --check` passed.
