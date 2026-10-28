@@ -432,7 +432,7 @@ export default async function RegionPage({
 
   // Counties only (ARCHITECTURE #368): a town's or ZIP's page never shows one.
   const photo = region.level === "county" ? photoFor(region.geoid) : undefined;
-  const housingContext = quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
+  const housingContext = !marketFirst && quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
   const sections = [
     { id: "place-overview", label: "Overview" },
     ...(marketFirst ? [{ id: "place-market", label: "Market at a glance" }] : []),
@@ -616,7 +616,7 @@ export default async function RegionPage({
       </ConsumerReading>
       </QuietAnchor>
       {marketFirst && <div className={styles.placeData}>
-        <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`}/>
+        <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`} revisions={new Map(profile.flatMap(item=>item.updated?[[item.metric_id,item.updated] as const]:[]))}/>
         <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} />
       </div>}
       <ExhibitGallery>

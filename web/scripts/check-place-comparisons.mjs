@@ -24,6 +24,9 @@ try {
     assert.deepEqual(headingFonts[0],headingFonts[1],'About this place matches the market heading');
     assert.equal(await ranks.locator('details').count(),0);
     assert.equal(await page.locator('.standouts-disclosure').count(),0);
+    assert.equal(await page.locator('.place-overview-context').count(),0,'duplicate cost sidebar removed');
+    assert.equal(await ranks.locator('a a').count(),0,'revision links are not nested in measure links');
+    for(const notice of await ranks.locator('.figure-updated a').all()) assert.equal(await notice.getAttribute('href'),'/changes');
     assert.equal(await ranks.locator('li').count(),5);
     assert((await ranks.locator('ul').boundingBox()).height<180);
     assert(await ranks.evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('#place-story-gallery'))&Node.DOCUMENT_POSITION_FOLLOWING)));
@@ -33,7 +36,7 @@ try {
     await next.click();
     await page.waitForFunction(()=>!document.querySelector('[aria-label="Previous ranked measures"]').disabled);
     await ranks.getByRole('button',{name:'Previous ranked measures'}).click();
-    const links=ranks.locator('ul a');
+    const links=ranks.locator('ul > li > a');
     await links.first().focus();await page.keyboard.press('End');
     assert(await links.last().evaluate(e=>e===document.activeElement));
     await page.waitForFunction(()=>document.querySelector('[aria-label="Next ranked measures"]').disabled);

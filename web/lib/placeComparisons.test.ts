@@ -15,3 +15,9 @@ it("omits missing/invalid ranks and uncurated repeats while naming absent uncert
  expect(comparisonMeasures([row('zhvi_sfr'),row('acs_median_hh_income',0)],empty)).toEqual([]);
  expect(comparisonMeasures([row('acs_median_hh_income')],empty)[0].rangeMissing).toBe(true);
 });
+it("preserves the sidebar's property-record home age with survey age only as a fallback",()=>{
+ const parcel={...row('modiv_median_year_built'),value:1958,survey:false};
+ const survey={...row('acs_median_year_built'),value:1965};
+ expect(comparisonMeasures([survey,parcel],empty).map(i=>i.row.metric_id)).toEqual(['modiv_median_year_built']);
+ expect(comparisonMeasures([survey],empty)[0].row.metric_id).toBe('acs_median_year_built');
+});
