@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 
 const origin = process.env.SITE_URL ?? 'http://localhost:3002';
 const output = resolve(process.env.PLACE_STORY_SHOT_DIR ?? '../dist/artifacts/screenshots/place-stories');
-const stories = { health:'health-in-context', market: 'income-and-home-value', sales: 'price-ladder', pressure: 'who-feels-housing-costs', lending: 'the-mortgage-market', building: 'is-new-jersey-building', migration: 'who-moves-in', commute: 'the-long-commute-premium', water: 'water-you-can-check',flood:'the-flood-claims-calendar',sites:'sites-and-cleanup',utilities:'when-the-power-goes-out',broadband:'where-internet-reaches' };
+const stories = { health:'health-in-context', market: 'income-and-home-value', sales: 'price-ladder', pressure: 'who-feels-housing-costs', lending: 'the-mortgage-market', building: 'is-new-jersey-building', migration: 'who-moves-in', commute: 'the-long-commute-premium', water: 'water-you-can-check',flood:'the-flood-claims-calendar',sites:'sites-and-cleanup',utilities:'when-the-power-goes-out',broadband:'where-internet-reaches',schools:'where-students-go' };
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch();
 const start = performance.now(), files = [];

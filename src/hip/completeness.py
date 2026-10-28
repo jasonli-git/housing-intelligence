@@ -252,6 +252,9 @@ METRIC_SUBJECTS: dict[str, str] = {
     "acs_married_couple_share": "context",
     "acs_with_children_share": "context",
     "acs_disability_share": "context",
+    "acs_k12_private_share": "context",
+    "acs_k8_private_share": "context",
+    "acs_hs_private_share": "context",
     # The visual stories (2026-10-22): shops, shade, height and street names describe
     # the place rather than its housing.
     "osm_wawa_count": "context",

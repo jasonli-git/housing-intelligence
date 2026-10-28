@@ -6,6 +6,7 @@ import { surveyYears } from "./periods";
 import { marketStorySummary } from "./marketPlaceStories";
 import { healthStorySummary } from "./healthPlaceStory";
 import { livingStorySummary } from "./livingPlaceStories";
+import { schoolsStorySummary } from "./schoolPlaceStory";
 import type { FloodStoryData } from "./placeFloodStory";
 
 export const PLACE_STORIES = {
@@ -17,6 +18,7 @@ export const PLACE_STORIES = {
   building: { slug: "is-new-jersey-building", title: "Building & demolition" },
   migration: { slug: "who-moves-in", title: "County arrivals & departures" },
   commute: { slug: "the-long-commute-premium", title: "Getting around" },
+  schools: { slug: "where-students-go", title: "Where students go" },
   water: { slug: "water-you-can-check", title: "Water you can check" },
   flood: { slug: "the-flood-claims-calendar", title: "Flood exposure & claims" },
   sites: { slug: "sites-and-cleanup", title: "Sites & cleanup" },
@@ -67,6 +69,7 @@ export function makePlaceStoryRecord(topic: PlaceStoryTopic, place: PlaceStoryRe
     : topic === "building" ? /^(permits_|nj_units_|nj_net_|nj_certificates_|nj_demolitions_)/.test(id)
     : topic === "sites" ? id.startsWith("njdep_sites_")
     : topic === "flood" ? /^(fema_|njdep_tidal_)/.test(id)
+    : topic === "schools" ? /^acs_(k12|k8|hs)_private_share$/.test(id)
     : topic === "water" && id.startsWith("water_");
   return { topic, place, levels: levels.filter(l => keep(l.metric_id)), metrics: extra.metrics ?? [], history: (extra.history ?? []).map(s => ({ metricId: s.metricId, observations: s.observations })),
     water: extra.water?.region_id === place.region_id && Array.isArray(extra.water.systems) ? extra.water : null,
@@ -77,6 +80,7 @@ export function makePlaceStoryRecord(topic: PlaceStoryTopic, place: PlaceStoryRe
     ...(topic === "flood" ? { flood:extra.flood?.region_id === place.region_id ? extra.flood : null } : {}),
     ...(topic === "utilities" ? { utilities:extra.utilities?.region_id === place.region_id ? extra.utilities : null, utilityInquiry:extra.utilityInquiry ?? null } : {}),
     ...(topic === "health" ? {community:extra.community?.region_id===place.region_id ? {...extra.community,districts:[],crime:[],broadband:[],broadband_place:null} : null} : {}),
+    ...(topic === "schools" ? { community:extra.community?.region_id === place.region_id ? {...extra.community,health:[],crime:[],broadband:[],broadband_place:null} : null } : {}),
     ...(topic === "broadband" ? { community:extra.community?.region_id === place.region_id ? {...extra.community,districts:[],health:[],crime:[]} : null } : {}), snapshot: "" };
 }
 export function summarizePlaceStory(record: PlaceStoryRecord): PlaceStorySummary {
@@ -84,6 +88,7 @@ export function summarizePlaceStory(record: PlaceStoryRecord): PlaceStorySummary
   const row = (id: string) => record.levels.find(l => l.metric_id === id && Number.isFinite(l.value) && typeof l.period_start === "string" && typeof l.period_end === "string" && /^\d{4}-\d{2}-\d{2}$/.test(l.period_start) && /^\d{4}-\d{2}-\d{2}$/.test(l.period_end));
   const chartRow = (l: PacketLevel, label: string) => ({ label, value: l.value, formatted: formatMetric(l.value, l.unit, l.metric_id), margin: marginLabel(l.value, l.margin_of_error ?? null, l.unit, l.metric_id) ?? undefined });
   if(record.topic === "health") return healthStorySummary(record);
+  if(record.topic === "schools") return schoolsStorySummary(record);
   const additional = marketStorySummary(record);
   if (additional) return additional;
   const living = livingStorySummary(record);

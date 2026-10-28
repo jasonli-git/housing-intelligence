@@ -13,7 +13,6 @@ import { makePlaceStoryRecord, PLACE_STORIES, storyHistoryMetrics, type PlaceSto
 import { stampPlaceStory } from "@/lib/placeStoryData";
 import { PlaceStoryGallery } from "@/components/PlaceStoryGallery";
 import { PlaceComparisonRail } from "@/components/PlaceComparisonRail";
-import { SchoolCheck } from "@/components/SchoolCheck";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
 import "../../horizon-theme.css";
@@ -310,7 +309,7 @@ export default async function RegionPage({
       history: topic === "market" ? series : topic === "building" ? storyHistoryMetrics(topic).map((metricId, i) => ({ metricId, observations: construction[i] })) : [],
       water: topic === "water" ? water : null, destinations: topic === "commute" ? workDestinations : null,
       pressure: topic === "pressure" ? pressure : null, migration: topic === "migration" ? migration : null,
-      flood:topic === "flood" ? floodClaims:null, utilities:topic === "utilities" ? utilities:null, utilityInquiry:topic === "utilities" ? bpuInquiry:null, community:(topic === "broadband" || topic === "health") ? community:null }))) : [];
+      flood:topic === "flood" ? floodClaims:null, utilities:topic === "utilities" ? utilities:null, utilityInquiry:topic === "utilities" ? bpuInquiry:null, community:(topic === "broadband" || topic === "health" || topic === "schools") ? community:null }))) : [];
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
   // (ARCHITECTURE #275), and a file published before then that still carries one is
@@ -626,8 +625,7 @@ export default async function RegionPage({
       </QuietAnchor>
       {marketFirst && <div className={styles.placeData}>
         <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`} revisions={new Map(profile.flatMap(item=>item.updated?[[item.metric_id,item.updated] as const]:[]))} measures={[...new Set(standing.filter(item=>item.group==="value").map(item=>item.metric_id))]}/>
-        <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} />
-        <SchoolCheck line data={community} reportHref={`${regionPath(regionId)}/report`} guideHref={`/guide?place=${regionId}#guide-checks-heading`}/>
+        <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} guideHref={`/guide?place=${regionId}#guide-checks-heading`} />
       </div>}
       <ExhibitGallery>
       {!marketFirst && <>

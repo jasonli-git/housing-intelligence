@@ -1,7 +1,7 @@
 -- The people and households, from the ACS in depth (Milestone 34): how workers get to
 -- work and how long it takes, who households are, and disability — at county,
--- municipality and ZCTA, each with its margin of error. Reads the `people_` and
--- `disability_` layers.
+-- municipality and ZCTA, each with its margin of error. Reads the `people_`,
+-- `disability_` and `schools_` layers.
 {{ config(materialized='table') }}
 
 {%- set people = ['B08301_001', 'B08301_003', 'B08301_010', 'B08301_019', 'B08301_021',
@@ -11,6 +11,11 @@
 {%- set disabled = ['B18101_004', 'B18101_007', 'B18101_010', 'B18101_013', 'B18101_016',
                     'B18101_019', 'B18101_023', 'B18101_026', 'B18101_029', 'B18101_032',
                     'B18101_035', 'B18101_038'] %}
+{#- Kindergarten to grade 12, boys then girls: K, 1-4, 5-8, 9-12. #}
+{%- set k8_public = ['B14002_008', 'B14002_011', 'B14002_014', 'B14002_032', 'B14002_035', 'B14002_038'] %}
+{%- set k8_private = ['B14002_009', 'B14002_012', 'B14002_015', 'B14002_033', 'B14002_036', 'B14002_039'] %}
+{%- set hs_public = ['B14002_017', 'B14002_041'] %}
+{%- set hs_private = ['B14002_018', 'B14002_042'] %}
 
 with people_keyed as (
     select geoid, level, release_layer, vintage,
@@ -21,6 +26,11 @@ disability_keyed as (
     select geoid, level, release_layer, vintage,
            {{ acs_columns(['B18101_001'] + disabled) }}
     from ({{ acs_layers('disability_') }})
+),
+schools_keyed as (
+    select geoid, level, release_layer, vintage,
+           {{ acs_columns(k8_public + k8_private + hs_public + hs_private) }}
+    from ({{ acs_layers('schools_') }})
 ),
 unpivoted as (
     -- Workers 16 and over, by how they usually got to work in the survey week.
@@ -45,6 +55,11 @@ unpivoted as (
     -- Any of the six difficulties the survey asks about — hearing, vision, cognition,
     -- walking, self-care, living independently — among people not in an institution.
     union all {{ acs_share('acs_disability_share', disabled, ['B18101_001'], relation='disability_keyed') }}
+    -- Children who live here and attend kindergarten to grade 12, the share at a private
+    -- school: all grades, kindergarten to grade 8, and high school.
+    union all {{ acs_share('acs_k12_private_share', k8_private + hs_private, k8_public + k8_private + hs_public + hs_private, relation='schools_keyed') }}
+    union all {{ acs_share('acs_k8_private_share', k8_private, k8_public + k8_private, relation='schools_keyed') }}
+    union all {{ acs_share('acs_hs_private_share', hs_private, hs_public + hs_private, relation='schools_keyed') }}
 )
 select
     'census_acs' as source_id,

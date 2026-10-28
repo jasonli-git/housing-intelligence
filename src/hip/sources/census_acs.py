@@ -148,6 +148,13 @@ DEPTH_LAYERS: dict[str, tuple[str, ...]] = {
         "B18101_001E",
         *_cells("B18101", 4, 7, 10, 13, 16, 19, 23, 26, 29, 32, 35, 38),
     ),
+    # Where children who live here go to school (2026-10-28): kindergarten to grade 12
+    # by public or private school (B14002), each sex's four grade bands. Charter, county
+    # vocational and choice schools are public schools in this table.
+    "schools_": (
+        *_cells("B14002", 8, 9, 11, 12, 14, 15, 17, 18),
+        *_cells("B14002", 32, 33, 35, 36, 38, 39, 41, 42),
+    ),
 }
 
 # The first edition tabulated on the 2020 ZCTAs, and so the first asked for them.

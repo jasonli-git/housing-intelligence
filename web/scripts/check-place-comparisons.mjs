@@ -26,7 +26,7 @@ try {
     assert.deepEqual(headingFonts[0],headingFonts[1],'About this place matches the market heading');
     assert.equal(await page.locator('#place-about-frame section[aria-labelledby="place-comparisons-heading"]').count(),1);
     assert.equal(await page.locator('#place-about-frame #place-story-gallery').count(),1);
-    assert.equal(await page.locator('#place-about-frame #community-schools-heading').count(),1,'school district is one line inside About this place');
+    assert.equal(await page.locator('#place-story-gallery #community-schools-heading').count(),1,'schools are a local story');
     const profile=page.locator('#place-housing-profile');
     assert.equal(await profile.locator('[data-profile-primary] article').count(),3);
     assert.equal(await profile.locator('[data-profile-more]').count(),1);

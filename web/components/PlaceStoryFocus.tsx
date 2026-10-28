@@ -18,6 +18,7 @@ import { HowUnusual } from "./HowUnusual";
 import { FloodRisk } from "./FloodRisk";
 import { Utilities } from "./Utilities";
 import { BroadbandStoryExplorer, UtilityOutageExplorer } from "./LivingStoryExplorers";
+import { SchoolsStory } from "./SchoolsStory";
 import { loadFloodStory } from "@/lib/placeFloodStory";
 import { coveredState } from "@/lib/states";
 import { displayName } from "@/lib/names";
@@ -61,7 +62,7 @@ export function PlaceStoryFocus({ initial, artifactUrl }: { initial: PlaceStoryR
           initial.topic === "migration" ? optionalJson<Migration>(`${base}/migration.json`, abort.signal) : null,
           initial.topic === "utilities" ? optionalJson<UtilityData>(`${base}/utilities.json`, abort.signal) : null,
           initial.topic === "utilities" ? optionalJson<{sources:{source_id:string;inquiries?:Inquiry[]}[]}>(`${artifactUrl}/freshness.json`,abort.signal):null,
-          (initial.topic === "broadband" || initial.topic === "health") ? optionalJson<CommunityData>(`${base}/community.json`,abort.signal):null,
+          (initial.topic === "broadband" || initial.topic === "health" || initial.topic === "schools") ? optionalJson<CommunityData>(`${base}/community.json`,abort.signal):null,
         ]);
         if (!packet || packet.region?.region_id !== id || !Array.isArray(packet.levels) || !["county", "municipality", "zip"].includes(packet.region.level)) throw new Error("No supported place packet");
         // Only an explicit county selection or a verified county parent supplies
@@ -117,6 +118,7 @@ export function PlaceStoryFocus({ initial, artifactUrl }: { initial: PlaceStoryR
         {record.topic === "health" && <CommunityContext data={record.community??null} level={record.place.level} topics={["health"]}/>}
         {record.topic === "sites" && <GroundAndWater name={name} levels={record.levels} water={null} scope="sites"/>}
         {record.topic === "utilities" && <><UtilityOutageExplorer key={record.place.region_id} data={record.utilities??null}/><Utilities data={record.utilities??null} bpuInquiry={record.utilityInquiry??undefined}/></>}
+        {record.topic === "schools" && <SchoolsStory name={name} record={record}/>}
         {record.topic === "broadband" && <BroadbandStoryExplorer key={record.place.region_id} data={record.community??null} level={record.place.level}/>}
         {record.topic === "flood" && <FloodRisk name={name} levels={record.levels} claims={record.flood?.claims??[]} paid={record.flood?.paid??[]} unplaced={record.flood?.unplaced??[]} newestYear={record.flood?.newest??null} claimsPlace={record.flood?.place??null} estimated={record.flood?.estimated??false} unseparable={record.flood?.unseparable??false}/>}
         {record.topic === "sales" && <HomeSales name={name} level={record.place.level} geoid={record.place.geoid ?? ""} levels={record.levels} showLookup={false} portrait />}

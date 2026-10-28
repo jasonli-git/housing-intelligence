@@ -12,7 +12,7 @@ function PreviewImage({ src, className }: { src: string; className: string }) {
   const [failed, setFailed] = useState(false);
   return failed ? null : <img className={className} src={src} alt="" loading="lazy" decoding="async" width="800" height="500" onError={() => setFailed(true)} />;
 }
-export function PlaceStoryGallery({ records, artifactUrl }: { records: PlaceStoryRecord[]; artifactUrl: string }) {
+export function PlaceStoryGallery({ records, artifactUrl, guideHref }: { records: PlaceStoryRecord[]; artifactUrl: string; guideHref?: string }) {
   const name = records[0] ? placeStoryName(records[0]) : "this place";
   const track=useRef<HTMLDivElement>(null);
   const [edges,setEdges]=useState({start:true,end:false});
@@ -48,7 +48,7 @@ export function PlaceStoryGallery({ records, artifactUrl }: { records: PlaceStor
       return <Link key={record.topic} id={record.topic === "commute" ? "about-getting-around" : record.topic === "utilities" ? "local-property-evidence" : `story-${record.topic}-preview`} className={styles.card} href={placeStoryHref(record.topic, record.place.region_id)} prefetch={false} data-preview-topic={record.topic} data-preview-snapshot={record.snapshot}>
         <div className={styles.cover} aria-hidden="true"><PlaceStoryChart record={record} /><PreviewImage key={`${prefix}-light`} className={styles.light} src={`${prefix}-light.jpg`} /><PreviewImage key={`${prefix}-dark`} className={styles.dark} src={`${prefix}-dark.jpg`} /></div>
         <p className={styles.topic}><span className={styles.topicName}>{PLACE_STORIES[record.topic].title}</span><span className={styles.openArrow} aria-hidden="true">↗</span></p>
-        <h4 id={({ water: "ground-water-heading", commute: "getting-around-heading", sales: "sales-heading", lending: "state-loans-exhibit", building: "homes-added-heading", migration: "who-is-moving-heading", pressure: "income-pressure-heading",sites:"ground-sites-heading",flood:"flood-risk-heading",utilities:"utilities-heading",broadband:"community-broadband-heading" } as Partial<Record<string,string>>)[record.topic]}>{summary.headline}</h4>
+        <h4 id={({ water: "ground-water-heading", commute: "getting-around-heading", sales: "sales-heading", lending: "state-loans-exhibit", building: "homes-added-heading", migration: "who-is-moving-heading", pressure: "income-pressure-heading",sites:"ground-sites-heading",flood:"flood-risk-heading",utilities:"utilities-heading",broadband:"community-broadband-heading",schools:"community-schools-heading" } as Partial<Record<string,string>>)[record.topic]}>{summary.headline}</h4>
         <p className={styles.qualifier}>{livingPreviewNote(record) ?? placeStoryPreviewNote(record)}</p>
         <div className={styles.previewMeta}>
           <p>{summary.source} · {summary.period}</p>
@@ -57,6 +57,6 @@ export function PlaceStoryGallery({ records, artifactUrl }: { records: PlaceStor
     })}</div>
     <button type="button" className={`${styles.railArrow} ${styles.nextArrow}`} aria-label="Next local stories" aria-controls="local-stories-track" disabled={edges.end} onClick={()=>move(1)}>›</button>
     </div>
-    <p className={styles.safety}>Checking a particular home? <a href="https://www9.state.nj.us/DEP_WaterWatch_public/" target="_blank" rel="noreferrer">Check the supplier’s current water records ↗</a>. System records do not describe a private well.</p>
+    <p className={styles.safety}>Checking a particular home? {guideHref && <><Link href={guideHref}>Open the buyer’s guide checks →</Link> · </>}<a href="https://www9.state.nj.us/DEP_WaterWatch_public/" target="_blank" rel="noreferrer">Check the supplier’s current water records ↗</a>. System records do not describe a private well.</p>
   </section>;
 }

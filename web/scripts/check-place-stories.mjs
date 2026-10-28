@@ -25,7 +25,7 @@ try {
     assert(await track.locator('a[data-preview-topic]').last().evaluate(el=>el===document.activeElement));
     await page.keyboard.press('Home');
     assert(await track.locator('a[data-preview-topic]').first().evaluate(el=>el===document.activeElement));
-    const topics = ['market', 'sales', 'pressure', 'lending', 'building', 'migration', 'commute', 'water','flood','sites','utilities','broadband','health'];
+    const topics = ['market', 'sales', 'pressure', 'lending', 'building', 'migration', 'commute', 'schools', 'water','flood','sites','utilities','broadband','health'];
     assert.equal(await gallery.locator('[data-preview-topic]').count(), topics.length);
     assert.equal(await gallery.locator('[data-preview-topic="past"]').count(), 0, 'history card removed from gallery');
     for (const topic of topics) {
@@ -97,7 +97,7 @@ try {
     assert.equal(await page.locator('#about-living-there').count(),0,'retired pilot wrapper');
     assert(await page.locator('#community-schools-heading').isVisible());
     assert.equal(await page.locator('.community-crime,.community-health').count(),0,'reporting and health no longer duplicated on profile');
-    assert(await page.locator('#community-schools-heading').innerText().then(t=>t.includes('not school assignments')));
+    assert(await page.locator('#community-schools-heading').innerText().then(t=>t.includes('private school')));
     for(const [id,topic] of [['ground-sites-heading','sites'],['flood-risk-heading','flood'],['utilities-heading','utilities'],['community-broadband-heading','broadband']])assert(await page.locator(`#${id}`).evaluate((el,t)=>Boolean(el.closest(`[data-preview-topic="${t}"]`)),topic),'legacy links still reach their topic');
     assert((await page.getByRole('link',{name:'Open the buyer’s guide'}).getAttribute('href')).endsWith('/guide?place=224#guide-checks-heading'));
     assert.equal(await page.locator('.exhibit-gallery .indexed-comparison').count(), 0, 'moved trends do not remain duplicated');

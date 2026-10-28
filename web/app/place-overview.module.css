@@ -226,10 +226,6 @@
 /* The comparison caveat belongs to the cost figures above it: a footnote, not a section. */
 .fiveSections :global(.place-cost-overview .cost-evidence) { margin-top: .25rem; padding-left: 1rem; border-left: 2px solid color-mix(in srgb,var(--plate-accent) 45%,transparent); }
 /* The school district as one line after Local stories, its qualification beside the name. */
-.placeData :global(.school-line) { margin: 1rem 0 0; padding-top: .85rem; border-top: 1px solid var(--border); color: var(--text-secondary); font: 13px/1.6 var(--font-text); }
-.placeData :global(.school-line strong) { color: var(--text-primary); font-weight: 500; }
-.placeData :global(.school-line span) { font-size: 12px; }
-.placeData :global(.school-line a) { color: var(--plate-accent); text-underline-offset: 3px; }
 /* A tighter opening: less air in the header and before the first section, so the market
    starts higher; the wider gap is kept between the sections themselves. */
 :global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections > :global(header#place-overview) { padding-top: .6rem; padding-bottom: .75rem; }
