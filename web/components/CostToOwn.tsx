@@ -194,6 +194,8 @@ export function CostToOwn({
   const [fields, setFields] = useState<HomeFields>(NO_HOME_FIELDS);
   const [view, setView] = useState<View>("upfront");
   const [calculationOpen,setCalculationOpen] = useState(false);
+  // The part of the payment bar a reader is pointing at, tapping or focused on.
+  const [barPart,setBarPart] = useState<string | null>(null);
 
   const setPersonal = (key: keyof Personal, value: number | null) => {
     const next = { ...personal };
@@ -587,6 +589,11 @@ export function CostToOwn({
         </details>
       );
 
+  const segments = [
+    ...parts.map((p) => ({ key: p.key, label: p.label, value: p.value, colour: PART_COLOURS[p.key] })),
+    { key: "kept", label: "Paid into your home", value: kept, colour: "var(--good)" },
+  ].filter((p) => p.value > 0);
+  const active = segments.find((p) => p.key === barPart) ?? null;
   const ownershipBreakdown = <>
           {/* Stated assumptions, not a forecast of rates (#327). */}
           <ReaderDetails title="At other mortgage rates" className="mortgage-rate-details">
@@ -617,18 +624,33 @@ export function CostToOwn({
           <div className="gone-kept">
             <div
               className="gone-kept-bar"
-              role="img"
+              role="group"
               aria-label={
                 `Of ${money(month.total)}: ` +
                 parts.map((p) => `${p.label.toLowerCase()} ${money(p.value)}`).join(", ") +
                 `, and ${money(kept)} paid into the home`
               }
             >
-              {parts.map((p) => (
-                <i key={p.key} style={{ width: share(p.value, month.total), background: PART_COLOURS[p.key] }} />
+              {segments.map((p) => (
+                <button
+                  type="button"
+                  key={p.key}
+                  className="gone-kept-part"
+                  aria-pressed={barPart === p.key}
+                  aria-label={`${p.label}: ${money(p.value)} a month, ${Math.round((p.value / month.total) * 100)}% of the payment`}
+                  style={{ width: share(p.value, month.total), background: p.colour }}
+                  onMouseEnter={() => setBarPart(p.key)}
+                  onFocus={() => setBarPart(p.key)}
+                  onClick={() => setBarPart(p.key)}
+                />
               ))}
-              <i style={{ width: share(kept, month.total), background: "var(--good)" }} />
             </div>
+            <p className="gone-kept-readout" aria-live="polite">
+              {active ? <>
+                <i style={{ background: active.colour }} />
+                <span>{active.label}</span> <b>{money(active.value)}</b> a month · {Math.round((active.value / month.total) * 100)}% of the payment
+              </> : <span>Hover or tap a colour to see what it pays for.</span>}
+            </p>
             {quiet && <p className="quiet-receipt"><span>Money gone <b>{money(month.gone)}</b></span><span>Into the home <b>{money(kept)}</b></span></p>}
             <p className="gone-kept-key" aria-hidden="true">
               {parts.map((p) => (

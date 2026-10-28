@@ -47,6 +47,7 @@
 @media(prefers-reduced-motion: reduce) { .page :global(.cost-updated-value) { animation: none; } }
 @media(max-width:600px) { .page.page :global(.cost-use-numbers .budget-inputs) { grid-template-columns: minmax(0,1fr); } }
 .page :global(.cost-ownership-breakdown .gone-kept) { margin-block: .6rem 0; }
+.page.page :global(.cost-ownership-breakdown .gone-kept-bar) { height: 10px; }
 .page :global(.place-overview-context :is(.quiet-portrait-dots, .quiet-portrait-house)) { display: none; }
 .page :global(.quiet-tool-group > .cost-yours) { margin-block: 1rem; }
 .page :global(.budget-inputs select) { min-height: 44px; width: 100%; font: inherit; color: var(--text-primary); background: var(--surface-card); border: 1px solid var(--border); border-radius: 6px; padding: .5rem; }
