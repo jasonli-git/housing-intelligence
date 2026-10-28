@@ -66,8 +66,8 @@
   header.page-head .town-pills label { display: block; font-size: 0; }
   header.page-head .town-pills input { width: 13rem; min-height: 38px; padding: .4rem .8rem; border-radius: 999px; font-size: 14px; }
   header.page-head .town-pills [role="status"] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  header.page-head .town-pills ul { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .85rem; }
-  header.page-head .town-pills li { min-width: 0; }
+  header.page-head .town-pills ul { display: flex; flex-wrap: nowrap; gap: .45rem; margin: .85rem 0 0; padding: 0 2.5rem .5rem 0; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: thin; -webkit-mask-image: linear-gradient(90deg, black calc(100% - 3rem), transparent); mask-image: linear-gradient(90deg, black calc(100% - 3rem), transparent); }
+  header.page-head .town-pills li { flex: none; scroll-snap-align: start; }
   header.page-head .town-pills a { display: inline-flex; gap: .4rem; min-height: 36px; padding: .4rem .85rem; border: 1px solid var(--glass-edge, var(--border)); border-radius: 999px; background: var(--glass, var(--surface-card)); font-size: 14px; white-space: nowrap; }
   header.page-head .town-pills a span { font-size: 12px; opacity: .6; }
   header.page-head .town-pills a:hover { border-color: var(--plate-accent, var(--text-secondary)); text-decoration: none; }
@@ -80,7 +80,7 @@
     }
     .quiet-county > header.page-head.has-photo > .town-pills { grid-area: towns; align-self: start; }
     .quiet-county > header.page-head.has-photo:has(> .town-pills) > .place-photo {
-      position: relative; align-self: stretch; justify-self: stretch; max-width: none; margin-top: .4rem; min-height: 360px; border-radius: 16px; overflow: hidden;
+      position: relative; align-self: stretch; justify-self: stretch; max-width: none; margin-top: .4rem; min-height: 280px; border-radius: 16px; overflow: hidden;
     }
     .quiet-county > header.page-head.has-photo:has(> .town-pills) > .place-photo picture { position: absolute; inset: 0; }
     .quiet-county > header.page-head.has-photo:has(> .town-pills) > .place-photo img { height: 100%; aspect-ratio: auto; border-radius: 0; }
