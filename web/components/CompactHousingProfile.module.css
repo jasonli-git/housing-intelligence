@@ -1,4 +1,4 @@
-.profile { min-width: 0; margin: 0; padding: 0; }
+.profile { min-width: 0; margin: 0; padding: .85rem 1rem .2rem; border: 1px solid var(--glass-edge,var(--border)); border-radius: 12px; background: var(--glass); }
 :global(body:has(.horizon-page)) main:global(#main-content) .profile > h3 { margin: 0 0 .8rem !important; padding: 0 !important; font: 500 14px/1.4 var(--font-text) !important; letter-spacing: 0 !important; color: var(--text-primary); }
 .profile > h3::before,.profile > h3::after { content: none !important; }
 .figures { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1.5rem; }

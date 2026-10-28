@@ -72,7 +72,6 @@
 .aboutMeasures > section { min-width: 0; margin: 0; }
 @media(min-width:1001px) {
   .aboutMeasures { grid-template-columns: minmax(290px,1fr) minmax(0,2fr); gap: 1.5rem; align-items: start; }
-  .aboutMeasures > section:first-child { padding-right: 1.5rem; border-right: 1px solid var(--border); }
 }
 @media print { .aboutMeasures { display: block; } }
 .placeData > section { margin: 0; }

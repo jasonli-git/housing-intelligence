@@ -39,3 +39,9 @@
 - Visually reviewed About this place in 390px and 1440px captures.
 - `NEXT_PUBLIC_ARTIFACT_URL=http://localhost:8093 npx next build --debug-build-paths='app/[state]/[place]/page.tsx,app/compare/page.tsx,app/search.json/route.ts,app/states.json/route.ts'`: passed, 1,188 static routes. Scoped export, not a full-site build.
 - `git diff --check`: passed.
+
+## Follow-up: separate left-hand profile card
+
+- At the user's request, the profile now has its own glass surface, subtle border, 12px corners and internal padding, echoing the former Costs sidebar while remaining left of the ranked carousel inside About this place.
+- Removed the column-divider rule; the card boundary provides the separation. Figures, definitions, revision notice, disclosure and carousel behavior are unchanged.
+- Changed only the two layout/style modules. Visually reviewed 390px and 1440px captures. TypeScript and all 852 web tests passed. All eight responsive/theme browser cases plus nonpilot Hoboken passed, including scoped axe, overflow and interactions. The scoped production export passed (1,188 routes). `git diff --check` passed. Local only.
