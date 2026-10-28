@@ -698,7 +698,7 @@ export default async function RegionPage({
           section of its own, rather than above the ranked measures. */}
       {marketFirst && consumer && <section id="place-picture" aria-labelledby="place-picture-heading">
         <h2 id="place-picture-heading">The local picture</h2>
-        <ConsumerReading reading={consumer} section="what_stands_out" heading="What stands out" headingLevel={3} annotation={editorialAnnotation} paperNote />
+        <ConsumerReading reading={consumer} section="what_stands_out" heading="What stands out" headingLevel={3} paperNote />
       </section>}
       <div id="place-explore">
       {/* The deployed alternatives section, kept for the pilot too (owner, 2026-10-28). */}
