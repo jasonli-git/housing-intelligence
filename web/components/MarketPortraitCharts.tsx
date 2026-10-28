@@ -75,7 +75,7 @@ export function MarketTrend({ points, label, change }: { points: MarketPoint[]; 
       aria-valuemin={0} aria-valuemax={points.length - 1} aria-valuenow={index} aria-valuetext={`${periodLabel(selected.date, "zori_all")}: ${money(selected.value)}`}
       onKeyDown={e => step(e, index, points.length, setIndex)} onPointerMove={e => { if (e.pointerType === "mouse" || e.buttons) pick(e); }}
       onPointerDown={e => { e.currentTarget.focus({ preventScroll: true }); pick(e); }}>
-      <svg viewBox="0 0 160 48" aria-hidden="true">
+      <svg viewBox="0 0 160 48" preserveAspectRatio="none" aria-hidden="true">
         <line x1="8" x2="152" y1="40" y2="40" className={styles.axis}/>
         <path d={marketLine(points, x, y)} className={styles.trendLine} />
         <line x1={x(selected.date)} x2={x(selected.date)} y1="4" y2="44" className={styles.cursor} />

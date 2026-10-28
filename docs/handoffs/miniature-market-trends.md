@@ -32,3 +32,9 @@ No backend, source, warehouse or other place layout changes. No push/deploy. A m
 - Five widths × both themes passed the hierarchy browser suite, including scoped axe, peer/keyboard interactions, cost inputs/reset, nonpilot preservation, comparison navigation/back and no-JavaScript figures/four SVGs.
 - Additional final-layout checks at 320, 600 and 1440px passed adjacency, miniature touch coordinate selection, visible exact readout and no overflow. Added those pointer/touch assertions to the regression script.
 - Scoped production build passed (1,188 routes). `git diff --check` passed. No backend/warehouse work was needed or run.
+
+## Follow-up: match the national metric sparklines
+
+The user requested a substantially smaller graphic, using the home page as reference. Inspected `national-strip.css`: its national sparkline is 20px high, with a 1.4px non-scaling stroke. Local trend graphics now use that height/stroke at 80px wide, within the retained 44px interaction target. Compact percentage and year labels fit inside the same 44px row. Updated the geometry assertions; pointer mapping remains correct through preserveAspectRatio=none. No data or calculations changed.
+
+Verification: TypeScript and 19 focused market tests passed; browser checks at 320/600/1440px in both themes passed 80×20 geometry, touch/keyboard readouts, 44px targets, overflow and scoped axe. No full suite/production rebuild repeated for this size refinement.
