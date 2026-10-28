@@ -232,3 +232,6 @@
 :global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections > :global(header#place-overview) { padding-top: .6rem; padding-bottom: .75rem; }
 :global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(.page-title) { margin-block: .2rem; }
 .fiveSections > :global(.region-standard-content) { padding-top: clamp(1.5rem,3vw,2.25rem); }
+/* The omissions strip closes the cost card, so its corners follow the card's 10px radius
+   inside its 1px border, not the horizon theme's 22px. */
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.cost-cards > .cost-evidence-omissions) { border-radius: 0 0 9px 9px; }
