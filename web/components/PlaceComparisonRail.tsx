@@ -30,12 +30,14 @@ export function PlaceComparisonRail({name,peers,levels,uncertainties,reportHref,
     el.scrollBy({left:direction*el.clientWidth*.85,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
   };
   if(!items.length)return null;
+  // One or two standouts read as a plain row; the carousel only when there is more to scroll.
+  const plain=items.length<=2;
   return <section className={styles.comparisons} aria-labelledby="place-comparisons-heading">
     <header><h3 id="place-comparisons-heading">Ranked measures</h3><Link href={`${reportHref}#report-current`}>All measures →</Link></header>
-    <p className={styles.note}>{measures?`Where ${name} ranks among the highest or lowest ${peers} (the outer 5%, or three at either end). `:""}Current-value rank among {peers} · lower → higher. This is a rank scale, not a value scale; bands include ties and 90% survey rank ranges.</p>
+    <p className={styles.note}>{measures?`Where ${name} ranks among the highest or lowest ${peers} (the outer 5%, or three at either end). `:`Current-value rank among ${peers} · lower → higher. `}A rank scale, not a value scale; bands include ties and 90% survey rank ranges.</p>
     <div className={railStyles.rail}>
-    <button type="button" className={`${railStyles.railArrow} ${railStyles.previous}`} aria-label="Previous ranked measures" aria-controls={trackId} disabled={edges.start} onClick={()=>move(-1)}>‹</button>
-    <ul ref={track} id={trackId} className={styles.rail} tabIndex={0} aria-label={`Current-value comparisons for ${name}`} onKeyDown={event=>{
+    {!plain&&<button type="button" className={`${railStyles.railArrow} ${railStyles.previous}`} aria-label="Previous ranked measures" aria-controls={trackId} disabled={edges.start} onClick={()=>move(-1)}>‹</button>}
+    <ul ref={track} id={trackId} className={plain?styles.plainRow:styles.rail} tabIndex={plain?undefined:0} aria-label={`Current-value comparisons for ${name}`} onKeyDown={event=>{
       if(!["ArrowRight","ArrowLeft","Home","End"].includes(event.key))return;
       const links=Array.from(event.currentTarget.querySelectorAll<HTMLAnchorElement>("a[data-comparison-measure]"));
       const index=links.indexOf(document.activeElement as HTMLAnchorElement);if(index<0)return;
@@ -57,7 +59,7 @@ export function PlaceComparisonRail({name,peers,levels,uncertainties,reportHref,
         </div>
       </li>)}
     </ul>
-    <button type="button" className={`${railStyles.railArrow} ${railStyles.nextArrow}`} aria-label="Next ranked measures" aria-controls={trackId} disabled={edges.end} onClick={()=>move(1)}>›</button>
+    {!plain&&<button type="button" className={`${railStyles.railArrow} ${railStyles.nextArrow}`} aria-label="Next ranked measures" aria-controls={trackId} disabled={edges.end} onClick={()=>move(1)}>›</button>}
     </div>
   </section>;
 }

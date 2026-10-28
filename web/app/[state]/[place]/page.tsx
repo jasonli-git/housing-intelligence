@@ -436,10 +436,10 @@ export default async function RegionPage({
   const housingContext = !marketFirst && quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
   const sections = [
     { id: "place-overview", label: "Overview" },
-    ...(marketFirst ? [{ id: "place-market", label: "Market at a glance" }] : []),
+    ...(marketFirst ? [{ id: "place-market", label: "The market" }] : []),
     ...(countyTowns.length ? [{ id: "county-towns", label: "Towns" }] : []),
     { id: quiet ? "quiet-cost" : "place-costs", label: "Costs" },
-    ...(marketFirst ? [{ id: "place-understand", label: "About this place" }] : []),
+    ...(marketFirst ? [{ id: "place-understand", label: "The place" }] : []),
     ...(!marketFirst ? [{ id: "field-notes", label: "Market" }] : []),
     ...(!marketFirst ? [{ id: "about-getting-around", label: "Getting around" }] : []),
     ...(!marketFirst ? [{ id: "about-living-there", label: "Living there" }] : []),
@@ -627,6 +627,7 @@ export default async function RegionPage({
       {marketFirst && <div className={styles.placeData}>
         <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`} revisions={new Map(profile.flatMap(item=>item.updated?[[item.metric_id,item.updated] as const]:[]))} measures={[...new Set(standing.filter(item=>item.group==="value").map(item=>item.metric_id))]}/>
         <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} />
+        <SchoolCheck line data={community} reportHref={`${regionPath(regionId)}/report`} guideHref={`/guide?place=${regionId}#guide-checks-heading`}/>
       </div>}
       <ExhibitGallery>
       {!marketFirst && <>
@@ -691,10 +692,6 @@ export default async function RegionPage({
       </ExhibitGallery>
       </QuietAnchor>
       </QuietAnchor>
-      {marketFirst && <div className={styles.homeChecks}>
-        <SchoolCheck data={community} reportHref={`${regionPath(regionId)}/report`}/>
-        <p id="place-address-checks-heading" className={styles.homeGuide}>Checking a specific home? <Link href={`/guide?place=${regionId}#guide-checks-heading`}>Open the buyer’s guide →</Link></p>
-      </div>}
       </section>
       <div id="place-explore">
       {marketFirst ? <CompactAlternatives name={name} data={similar}/> : <SimilarPlaces name={name} state={region.state_code} data={similar} />}

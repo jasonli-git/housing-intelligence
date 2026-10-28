@@ -24,7 +24,7 @@ try {
     assert.deepEqual(headingFonts[0],headingFonts[1],'About this place matches the market heading');
     assert.equal(await page.locator('#place-about-frame section[aria-labelledby="place-comparisons-heading"]').count(),1);
     assert.equal(await page.locator('#place-about-frame #place-story-gallery').count(),1);
-    assert.equal(await page.locator('#place-about-frame #community-schools-heading').count(),0,'practical school check remains outside the exploration frame');
+    assert.equal(await page.locator('#place-about-frame #community-schools-heading').count(),1,'school district is one line inside About this place');
     const profile=page.locator('#place-housing-profile');
     assert.equal(await profile.locator('[data-profile-primary] article').count(),3);
     assert.equal(await profile.locator('[data-profile-more]').count(),1);
@@ -44,7 +44,7 @@ try {
     assert((await ranks.locator('ul').boundingBox()).height<230);
     assert(await ranks.evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('#place-story-gallery'))&Node.DOCUMENT_POSITION_FOLLOWING)));
     // The rail lists only standout measures; carousel motion needs two or more.
-    if(await ranks.locator('ul a[data-comparison-measure]').count()>1){
+    if(await ranks.locator('ul a[data-comparison-measure]').count()>2){
     await ranks.hover();
     const next=ranks.getByRole('button',{name:'Next ranked measures'});
     assert.equal(await next.evaluate(e=>e.className),await page.getByRole('button',{name:'Next local stories'}).evaluate(e=>e.className),'shared frosted-glass arrow styling');

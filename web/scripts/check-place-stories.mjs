@@ -95,7 +95,7 @@ try {
     const audit = await new AxeBuilder({ page }).include('#place-story-gallery').analyze();
     assert.deepEqual(audit.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })), []);
     assert.equal(await page.locator('#about-living-there').count(),0,'retired pilot wrapper');
-    assert(await page.getByRole('heading',{name:'Check the school district',exact:true}).isVisible());
+    assert(await page.locator('#community-schools-heading').isVisible());
     assert.equal(await page.locator('.community-crime,.community-health').count(),0,'reporting and health no longer duplicated on profile');
     assert(await page.locator('#community-schools-heading').innerText().then(t=>t.includes('not school assignments')));
     for(const [id,topic] of [['ground-sites-heading','sites'],['flood-risk-heading','flood'],['utilities-heading','utilities'],['community-broadband-heading','broadband']])assert(await page.locator(`#${id}`).evaluate((el,t)=>Boolean(el.closest(`[data-preview-topic="${t}"]`)),topic),'legacy links still reach their topic');

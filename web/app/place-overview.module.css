@@ -206,7 +206,7 @@
 .homeGuide a { display: inline-flex; align-items: center; min-height: 44px; color: var(--kind-guide); font: 500 13px/1.4 var(--font-text); text-underline-offset: 3px; }
 
 /* One boundary rhythm for the five-section Princeton pilot; internal spacing stays local. */
-.fiveSections { --place-section-gap: clamp(2rem,4vw,3rem); }
+.fiveSections { --place-section-gap: clamp(3.25rem,6vw,5rem); }
 .fiveSections > :global(nav[aria-label="Place sections"]) { margin-bottom: 0; }
 .fiveSections > :global(.region-standard-content) { display: flow-root; padding-top: var(--place-section-gap); }
 .fiveSections :global(#place-market) { margin: 0; }
@@ -228,3 +228,8 @@
 .fiveSections :global(div:has(> #place-market-heading)),.fiveSections :global(.place-cost-overview > .section-head),.fiveSections :global(header:has(> #similar-places-heading)) { align-items: flex-end !important; }
 /* The comparison caveat belongs to the cost figures above it: a footnote, not a section. */
 .fiveSections :global(.place-cost-overview .cost-evidence) { margin-top: .25rem; padding-left: 1rem; border-left: 2px solid color-mix(in srgb,var(--plate-accent) 45%,transparent); }
+/* The school district as one line after Local stories, its qualification beside the name. */
+.placeData :global(.school-line) { margin: 1rem 0 0; padding-top: .85rem; border-top: 1px solid var(--border); color: var(--text-secondary); font: 13px/1.6 var(--font-text); }
+.placeData :global(.school-line strong) { color: var(--text-primary); font-weight: 500; }
+.placeData :global(.school-line span) { font-size: 12px; }
+.placeData :global(.school-line a) { color: var(--plate-accent); text-underline-offset: 3px; }
