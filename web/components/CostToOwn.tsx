@@ -661,6 +661,20 @@ export function CostToOwn({
       {!compactOverview && monthlyComparison}
 
       <div className="cost-cards">
+        {compactOverview && control && planning && <div className="cost-use-numbers" role="group" aria-label="Use your numbers">
+          <h3>Use your numbers</h3>
+          <div className="budget-inputs">
+            <label className="control"><span>Yearly household income before tax</span><input inputMode="decimal" value={household.income ?? ""} placeholder="e.g. 100000" onChange={event=>saveHousehold({...household,income:parseAmount(event.target.value)??undefined})}/></label>
+            {downControl}
+            <Field label="Purchase price" value={fields.price} placeholder={money(home.value)} onChange={t=>setField("price",t)}/>
+          </div>
+          <p className="cost-budget-result" aria-live="polite">{household.income && household.income>0 ? `Estimated payment uses ${Math.round(month.total/(household.income/12)*100)}% of your income before tax.` : "Add your income to compare it with the payment above."}{partial && ` Included costs only; missing: ${listed(month.missing)}.`}</p>
+          {fineTune}
+          <nav className="cost-planning-links" aria-label="Plan beyond this estimate">
+            {guidePlaceId!==undefined && <a href={`/guide?place=${guidePlaceId}`} onClick={transferToGuide}>Check upfront cash & rent vs. buy →</a>}
+            {comparePlaceId!==undefined && <a href={`/afford?county=all&place=${comparePlaceId}${household.income ? `&income=${household.income}`:""}`}>Find your fit →</a>}
+          </nav>
+        </div>}
         <article className="cost-card">
           <h3 className="cost-card-label">
             <Term entry={terms.own}>
@@ -759,20 +773,7 @@ export function CostToOwn({
             <Glossed text={`The monthly owning estimate leaves out ${listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.`} />
           </p>
         </aside>
-        {compactOverview && control && planning && <div className="cost-use-numbers" role="group" aria-label="Use your numbers">
-          <h3>Use your numbers</h3>
-          <div className="budget-inputs">
-            <label className="control"><span>Yearly household income before tax</span><input inputMode="decimal" value={household.income ?? ""} placeholder="e.g. 100000" onChange={event=>saveHousehold({...household,income:parseAmount(event.target.value)??undefined})}/></label>
-            {downControl}
-            <Field label="Purchase price" value={fields.price} placeholder={money(home.value)} onChange={t=>setField("price",t)}/>
-          </div>
-          <p className="cost-budget-result" aria-live="polite">{household.income && household.income>0 ? `Estimated payment uses ${Math.round(month.total/(household.income/12)*100)}% of your income before tax.` : "Add your income to compare it with the payment above."}{partial && ` Included costs only; missing: ${listed(month.missing)}.`}</p>
-          {fineTune}
-          <nav className="cost-planning-links" aria-label="Plan beyond this estimate">
-            {guidePlaceId!==undefined && <a href={`/guide?place=${guidePlaceId}`} onClick={transferToGuide}>Check upfront cash & rent vs. buy →</a>}
-            {comparePlaceId!==undefined && <a href={`/afford?county=all&place=${comparePlaceId}${household.income ? `&income=${household.income}`:""}`}>Find your fit →</a>}
-          </nav>
-        </div>}
+
       </div>
 
 

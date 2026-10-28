@@ -30,7 +30,7 @@
 .page.page :global(.place-cost-overview .cost-figure b) { font-size: clamp(30px, 3.4vw, 44px); }
 .page :global(.cost-ownership-breakdown) { grid-column: 1 / -1; padding: 1rem 1.1rem; border-top: 1px solid var(--border); }
 .page :global(.cost-ownership-breakdown > h4) { margin: 0 0 .6rem; font: 500 14px/1.5 var(--font-text); }
-.page :global(.cost-use-numbers) { grid-column: 1 / -1; padding: 1rem 1.1rem; border-top: 1px solid var(--border); }
+.page :global(.cost-use-numbers) { grid-column: 1 / -1; padding: 1rem 1.1rem; border-bottom: 1px solid var(--border); }
 .page :global(.cost-use-numbers > h3) { margin: 0 0 .7rem; font: 500 16px/1.4 var(--font-text); }
 .page.page :global(.cost-use-numbers .budget-inputs) { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .8rem; }
 .page :global(.cost-use-numbers .control) { min-width: 0; }

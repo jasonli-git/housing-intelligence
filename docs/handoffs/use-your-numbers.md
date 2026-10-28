@@ -33,3 +33,7 @@ No automatic navigation or scrolling on edits. The shared household preferences 
 - Initial browser harness used an exact label that included select option text; added an explicit accessible selector name and reran successfully. Initial unit run identified the old group-name expectation; updated for the approved new presentation. An npm invocation from repo root failed due to no root package.json; reran in web.
 - Scoped production build for place, compare, search and state routes: passed (1,188 routes).
 - `git diff --check`: passed.
+
+## Follow-up: controls at the top
+
+Moved the existing control group to the first child of the cost card, ahead of the monthly figures, in both DOM and visual order. Changed its separator to the bottom edge. No inputs, calculations or tool links changed. Typecheck and CostToOwn component tests rerun; desktop/mobile light/dark browser checks verify placement, input operation and overflow.
