@@ -21,7 +21,7 @@ export function CompactAlternatives({name,data}:{name:string;data:SimilarPlaces|
     return basis?[{id,basis,label:labels[id]??basis.label,values:places.map(p=>p.figures.find(f=>f.metric_id===id))}]:[];
   });
   return <section className={styles.alternatives} aria-labelledby="similar-places-heading">
-    <header><h3 id="similar-places-heading">{zip?"Similar ZIPs, lower home values":"Similar places, lower sale prices"}</h3><Link href={`/compare${placesQuery([data.here.region_id,...matches.map(m=>m.place.region_id)].slice(0,MAX_PLACES))}`}>Compare places →</Link></header>
+    <header><h2 id="similar-places-heading">{zip?"Similar ZIPs, lower home values":"Similar places, lower sale prices"}</h2><Link href={`/compare${placesQuery([data.here.region_id,...matches.map(m=>m.place.region_id)].slice(0,MAX_PLACES))}`}>Compare places →</Link></header>
     {matches.length?<ul>{shown.map(({place,price,less})=><li key={place.region_id}>
       <Link className={zip?"destination-zip":"destination-town"} href={regionPath(place.region_id)}>{place.name} ↗</Link>
       <p><b>{less}% lower</b> · {formatMetric(price.value!,price.unit,data.price)}</p>

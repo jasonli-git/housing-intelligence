@@ -566,11 +566,13 @@ export default async function RegionPage({
       </QuietAnchor>
       {!cost && housingContext}
 
-      <section id="place-understand" className="local-understand-group" aria-label="About this place">
+      <section id="place-understand" className="local-understand-group" {...(marketFirst ? { "aria-labelledby": "place-about-heading" } : { "aria-label": "About this place" })}>
+      {/* The pilot titles the whole section, profile and box together, like the other three. */}
+      {marketFirst && <h2 id="place-about-heading">About this place</h2>}
       <QuietAnchor enabled={marketFirst} id="place-about-layout">
       {marketFirst && <CompactHousingProfile items={profile} peers={peerNoun(peer_level)} />}
       <QuietAnchor enabled={marketFirst} id="place-about-frame">
-      <h2>About this place</h2>
+      {!marketFirst && <h2>About this place</h2>}
 
       {!quiet && householdContent}
 

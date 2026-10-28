@@ -17,7 +17,7 @@ try {
       return {expected:parseFloat(getComputedStyle(document.querySelector('#quiet-cost')).marginTop),gaps:boxes.slice(1).map((box,i)=>box.top-boxes[i].bottom)};
     });
     assert(spacing.gaps.every(gap=>Math.abs(gap-spacing.expected)<1),'one consistent main-section gap');
-    const headingFonts=await page.evaluate(()=>['#place-market-heading','#place-about-frame > h2'].map(selector=>{
+    const headingFonts=await page.evaluate(()=>['#place-market-heading','#place-about-heading'].map(selector=>{
       const style=getComputedStyle(document.querySelector(selector));
       return [style.fontFamily,style.fontSize,style.fontWeight,style.lineHeight];
     }));
