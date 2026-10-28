@@ -48,13 +48,13 @@ try {
     assert.equal(await alternatives.locator('ul > li').count(),3);
     assert.equal(await alternatives.locator('table').count(),1);
     assert.equal(await alternatives.locator('tbody tr').count(),6,'price, four matching traits and commute stay visible');
-    assert.equal(await alternatives.locator('thead th').count(),5,'baseline place plus three candidates');
+    assert.equal(await alternatives.locator('thead th').count(),7,'baseline place plus all five candidates');
     for(const notice of await ranks.locator('.figure-updated').all()) assert(await notice.evaluate(el=>!!el.closest('[data-comparison-card]')),'revision notice is inside its card');
     assert((await alternatives.innerText()).includes('not schools or safety'));
     const alternativesFont=await page.locator('#similar-places-heading').evaluate(e=>{const s=getComputedStyle(e);return [s.fontFamily,s.fontSize,s.fontWeight,s.lineHeight];});
     assert.deepEqual(alternativesFont,headingFonts[1],'Alternatives matches About this place');
     await alternatives.locator('summary').click();
-    assert((await alternatives.innerText()).includes('Other matches:'));
+    assert((await alternatives.innerText()).includes('Matched on'));
     await alternatives.locator('summary').click();
     await alternatives.getByRole('link',{name:'Compare places →'}).click();
     await page.getByRole('heading',{name:'Compare places',exact:true}).waitFor();

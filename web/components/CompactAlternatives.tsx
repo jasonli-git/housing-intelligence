@@ -14,7 +14,7 @@ export function CompactAlternatives({name,data}:{name:string;data:SimilarPlaces|
   const zip=data.level==="zip";
   const matched=similarGroups(data)[0].rows.map(r=>r.label.toLowerCase());
   const shown=matches.slice(0,3);
-  const places=[data.here,...shown.map(m=>m.place)];
+  const places=[data.here,...matches.map(m=>m.place)];
   const labels:Record<string,string>={sr1a_median_sale_price:"Median sale price",acs_share_detached:"Detached homes",acs_homeownership_rate:"Owner-occupied homes",acs_with_children_share:"Households with children",transit_rail_homes_share:"Homes within ½ mile of rail",acs_mean_commute_minutes:"Mean one-way commute"};
   const rows=[...new Set([data.price,...data.measures,data.commute])].flatMap(id=>{
     const basis=data.here.figures.find(f=>f.metric_id===id);
@@ -26,13 +26,13 @@ export function CompactAlternatives({name,data}:{name:string;data:SimilarPlaces|
       <Link className={zip?"destination-zip":"destination-town"} href={regionPath(place.region_id)}>{place.name} ↗</Link>
       <p><b>{less}% lower</b> · {formatMetric(price.value!,price.unit,data.price)}</p>
     </li>)}</ul>:<p className={styles.note}>No qualifying lower-price match for {name}. Missing prices are not treated as zero.</p>}
-    <p className={styles.note}>{zip?"Typical home-value estimates":"Median qualifying sales"}{priceWindow(data)?` · ${priceWindow(data)}`:""}{!zip?` · at least ${data.min_sales} sales per town`:""}. {matches.length>3?`Showing 3 of ${matches.length} matches.`:""}</p>
+    <p className={styles.note}>{zip?"Typical home-value estimates":"Median qualifying sales"}{priceWindow(data)?` · ${priceWindow(data)}`:""}{!zip?` · at least ${data.min_sales} sales per town`:""}. {matches.length>3?`Three highlights; all ${matches.length} matches below.`:""}</p>
     {matches.length>0&&<>
       <h4 className={styles.matchHeading}>The match, side by side</h4>
       <p className={styles.note}>At least {Math.round((1-data.cheaper_by)*100)}% lower prices; commute no more than {data.commute_minutes} minutes longer. Similarity uses the housing measures below—not schools or safety.</p>
       <div className={styles.matchScroll} tabIndex={0} role="region" aria-label={`Compare matching characteristics with ${name}`}>
         <table className={styles.matchTable}>
-          <caption className="visually-hidden">{name} and {shown.length} lower-price {shown.length===1?"match":"matches"}: prices, matching characteristics and commute. Dates belong to each measure.</caption>
+          <caption className="visually-hidden">{name} and {matches.length} lower-price {matches.length===1?"match":"matches"}: prices, matching characteristics and commute. Dates belong to each measure.</caption>
           <thead><tr><th scope="col">Measure</th>{places.map((p,i)=><th key={p.region_id} scope="col">{i===0?<>{name}<small>This place</small></>:<Link href={regionPath(p.region_id)}>{p.name}</Link>}</th>)}</tr></thead>
           <tbody>{rows.map(({id,basis,label,values})=><tr key={id}>
             <th scope="row">{label}{id!==data.price&&<small>{basis.period_end?`${id.startsWith("acs_")?"ACS ":""}${periodLabel(basis.period_end,id)}`:"Date unavailable"}</small>}</th>
@@ -41,6 +41,6 @@ export function CompactAlternatives({name,data}:{name:string;data:SimilarPlaces|
         </table>
       </div>
     </>}
-    <details className={styles.method}><summary>Matching details</summary><p>Matched on {matched.join(", ")}. Price must be at least {Math.round((1-data.cheaper_by)*100)}% lower, with a commute no more than {data.commute_minutes} minutes longer.{!zip&&` Towns need at least ${data.min_sales} qualifying sales.`} This is a measured match, not a recommendation.</p>{matches.length>3&&<p>Other matches: {matches.slice(3).map(({place},i)=><span key={place.region_id}>{i>0?", ":""}<Link href={regionPath(place.region_id)}>{place.name}</Link></span>)}.</p>}</details>
+    <details className={styles.method}><summary>Matching details</summary><p>Matched on {matched.join(", ")}. Price must be at least {Math.round((1-data.cheaper_by)*100)}% lower, with a commute no more than {data.commute_minutes} minutes longer.{!zip&&` Towns need at least ${data.min_sales} qualifying sales.`} This is a measured match, not a recommendation.</p></details>
   </section>;
 }

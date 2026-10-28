@@ -22,3 +22,11 @@ it("does not claim savings from missing, zero, higher or differently dated price
   expect(html).toContain('No qualifying lower-price match');expect(html).not.toContain('% lower</b>');
  }
 });
+it("includes all five matches in the table while retaining three quick summaries",()=>{
+ const matches=Array.from({length:5},(_,i)=>({...data.matches[0],region_id:458+i,name:`Match ${i+1}`}));
+ const html=renderToStaticMarkup(<CompactAlternatives name="Here" data={{...data,matches}}/>);
+ const table=html.slice(html.indexOf('<table'),html.indexOf('</table>'));
+ for(const match of matches)expect(table).toContain(match.name);
+ expect((table.match(/scope="col"/g)??[])).toHaveLength(7);
+ expect((html.slice(html.indexOf('<ul>'),html.indexOf('</ul>')).match(/<li>/g)??[])).toHaveLength(3);
+});

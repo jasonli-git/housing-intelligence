@@ -40,3 +40,10 @@
 - `node scripts/check-place-comparisons.mjs`: passed at 320, 390, 768 and 1440 pixels in light and dark themes, including keyboard navigation, revision containment, matrix shape, compare/back navigation, section spacing, page overflow and scoped axe. Nonpilot Hoboken retains its original treatment. Reviewed mobile and desktop screenshots.
 - `NEXT_PUBLIC_ARTIFACT_URL=http://localhost:8093 npx next build --debug-build-paths='app/[state]/[place]/page.tsx,app/compare/page.tsx,app/search.json/route.ts,app/states.json/route.ts'`: passed, 1,188 static routes. This is a scoped export, not a full-site build. The first sandboxed attempt could not reach the local API; repeated with local service access.
 - `git diff --check`: passed.
+
+## Follow-up: all matches in the table
+
+- At the user's request, the matrix now includes all five qualifying Princeton matches alongside Princeton (seven columns including measure labels). Three quick summaries remain above it, and the compare shortcut still respects the four-place comparison limit.
+- Removed the redundant additional-match links from Matching details, since those places are now linked directly in the table. The caption and source note distinguish three highlights from the full set.
+- Added a regression test for five table candidates and three summary items. Updated the browser check to expect all five candidates.
+- Verification: TypeScript and all 852 web tests passed. `node scripts/check-place-comparisons.mjs` passed at all four widths in both themes, including scoped axe and compare/back. The same scoped production export command above passed (1,188 routes). `git diff --check` passed.
