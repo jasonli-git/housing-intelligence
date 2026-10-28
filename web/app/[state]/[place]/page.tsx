@@ -477,10 +477,11 @@ export default async function RegionPage({
               </aside>
             )}
             <Link className="eyebrow-report" href={`${regionPath(regionId)}/report`}>Full report <span aria-hidden="true">↗</span></Link>
+            <Link className="eyebrow-report place-compare" aria-label={`Compare ${name} with other places`} href={`/compare${placesQuery([regionId])}`}>Compare <span aria-hidden="true">↗</span></Link>
           </div>
           <div className="page-title-row">
             <h1 className="page-title">{name}</h1>
-            <div className="place-title-actions"><ComputedBadge /><Link className="place-compare" aria-label={`Compare ${name} with other places`} href={`/compare${placesQuery([regionId])}`}>Compare this place <span aria-hidden="true">↗</span></Link></div>
+            <div className="place-title-actions"><ComputedBadge /></div>
           </div>
           {/* Every rank names its own cohort now — "12th of 21 NJ counties" — so the
               line that named it once for the whole page is gone (Milestone 28). */}
