@@ -58,3 +58,6 @@
 @container(max-width:760px) { .rail { grid-auto-columns: calc((100% - .65rem)/2.15); } }
 @container(max-width:450px) { .rail { grid-auto-columns: 85%; } }
 @media print { .rail { grid-auto-flow: row; grid-template-columns: repeat(2,minmax(0,1fr)); grid-auto-columns: auto; overflow: visible; } }
+/* This place's column, marked in the page accent as the reference every match reads against. */
+.matchTable :is(th,td):nth-child(2) { background: color-mix(in srgb,var(--plate-accent,var(--series-1)) 7%,transparent); }
+.matchTable thead th:nth-child(2) { box-shadow: inset 0 2px 0 var(--plate-accent,var(--series-1)); color: var(--plate-ink,var(--text-primary)); }
