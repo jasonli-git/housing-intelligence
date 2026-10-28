@@ -226,9 +226,5 @@
 :global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(:is(#place-market-heading,.place-cost-overview > .section-head h2,#place-about-heading,#similar-places-heading))::after { content: ""; position: absolute; top: 0; left: 0; width: min(100%,1100px); height: 2px; background: linear-gradient(90deg,var(--plate-accent),color-mix(in srgb,var(--plate-accent) 25%,transparent) 40%,transparent); }
 /* Links beside a title sit on its baseline, not the kicker's. */
 .fiveSections :global(div:has(> #place-market-heading)),.fiveSections :global(.place-cost-overview > .section-head),.fiveSections :global(header:has(> #similar-places-heading)) { align-items: flex-end !important; }
-/* The comparison caveat and five-year history read the card's own figures (and change
-   with the reader's price), so they close the costs card as its footer. */
-.fiveSections :global(.place-cost-overview:has(> .cost-evidence) > .cost-cards) { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(.place-cost-overview > .cost-evidence) { margin: -.8rem 0 0; padding: .35rem 1.1rem .5rem; border: 1px solid var(--glass-edge,var(--border)); border-top: 1px solid var(--border); border-radius: 0 0 10px 10px; background: color-mix(in srgb,var(--plate-ink) 2.5%,transparent); }
-/* Without the "your numbers" row the footer takes row 4, so no empty track opens a gap. */
-.fiveSections :global(.place-cost-overview:not(:has(> .cost-yours)) > .cost-evidence) { grid-row: 4; }
+/* The comparison caveat belongs to the cost figures above it: a footnote, not a section. */
+.fiveSections :global(.place-cost-overview .cost-evidence) { margin-top: .25rem; padding-left: 1rem; border-left: 2px solid color-mix(in srgb,var(--plate-accent) 45%,transparent); }
