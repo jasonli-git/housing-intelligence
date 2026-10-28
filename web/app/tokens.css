@@ -194,6 +194,10 @@
   --jl-ink-2: oklch(0.42 0.006 95);
   --jl-live: #429c5a;
   --jl-live: oklch(0.62 0.13 150);
+  /* Text laid over a photograph, under a dark wash, the same in both themes. */
+  --photo-ink: #f7f4ee;
+  --photo-ink-soft: #e6e0d6;
+  --photo-shade: #000b;
 }
 
 @media (prefers-color-scheme: dark) {

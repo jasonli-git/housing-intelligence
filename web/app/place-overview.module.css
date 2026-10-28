@@ -89,8 +89,9 @@
   .page.page :global(.place-cost-overview:has(.place-overview-context)) { grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr); }
   .page.page :global(.place-cost-overview:has(.place-overview-context) > .cost-cards) { grid-column: 1; }
   .page :global(.place-overview-context) { grid-column: 2; }
-  :global(body:has(.horizon-page)) main:global(#main-content).page > :global(header.has-photo) { grid-template-columns: minmax(0, 1fr) 250px; }
-  :global(body:has(.horizon-page)) main:global(#main-content).page > :global(header.has-photo > .place-photo) { max-width: 250px; margin-top: 1rem; }
+  /* A county's photograph takes the header's right half beside the title and towns. */
+  :global(body:has(.horizon-page)) main:global(#main-content).page > :global(header.has-photo) { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
+  :global(body:has(.horizon-page)) main:global(#main-content).page > :global(header.has-photo > .place-photo) { max-width: none; margin-top: .4rem; }
 }
 @media(max-width:1000px) {
   .page :global(.place-overview-context) { grid-row: 4; }
