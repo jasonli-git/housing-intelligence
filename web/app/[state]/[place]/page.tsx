@@ -13,7 +13,6 @@ import { makePlaceStoryRecord, PLACE_STORIES, storyHistoryMetrics, type PlaceSto
 import { stampPlaceStory } from "@/lib/placeStoryData";
 import { PlaceStoryGallery } from "@/components/PlaceStoryGallery";
 import { PlaceComparisonRail } from "@/components/PlaceComparisonRail";
-import { CompactAlternatives } from "@/components/CompactAlternatives";
 import { SchoolCheck } from "@/components/SchoolCheck";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
@@ -694,7 +693,8 @@ export default async function RegionPage({
       </QuietAnchor>
       </section>
       <div id="place-explore">
-      {marketFirst ? <CompactAlternatives name={name} data={similar}/> : <SimilarPlaces name={name} state={region.state_code} data={similar} />}
+      {/* The deployed alternatives section, kept for the pilot too (owner, 2026-10-28). */}
+      <SimilarPlaces name={name} state={region.state_code} data={similar} />
       </div>
 
       <p className="place-report-line" id="region-detailed-data">

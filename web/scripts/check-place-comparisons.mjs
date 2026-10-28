@@ -61,20 +61,16 @@ try {
     await page.keyboard.press('Home');
     assert(await links.first().evaluate(e=>e===document.activeElement));
     }
-    assert.equal(await alternatives.locator('ul > li').count(),3);
+    // The deployed alternatives section (SimilarPlaces), restored for the pilot.
+    assert.equal(await alternatives.evaluate(e=>e.classList.contains('similar-places')),true,'deployed alternatives component');
     assert.equal(await alternatives.locator('table').count(),1);
-    assert.equal(await alternatives.locator('tbody tr').count(),6,'price, four matching traits and commute stay visible');
-    assert.equal(await alternatives.locator('thead th').count(),7,'baseline place plus all five candidates');
     for(const notice of await ranks.locator('.figure-updated').all()) assert(await notice.evaluate(el=>!!el.closest('[data-comparison-card]')),'revision notice is inside its card');
-    assert((await alternatives.innerText()).includes('not schools or safety'));
+    assert((await alternatives.innerText()).includes('not schools'));
     const alternativesFont=await page.locator('#similar-places-heading').evaluate(e=>{const s=getComputedStyle(e);return [s.fontFamily,s.fontSize,s.fontWeight,s.lineHeight];});
     assert.deepEqual(alternativesFont,headingFonts[1],'Alternatives matches About this place');
-    await alternatives.locator('summary').click();
     assert((await alternatives.innerText()).includes('Matched on'));
-    await alternatives.locator('summary').click();
-    await alternatives.getByRole('link',{name:'Compare places →'}).click();
+    await alternatives.getByRole('link',{name:/Compare these side by side/}).click();
     await page.getByRole('heading',{name:'Compare places',exact:true}).waitFor();
-    assert.equal(new URL(page.url()).searchParams.get('places').split(',').length,4);
     await page.goBack({waitUntil:'networkidle'});
     await ranks.waitFor();
     await page.evaluate(t=>document.documentElement.dataset.theme=t,theme);
@@ -86,7 +82,7 @@ try {
       await ranks.screenshot({path:`/tmp/comparisons-final-${width}-${theme}.png`});
       await alternatives.screenshot({path:`/tmp/alternatives-final-${width}-${theme}.png`});
     }
-    console.log(`${width}/${theme}: visible ranking rail, compact alternatives, details, comparison/back, overflow and axe passed`);
+    console.log(`${width}/${theme}: visible ranking rail, deployed alternatives, details, comparison/back, overflow and axe passed`);
     await context.close();
   }
   const page=await browser.newPage();
