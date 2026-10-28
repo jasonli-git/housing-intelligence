@@ -441,7 +441,6 @@ export default async function RegionPage({
     ...(!marketFirst ? [{ id: "about-getting-around", label: "Getting around" }] : []),
     ...(marketFirst ? [{id:"place-address-checks-heading",label:"Check a home"}] : [{ id: "about-living-there", label: "Living there" }]),
     ...(similar ? [{ id: "place-explore", label: "Alternatives" }] : []),
-    { id: "sources-heading", label: "Sources" },
   ];
 
   return (
