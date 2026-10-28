@@ -12,7 +12,7 @@ try {
     const ranks=page.locator('section[aria-labelledby="place-comparisons-heading"]');
     const alternatives=page.locator('section[aria-labelledby="similar-places-heading"]');
     const spacing=await page.evaluate(()=>{
-      const selectors=['nav[aria-label="Place sections"]','#place-market','#quiet-cost > section','#place-understand','#place-explore > section'];
+      const selectors=['nav[aria-label="Place sections"]','#place-housing-profile','#place-market','#quiet-cost > section','#place-understand','#place-explore > section'];
       const boxes=selectors.map(s=>document.querySelector(s).getBoundingClientRect());
       return {expected:parseFloat(getComputedStyle(document.querySelector('#quiet-cost')).marginTop),gaps:boxes.slice(1).map((box,i)=>box.top-boxes[i].bottom)};
     });
@@ -25,6 +25,13 @@ try {
     assert.equal(await page.locator('#place-about-frame section[aria-labelledby="place-comparisons-heading"]').count(),1);
     assert.equal(await page.locator('#place-about-frame #place-story-gallery').count(),1);
     assert.equal(await page.locator('#place-about-frame #community-schools-heading').count(),0,'practical school check remains outside the exploration frame');
+    const profile=page.locator('#place-housing-profile');
+    assert.equal(await profile.locator('.quiet-profile > .quiet-profile-grid article').count(),3);
+    assert.equal(await profile.locator('.quiet-profile-more').count(),1);
+    assert(await profile.evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('#place-market'))&Node.DOCUMENT_POSITION_FOLLOWING)));
+    await profile.getByText('More about the housing here',{exact:false}).click();
+    assert(await profile.locator('.quiet-profile-more article').count()>0);
+    await profile.getByText('More about the housing here',{exact:false}).click();
     assert.equal(await ranks.locator('details').count(),0);
     assert.equal(await page.locator('.standouts-disclosure').count(),0);
     assert.equal(await page.locator('.place-overview-context').count(),0,'duplicate cost sidebar removed');
@@ -64,7 +71,7 @@ try {
     await page.evaluate(t=>document.documentElement.dataset.theme=t,theme);
     // Audit settled colors, not the theme/color transition after history restoration.
     await page.waitForFunction(()=>!document.getAnimations().some(a=>a.constructor.name==='CSSTransition'&&a.playState==='running'));
-    assert.deepEqual((await new AxeBuilder({page}).include('section[aria-labelledby="place-comparisons-heading"]').include('section[aria-labelledby="similar-places-heading"]').analyze()).violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);
+    assert.deepEqual((await new AxeBuilder({page}).include('#place-housing-profile').include('section[aria-labelledby="place-comparisons-heading"]').include('section[aria-labelledby="similar-places-heading"]').analyze()).violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     if(width===390||width===1440){
       await ranks.screenshot({path:`/tmp/comparisons-final-${width}-${theme}.png`});

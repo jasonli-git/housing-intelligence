@@ -527,6 +527,11 @@ export default async function RegionPage({
 
       <div className="region-standard-content">
 
+      {marketFirst && profile.length > 0 && <section id="place-housing-profile" className={styles.housingProfile} aria-labelledby="place-housing-profile-heading">
+        <h2 id="place-housing-profile-heading">Housing at a glance</h2>
+        <QuietProfile items={profile} peers={peerNoun(peer_level)} />
+      </section>}
+
       {marketFirst && <PlaceMarketOpening levels={packet.levels} metrics={packet.metrics}
         uncertainties={uncertainties} peers={peers} ownId={regionId} cohorts={marketCohorts} histories={series}
         reportHref={`${regionPath(regionId)}/report`}
