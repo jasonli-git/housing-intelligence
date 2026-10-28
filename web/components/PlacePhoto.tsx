@@ -17,8 +17,8 @@ export function PlacePhoto({ geoid }: { geoid: string }) {
   return (
     <figure className="place-photo print-hide">
       <picture>
-        <source type="image/avif" srcSet={avif.srcSet} sizes="(max-width: 760px) 100vw, 480px" />
-        <source type="image/webp" srcSet={webp.srcSet} sizes="(max-width: 760px) 100vw, 480px" />
+        <source type="image/avif" srcSet={avif.srcSet} sizes="(max-width: 760px) 100vw, 50vw" />
+        <source type="image/webp" srcSet={webp.srcSet} sizes="(max-width: 760px) 100vw, 50vw" />
         <img src={webp.largest} alt={photo.alt} width={1280} height={Math.round(1280 / PHOTO_ASPECT)} decoding="async" />
       </picture>
       <figcaption>

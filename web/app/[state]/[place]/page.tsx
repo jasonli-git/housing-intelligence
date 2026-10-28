@@ -434,8 +434,6 @@ export default async function RegionPage({
   const housingContext = !marketFirst && quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
   const sections = [
     { id: "place-overview", label: "Overview" },
-    // A county's towns sit in its header, so they come before the market.
-    ...(countyTowns.length ? [{ id: "county-towns", label: "Towns" }] : []),
     ...(marketFirst ? [{ id: "place-market", label: "The market" }] : []),
     { id: quiet ? "quiet-cost" : "place-costs", label: "Costs" },
     ...(marketFirst ? [{ id: "place-understand", label: "The place" }] : []),
@@ -443,6 +441,7 @@ export default async function RegionPage({
     ...(!marketFirst ? [{ id: "about-getting-around", label: "Getting around" }] : []),
     ...(!marketFirst ? [{ id: "about-living-there", label: "Living there" }] : []),
     ...(marketFirst && consumer ? [{ id: "place-picture", label: "Local picture" }] : []),
+    ...(countyTowns.length ? [{ id: "county-towns", label: "Towns" }] : []),
     ...(similar ? [{ id: "place-explore", label: "Alternatives" }] : []),
   ];
 
@@ -512,9 +511,6 @@ export default async function RegionPage({
             </details>
           )}
         </div>
-        {region.level === "county" && countyTowns.length > 0 && (
-          <TownRow name={name} towns={countyTowns.map(t => ({ id: t.region_id, href: regionPath(t.region_id), name: countyTowns.filter(o => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, c => c.toUpperCase()) : displayName(t) }))} />
-        )}
         {photo && <PlacePhoto geoid={region.geoid} />}
       </header>
 
@@ -699,6 +695,10 @@ export default async function RegionPage({
       {marketFirst && consumer && <section id="place-picture" aria-labelledby="place-picture-heading">
         <h2 id="place-picture-heading">The local picture</h2>
         <ConsumerReading reading={consumer} section="what_stands_out" heading="What stands out" headingLevel={3} paperNote />
+      </section>}
+      {/* A county's towns, a section of their own after the place (2026-10-28). */}
+      {countyTowns.length > 0 && <section id="place-towns" className="place-towns">
+        <TownRow name={name} towns={countyTowns.map(t => ({ id: t.region_id, href: regionPath(t.region_id), name: countyTowns.filter(o => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, c => c.toUpperCase()) : displayName(t) }))} />
       </section>}
       <div id="place-explore">
       {/* The deployed alternatives section, kept for the pilot too (owner, 2026-10-28). */}
