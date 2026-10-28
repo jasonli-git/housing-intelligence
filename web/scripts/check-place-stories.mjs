@@ -14,6 +14,17 @@ try {
     assert.equal(await page.locator('#county-market-history').count(),0,'county market history is not shown on a town page');
     const gallery = page.locator('#place-story-gallery');
     await gallery.scrollIntoViewIfNeeded();
+    const track=gallery.locator('#local-stories-track');
+    assert(await track.evaluate(el=>el.scrollWidth>el.clientWidth),'local stories form one scrollable rail');
+    assert((await track.boundingBox()).height<400,'local stories remain compact');
+    await gallery.hover();
+    await gallery.getByRole('button',{name:'Next local stories'}).click();
+    await page.waitForFunction(()=>document.getElementById('local-stories-track').scrollLeft>0);
+    await track.locator('a[data-preview-topic]').first().focus();
+    await page.keyboard.press('End');
+    assert(await track.locator('a[data-preview-topic]').last().evaluate(el=>el===document.activeElement));
+    await page.keyboard.press('Home');
+    assert(await track.locator('a[data-preview-topic]').first().evaluate(el=>el===document.activeElement));
     const topics = ['market', 'sales', 'pressure', 'lending', 'building', 'migration', 'commute', 'water','flood','sites','utilities','broadband','health'];
     assert.equal(await gallery.locator('[data-preview-topic]').count(), topics.length);
     assert.equal(await gallery.locator('[data-preview-topic="past"]').count(), 0, 'history card removed from gallery');
