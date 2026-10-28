@@ -44,3 +44,5 @@ Verification: TypeScript and 19 focused market tests passed; browser checks at 3
 The user requested a wider chart behind the large value. The chart now spans the finding width in a 72px-high value area, with a 48px-high SVG. The monetary value overlays the muted line with a theme-aware text halo. Plot marks use 30% opacity; the percentage and year labels retain their normal contrast. The figure ignores pointer events so scrubbing works across the entire chart, including behind the text. Tooltip, keyboard and actual-data scaling remain unchanged; missing history retains an explicit message.
 
 Updated the shared browser harness to assert overlay geometry. Typecheck, 19 focused market tests and 320/600/1440px light/dark browser checks passed for geometry, touch/keyboard readouts, overflow and scoped axe. Visually inspected desktop dark and narrow mobile light captures. No full suite/production build repeated for this CSS-only experiment.
+
+Follow-up: centered the large overlaid monetary values within each chart. Browser geometry/text-alignment checks passed at 390 and 1440px. No full suite/build rerun for this single CSS alignment adjustment.
