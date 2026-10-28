@@ -99,9 +99,10 @@ try {
   const page = await browser.newPage();
   for (const path of ['/nj/mercer-county', '/nj/zip-08540', '/nj/hoboken']) {
     await page.goto(`${origin}${path}`);
-    assert.equal(await page.locator('#place-market').count(), 0, `${path}: one-town experiment only`);
-    assert(await page.locator('.orientation-details').count() > 0);
-    console.log(`${path}: original opening retained`);
+    assert.equal(await page.locator('#place-market').count(), 1, `${path}: market-first layout on every place`);
+    assert.equal(await page.locator('.orientation-details').count(), 0, `${path}: no separate market-context disclosure`);
+    assert.equal(await page.locator('#place-about-heading').count(), 1, `${path}: About this place titled`);
+    console.log(`${path}: market-first layout`);
   }
   await page.goto(`${origin}/nj/princeton`, { waitUntil: 'networkidle' });
   const peer = page.locator('[data-portrait="peers"]').first();

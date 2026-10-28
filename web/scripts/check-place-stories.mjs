@@ -162,8 +162,8 @@ try {
   assert.equal(new URL(page.url()).searchParams.get('place'),'224');await page.locator('#guide-checks-heading').waitFor({state:'visible'});
   for (const route of ['/nj/hoboken', '/nj/mercer-county', '/nj/zip-08540']) {
     await page.goto(origin + route);
-    assert.equal(await page.locator('#place-story-gallery').count(), 0);
-    assert.equal(await page.locator('.ground-water').count(), 1, 'other places retain original sections');
+    assert.equal(await page.locator('#place-story-gallery [data-preview-topic]').count(), 14, `${route}: every local story`);
+    assert.equal(await page.locator('.exhibit-gallery .ground-water').count(), 0, `${route}: stories not duplicated below`);
   }
-  console.log('Place picker, new-topic county selections, county/ZIP identity, back/reload, invalid/missing selection, new library cover and non-pilot place regressions passed');
+  console.log('Place picker, new-topic county selections, county/ZIP identity, back/reload, invalid/missing selection, new library cover and local stories on other places passed');
 } finally { await browser.close(); }

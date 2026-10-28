@@ -87,8 +87,8 @@ try {
   }
   const page=await browser.newPage();
   await page.goto(`${origin}/nj/hoboken`,{waitUntil:'networkidle'});
-  assert.equal(await page.locator('#place-comparisons-heading').count(),0);
-  assert(await page.locator('.standouts-disclosure').count()>0);
-  assert(await page.locator('.similar-places').count()>0);
-  console.log('Nonpilot Hoboken retains its original rankings/alternatives treatment');
+  assert.equal(await page.locator('#place-comparisons-heading').count(),1,'Hoboken has the ranking rail');
+  assert.equal(await page.locator('.standouts-disclosure').count(),0,'no old rankings disclosure');
+  assert(await page.locator('#place-explore .similar-places').count()>0);
+  console.log('Hoboken has the market-first rankings and alternatives');
 } finally { await browser.close(); }

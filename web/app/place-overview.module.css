@@ -208,20 +208,22 @@
 .fiveSections > :global(nav[aria-label="Place sections"]) { margin-bottom: 0; }
 .fiveSections > :global(.region-standard-content) { display: flow-root; padding-top: var(--place-section-gap); }
 .fiveSections :global(#place-market) { margin: 0; }
-.fiveSections :global(#quiet-cost),.fiveSections :global(#place-understand),.fiveSections :global(#place-explore) { display: flow-root; margin: var(--place-section-gap) 0 0 !important; padding: 0; }
+.fiveSections :global(#quiet-cost),.fiveSections :global(#place-understand),.fiveSections :global(#place-picture),.fiveSections :global(#place-explore) { display: flow-root; margin: var(--place-section-gap) 0 0 !important; padding: 0; }
 .fiveSections :global(#quiet-cost > section),.fiveSections :global(#place-explore > section) { margin: 0; padding-top: 0; border-top: 0; }
 .fiveSections :global(#quiet-cost > section > .section-head) { padding-top: 0; }
 .fiveSections :global(#place-understand > :last-child) { margin-bottom: 0; }
 
 /* The site's numbered section kickers and accent rule (horizon-theme.css), back on the
    pilot's four main titles at one size, so each section starts the same way. */
-:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(:is(#place-market-heading,.place-cost-overview > .section-head h2,#place-about-heading,#similar-places-heading)) { position: relative; padding-top: 1.35rem !important; font: 400 clamp(26px,3vw,36px)/1.15 Georgia,serif !important; letter-spacing: -.025em !important; color: var(--plate-ink); }
-:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(:is(#place-market-heading,.place-cost-overview > .section-head h2,#place-about-heading,#similar-places-heading))::before { display: block; margin-bottom: .5rem; font: 600 11px/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--plate-accent); }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(:is(#place-market-heading,.place-cost-overview > .section-head h2,#place-about-heading,#place-picture-heading,#similar-places-heading)) { position: relative; padding-top: 1.35rem !important; font: 400 clamp(26px,3vw,36px)/1.15 Georgia,serif !important; letter-spacing: -.025em !important; color: var(--plate-ink); }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(:is(#place-market-heading,.place-cost-overview > .section-head h2,#place-about-heading,#place-picture-heading,#similar-places-heading))::before { display: block; margin-bottom: .5rem; font: 600 11px/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--plate-accent); }
 :global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#place-market-heading)::before { content: "01 · The market" / ""; }
 :global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(.place-cost-overview > .section-head h2)::before { content: "02 · Costs" / ""; }
 :global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#place-about-heading)::before { content: "03 · The place" / ""; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#place-picture-heading)::before { content: "04 · The local picture" / ""; }
 :global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#similar-places-heading)::before { content: "04 · Alternatives" / ""; }
-:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(:is(#place-market-heading,.place-cost-overview > .section-head h2,#place-about-heading,#similar-places-heading))::after { content: ""; position: absolute; top: 0; left: 0; width: min(100%,1100px); height: 2px; background: linear-gradient(90deg,var(--plate-accent),color-mix(in srgb,var(--plate-accent) 25%,transparent) 40%,transparent); }
+.fiveSections :global(#place-picture-heading) { margin-bottom: 1.2rem; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(:is(#place-market-heading,.place-cost-overview > .section-head h2,#place-about-heading,#place-picture-heading,#similar-places-heading))::after { content: ""; position: absolute; top: 0; left: 0; width: min(100%,1100px); height: 2px; background: linear-gradient(90deg,var(--plate-accent),color-mix(in srgb,var(--plate-accent) 25%,transparent) 40%,transparent); }
 /* Links beside a title sit on its baseline, not the kicker's. */
 .fiveSections :global(div:has(> #place-market-heading)),.fiveSections :global(.place-cost-overview > .section-head),.fiveSections :global(header:has(> #similar-places-heading)) { align-items: flex-end !important; }
 /* The comparison caveat belongs to the cost figures above it: a footnote, not a section. */

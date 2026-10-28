@@ -300,8 +300,8 @@ export default async function RegionPage({
 
   const name = displayName(region);
   const quiet = ["county", "municipality", "zip"].includes(region.level);
-  // Deliberately one town for local review, not a platform-wide hierarchy decision.
-  const marketFirst = region.state_code === "NJ" && region.geoid === "3402160900";
+  // The market-first layout, piloted on Princeton and now every county, town and ZIP.
+  const marketFirst = quiet;
   const marketCohorts = marketFirst ? await marketPortraitData(region.state_code, packet.levels) : [];
   const placeStoryRecords = marketFirst ? (Object.keys(PLACE_STORIES) as PlaceStoryTopic[]).filter(topic => topic !== "past").map(topic => stampPlaceStory(makePlaceStoryRecord(topic,
     { region_id: regionId, name: region.name, level: region.level, state_code: region.state_code, geoid: region.geoid }, packet.levels,
@@ -434,13 +434,15 @@ export default async function RegionPage({
   const housingContext = !marketFirst && quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
   const sections = [
     { id: "place-overview", label: "Overview" },
-    ...(marketFirst ? [{ id: "place-market", label: "The market" }] : []),
+    // A county's towns sit in its header, so they come before the market.
     ...(countyTowns.length ? [{ id: "county-towns", label: "Towns" }] : []),
+    ...(marketFirst ? [{ id: "place-market", label: "The market" }] : []),
     { id: quiet ? "quiet-cost" : "place-costs", label: "Costs" },
     ...(marketFirst ? [{ id: "place-understand", label: "The place" }] : []),
     ...(!marketFirst ? [{ id: "field-notes", label: "Market" }] : []),
     ...(!marketFirst ? [{ id: "about-getting-around", label: "Getting around" }] : []),
     ...(!marketFirst ? [{ id: "about-living-there", label: "Living there" }] : []),
+    ...(marketFirst && consumer ? [{ id: "place-picture", label: "Local picture" }] : []),
     ...(similar ? [{ id: "place-explore", label: "Alternatives" }] : []),
   ];
 
@@ -584,7 +586,8 @@ export default async function RegionPage({
           sentences say what changed. */}
       <div id="about-picture" className="about-anchor" />
       <QuietAnchor enabled={quiet} id="quiet-highlights">
-      <ConsumerReading reading={consumer} section="what_stands_out" heading={quiet ? "The local picture" : `What stands out in ${name}`} annotation={editorialAnnotation} paperNote={quiet}>
+      {/* The market-first layout gives the reading a section of its own after this one. */}
+      <ConsumerReading reading={marketFirst ? null : consumer} section="what_stands_out" heading={quiet ? "The local picture" : `What stands out in ${name}`} annotation={editorialAnnotation} paperNote={quiet}>
       {!marketFirst && standing.length > 0 && (
         <details className="standouts-disclosure">
           <summary>
@@ -691,6 +694,12 @@ export default async function RegionPage({
       </QuietAnchor>
       </QuietAnchor>
       </section>
+      {/* The written reading (counties, 2026-10-28): after the computed figures, in a
+          section of its own, rather than above the ranked measures. */}
+      {marketFirst && consumer && <section id="place-picture" aria-labelledby="place-picture-heading">
+        <h2 id="place-picture-heading">The local picture</h2>
+        <ConsumerReading reading={consumer} section="what_stands_out" heading="What stands out" headingLevel={3} annotation={editorialAnnotation} paperNote />
+      </section>}
       <div id="place-explore">
       {/* The deployed alternatives section, kept for the pilot too (owner, 2026-10-28). */}
       <SimilarPlaces name={name} state={region.state_code} data={similar} />

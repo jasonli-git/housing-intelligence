@@ -594,6 +594,10 @@ export function CostToOwn({
     { key: "kept", label: "Paid into your home", value: kept, colour: "var(--good)" },
   ].filter((p) => p.value > 0);
   const active = segments.find((p) => p.key === barPart) ?? null;
+  const pickPart = (target: EventTarget) => {
+    const key = target instanceof Element ? target.closest<HTMLElement>("[data-part]")?.dataset.part : undefined;
+    if (key) setBarPart(key);
+  };
   const ownershipBreakdown = <>
           {/* Stated assumptions, not a forecast of rates (#327). */}
           <ReaderDetails title="At other mortgage rates" className="mortgage-rate-details">
@@ -622,26 +626,35 @@ export function CostToOwn({
             </p>
           </ReaderDetails>
           <div className="gone-kept">
+            {/* One target for the whole bar: a slice can be a sliver too narrow to tap,
+                so the pointer picks the slice under it and arrow keys step through them. */}
             <div
               className="gone-kept-bar"
               role="group"
+              tabIndex={0}
               aria-label={
                 `Of ${money(month.total)}: ` +
                 parts.map((p) => `${p.label.toLowerCase()} ${money(p.value)}`).join(", ") +
-                `, and ${money(kept)} paid into the home`
+                `, and ${money(kept)} paid into the home. Use the arrow keys to step through the parts.`
               }
+              onPointerMove={(event) => pickPart(event.target)}
+              onPointerDown={(event) => pickPart(event.target)}
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+                event.preventDefault();
+                const at = segments.findIndex((p) => p.key === barPart);
+                const step = event.key === "ArrowRight" ? 1 : -1;
+                const n = segments.length;
+                setBarPart(segments[at < 0 ? (step > 0 ? 0 : n - 1) : (at + step + n) % n].key);
+              }}
             >
               {segments.map((p) => (
-                <button
-                  type="button"
+                <i
                   key={p.key}
+                  data-part={p.key}
                   className="gone-kept-part"
-                  aria-pressed={barPart === p.key}
-                  aria-label={`${p.label}: ${money(p.value)} a month, ${Math.round((p.value / month.total) * 100)}% of the payment`}
+                  data-active={barPart === p.key || undefined}
                   style={{ width: share(p.value, month.total), background: p.colour }}
-                  onMouseEnter={() => setBarPart(p.key)}
-                  onFocus={() => setBarPart(p.key)}
-                  onClick={() => setBarPart(p.key)}
                 />
               ))}
             </div>
@@ -649,7 +662,7 @@ export function CostToOwn({
               {active ? <>
                 <i style={{ background: active.colour }} />
                 <span>{active.label}</span> <b>{money(active.value)}</b> a month · {Math.round((active.value / month.total) * 100)}% of the payment
-              </> : <span>Hover or tap a colour to see what it pays for.</span>}
+              </> : <span>Point at or tap a colour to see what it pays for.</span>}
             </p>
             {quiet && <p className="quiet-receipt"><span>Money gone <b>{money(month.gone)}</b></span><span>Into the home <b>{money(kept)}</b></span></p>}
             <p className="gone-kept-key" aria-hidden="true">
