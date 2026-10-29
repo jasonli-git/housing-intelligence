@@ -213,7 +213,7 @@
    market, counties, visual stories, statewide data — with the same titles, kickers and
    spacing, and the county page's half-width photograph. */
 @media screen {
-  main.nj-page .state-chapters { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(3.24rem, 6.48vw, 5.4rem); margin-top: clamp(2.5rem, 5vw, 4rem); }
+  main.nj-page .state-chapters { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(3.56rem, 7.13vw, 5.94rem); margin-top: clamp(2.5rem, 5vw, 4rem); }
   main.nj-page .state-chapters > * { min-width: 0; margin: 0 !important; }
   body:has(.horizon-page) main.nj-page :is(#state-overview-heading, #state-counties h2, #state-visual-heading, #state-data-heading) {
     position: relative; margin: 0 0 1rem !important; padding: 1.35rem 0 0 !important; border: 0 !important;
