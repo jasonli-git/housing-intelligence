@@ -53,7 +53,7 @@ export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownI
   }
 
   return <section className={styles.opening} id="place-market" aria-labelledby="place-market-heading">
-    <div className={styles.heading}><h2 id="place-market-heading">The housing market</h2><Link href={`${reportHref}#report-measures`}>Figures & sources <span aria-hidden="true">↗</span></Link></div>
+    <div className={styles.heading}><h2 id="place-market-heading">Housing market</h2><Link href={`${reportHref}#report-measures`}>Figures & sources <span aria-hidden="true">↗</span></Link></div>
     {standing.length > 0 && <aside className={styles.standing} aria-label="Where it ranks"><div className={styles.standingHead}><span className={styles.standingLabel}>Where it ranks</span>{standingTitle && <p className={styles.standingTitle}>{standingTitle}</p>}</div><div className={styles.standingBody}>{standing.map((sentence) => <p key={sentence}>{sentence}</p>)}</div></aside>}
     <div className={styles.findings}>
       {finding(home, price?.basis === "transactions" ? "Median recorded sale price" : "Typical home value", "No current home-value index or recent qualifying sale-price median is available.", price?.basis === "transactions" ? "Qualifying sales—not the value of every home." : "Modeled value—not a sale price or appraisal.")}

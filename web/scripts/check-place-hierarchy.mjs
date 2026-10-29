@@ -12,7 +12,7 @@ try {
     page.on('pageerror', e => errors.push(e.message));
     await page.goto(`${origin}/nj/princeton`, { waitUntil: 'networkidle' });
     await page.evaluate(t => document.documentElement.dataset.theme = t, theme);
-    const opening = page.getByRole('region', { name: 'The housing market', exact: true });
+    const opening = page.getByRole('region', { name: 'Housing market', exact: true });
     assert(await opening.isVisible());
     assert.equal(await opening.locator('details').count(), 0, 'all primary findings and qualifications are visible');
     assert.equal(await page.locator('.orientation-details').count(), 0, 'no market disclosure in the header');
@@ -69,9 +69,9 @@ try {
     const box = await opening.boundingBox();
     assert(box.y < 650, 'market starts near the opening, not after the cost model');
     const nav = page.getByRole('navigation', { name: 'Place sections' });
-    await nav.getByRole('link', { name: 'The market', exact: true }).click();
+    await nav.getByRole('link', { name: 'Housing market', exact: true }).click();
     assert.equal(new URL(page.url()).hash, '#place-market');
-    await nav.getByRole('link',{name:'Costs',exact:true}).click();
+    await nav.getByRole('link',{name:'Monthly costs',exact:true}).click();
     assert.equal(new URL(page.url()).hash, '#quiet-cost');
     const cost = page.locator('.place-cost-overview');
     assert(await cost.isVisible());

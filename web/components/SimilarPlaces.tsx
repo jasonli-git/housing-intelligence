@@ -34,7 +34,7 @@ export function SimilarPlaces({ name, state, data }: { name: string; state: stri
   return (
     <section className="section sales similar-places" aria-labelledby="similar-places-heading">
       <div className="section-head">
-        <h2 id="similar-places-heading">Somewhere like here, but cheaper?</h2>
+        <h2 id="similar-places-heading">Similar cheaper places</h2>
       </div>
 
       <p className="sales-lead">

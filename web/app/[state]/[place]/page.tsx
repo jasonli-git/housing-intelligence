@@ -434,15 +434,15 @@ export default async function RegionPage({
   const housingContext = !marketFirst && quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
   const sections = [
     { id: "place-overview", label: "Overview" },
-    ...(marketFirst ? [{ id: "place-market", label: "The market" }] : []),
-    { id: quiet ? "quiet-cost" : "place-costs", label: "Costs" },
-    ...(marketFirst ? [{ id: "place-understand", label: "The place" }] : []),
+    ...(marketFirst ? [{ id: "place-market", label: "Housing market" }] : []),
+    { id: quiet ? "quiet-cost" : "place-costs", label: "Monthly costs" },
+    ...(marketFirst ? [{ id: "place-understand", label: "About this place" }] : []),
     ...(!marketFirst ? [{ id: "field-notes", label: "Market" }] : []),
     ...(!marketFirst ? [{ id: "about-getting-around", label: "Getting around" }] : []),
     ...(!marketFirst ? [{ id: "about-living-there", label: "Living there" }] : []),
     ...(marketFirst && consumer ? [{ id: "place-picture", label: "Local picture" }] : []),
     ...(countyTowns.length ? [{ id: "county-towns", label: "Towns" }] : []),
-    ...(similar ? [{ id: "place-explore", label: "Alternatives" }] : []),
+    ...(similar ? [{ id: "place-explore", label: "Similar cheaper places" }] : []),
   ];
 
   return (

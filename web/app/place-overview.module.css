@@ -220,12 +220,12 @@
    pilot's four main titles at one size, so each section starts the same way. */
 :global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(:is(#place-market-heading,.place-cost-overview > .section-head h2,#place-about-heading,#place-picture-heading,#county-towns h2,#similar-places-heading)) { position: relative; padding-top: 1.35rem !important; font: 400 clamp(26px,3vw,36px)/1.15 Georgia,serif !important; letter-spacing: -.025em !important; color: var(--plate-ink); }
 :global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(:is(#place-market-heading,.place-cost-overview > .section-head h2,#place-about-heading,#place-picture-heading,#county-towns h2,#similar-places-heading))::before { display: block; margin-bottom: .5rem; font: 600 11px/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--plate-accent); }
-:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#place-market-heading)::before { content: "01 · The market" / ""; }
-:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(.place-cost-overview > .section-head h2)::before { content: "02 · Costs" / ""; }
-:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#place-about-heading)::before { content: "03 · The place" / ""; }
-:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#place-picture-heading)::before { content: "04 · The local picture" / ""; }
-:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#similar-places-heading)::before { content: "04 · Alternatives" / ""; }
-:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#county-towns h2)::before { content: "05 · Towns" / ""; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#place-market-heading)::before { content: "01" / ""; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(.place-cost-overview > .section-head h2)::before { content: "02" / ""; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#place-about-heading)::before { content: "03" / ""; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#place-picture-heading)::before { content: "04" / ""; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#similar-places-heading)::before { content: "04" / ""; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#county-towns h2)::before { content: "05" / ""; }
 .fiveSections :global(#place-picture-heading) { margin-bottom: 1.2rem; }
 :global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(:is(#place-market-heading,.place-cost-overview > .section-head h2,#place-about-heading,#place-picture-heading,#county-towns h2,#similar-places-heading))::after { content: ""; position: absolute; top: 0; left: 0; width: min(100%,1100px); height: 2px; background: linear-gradient(90deg,var(--plate-accent),color-mix(in srgb,var(--plate-accent) 25%,transparent) 40%,transparent); }
 /* Links beside a title sit on its baseline, not the kicker's. */

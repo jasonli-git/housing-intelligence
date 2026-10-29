@@ -683,7 +683,7 @@ export function CostToOwn({
   return (
     <section className={`section cost${compactOverview ? " place-cost-overview" : ""}`} aria-labelledby={`${id}-heading`}>
       <div className="section-head">
-        <h2 id={`${id}-heading`}>{compactOverview ? "Monthly housing costs" : "What it costs to own and to rent"}</h2>
+        <h2 id={`${id}-heading`}>{compactOverview ? "Monthly costs" : "What it costs to own and to rent"}</h2>
         {control && !compactOverview ? downControl : <span className="control-label">{down}% down payment</span>}
       </div>
 
