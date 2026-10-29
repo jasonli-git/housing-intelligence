@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { StoryShell } from "@/components/StoryShell";
-import { api, type Persistence } from "@/lib/api";
+import { api, artifactUrl, type Persistence } from "@/lib/api";
+import { initialPlaceStory } from "@/lib/placeStoryData";
+import { PlaceStoryFocus } from "@/components/PlaceStoryFocus";
 import { pageMetadata } from "@/lib/meta";
 import { againstUsual, placeAmongYears } from "@/lib/persistence";
 import { regionPath } from "@/lib/placeRoutes";
@@ -52,6 +54,7 @@ function Panel({ p, first, last, span, annotate = false }: { p: Persistence; fir
 }
 
 export default async function IsTodayUnusualPage() {
+  const initial = await initialPlaceStory("past");
   const counties = await storyCounties();
   const read = await Promise.all([1, ...counties.keys()].map((id) => api.persistence(id)));
   const shown = read.filter((p): p is Persistence => !!p && p.vs_median !== null && p.series.length > 1);
@@ -64,6 +67,7 @@ export default async function IsTodayUnusualPage() {
   return (
     <StoryShell
       title="Is today unusual here?"
+      focus={<PlaceStoryFocus initial={initial} artifactUrl={artifactUrl} />}
       lede={<>Each panel is a county&rsquo;s home prices against its households&rsquo; incomes, year by year, measured against that county&rsquo;s own usual level, the dashed line. Above it, homes cost more of a year&rsquo;s income than usual. {highest.length ? <>{highest.length === 1 ? `${highest[0]} is` : `${highest.length} counties are`} at or near the highest in their record.</> : null}</>}
       note={<>Each year, FHFA&rsquo;s house price index for the county divided by the Census Bureau&rsquo;s estimate of its median household income, compared with the middle year of all its years. An index, not dollars: each panel compares a county with its own past only, so two panels say how unusual today is in each, not which county is dearer. The record starts in {first}; years with no income estimate are skipped. All panels share one scale, in percent from the usual level. Each county&rsquo;s page explains its history in words.</>}
     >

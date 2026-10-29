@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { PacketLevel, PacketMetric } from "@/lib/api";
+import type { Uncertainties } from "@/lib/uncertainty";
 import {
   housingProfile,
   pace,
@@ -13,6 +14,7 @@ import {
   tradeoff,
   verdict,
   verdictHeadline,
+  verdictTitle,
 } from "@/lib/verdict";
 
 function metric(metric_id: string, fields: Partial<PacketMetric>): PacketMetric {
@@ -457,5 +459,16 @@ describe("standingRange and paceRange", () => {
     expect(paceRange(15, 21, 21)).toBe("more slowly than most");
     expect(paceRange(10, 11, 21)).toBe("at about the typical pace");
     expect(paceRange(3, 20, 21)).toBe("at a pace that can’t be told apart from most");
+  });
+});
+
+describe("verdictTitle", () => {
+  const value = { metric_id: "zhvi_sfr", label: "Home value", unit: "usd", direction: "higher_is_better", value: 954354, period_start: "2026-09-01", period_end: "2026-09-30", rank: 79, of: 388, percentile: null, release_id: null, source_id: null, match_method: null } as PacketLevel;
+  const change = { metric_id: "zhvi_sfr", pct_change: 36.4, rank: 202, of: 384 } as unknown as PacketMetric;
+  it("names the rank and the pace in a headline", () => {
+    expect(verdictTitle([change], [value])).toBe("The 79th most expensive of 388, rising at about the typical pace");
+  });
+  it("gives no headline where the value's rank is a survey range", () => {
+    expect(verdictTitle([change], [value], { value: new Map([["zhvi_sfr", { best: 60, worst: 90, margin: 1 }]]), change: new Map() } as unknown as Uncertainties)).toBeNull();
   });
 });

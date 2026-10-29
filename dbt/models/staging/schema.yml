@@ -166,7 +166,8 @@ models:
   - name: stg_census_acs_people
     description: >-
       The ACS in depth on the people (Milestone 34): how and how long workers commute,
-      household types and disability; county, municipal and ZCTA.
+      household types, disability and private-school enrollment; county, municipal
+      and ZCTA.
     columns:
       - name: geoid
         tests: [not_null]
@@ -174,7 +175,8 @@ models:
         tests:
           - accepted_values:
               values: ['people_county', 'people_cousub', 'people_zcta',
-                       'disability_county', 'disability_cousub', 'disability_zcta']
+                       'disability_county', 'disability_cousub', 'disability_zcta',
+                       'schools_county', 'schools_cousub', 'schools_zcta']
       - name: value
         tests:
           - not_null

@@ -915,7 +915,9 @@ Open questions recorded when it was raised:
 
 ## Place-page information hierarchy
 
-**Status:** Exploratory — not approved for implementation
+**Status:** Decided — market-first layout approved for every county, town and ZIP page
+(owner, 2026-10-28), and adapted for the New Jersey page (2026-10-29); ARCHITECTURE
+#451–#452. Reader testing below has not been done.
 **Recorded:** 2026-10-27
 
 This came from outside design advice, reviewed in conversation and again by Codex. The
@@ -977,3 +979,19 @@ There are many stylesheets with overlapping names. That justifies checking how s
 interact, but the count alone doesn't show that the design lacks a system.
 
 Do not implement yet.
+
+---
+
+## Place-linked visual stories
+
+**Status:** Extended — local story cards on every county, town and ZIP page (owner,
+2026-10-28; ARCHITECTURE #451), and on the New Jersey page (#452)
+**Recorded:** 2026-10-27
+
+Explore turning place-page exhibits into place-aware stories, reusing existing stories
+where their questions align. Place pages could show a selected-view screenshot and a
+concise local finding linking into that story. Preserve geography, dates, coverage,
+sources and practical checks.
+
+The owner approved a local pilot covering one market topic, commute and water on
+Princeton. This does not approve migrating every component or rolling out to all places.

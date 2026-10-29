@@ -12,14 +12,15 @@ and not a chatbot: pages, maps, tools, reports and an API are the product, and a
 optional AI layer only explains figures that were already computed.
 
 > **Status — <!-- fill:version -->v0.50.0 (2026-10-08)<!-- /fill -->, updated
-> 2026-10-27.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
+> 2026-10-29.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
 > published in full: the state, <!-- fill:counties -->21<!-- /fill --> counties,
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** Every tool page reworked to lead with its answer: place pages, Compare and
-> the Budget explorer (#448); the Buyer's guide, tax lookup and Housing help (#449); and
-> searchable county and town directories with navigable reports (#450).
+> **Latest.** Every county, town and ZIP page now leads with its housing market, then
+> monthly costs, the place and similar cheaper places, each section with its own look
+> (#451); a streamlined New Jersey page (#452); and a story on where students go to
+> school (#453).
 >
 > **Next.** Clearing TODO and the open Director Notes; then the hosting move for a second
 > state, on hold until they are cleared. See [ROADMAP.md](docs/ROADMAP.md) and

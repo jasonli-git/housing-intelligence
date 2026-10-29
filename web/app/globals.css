@@ -255,6 +255,16 @@ details[open] > summary .when-closed { display: none; }
 .gone-kept { display: grid; gap: 6px; }
 .gone-kept-bar { display: flex; overflow: hidden; background: var(--grid); }
 .gone-kept-bar i { display: block; height: 100%; }
+/* Each part is a button; the tap area reaches above and below the thin bar. */
+.gone-kept-part::after { content: ""; position: absolute; inset: -10px 0; }
+.gone-kept-part { position: relative; display: block; height: 100%; min-width: 2px; cursor: pointer; transition: opacity 120ms ease, filter 120ms ease; }
+.gone-kept-bar:has(.gone-kept-part[data-active]) .gone-kept-part:not([data-active]) { opacity: .45; }
+.gone-kept-bar:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.gone-kept-readout { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-height: 1.5em; font-size: var(--text-note); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.gone-kept-readout i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+.gone-kept-readout span:not(:only-child) { color: var(--text-primary); }
+.gone-kept-readout b { color: var(--text-primary); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .gone-kept-part { transition: none; } }
 .gone-kept-key { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: var(--text-note); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 .gone-kept-key span { display: inline-flex; align-items: center; gap: 6px; }
 .gone-kept-key i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
@@ -2527,9 +2537,12 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
 .cost-monthly-headline + .cost-cards { margin-top: 0.7rem; }
 
 .gone-kept-bar {
-  height: 9px;
+  height: 12px;
+  overflow: visible;
   border-radius: 999px;
 }
+.gone-kept-bar .gone-kept-part:first-child { border-radius: 999px 0 0 999px; }
+.gone-kept-bar .gone-kept-part:last-child { border-radius: 0 999px 999px 0; }
 
 .cost-strip {
   margin-top: 1rem;

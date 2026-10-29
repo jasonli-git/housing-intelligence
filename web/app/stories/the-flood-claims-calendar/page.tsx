@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
 import { StoryShell } from "@/components/StoryShell";
+import { PlaceStoryFocus } from "@/components/PlaceStoryFocus";
+import { initialPlaceStory } from "@/lib/placeStoryData";
+import { artifactUrl } from "@/lib/api";
 import { pageMetadata } from "@/lib/meta";
 import { storyPoints } from "@/lib/storyData";
 import "../../horizon-theme.css";
@@ -28,6 +31,7 @@ const dayOfYear = (d: string) => {
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default async function FloodCalendarPage() {
+  const initial=await initialPlaceStory("flood");
   const { points } = await storyPoints("flood-claims-calendar");
   const days = points.map((p) => ({ day: p.x, claims: p.y }));
   const years = [...new Set(days.map((d) => +d.day.slice(0, 4)))].sort((a, b) => a - b);
@@ -46,6 +50,7 @@ export default async function FloodCalendarPage() {
   const share = busiest.reduce((a, d) => a + d.claims, 0) / (total || 1);
   return (
     <StoryShell
+      focus={<PlaceStoryFocus initial={initial} artifactUrl={artifactUrl}/>}
       title="The flood claims calendar"
       lede={<>Every row is a year, every sliver a day, and its brightness the flood insurance claims New Jersey&rsquo;s homes made for it. Most of the calendar is dark. Then a storm draws a bright stripe: Sandy&rsquo;s {sandy.toLocaleString("en-US")} claims on 29 October 2012 are more than most whole years. Ten days hold {Math.round(share * 100)}% of the {total.toLocaleString("en-US")} claims paid since {first}.</>}
       note={<>FEMA&rsquo;s National Flood Insurance Program redacted claims (OpenFEMA), every claim with anything paid, dated by its day of loss; a storm&rsquo;s claims can spread over the days after it. Only insured homes claim, and fewer homes were insured in the 1970s and 1980s than since, so early years run darker than their floods were. OpenFEMA&rsquo;s terms forbid trying to identify claimants; nothing here is below a statewide count.</>}

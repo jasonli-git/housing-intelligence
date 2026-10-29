@@ -13,6 +13,16 @@ are not yet recorded here.
 
 ### Added
 
+- **Place pages lead with the housing market** (ARCHITECTURE #451): every county, town and
+  ZIP page opens on its market, then monthly costs as receipts, the place as a field-guide
+  plate with its local stories, and similar cheaper places as destination cards — each
+  section with its own colour, and a section bar to match. Counties gain AI highlights and
+  a towns row, with a larger photo.
+- **A streamlined New Jersey page** (ARCHITECTURE #452): the sale price, the property tax
+  rate and homes sold; where working residents commute; statewide story cards; a showcase
+  of New Jersey's visual stories; the counties.
+- **Where students go** (ARCHITECTURE #453): a story and local card on the share of K–12
+  students who live in a place and attend a private school, from the Census.
 - **State, county and research pages reworked** (ARCHITECTURE #450): searchable directories of
   counties and towns replace the swipe strips; reports gain section navigation, sticky table
   headings and expandable history; the sources page gains a publisher index.

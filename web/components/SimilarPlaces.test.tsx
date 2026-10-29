@@ -14,7 +14,9 @@ describe("SimilarPlaces", () => {
     expect(screen.getByText(/means only acs_share_detached and acs_homeownership_rate/)).toBeTruthy();
     expect(screen.getByText(/January 2024 to June 2026/)).toBeTruthy();
     expect(screen.getByRole("link", { name: "Audubon" }).getAttribute("href")).toBe("/regions/610");
-    expect(screen.getByText("$375,000")).toBeTruthy();
+    // Once on the destination card, once in the table beneath it.
+    expect(screen.getAllByText("$375,000")).toHaveLength(2);
+    expect(screen.getByRole("list", { name: /Cheaper towns like Cherry Hill/ }).querySelector("a")?.getAttribute("href")).toBe("/regions/610");
   });
 
   it("says so when no town is near enough, and shows no table", () => {

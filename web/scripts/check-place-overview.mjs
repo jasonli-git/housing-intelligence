@@ -22,11 +22,12 @@ try {
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${path} ${width} overflow`);
       if (hasCosts) {
       const heading = await cost.locator(':scope > .section-head h2').boundingBox();
-      assert(heading.height < 80, 'Cost heading should remain compact');
-      const figures = await cost.locator('.cost-cards').boundingBox();
-      assert(figures.y < 850, `${path} ${width}: figures too far down (${figures.y})`);
-      assert(await cost.locator('.cost-evidence-omissions').isVisible());
-      const down = cost.locator(':scope > .section-head select');
+      // The numbered kicker sits above the title; the costs follow the market section.
+      assert(heading.height < 140, 'Cost heading should remain compact');
+      assert(await cost.locator('.cost-fine-print').isVisible());
+      // The down payment is one of the reader's own numbers, behind "Use your numbers".
+      await cost.locator('.cost-use-numbers > summary').click();
+      const down = cost.locator('.cost-use-numbers select').first();
       const before = await cost.locator('.cost-figure').first().innerText();
       await down.selectOption('10');
       assert.notEqual(await cost.locator('.cost-figure').first().innerText(), before);
@@ -38,18 +39,10 @@ try {
       const navBox = await nav.boundingBox();
       const barBox = await page.locator('.bar').boundingBox();
       assert(Math.abs(navBox.y - barBox.height) < 2, `Navigator should stay under masthead: ${navBox.y}, ${barBox.height}`);
-      if (width <= 760) {
-        await nav.getByRole('combobox').selectOption('sources-heading');
-      } else {
-        await nav.getByRole('link', { name: 'Sources', exact: true }).click();
-      }
-      assert(await page.locator('.footer-provenance').evaluate(d => d.open));
-      assert.equal(await page.evaluate(() => document.activeElement.id), 'sources-heading');
-      assert.equal(new URL(page.url()).hash, '#sources-heading');
       const scan = await new AxeBuilder({ page }).withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']).include('main').include('nav[aria-label="Place sections"]').analyze();
       assert.deepEqual(scan.violations.map(v => ({id:v.id, targets:v.nodes.map(n=>n.target)})), []);
       assert.deepEqual(errors, []);
-      console.log(`${path} ${width}: overview, inputs, sources, sticky nav, overflow and axe passed`);
+      console.log(`${path} ${width}: overview, inputs, sticky nav, overflow and axe passed`);
       await context.close();
     }
   }

@@ -2,29 +2,30 @@ import { Term } from "@/components/Term";
 import type { LevelReading } from "@/lib/api";
 import type { ReactNode } from "react";
 import { formatMetric } from "@/lib/format";
-import { monthLabel, periodLabel } from "@/lib/periods";
+import { monthLabel } from "@/lib/periods";
 import { stateOverviewFigures } from "@/lib/stateEntry";
 
-export function StateOverview({ levels, mortgage, preliminaryYears, hasNotes = false, children }: {
+export function StateOverview({ levels, hasNotes = false, children }: {
   levels: LevelReading[];
-  mortgage: { value: number; period_start: string; metric_id: string } | null;
-  preliminaryYears: number[];
   hasNotes?: boolean;
   children?: ReactNode;
 }) {
-  const { price, added, certified, demolished } = stateOverviewFigures(levels);
+  // The market in three New Jersey figures (owner, 2026-10-29): the sale price, the
+  // property tax the state is known for, and how many homes sold. The national mortgage
+  // rate and net homes added no longer lead it.
+  const { price, tax, sales } = stateOverviewFigures(levels);
   return <section id="state-overview" className="state-overview" aria-labelledby="state-overview-heading">
-    <div className="state-chapter-head"><h2 id="state-overview-heading">Statewide snapshot{hasNotes && <sup className="state-note-marker"><a id="state-note-reference" className="state-note-reference" href="#state-figure-notes" aria-label="Read notes about statewide figures at the bottom of the page" title="Notes about statewide figures">†</a></sup>}</h2></div>
+    <div className="state-chapter-head"><h2 id="state-overview-heading">Housing market{hasNotes && <sup className="state-note-marker"><a id="state-note-reference" className="state-note-reference" href="#state-figure-notes" aria-label="Read notes about statewide figures at the bottom of the page" title="Notes about statewide figures">†</a></sup>}</h2></div>
     <div className="state-facts">
       {price && <article><strong>{formatMetric(price.value, price.unit, price.metric_id)}</strong><Term id={price.metric_id}>Median sold-home price</Term><small>{monthLabel(price.period_start)}–{monthLabel(price.period_end)} · NJ sale records</small></article>}
-      {mortgage && <article><strong>{mortgage.value.toFixed(2)}%</strong><Term id={mortgage.metric_id}>30-year fixed · US average</Term><small>{periodLabel(mortgage.period_start, mortgage.metric_id)} · Freddie Mac · not a quote</small></article>}
-      {added && <article><strong>{formatMetric(added.value, added.unit, added.metric_id)}</strong><Term id={added.metric_id}>Net homes added</Term><small>{periodLabel(added.period_end, added.metric_id)}{preliminaryYears.includes(Number(added.period_end.slice(0, 4))) ? " (preliminary)" : ""} · Reporting towns only</small></article>}
+      {tax && <article><strong>{formatMetric(tax.value, tax.unit, tax.metric_id)}</strong><Term id={tax.metric_id}>Effective property tax rate</Term><small>{tax.period_end.slice(0, 4)} · NJ Division of Taxation</small></article>}
+      {sales && <article><strong>{formatMetric(sales.value, sales.unit, sales.metric_id)}</strong><Term id={sales.metric_id}>Homes sold</Term><small>{monthLabel(sales.period_start)}–{monthLabel(sales.period_end)} · NJ sale records</small></article>}
     </div>
-    {!price && !added && !mortgage && <p>Statewide overview figures are unavailable in this snapshot.</p>}
-    {(price || added || mortgage) && <details className="state-snapshot-limits"><summary>Scope &amp; reporting coverage</summary><div>
+    {!price && !tax && !sales && <p>Statewide overview figures are unavailable in this snapshot.</p>}
+    {(price || tax || sales) && <details className="state-snapshot-limits"><summary>Scope</summary><div>
       {price && <p>Sale price covers qualifying residential sales—not the value of every home.</p>}
-      {mortgage && <p>Mortgage rate is the national average, not a local rate or a lender quote.</p>}
-      {added && <p>NJ construction reports: completions minus demolitions; reporting towns only.{certified && demolished ? ` Reporting coverage: ${(certified.value * 100).toFixed(0)}% for completions, ${(demolished.value * 100).toFixed(0)}% for demolitions.` : ""}</p>}
+      {tax && <p>The effective rate is the property tax levied per $100 of a home’s market value, statewide; a town’s rate can be far higher or lower.</p>}
+      {sales && <p>Homes sold counts qualifying residential sales over the whole window shown, not one year.</p>}
     </div></details>}
     {children}
   </section>;

@@ -54,3 +54,37 @@
     .quiet-county > header.page-head.has-photo .state-place-artwork-header :is(.state-artwork-wash, .state-artwork-points) { fill: #fff; }
   }
 }
+
+/* A county's header (2026-10-28): the photograph is the right half of the header, its
+   caption laid over its foot, with the New Jersey artwork beside the title. The county's
+   towns are a section of their own near the foot of the page: one sideways-scrolling row
+   of pills, however many towns the county has. */
+@media screen {
+  nav.town-pills.town-pills { margin: 0; padding: 0; border: 0; }
+  nav.town-pills.town-pills > div:first-child { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .8rem 1rem; }
+  nav.town-pills.town-pills label { display: block; font-size: 0; }
+  nav.town-pills.town-pills input { width: 15rem; min-height: 40px; padding: .4rem .9rem; border-radius: 999px; font-size: 14px; }
+  nav.town-pills.town-pills [role="status"] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  nav.town-pills.town-pills ul { display: flex; flex-wrap: nowrap; gap: .5rem; margin: 1.2rem 0 0; padding: 0 2.5rem .6rem 0; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: thin; -webkit-mask-image: linear-gradient(90deg, black calc(100% - 3rem), transparent); mask-image: linear-gradient(90deg, black calc(100% - 3rem), transparent); }
+  nav.town-pills.town-pills li { flex: none; scroll-snap-align: start; }
+  nav.town-pills.town-pills a { display: inline-flex; gap: .4rem; min-height: 40px; padding: .5rem .95rem; border: 1px solid var(--glass-edge, var(--border)); border-radius: 999px; background: var(--glass, var(--surface-card)); font-size: 14px; white-space: nowrap; }
+  nav.town-pills.town-pills a span { font-size: 12px; opacity: .6; }
+  nav.town-pills.town-pills a:hover { border-color: var(--plate-accent, var(--text-secondary)); text-decoration: none; }
+
+  @media (min-width: 761px) {
+    .quiet-county > header.page-head.has-photo[data-kind="county"] > .place-photo {
+      position: relative; align-self: start; justify-self: stretch; max-width: none; margin-top: .4rem; border-radius: 16px; overflow: hidden;
+    }
+    .quiet-county > header.page-head.has-photo[data-kind="county"] > .place-photo img { aspect-ratio: 16 / 9; border-radius: 0; }
+    .quiet-county > header.page-head.has-photo[data-kind="county"] > .place-photo::after { content: ""; position: absolute; inset: 55% 0 0; background: linear-gradient(180deg, transparent, var(--photo-shade)); pointer-events: none; }
+    .quiet-county > header.page-head.has-photo[data-kind="county"] > .place-photo figcaption { position: absolute; left: 1rem; right: 1rem; bottom: .8rem; z-index: 1; margin: 0; text-align: left; color: var(--photo-ink-soft); text-shadow: 0 1px 2px var(--photo-shade); }
+    .quiet-county > header.page-head.has-photo[data-kind="county"] > .place-photo .place-photo-caption { color: var(--photo-ink); }
+    .quiet-county > header.page-head.has-photo[data-kind="county"] .state-place-artwork-header { right: calc(47.5% + 1rem); top: .2rem; width: clamp(180px, 20vw, 250px); opacity: .55; }
+  }
+  @media (max-width: 760px) {
+    .quiet-county > header.page-head.has-photo[data-kind="county"] { --place-photo-band: 300px; }
+    .quiet-county > header.page-head.has-photo[data-kind="county"] .page-title-row { margin-bottom: 6.5rem; }
+    nav.town-pills.town-pills input { width: 100%; }
+    nav.town-pills.town-pills label { flex: 1 1 100%; }
+  }
+}

@@ -23,15 +23,19 @@ const DRINKING_WATER_WATCH = "https://www9.state.nj.us/DEP_WaterWatch_public/";
  */
 export function GroundAndWater({
   name,
-  levels,
-  water,
+  levels: inputLevels,
+  water: inputWater,
   compact = false,
+  scope = "all",
 }: {
   name: string;
   levels: PacketLevel[];
   water: WaterSystems | null;
   compact?: boolean;
+  scope?: "all" | "sites" | "water";
 }) {
+  const levels = scope === "sites" ? inputLevels.filter(l => !l.metric_id.startsWith("water_")) : scope === "water" ? inputLevels.filter(l => !l.metric_id.startsWith("njdep_")) : inputLevels;
+  const water = scope === "sites" ? null : inputWater;
   const value = (id: string) => levels.find((l) => l.metric_id === id)?.value ?? null;
   const open = value("njdep_sites_open");
   const controlled = value("njdep_sites_post_remedy");
@@ -42,11 +46,12 @@ export function GroundAndWater({
   const orderedSystems = compact ? [...(water?.systems ?? [])].sort((a,b) => b.share_of_homes-a.share_of_homes || a.name.localeCompare(b.name)) : water?.systems ?? [];
   const visibleSystems = compact ? orderedSystems.slice(0,2) : orderedSystems;
   const remainingSystems = compact ? orderedSystems.slice(2) : [];
+  const headingId = scope === "sites" ? "ground-sites-heading" : "ground-water-heading";
 
   return (
-    <section className="section sales ground-water" aria-labelledby="ground-water-heading">
+    <section className="section sales ground-water" aria-labelledby={headingId}>
       <div className="section-head">
-        <h2 id="ground-water-heading">What’s in the ground and the water?</h2>
+        <h2 id={headingId}>{scope === "sites" ? "Contaminated-site records" : scope === "water" ? "Water systems and records" : "What’s in the ground and the water?"}</h2>
       </div>
 
       {open !== null && (
@@ -125,7 +130,7 @@ export function GroundAndWater({
           <a href={DRINKING_WATER_WATCH} target="_blank" rel="noreferrer">Drinking Water Watch</a>.
         </p>
       )}
-      <ReaderDetails title="Water records and sources">
+      <ReaderDetails title={scope === "sites" ? "Site records and sources" : "Water records and sources"}>
       {water && (
         <p className="sales-note">
           A health-based violation is a contaminant over its legal limit, or treatment the
@@ -141,13 +146,13 @@ export function GroundAndWater({
       )}
 
       <p className="sales-note">
-        Sites and service areas: New Jersey Department of Environmental Protection.
+        {scope === "sites" ? "Sites: New Jersey Department of Environmental Protection." : <>Sites and service areas: New Jersey Department of Environmental Protection.
         Violations: EPA’s Safe Drinking Water Information System. Homes served are estimated
-        from the 2020 Census.
+        from the 2020 Census.</>}
       </p>
       </ReaderDetails>
       <p className="sales-note publisher-notice-inline">{NJDEP_NOTICE}</p>
-      <StoryLink href="/stories/water-you-can-check" />
+      {scope === "all" && <StoryLink href="/stories/water-you-can-check" />}
     </section>
   );
 }

@@ -3,6 +3,9 @@ import Link from "next/link";
 
 import { StackedBars } from "@/components/StackedBars";
 import { StoryShell } from "@/components/StoryShell";
+import { PlaceStoryFocus } from "@/components/PlaceStoryFocus";
+import { initialPlaceStory } from "@/lib/placeStoryData";
+import { artifactUrl } from "@/lib/api";
 import { pageMetadata } from "@/lib/meta";
 import { regionPath } from "@/lib/placeRoutes";
 import { latestFor, seriesFor, storyCounties } from "@/lib/storyData";
@@ -30,6 +33,7 @@ const REASONS = [
 ];
 
 export default async function MortgageMarketPage() {
+  const initial = await initialPlaceStory("lending");
   const counties = await storyCounties();
   const ids = [...counties.keys()];
   const [v, years] = await Promise.all([
@@ -42,6 +46,7 @@ export default async function MortgageMarketPage() {
   return (
     <StoryShell
       title="The mortgage market"
+      focus={<PlaceStoryFocus initial={initial} artifactUrl={artifactUrl} />}
       lede="For every county, two bars from lenders' own filings. The first is what kind of loan home buyers got; the second is why the applications that were turned down were turned down. Counties with the highest denial rates come first."
       note={<>The Home Mortgage Disclosure Act data lenders file with the CFPB, {year ?? "latest year"}: first-lien loans to buy a one- to four-family home to live in. A lender can give up to four reasons for a denial; the shares here are of each denial&rsquo;s first reason, and &ldquo;other&rdquo; gathers the rest, from incomplete applications to collateral and employment history.</>}
     >

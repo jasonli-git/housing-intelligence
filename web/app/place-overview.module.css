@@ -5,9 +5,6 @@
 .page.page :global(.page-title-row) { display: flex; flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem 1.5rem; margin: .6rem 0; }
 .page :global(.place-title-actions) { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem 1rem; }
 .page :global(.place-title-actions .computed-line) { margin: 0; }
-.page :global(.place-compare) { display: inline-flex; align-items: center; gap: .65rem; min-height: 44px; padding: .5rem .8rem; border: 1px solid var(--plate-accent); border-radius: 6px; background: var(--plate-paper); color: var(--plate-ink) !important; font: 500 13px/1.4 var(--font-text); text-decoration: none; }
-.page :global(.place-compare:hover) { background: color-mix(in srgb, var(--plate-accent) 10%, var(--plate-paper)); }
-.page :global(.place-compare:focus-visible) { outline: 2px solid var(--plate-accent); outline-offset: 3px; }
 .page.page :global(.region-orientation) { max-width: 84ch; margin: .5rem 0 0; font-size: 14px; line-height: 1.55; }
 .page.page :global(.orientation-details) { margin: .2rem 0 0; }
 .page :global(.state-place-artwork-header) { max-height: 150px; opacity: .22; }
@@ -23,14 +20,34 @@
 .page.page :global(.place-cost-overview > .cost-yours) { grid-row: 4; margin: 0; }
 .page.page :global(.place-cost-overview > .cost-cards) { grid-row: 3; margin: 0; align-self: start; border-radius: 10px; }
 .page :global(.place-overview-context) { grid-row: 3; }
-.page.page :global(.place-cost-overview > .cost-monthly-headline) { grid-row: 5; margin: 0; }
-.page.page :global(.place-cost-overview > .cost-evidence) { grid-row: 6; margin: 0; }
-.page.page :global(.place-cost-overview > .quiet-tool-group) { grid-row: 7; margin-top: .8rem; }
+.page :global(.place-cost-overview .shared-calculation > .cost-monthly-headline) { grid-column: 1 / -1; margin: 0; border-radius: 0; border: 0; padding: 0; }
+.page.page :global(.place-cost-overview > .cost-evidence) { grid-row: 5; margin: 0; }
+.page.page :global(.place-cost-overview > .quiet-tool-group) { grid-row: 6; margin-top: .8rem; }
 .page.page :global(.place-cost-overview .cost-card) { padding: 1.1rem; }
 .page.page :global(.place-cost-overview .cost-figure b) { font-size: clamp(30px, 3.4vw, 44px); }
 .page :global(.cost-ownership-breakdown) { grid-column: 1 / -1; padding: 1rem 1.1rem; border-top: 1px solid var(--border); }
 .page :global(.cost-ownership-breakdown > h4) { margin: 0 0 .6rem; font: 500 14px/1.5 var(--font-text); }
+.page :global(.cost-use-numbers) { grid-column: 1 / -1; padding: 0; border-bottom: 1px solid var(--border); }
+.page :global(.cost-use-numbers > summary) { box-sizing: border-box; min-height: 44px; padding: .65rem 1.1rem; cursor: pointer; font: 500 14px/1.4 var(--font-text); }
+.page :global(.cost-use-numbers > summary > span) { margin-left: .6rem; color: var(--text-secondary); font-size: 12px; font-weight: 400; }
+.page :global(.cost-use-numbers > summary:focus-visible) { outline: 2px solid var(--focus); outline-offset: -3px; }
+.page :global(.cost-use-numbers-body) { padding: .3rem 1.1rem 1rem; }
+.page.page :global(.cost-use-numbers .budget-inputs) { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .8rem; }
+.page :global(.cost-use-numbers .control) { min-width: 0; }
+.page :global(.cost-use-numbers .budget-inputs > label) { display: grid; align-content: start; gap: .4rem; min-width: 0; font: 13px/1.4 var(--font-text); }
+.page.page :global(.cost-use-numbers .budget-inputs input) { box-sizing: border-box; width: 100%; min-height: 44px; padding: .6rem .7rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-card); color: var(--text-primary); font: inherit; }
+.page :global(.cost-budget-result) { font: 12px/1.5 var(--font-text); color: var(--text-secondary); margin: .65rem 0; }
+.page.page :global(.cost-use-numbers-body > .cost-yours) { margin: 0; padding: 0; background: transparent; border: 0; border-radius: 0; }
+.page :global(.cost-planning-links) { display: flex; flex-wrap: wrap; gap: .2rem 1.5rem; }
+.page :global(.cost-planning-links a) { display: inline-flex; align-items: center; min-height: 44px; font: 500 13px/1.4 var(--font-text); }
+.page :global(.cost-planning-links a[href^="/guide"]) { color: var(--kind-guide); }
+.page :global(.cost-planning-links a[href^="/afford"]) { color: var(--kind-budget); }
+.page :global(.cost-updated-value) { animation: cash-updated .65s ease-out; }
+@keyframes cash-updated { from { background: color-mix(in srgb,var(--plate-accent) 20%,transparent); } to { background: transparent; } }
+@media(prefers-reduced-motion: reduce) { .page :global(.cost-updated-value) { animation: none; } }
+@media(max-width:600px) { .page.page :global(.cost-use-numbers .budget-inputs) { grid-template-columns: minmax(0,1fr); } }
 .page :global(.cost-ownership-breakdown .gone-kept) { margin-block: .6rem 0; }
+.page.page :global(.cost-ownership-breakdown .gone-kept-bar) { height: 10px; }
 .page :global(.place-overview-context :is(.quiet-portrait-dots, .quiet-portrait-house)) { display: none; }
 .page :global(.quiet-tool-group > .cost-yours) { margin-block: 1rem; }
 .page :global(.budget-inputs select) { min-height: 44px; width: 100%; font: inherit; color: var(--text-primary); background: var(--surface-card); border: 1px solid var(--border); border-radius: 6px; padding: .5rem; }
@@ -48,6 +65,21 @@
 .page.page :global(.place-overview-context .quiet-profile-more) { margin-top: .5rem; }
 .page.page :global(.place-overview-context .quiet-profile-more summary) { min-height: 44px; font-size: 12px; }
 .page.page :global(.local-understand-group) { margin-top: 2rem; }
+.placeData { margin-top: .8rem; }
+.page :global(#place-about-layout) { display: grid; grid-template-columns: minmax(0,1fr); gap: 1.25rem; align-items: start; }
+.page :global(#place-about-layout > *) { min-width: 0; margin: 0; }
+/* Stacked at every width (2026-10-29): the profile is a band across the top, the ranked
+   measures and stories a full-width card below it. */
+@media(min-width:1001px) {
+  .page :global(#place-about-layout) { gap: 1.5rem; }
+}
+@media print { .page :global(#place-about-layout) { display: block; } }
+.placeData > section { margin: 0; }
+.placeData > section + section { margin-top: 1rem; }
+.page :global(#place-about-frame) { padding: clamp(.85rem,2vw,1.25rem); border: 1px solid color-mix(in srgb,var(--border) 75%,transparent); border-radius: 14px; background: linear-gradient(145deg,color-mix(in srgb,var(--plate-accent) 3%,transparent),transparent 65%),color-mix(in srgb,var(--surface-card) 35%,transparent); }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-about-frame > h2) { margin: 0 0 .7rem !important; padding: 0 !important; border: 0 !important; font: 400 clamp(26px,3vw,36px)/1.2 Georgia,serif !important; letter-spacing: -.025em !important; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-about-frame > h2)::before,
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-about-frame > h2)::after { content: none; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group > h2) { margin-top: 0 !important; padding-top: 1rem !important; font-size: 32px !important; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group > h2)::before { content: none; }
 .page.page :global(.exhibit-gallery > .exhibit-group-head) { margin-top: 1.4rem; padding-top: 1rem; font-size: 27px; }
@@ -59,8 +91,9 @@
   .page.page :global(.place-cost-overview:has(.place-overview-context)) { grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr); }
   .page.page :global(.place-cost-overview:has(.place-overview-context) > .cost-cards) { grid-column: 1; }
   .page :global(.place-overview-context) { grid-column: 2; }
-  :global(body:has(.horizon-page)) main:global(#main-content).page > :global(header.has-photo) { grid-template-columns: minmax(0, 1fr) 250px; }
-  :global(body:has(.horizon-page)) main:global(#main-content).page > :global(header.has-photo > .place-photo) { max-width: 250px; margin-top: 1rem; }
+  /* A county's photograph takes the header's right half beside the title and towns. */
+  :global(body:has(.horizon-page)) main:global(#main-content).page > :global(header.has-photo) { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
+  :global(body:has(.horizon-page)) main:global(#main-content).page > :global(header.has-photo > .place-photo) { max-width: none; margin-top: .4rem; }
 }
 @media(max-width:1000px) {
   .page :global(.place-overview-context) { grid-row: 4; }
@@ -103,8 +136,15 @@
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.exhibit-kicker) { margin: 0 0 .6rem; padding: 0; border: 0; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.exhibit-kicker > span:first-child) { padding: 0 !important; border: 0 !important; border-radius: 0; background: transparent !important; color: var(--text-secondary) !important; font: 500 12px/1.4 var(--font-text) !important; letter-spacing: 0; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group > h2) { margin: 0 0 .7rem !important; padding: 0 !important; font: 500 18px/1.4 var(--font-text) !important; border: 0 !important; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group):has(.placeData) > h2 { font: 400 clamp(26px,3vw,36px)/1.2 Georgia,serif !important; letter-spacing: -.025em !important; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.local-understand-group):has(.placeData) > h2::after { content: none; }
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.exhibit-gallery > .exhibit-group-head) { margin: 1rem 0 0; padding: .9rem 0 0; border-top: 1px solid var(--border); font: 600 15px/1.4 var(--font-text); letter-spacing: 0; }
 .page.page :global(.exhibit-group-head)::before { content: none !important; }
+.homeChecks { margin: 1.5rem 0; padding: 1rem 1.1rem; border: 1px solid var(--border); border-radius: 12px; }
+.homeChecks h3 { margin: 0 0 .4rem; font: 500 16px/1.4 var(--font-text); }
+.homeChecks p { margin: .35rem 0; font: 13px/1.5 var(--font-text); color: var(--text-secondary); }
+.homeChecks > section > p:first-of-type { color: var(--text-primary); }
+.homeChecks a[href*="/report"] { color: var(--plate-accent); }
 .page.page :global(.standouts-disclosure) { margin: 0 0 .5rem; border: 0; }
 .page.page :global(.standouts-disclosure > summary) { min-height: 44px; padding: .4rem 0; font-size: 13px; }
 .page.page :global(.standouts-disclosure > summary strong) { font: 500 13px/1.4 var(--font-text); }
@@ -162,4 +202,162 @@
 
 @media print {
   .page :global(.place-evidence-group)::details-content { content-visibility: visible !important; height: auto !important; }
+}
+
+.homeGuide a { display: inline-flex; align-items: center; min-height: 44px; color: var(--kind-guide); font: 500 13px/1.4 var(--font-text); text-underline-offset: 3px; }
+
+/* One boundary rhythm for the five-section Princeton pilot; internal spacing stays local. */
+.fiveSections { --place-section-gap: clamp(3.56rem,7.13vw,5.94rem); }
+.fiveSections > :global(nav[aria-label="Place sections"]) { margin-bottom: 0; }
+.fiveSections > :global(.region-standard-content) { display: flow-root; padding-top: var(--place-section-gap); }
+.fiveSections :global(#place-market) { margin: 0; }
+.fiveSections :global(#quiet-cost),.fiveSections :global(#place-understand),.fiveSections :global(#place-picture),.fiveSections :global(#place-towns),.fiveSections :global(#place-explore) { display: flow-root; margin: var(--place-section-gap) 0 0 !important; padding: 0; }
+.fiveSections :global(#quiet-cost > section),.fiveSections :global(#place-explore > section) { margin: 0; padding-top: 0; border-top: 0; }
+.fiveSections :global(#quiet-cost > section > .section-head) { padding-top: 0; }
+.fiveSections :global(#place-understand > :last-child) { margin-bottom: 0; }
+
+/* The site's numbered section kickers and accent rule (horizon-theme.css), back on the
+   pilot's four main titles at one size, so each section starts the same way. */
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(:is(#place-market-heading,.place-cost-overview > .section-head h2,#place-about-heading,#place-picture-heading,#county-towns h2,#similar-places-heading)) { position: relative; padding-top: 1.35rem !important; font: 400 clamp(26px,3vw,36px)/1.15 Georgia,serif !important; letter-spacing: -.025em !important; color: var(--plate-ink); }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(:is(#place-market-heading,.place-cost-overview > .section-head h2,#place-about-heading,#place-picture-heading,#county-towns h2,#similar-places-heading))::before { display: block; margin-bottom: .5rem; font: 600 11px/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--plate-accent); }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#place-market-heading)::before { content: "01" / ""; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(.place-cost-overview > .section-head h2)::before { content: "02" / ""; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#place-about-heading)::before { content: "03" / ""; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#place-picture-heading)::before { content: "04" / ""; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#similar-places-heading)::before { content: "04" / ""; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(#county-towns h2)::before { content: "05" / ""; }
+.fiveSections :global(#place-picture-heading) { margin-bottom: 1.2rem; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(:is(#place-market-heading,.place-cost-overview > .section-head h2,#place-about-heading,#place-picture-heading,#county-towns h2,#similar-places-heading))::after { content: ""; position: absolute; top: 0; left: 0; width: min(100%,1100px); height: 2px; background: linear-gradient(90deg,var(--plate-accent),color-mix(in srgb,var(--plate-accent) 25%,transparent) 40%,transparent); }
+/* Links beside a title sit on its baseline, not the kicker's. */
+.fiveSections :global(div:has(> #place-market-heading)),.fiveSections :global(.place-cost-overview > .section-head),.fiveSections :global(header:has(> #similar-places-heading)) { align-items: flex-end !important; }
+/* The comparison caveat belongs to the cost figures above it: a footnote, not a section. */
+.fiveSections :global(.place-cost-overview .cost-evidence) { margin-top: .25rem; padding-left: 1rem; border-left: 2px solid color-mix(in srgb,var(--plate-accent) 45%,transparent); }
+/* The school district as one line after Local stories, its qualification beside the name. */
+/* A tighter opening: less air in the header and before the first section, so the market
+   starts higher; the wider gap is kept between the sections themselves. */
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections > :global(header#place-overview) { padding-top: .6rem; padding-bottom: .75rem; }
+:global(body:has(.horizon-page)) main:global(#main-content).page.fiveSections :global(.page-title) { margin-block: .2rem; }
+.fiveSections > :global(.region-standard-content) { padding-top: clamp(1.5rem,3vw,2.25rem); }
+/* The omissions strip closes the cost card, so its corners follow the card's 10px radius
+   inside its 1px border, not the horizon theme's 22px. */
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.cost-cards > .cost-evidence-omissions) { border-radius: 0 0 9px 9px; }
+
+/* Monthly costs as receipts (2026-10-29): the owning payment itemised on a paper-toned
+   slip with a perforated top edge, mono figures on dotted leaders; the difference from
+   renting in one line under both cards; the caveats as the slip's fine print. */
+.page :global(.cost-card:has(.cost-receipt)) { display: flex; flex-direction: column; }
+.page.page :global(.cost-receipt) { --receipt-paper: light-dark(color-mix(in srgb, white 80%, var(--plate-paper, var(--surface-card))), color-mix(in srgb, var(--plate-ink, var(--text-primary)) 15%, var(--plate-paper, var(--surface-card)))); display: flex; flex-direction: column; grid-column: auto; position: relative; margin: 1rem 0 0; padding: 1.3rem 1.1rem 1rem; border: 0; border-radius: 4px 4px 10px 10px; background: var(--receipt-paper); box-shadow: 0 1px 2px light-dark(color-mix(in srgb, var(--plate-ink, black) 12%, transparent), transparent); }
+.page :global(.cost-receipt)::before { content: ""; position: absolute; inset: -9px 0 auto; height: 10px; background: radial-gradient(circle at 6px 0, transparent 4px, var(--receipt-paper) 4.5px) 0 5px / 12px 10px repeat-x; }
+.page :global(.cost-receipt .quiet-receipt),.page :global(.cost-receipt .gone-kept-key) { display: none; }
+/* The slip reads top to bottom: the bar, the lines, the totals, then other rates. */
+.page :global(.cost-receipt > .mortgage-rate-details) { order: 9; margin: .9rem 0 0; }
+.page :global(.cost-receipt)::after { content: attr(data-slip); position: absolute; top: .45rem; right: 1.1rem; font: 600 9.5px/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--text-secondary); }
+.page :global(.cost-receipt-lines) { display: grid; gap: .35rem; margin: .9rem 0 0; padding: 0; list-style: none; }
+.page :global(:is(.cost-receipt-lines li, .cost-receipt-total, .cost-receipt-kept)) { display: flex; align-items: baseline; gap: .5rem; margin: 0; font: 13px/1.5 var(--font-text); color: var(--text-secondary); }
+.page :global(:is(.cost-receipt-lines li, .cost-receipt-kept) > i) { flex: none; width: 8px; height: 8px; border-radius: 2px; align-self: center; }
+.page :global(:is(.cost-receipt-lines li, .cost-receipt-total, .cost-receipt-kept) > span) { display: flex; flex: 1; gap: .5rem; align-items: baseline; min-width: 0; }
+.page :global(:is(.cost-receipt-lines li, .cost-receipt-total, .cost-receipt-kept) > span)::after { content: ""; flex: 1; border-bottom: 1px dotted color-mix(in srgb, currentColor 45%, transparent); transform: translateY(-.25em); }
+.page :global(:is(.cost-receipt-lines li, .cost-receipt-total, .cost-receipt-kept) > b) { font: 500 13px/1.5 var(--font-mono); color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.page :global(.cost-receipt-total) { margin-top: .55rem; padding-top: .55rem; border-top: 1px dashed color-mix(in srgb, var(--text-secondary) 50%, transparent); color: var(--text-primary); }
+.page :global(.cost-receipt-total > b) { font-weight: 600 !important; }
+.page :global(.cost-receipt-kept) { margin-top: .2rem; }
+.page :global(.cost-receipt-kept > b) { color: var(--good) !important; }
+.page :global(.cost-difference) { grid-column: 1 / -1; margin: 0; padding: .9rem 1.1rem; border-top: 1px solid var(--border); font: 400 clamp(16px, 1.6vw, 19px)/1.45 Georgia, serif; color: var(--text-primary); }
+.page :global(.cost-difference b) { font-weight: 600; }
+/* The yellow strip of the omissions, kept (owner, 2026-10-29), holding both lines. */
+.page :global(.cost-fine-print) { grid-column: 1 / -1; display: grid; gap: .3rem; }
+.page :global(.cost-fine-print p) { margin: 0; color: var(--text-secondary); font: 11.5px/1.55 var(--font-text); }
+.page :global(.cost-fine-print b) { color: var(--text-primary); font-weight: 600; }
+.page.page :global(.cost-cards > .cost-fine-print) { display: grid; grid-template-columns: minmax(0, 1fr) !important; gap: .3rem; }
+.page.page :global(.cost-cards > .cost-fine-print > p) { grid-column: 1; margin: 0; }
+/* The estimate's assumptions as chips beside the section title; each opens its field. */
+.page :global(.cost-assumptions) { display: flex; flex-wrap: wrap; gap: .4rem; }
+.page :global(.cost-assumptions button) { display: inline-flex; align-items: baseline; gap: .35rem; min-height: 34px; padding: .3rem .75rem; border: 1px solid var(--glass-edge, var(--border)); border-radius: 999px; background: var(--glass, var(--surface-card)); color: var(--text-primary); font: 500 13px/1.3 var(--font-mono); font-variant-numeric: tabular-nums; cursor: pointer; }
+.page :global(.cost-assumptions button span) { color: var(--text-secondary); font: 400 11px/1.3 var(--font-text); }
+.page :global(.cost-assumptions button:hover) { border-color: var(--plate-accent, var(--text-secondary)); }
+.page :global(.cost-assumptions button:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Monthly costs, its own section (2026-10-29): no container card — the two slips sit on
+   the page, each printed whole (label, headline, lines) on paper with a perforated top;
+   the figures in mono; amber in place of the site's accent for its kicker, rule and chips. */
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview) { --plate-accent: var(--cost-accent); }
+/* One amber tray holds it all (2026-10-29): your numbers, the two slips, the difference,
+   the breakdown and the fine print, so the section reads as a single counter. */
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview > .cost-cards) {
+  gap: 1.2rem; padding: 1.1rem 1.2rem 0; overflow: hidden; border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--cost-accent) 28%, transparent) !important;
+  background: color-mix(in srgb, var(--cost-accent) 6%, transparent) !important;
+}
+.page.page :global(.place-cost-overview .cost-cards > .cost-use-numbers) { grid-column: 1 / -1; margin: 0; padding: 0; }
+.page.page :global(.place-cost-overview .cost-cards > .cost-use-numbers > summary) { padding: 0; }
+.page.page :global(.place-cost-overview .cost-cards > .calculation-toggle) { grid-column: 1 / -1; margin: 0; padding: .75rem 0; border: 0 !important; border-top: 1px dashed color-mix(in srgb, var(--cost-accent) 35%, transparent) !important; border-radius: 0; background: none !important; }
+.page.page :global(.place-cost-overview .cost-cards > .shared-calculation) { grid-column: 1 / -1; }
+.page.page :global(.place-cost-overview .cost-cards > .cost-fine-print) { margin: 0 -1.2rem; padding: .8rem 1.2rem .9rem; border-radius: 0 !important; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview .cost-cards > .cost-card) {
+  --receipt-paper: light-dark(color-mix(in srgb, white 80%, var(--plate-paper, var(--surface-card))), color-mix(in srgb, var(--plate-ink, var(--text-primary)) 15%, var(--plate-paper, var(--surface-card))));
+  position: relative; margin-top: 10px; padding: 1.2rem 1.2rem 1.1rem; border: 0 !important; border-radius: 4px 4px 12px 12px; background: var(--receipt-paper) !important;
+  box-shadow: 0 1px 2px light-dark(color-mix(in srgb, var(--plate-ink, black) 12%, transparent), transparent);
+}
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview .cost-cards > .cost-card)::before { content: ""; position: absolute; inset: -9px 0 auto; height: 10px; background: radial-gradient(circle at 6px 0, transparent 4px, var(--receipt-paper) 4.5px) 0 5px / 12px 10px repeat-x; }
+/* The slip inside a slip goes: its lines print straight onto the card. */
+.page.page :global(.cost-card .cost-receipt) { margin-top: .9rem; padding: .9rem 0 0; border-top: 1px dashed color-mix(in srgb, var(--text-secondary) 45%, transparent); border-radius: 0; background: none; box-shadow: none; }
+.page.page :global(.cost-card .cost-receipt)::before { content: none; }
+.page.page :global(.cost-card .cost-receipt)::after { position: static; order: -1; display: block; margin: 0 0 .7rem; }
+.page.page :global(.place-cost-overview .cost-figure b) { font-family: var(--font-mono) !important; font-weight: 500 !important; letter-spacing: -.04em; }
+.page.page :global(.place-cost-overview .cost-use-numbers) { border: 0; background: none; }
+.page :global(.cost-assumptions button) { border-color: color-mix(in srgb, var(--cost-accent) 45%, transparent); }
+.page :global(.cost-difference) { border-top: 0; padding-inline: 0; }
+.page :global(.cost-difference b) { color: var(--cost-accent); }
+@media (max-width: 760px) {
+  :global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview > .cost-cards) { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+/* About this place, its own section (2026-10-29): a muted green accent; the local stories
+   full width beneath the profile, out of the card they shared with the ranked measures. */
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-understand) { --plate-accent: var(--place-accent); }
+.storyShowcase { margin-top: 1.6rem; }
+/* With the standouts folded into the profile, the frame below it has nothing to hold. */
+.fiveSections :global(#place-about-frame:not(:has(#place-comparisons-heading))) { display: none; }
+/* About this place: one label style for its parts, the profile's green mono label, and
+   the address checks as a quiet row of links (2026-10-29). */
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-understand :is(#place-story-gallery-heading, #place-comparisons-heading)) { margin: 0 0 .6rem !important; padding: 0 !important; color: var(--plate-accent) !important; font: 600 11px/1.4 var(--font-mono) !important; letter-spacing: .16em !important; text-transform: uppercase; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-understand :is(#place-story-gallery-heading, #place-comparisons-heading))::before,
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-understand :is(#place-story-gallery-heading, #place-comparisons-heading))::after { content: none !important; }
+.storyShowcase :global(#place-story-gallery > p:last-child) { margin-top: .8rem; color: var(--text-secondary); font: 12px/1.6 var(--font-text); }
+.storyShowcase :global(#place-story-gallery > p:last-child a) { color: var(--plate-accent); text-underline-offset: 3px; }
+
+/* Similar cheaper places, its own section (2026-10-29): a violet accent; the matches as
+   destination cards, each with its saving against here; the deployed table beneath, with
+   here's column tinted, the price row set bold and a closeness dot on each matched share. */
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-explore) { --plate-accent: var(--explore-accent); }
+.page :global(#place-explore .similar-compare a) { color: var(--explore-accent); }
+.page :global(.similar-destinations) { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .8rem; margin: 1.1rem 0 1.4rem; padding: 0; list-style: none; }
+.page :global(.similar-destination) { position: relative; display: grid; gap: .3rem; height: 100%; box-sizing: border-box; padding: .95rem 1rem 1rem; border: 1px solid color-mix(in srgb, var(--explore-accent) 30%, var(--glass-edge, var(--border))); border-radius: 14px; background: linear-gradient(160deg, color-mix(in srgb, var(--explore-accent) 9%, transparent), transparent 65%), var(--glass, var(--surface-card)); color: var(--text-primary); text-decoration: none; }
+.page :global(.similar-destination)::after { content: "→"; position: absolute; top: .85rem; right: 1rem; color: var(--explore-accent); }
+.page :global(.similar-destination:hover) { border-color: var(--explore-accent); }
+.page :global(.similar-destination:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+.page :global(.similar-destination-name) { padding-right: 1.2rem; font: 500 15px/1.3 var(--font-text); }
+.page :global(.similar-destination-price) { font: 400 clamp(24px, 2.3vw, 30px)/1.1 Georgia, serif; letter-spacing: -.03em; }
+.page :global(.similar-destination-saving) { color: var(--text-secondary); font: 12px/1.4 var(--font-text); }
+.page :global(.similar-destination-saving b) { color: var(--explore-accent); font-weight: 600; }
+.page :global(.similar-destination-chips) { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .3rem; }
+.page :global(.similar-destination-chips span) { padding: .1rem .5rem; border-radius: 999px; background: color-mix(in srgb, var(--text-secondary) 12%, transparent); color: var(--text-secondary); font: 500 11px/1.5 var(--font-mono); }
+.page :global(.similar-table :is(th, td):nth-child(2)) { background: color-mix(in srgb, var(--explore-accent) 8%, transparent); }
+.page :global(.similar-table tr[data-similar-row="price"] :is(th, td)) { font-weight: 600; color: var(--text-primary); }
+.page :global(.similar-closeness) { display: inline-block; width: 7px; height: 7px; margin-left: .4rem; border-radius: 50%; vertical-align: .1em; border: 1px solid var(--explore-accent); }
+.page :global(.similar-closeness[data-close="near"]) { background: var(--explore-accent); }
+.page :global(.similar-closeness[data-close="mid"]) { background: linear-gradient(90deg, var(--explore-accent) 50%, transparent 50%); }
+.page.page :global(#place-explore a.similar-destination) { border-radius: 14px !important; }
+.page.page :global(#place-explore .similar-table thead a) { color: var(--explore-accent) !important; }
+
+/* The page's close: a hairline, one sentence, and its links as quiet pills. */
+.pageClose { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .8rem 1.5rem; }
+.pageClose > p { margin: 0; max-width: 46ch; }
+.pageClose > nav { display: flex; flex-wrap: wrap; gap: .45rem; }
+:global(body:has(.horizon-page)) main .pageClose > nav a { display: inline-flex; align-items: center; gap: .35rem; min-height: 34px; padding: 0 .8rem; border: 1px solid var(--glass-edge, var(--border)); border-radius: 999px; background: var(--glass, var(--surface-card)); font-size: 13px; text-decoration: none !important; }
+:global(body:has(.horizon-page)) main .pageClose > nav a:hover { border-color: var(--plate-accent); }
+/* On a phone the destination cards scroll sideways rather than stack five deep. */
+@media (max-width: 600px) {
+  .page :global(.similar-destinations) { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(200px, 72%); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; padding-bottom: .5rem; }
+  .page :global(.similar-destinations > li) { scroll-snap-align: start; }
 }

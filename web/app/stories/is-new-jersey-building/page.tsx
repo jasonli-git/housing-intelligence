@@ -3,6 +3,13 @@ import Link from "next/link";
 
 import { StoryLines } from "@/components/StoryLines";
 import { StoryShell } from "@/components/StoryShell";
+import { PlaceStoryFocus } from "@/components/PlaceStoryFocus";
+import { initialPlaceStory } from "@/lib/placeStoryData";
+import { api, artifactUrl } from "@/lib/api";
+import { HousingMosaic } from "@/components/HousingMosaic";
+import { statewideMosaicViews } from "@/lib/housingMosaic";
+import { constructionYears } from "@/lib/construction";
+import { PRIMARY_STATE } from "@/lib/states";
 import { pageMetadata } from "@/lib/meta";
 import { regionPath } from "@/lib/placeRoutes";
 import { latestFor, seriesFor, storyCounties } from "@/lib/storyData";
@@ -23,7 +30,14 @@ const MEASURES = [
 const n = (v: number) => Math.round(v).toLocaleString("en-US");
 
 export default async function IsNewJerseyBuildingPage() {
+  const initial = await initialPlaceStory("building");
   const counties = await storyCounties();
+  // What kind of homes were finished statewide: the mix the New Jersey page showed
+  // until 2026-10-29, with the years still preliminary named.
+  const [statePacket, ...stateSeries] = await Promise.all([api.packet(PRIMARY_STATE.regionId, "5y"),
+    ...["permits_total_units", "nj_units_certified", "nj_units_demolished", "nj_net_units_added"].map(async m => (await api.observations(PRIMARY_STATE.regionId, m))?.observations ?? [])]);
+  const preliminary = constructionYears({ permitted: stateSeries[0], completed: stateSeries[1], demolished: stateSeries[2], net: stateSeries[3] }).filter(r => r.preliminary).map(r => r.year);
+  const newHomes = statewideMosaicViews(statePacket?.levels ?? [], preliminary).filter(v => v.id === "new-homes");
   const ids = [...counties.keys()];
   const [series, net] = await Promise.all([
     Promise.all(MEASURES.map((m) => seriesFor(m.metric, ids))),
@@ -47,12 +61,14 @@ export default async function IsNewJerseyBuildingPage() {
   return (
     <StoryShell
       title="Is New Jersey building?"
+      focus={<PlaceStoryFocus initial={initial} artifactUrl={artifactUrl} />}
       lede="Homes permitted are plans; homes completed are homes; homes demolished come off the count. Statewide over the years first, then each county's latest year, ordered by net homes added for every 1,000 it already had."
       note={<>Permits: the Census Bureau&rsquo;s Building Permits Survey. Completions and demolitions: certificates of occupancy and demolition permits reported to the New Jersey Department of Community Affairs, which not every town reports every year, so a county&rsquo;s totals can run low. Net homes added: completions less demolitions, per 1,000 existing homes.</>}
     >
       <figure className="story-figure" tabIndex={0}>
         <StoryLines series={statewide} format={n} label="Line chart: homes permitted, completed and demolished statewide each year." />
       </figure>
+      {newHomes.length > 0 && <HousingMosaic embedded statewide name="New Jersey" title="What kind of homes were finished" views={newHomes} />}
       <h2 className="story-h">County by county</h2>
       <p className="ladder-key">{MEASURES.map((m) => <span key={m.metric}><i style={{ background: `var(--story-${m.slot})` }} />{m.label}</span>)}</p>
       <table className="story-table">

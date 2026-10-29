@@ -686,6 +686,11 @@ export const api = {
     tryGet<{ regions: { region_id: number; series: { period_start: string; value: number }[] }[] }>(
       `/compare?metric_id=${encodeURIComponent(metricId)}` + ids.map((id) => `&region_ids=${id}`).join(""),
     ),
+  /** Build-time market portrait: only one common month, never undated latest ranks. */
+  marketObservations: (metricId: string, ids: number[], period: string) =>
+    tryGet<import("./marketPortrait").MarketComparison>(
+      `/compare?metric_id=${encodeURIComponent(metricId)}&from=${period}&to=${period}` + ids.map(id => `&region_ids=${id}`).join(""),
+    ),
   packet: (id: number, window: string) =>
     tryGet<Packet>(`/regions/${id}/packet?window=${window}`),
   geo: (level: string, state: string, simplify?: number) =>

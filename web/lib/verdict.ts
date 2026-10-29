@@ -186,6 +186,44 @@ export function verdict(
   return null;
 }
 
+/**
+ * A headline for the ranked sentence: "The 79th most expensive of 388, rising at about
+ * the typical pace". Null where the home value's rank is a survey range, which the
+ * sentence below it states in full; the pace is left off where its rank is a range or
+ * the change sits within its margin.
+ */
+export function verdictTitle(metrics: PacketMetric[], levels: PacketLevel[], uncertainties?: Uncertainties): string | null {
+  for (const home of HOME_VALUES) {
+    const level = ranked(levels, home.metric_id);
+    if (!level) continue;
+    if (spread(uncertainties?.value.get(home.metric_id))) return null;
+    const place = standing(level.rank, level.of);
+    let title = `${place[0].toUpperCase()}${place.slice(1)} of ${level.of}`;
+    const change = ranked(metrics, home.metric_id);
+    const u = uncertainties?.change.get(home.metric_id);
+    if (change && !spread(u) && !(u?.margin != null && Math.abs(change.pct_change) <= u.margin)) {
+      title += change.pct_change < 0 ? ", falling over five years"
+        : change.pct_change === 0 ? ", unchanged over five years"
+        : `, rising ${pace(change.rank, change.of)}`;
+    }
+    return title;
+  }
+  return null;
+}
+
+/** The title's rank as figures, for the headline strip's drop number: "79th" of 388, the
+ *  same position `standing` names in words, and null wherever `verdictTitle` is. */
+export function verdictRank(levels: PacketLevel[], uncertainties?: Uncertainties): { place: string; of: number } | null {
+  for (const home of HOME_VALUES) {
+    const level = ranked(levels, home.metric_id);
+    if (!level) continue;
+    if (spread(uncertainties?.value.get(home.metric_id))) return null;
+    const top = level.rank <= Math.ceil(level.of / 2);
+    return { place: ordinal(top ? level.rank : level.of - level.rank + 1), of: level.of };
+  }
+  return null;
+}
+
 /** A compact orientation; the full verdict retains the figures and exact cohort. */
 export function verdictHeadline(peers: Peers, metrics: PacketMetric[], levels: PacketLevel[], uncertainties?: Uncertainties): string | null {
   for (const home of HOME_VALUES) {

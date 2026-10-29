@@ -194,6 +194,8 @@ export function CostToOwn({
   const [fields, setFields] = useState<HomeFields>(NO_HOME_FIELDS);
   const [view, setView] = useState<View>("upfront");
   const [calculationOpen,setCalculationOpen] = useState(false);
+  // The part of the payment bar a reader is pointing at, tapping or focused on.
+  const [barPart,setBarPart] = useState<string | null>(null);
 
   const setPersonal = (key: keyof Personal, value: number | null) => {
     const next = { ...personal };
@@ -202,6 +204,14 @@ export function CostToOwn({
     savePersonal(next);
   };
   const setField = (key: keyof HomeFields, text: string) => setFields({ ...fields, [key]: text });
+  const transferToGuide = () => {
+    if (guidePlaceId === undefined) return;
+    const home = Object.fromEntries([
+      ["price", parseAmount(fields.price)], ["taxYear", parseAmount(fields.tax)], ["hoaMonth", parseAmount(fields.hoa)],
+      ["floodYear", parseAmount(fields.flood)], ["movingCost", parseAmount(fields.moving)], ["repairsCost", parseAmount(fields.repairs)],
+    ].filter(([,value]) => value !== null));
+    writeGuideTransfer(guidePlaceId, home, parseAmount(fields.rent));
+  };
 
   const typedPrice = parseAmount(fields.price);
   const typedTax = parseAmount(fields.tax);
@@ -482,7 +492,7 @@ export function CostToOwn({
 
   const downControl = <label className="control">
             <span className="control-label">Down payment</span>
-            <select value={down} onChange={(event) => setPersonal("downPct", Number(event.target.value))}>
+            <select aria-label="Down payment" value={down} onChange={(event) => setPersonal("downPct", Number(event.target.value))}>
               {DOWN_PAYMENTS.map((pct) => (
                 <option key={pct} value={pct}>
                   {pct}%
@@ -517,32 +527,33 @@ export function CostToOwn({
       </aside>
       </QuietDisclosure> : null;
 
-  const monthlyComparison = control && cashComparison ? <div className="cost-monthly-headline" role="group" aria-label="Monthly cash comparison">
-    <p className="cost-evidence-label">Monthly cash</p>
+  const monthlyComparison = control && cashComparison ? <div className="cost-monthly-headline" role="group" aria-label={compactOverview ? "Ownership cost after principal" : "Monthly cash comparison"}>
+    <p className="cost-evidence-label">{compactOverview ? "After principal builds equity" : "Monthly cash"}</p>
+    {compactOverview && <p className="calculation-note">A secondary comparison: principal reduces your loan balance but still leaves your bank account. This is not the cash needed each month.</p>}
     {quiet && rentMonth !== null && against ? <DifferenceBridge own={goneNoUtilities} rent={rentMonth} principal={kept} kind={against.kind} gap={against.gap} missing={missingBeyondUtilities}/> : <p className="cost-monthly-headline-copy" aria-live="polite">{cashComparison}</p>}
   </div> : null;
 
   const fineTune = control && planning && (
         <details className="cost-yours">
           <summary>
-            <span className="cost-yours-title">{compactOverview ? "Adjust purchase price & assumptions" : "Fine-tune the costs"}</span>
-            <span className="cost-yours-hint">
+            <span className="cost-yours-title">{compactOverview ? "More assumptions" : "Fine-tune the costs"}</span>
+            {!compactOverview && <span className="cost-yours-hint">
               {own ? "Using your figures" : "Replace any figure with your own — a listing’s price, a quote"}
-            </span>
+            </span>}
           </summary>
           <div className="cost-yours-body">
-            <MonthlyBill current={month} baseline={baselineMonth} />
+            {!compactOverview && <MonthlyBill current={month} baseline={baselineMonth} />}
             <fieldset>
               <legend>This home <small>stays on this page</small></legend>
-              <Field label="Purchase price" value={fields.price} placeholder={money(home.value)} onChange={(t) => setField("price", t)} />
+              {!compactOverview && <Field label="Purchase price" value={fields.price} placeholder={money(home.value)} onChange={(t) => setField("price", t)} />}
               <Field label="Property tax a year" value={fields.tax} placeholder={tax ? money(tax.value) : "not published"} onChange={(t) => setField("tax", t)} />
               <Field label="HOA or condo fees a month" value={fields.hoa} placeholder="if any" onChange={(t) => setField("hoa", t)} />
               <Field label="Flood insurance a year" value={fields.flood} placeholder="if required" onChange={(t) => setField("flood", t)}>
                 <a href={FLOOD_MAP.url} target="_blank" rel="noreferrer">Check FEMA’s flood map</a>
               </Field>
               {!quiet && <Field label="Rent you’d pay instead, a month" value={fields.rent} placeholder={rent ? money(rent.value) : "not published"} onChange={(t) => setField("rent", t)} />}
-              <Field label="Moving" value={fields.moving} placeholder="optional" onChange={(t) => setField("moving", t)} />
-              <Field label="First repairs" value={fields.repairs} placeholder="optional" onChange={(t) => setField("repairs", t)} />
+              {!compactOverview && <><Field label="Moving" value={fields.moving} placeholder="optional" onChange={(t) => setField("moving", t)} />
+              <Field label="First repairs" value={fields.repairs} placeholder="optional" onChange={(t) => setField("repairs", t)} /></>}
             </fieldset>
             <fieldset>
               <legend>You <small>remembered on every page, in this browser</small></legend>
@@ -552,11 +563,11 @@ export function CostToOwn({
                 <NumberField label="Mortgage insurance, % of loan a year" value={personal.pmiPct} placeholder="your quote" onChange={(v) => setPersonal("pmiPct", v)} />
               )}
               <NumberField label="Upkeep, % of price a year" value={personal.upkeepPct} placeholder={String(UPKEEP_PCT)} onChange={(v) => setPersonal("upkeepPct", v)} />
-              <NumberField label="Closing costs, % of price" value={personal.closingPct} placeholder={`${CLOSING.low * 100}–${CLOSING.high * 100}`} onChange={(v) => setPersonal("closingPct", v)} />
+              {!compactOverview && <><NumberField label="Closing costs, % of price" value={personal.closingPct} placeholder={`${CLOSING.low * 100}–${CLOSING.high * 100}`} onChange={(v) => setPersonal("closingPct", v)} />
               <NumberField label="Years you’d stay" value={personal.years} placeholder={String(DEFAULT_YEARS)} onChange={(v) => setPersonal("years", v)} />
               <NumberField label="Home prices, % a year" value={personal.appreciationPct} placeholder="0, flat" onChange={(v) => setPersonal("appreciationPct", v)} />
               <NumberField label="Rents, % a year" value={personal.rentGrowthPct} placeholder="0, flat" onChange={(v) => setPersonal("rentGrowthPct", v)} />
-              <NumberField label="Selling commission, %" value={personal.commissionPct} placeholder={String(COMMISSION_PCT)} onChange={(v) => setPersonal("commissionPct", v)} />
+              <NumberField label="Selling commission, %" value={personal.commissionPct} placeholder={String(COMMISSION_PCT)} onChange={(v) => setPersonal("commissionPct", v)} /></>}
             </fieldset>
             <p className="cost-yours-note">
               What you enter changes this page’s arithmetic only — never this place’s published
@@ -578,6 +589,15 @@ export function CostToOwn({
         </details>
       );
 
+  const segments = [
+    ...parts.map((p) => ({ key: p.key, label: p.label, value: p.value, colour: PART_COLOURS[p.key] })),
+    { key: "kept", label: "Paid into your home", value: kept, colour: "var(--good)" },
+  ].filter((p) => p.value > 0);
+  const active = segments.find((p) => p.key === barPart) ?? null;
+  const pickPart = (target: EventTarget) => {
+    const key = target instanceof Element ? target.closest<HTMLElement>("[data-part]")?.dataset.part : undefined;
+    if (key) setBarPart(key);
+  };
   const ownershipBreakdown = <>
           {/* Stated assumptions, not a forecast of rates (#327). */}
           <ReaderDetails title="At other mortgage rates" className="mortgage-rate-details">
@@ -606,20 +626,44 @@ export function CostToOwn({
             </p>
           </ReaderDetails>
           <div className="gone-kept">
+            {/* One target for the whole bar: a slice can be a sliver too narrow to tap,
+                so the pointer picks the slice under it and arrow keys step through them. */}
             <div
               className="gone-kept-bar"
-              role="img"
+              role="group"
+              tabIndex={0}
               aria-label={
                 `Of ${money(month.total)}: ` +
                 parts.map((p) => `${p.label.toLowerCase()} ${money(p.value)}`).join(", ") +
-                `, and ${money(kept)} paid into the home`
+                `, and ${money(kept)} paid into the home. Use the arrow keys to step through the parts.`
               }
+              onPointerMove={(event) => pickPart(event.target)}
+              onPointerDown={(event) => pickPart(event.target)}
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+                event.preventDefault();
+                const at = segments.findIndex((p) => p.key === barPart);
+                const step = event.key === "ArrowRight" ? 1 : -1;
+                const n = segments.length;
+                setBarPart(segments[at < 0 ? (step > 0 ? 0 : n - 1) : (at + step + n) % n].key);
+              }}
             >
-              {parts.map((p) => (
-                <i key={p.key} style={{ width: share(p.value, month.total), background: PART_COLOURS[p.key] }} />
+              {segments.map((p) => (
+                <i
+                  key={p.key}
+                  data-part={p.key}
+                  className="gone-kept-part"
+                  data-active={barPart === p.key || undefined}
+                  style={{ width: share(p.value, month.total), background: p.colour }}
+                />
               ))}
-              <i style={{ width: share(kept, month.total), background: "var(--good)" }} />
             </div>
+            <p className="gone-kept-readout" aria-live="polite">
+              {active ? <>
+                <i style={{ background: active.colour }} />
+                <span>{active.label}</span> <b>{money(active.value)}</b> a month · {Math.round((active.value / month.total) * 100)}% of the payment
+              </> : <span>Point at or tap a colour to see what it pays for.</span>}
+            </p>
             {quiet && <p className="quiet-receipt"><span>Money gone <b>{money(month.gone)}</b></span><span>Into the home <b>{money(kept)}</b></span></p>}
             <p className="gone-kept-key" aria-hidden="true">
               {parts.map((p) => (
@@ -636,11 +680,31 @@ export function CostToOwn({
           </div>
   </>;
 
+  // What the estimate assumes, as chips (2026-10-29): each opens "Use your numbers" (and
+  // "More assumptions" for the rate) at the field that changes it.
+  const editAssumption = (target: HTMLElement, label: string, deeper = false) => {
+    const section = target.closest("section");
+    const panel = section?.querySelector<HTMLDetailsElement>(".cost-use-numbers");
+    if (!panel) return;
+    panel.open = true;
+    if (deeper) { const more = panel.querySelector<HTMLDetailsElement>(".cost-yours"); if (more) more.open = true; }
+    requestAnimationFrame(() => {
+      const field = panel.querySelector<HTMLElement>(`[aria-label="${label}"]`);
+      field?.scrollIntoView({ block: "center", behavior: "smooth" });
+      field?.focus({ preventScroll: true });
+    });
+  };
+  const assumptionChips = <div className="cost-assumptions" role="group" aria-label="What the estimate assumes">
+    <button type="button" onClick={(e) => editAssumption(e.currentTarget, "Purchase price")}><span>Price</span> {money(input.price)}</button>
+    <button type="button" onClick={(e) => editAssumption(e.currentTarget, "Down payment")}><span>Down</span> {down}%</button>
+    <button type="button" onClick={(e) => editAssumption(e.currentTarget, "Mortgage rate, %", true)}><span>Rate</span> {input.ratePct.toFixed(2)}%</button>
+  </div>;
+
   return (
     <section className={`section cost${compactOverview ? " place-cost-overview" : ""}`} aria-labelledby={`${id}-heading`}>
       <div className="section-head">
-        <h2 id={`${id}-heading`}>{compactOverview ? "Monthly housing costs" : "What it costs to own and to rent"}</h2>
-        {control && !compactOverview ? downControl : <span className="control-label">{down}% down payment</span>}
+        <h2 id={`${id}-heading`}>{compactOverview ? "Monthly costs" : "What it costs to own and to rent"}</h2>
+        {control && !compactOverview ? downControl : compactOverview && control && planning ? assumptionChips : <span className="control-label">{down}% down payment</span>}
       </div>
 
       {compactOverview && <p className="cost-overview-meta">Published starting figures: {home.basis === "index" ? "home value" : "sale-price median"} {home.asOf}{rent && ` · rent ${rent.asOf}`} · mortgage benchmark {rate.asOf}. Your inputs adjust the estimates below.</p>}
@@ -652,6 +716,22 @@ export function CostToOwn({
       {!compactOverview && monthlyComparison}
 
       <div className="cost-cards">
+        {compactOverview && control && planning && <details className="cost-use-numbers" role="group" aria-label="Use your numbers">
+          <summary>Use your numbers <span>{own ? "Using your figures" : "Adjust the estimate"}</span></summary>
+          <div className="cost-use-numbers-body">
+          <div className="budget-inputs">
+            <label className="control"><span>Yearly household income before tax</span><input inputMode="decimal" value={household.income ?? ""} placeholder="e.g. 100000" onChange={event=>saveHousehold({...household,income:parseAmount(event.target.value)??undefined})}/></label>
+            {downControl}
+            <Field label="Purchase price" value={fields.price} placeholder={money(home.value)} onChange={t=>setField("price",t)}/>
+          </div>
+          <p className="cost-budget-result" aria-live="polite">{household.income && household.income>0 ? `Estimated payment uses ${Math.round(month.total/(household.income/12)*100)}% of your income before tax.` : "Add your income to compare it with the payment above."}{partial && ` Included costs only; missing: ${listed(month.missing)}.`}</p>
+          {fineTune}
+          <nav className="cost-planning-links" aria-label="Plan beyond this estimate">
+            {guidePlaceId!==undefined && <a href={`/guide?place=${guidePlaceId}`} onClick={transferToGuide}>Check upfront cash & rent vs. buy →</a>}
+            {comparePlaceId!==undefined && <a href={`/afford?county=all&place=${comparePlaceId}${household.income ? `&income=${household.income}`:""}`}>Find your fit →</a>}
+          </nav>
+          </div>
+        </details>}
         <article className="cost-card">
           <h3 className="cost-card-label">
             <Term entry={terms.own}>
@@ -671,8 +751,8 @@ export function CostToOwn({
             </p>
           )}
           <p className="cost-figure" aria-live="polite">
-            <b>{money(month.total)}</b>
-            <span>{quiet ? <Glossed text="a month, including principal" /> : "a month, every cost below"}</span>
+            <b key={compactOverview ? month.total : undefined} className={compactOverview ? "cost-updated-value" : undefined}>{money(month.total)}</b>
+            <span>{compactOverview ? "estimated cash paid each month, including principal" : quiet ? <Glossed text="a month, including principal" /> : "a month, every cost below"}</span>
           </p>
           {month.loan.fha && (
             <p className="cost-basis">
@@ -710,6 +790,16 @@ export function CostToOwn({
             · not a lender quote
           </p>
           {!compactOverview && ownershipBreakdown}
+          {/* The owning payment as a receipt (2026-10-29): each cost on its own line,
+              then what is gone and what goes into the home. */}
+          {compactOverview && <div className="cost-ownership-breakdown cost-receipt" data-slip="Monthly · owning">
+            {ownershipBreakdown}
+            <ul className="cost-receipt-lines">
+              {segments.filter((p) => p.key !== "kept").map((p) => <li key={p.key}><i style={{ background: p.colour }} aria-hidden="true" /><span>{p.label}</span><b>{money(p.value)}</b></li>)}
+            </ul>
+            <p className="cost-receipt-total"><span>Money gone</span><b>{money(month.gone)}</b></p>
+            <p className="cost-receipt-kept"><i style={{ background: "var(--good)" }} aria-hidden="true" /><span>Into the home</span><b>{money(kept)}</b></p>
+          </div>}
           {!quiet && owningLedger}
         </article>
 
@@ -723,6 +813,12 @@ export function CostToOwn({
                 <b>{money(rentMonth)}</b>
                 <span>a month, all of it gone</span>
               </p>
+              {/* The shorter slip beside the owning one: one line, all of it gone. */}
+              {compactOverview && <div className="cost-receipt" data-slip="Monthly · renting">
+                <ul className="cost-receipt-lines"><li><i style={{ background: "var(--text-secondary)" }} aria-hidden="true" /><span>Rent</span><b>{money(rentMonth)}</b></li></ul>
+                <p className="cost-receipt-total"><span>Money gone</span><b>{money(rentMonth)}</b></p>
+                <p className="cost-receipt-kept"><i style={{ background: "var(--good)" }} aria-hidden="true" /><span>Into a home</span><b>{money(0)}</b></p>
+              </div>}
               {!quiet && rentingLedger}
             </>
           ) : (
@@ -732,15 +828,25 @@ export function CostToOwn({
             </p>
           )}
         </article>
-        {compactOverview && <div className="cost-ownership-breakdown"><h4>Where the ownership payment goes</h4>{ownershipBreakdown}</div>}
+        {compactOverview && rentMonth !== null && <p className="cost-difference">
+          {month.total >= rentMonth
+            ? <>Owning costs <b>{money(month.total - rentMonth)} more</b> a month than renting; <b>{money(kept)}</b> of the owning payment goes into the home.</>
+            : <>Owning costs <b>{money(rentMonth - month.total)} less</b> a month than renting, and <b>{money(kept)}</b> of it goes into the home.</>}
+        </p>}
         {quiet && <>
           {calculationToggle}
           <section id={id+"-calculation"} className="shared-calculation" hidden={!calculationOpen} aria-label="Owning and renting calculation">
+            {compactOverview && monthlyComparison}
             <div><h4>Owning</h4><p className="calculation-note">Cash payment includes principal and included utilities. Money spent includes utilities here; the bridge excludes them.</p>{owningLedger}</div>
             <div><h4>Renting</h4>{rentingLedger ?? <p>No rent figure. {planning ? "Enter one under ‘Your numbers’ to compare." : "Enter your rent in the buyer’s guide to compare."}</p>}</div>
           </section>
         </>}
-        <aside className="cost-evidence-omissions" aria-label="Costs not included in the monthly owning estimate">
+        {compactOverview ? <footer className="cost-evidence-omissions cost-fine-print" aria-label="Fine print">
+          <p><b>Not included:</b> <Glossed text={`the owning estimate leaves out ${listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.`} /></p>
+          {rentalCaveat && <p><b>Comparing the two:</b> {rentalCaveat} Owning includes utilities; a quoted rent usually does not.</p>}
+          {history && <p><b>Five years back, not a forecast:</b> {history}</p>}
+          {noTax && <p><b>Tax:</b> {noTax}</p>}
+        </footer> : <aside className="cost-evidence-omissions" aria-label="Costs not included in the monthly owning estimate">
           <p className="cost-evidence-label">
             <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
             Not included
@@ -748,18 +854,18 @@ export function CostToOwn({
           <p>
             <Glossed text={`The monthly owning estimate leaves out ${listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.`} />
           </p>
-        </aside>
+        </aside>}
+
       </div>
 
 
       {compactOverview && overviewContext && <div className="place-overview-context">{overviewContext}</div>}
-      {compactOverview && monthlyComparison}
 
-      {control && (
+      {control && !compactOverview && (
         <div className="cost-strip cost-evidence">
           {beforeMoving}
           <div className="cost-evidence-grid">
-            {rentalCaveat && (
+            {rentalCaveat && !compactOverview && (
               <div className="cost-evidence-item">
                 <p className="cost-evidence-label">Comparison caveat</p>
                 <p>{rentalCaveat}</p>
@@ -782,7 +888,7 @@ export function CostToOwn({
         </div>
       )}
 
-      {planning && <QuietToolGroup enabled={quiet}>
+      {planning && !compactOverview && <QuietToolGroup enabled={quiet}>
       {quiet && budgetFit}
       {compactOverview && fineTune}
       <div className={quiet ? "planning-preview-grid" : undefined}>

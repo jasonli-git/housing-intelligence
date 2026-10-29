@@ -398,6 +398,18 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     what: "The share of people here with a disability affecting hearing, sight, memory, walking, self-care or living on their own.",
     why: "Says how many people here may need homes that are accessible without stairs.",
   },
+  acs_k12_private_share: {
+    what: "Of the children who live here and attend kindergarten to grade 12, the share enrolled at a private school. Charter and county vocational schools count as public.",
+    why: "Not every child who lives here attends the local district’s schools.",
+  },
+  acs_k8_private_share: {
+    what: "Of the children who live here in kindergarten to grade 8, the share enrolled at a private school.",
+    why: "Private enrollment often differs between the younger grades and high school.",
+  },
+  acs_hs_private_share: {
+    what: "Of the children who live here in grades 9 to 12, the share enrolled at a private school.",
+    why: "Private enrollment often differs between the younger grades and high school.",
+  },
   modiv_median_tax_bill: {
     what: "What the middle one- to four-family home paid in property tax in the tax year shown, before any relief a household may claim.",
     why: "New Jersey’s property taxes are among the highest in the country, so this can matter as much as the price.",

@@ -1451,6 +1451,40 @@ metrics:
     source_id: census_acs
     record_type: survey
 
+  acs_k12_private_share:
+    label: Students at private schools
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Children who live here and attend kindergarten to grade 12, the share enrolled at
+      a private school, ACS 5-year table B14002. Charter, county vocational and choice
+      schools count as public. Where students live, not where the schools are.
+    source_id: census_acs
+    record_type: survey
+
+  acs_k8_private_share:
+    label: Students at private schools, kindergarten to grade 8
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Children who live here and attend kindergarten to grade 8, the share enrolled at a
+      private school, ACS 5-year table B14002.
+    source_id: census_acs
+    record_type: survey
+
+  acs_hs_private_share:
+    label: Students at private schools, grades 9 to 12
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Children who live here and attend grades 9 to 12, the share enrolled at a private
+      school, ACS 5-year table B14002.
+    source_id: census_acs
+    record_type: survey
+
   # Milestone 35: Fair Market Rents for every size, and HUD's ZIP-level ones, for the
   # rent comparison. Shown as levels, never ranked: the county ones repeat across
   # counties sharing an FMR area, and the ZIP ones exist only where HUD sets them

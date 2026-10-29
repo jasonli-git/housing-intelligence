@@ -14,12 +14,12 @@ afterEach(() => { cleanup(); history.replaceState(null, "", location.pathname); 
 
 it("discovers the shared footer outside main and excludes absent destinations", () => {
   render(<><main><PlaceSectionNav sections={sections} /><h1 id="overview">Place</h1></main><footer><details><summary>Evidence</summary><h2 id="sources">Source records</h2></details></footer></>);
-  expect(screen.getAllByRole("option").map(o => o.textContent)).toEqual(["Overview", "Sources"]);
+  expect(screen.getAllByRole("link").map(o => o.textContent)).toEqual(["Overview", "Sources"]);
 });
 
 it("opens source disclosures, transfers focus and respects reduced motion", () => {
   render(<><PlaceSectionNav sections={sections} /><h1 id="overview">Place</h1><footer><details><summary>Evidence</summary><h2 id="sources">Source records</h2></details></footer></>);
-  fireEvent.change(screen.getByRole("combobox"), { target: { value: "sources" } });
+  fireEvent.click(screen.getByRole("link", { name: "Sources" }));
   expect(document.querySelector("details")?.open).toBe(true);
   expect(document.activeElement?.id).toBe("sources");
   expect(location.hash).toBe("#sources");

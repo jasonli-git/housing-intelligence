@@ -4,7 +4,7 @@ import { useState, type CSSProperties } from "react";
 import { mosaicCounts, type MosaicView } from "@/lib/housingMosaic";
 
 /** A playful share graphic, not a map, a sample of homes, or a cross-tabulation. */
-export function HousingMosaic({ name, views, statewide = false, embedded = false }: { name: string; views: MosaicView[]; statewide?: boolean; embedded?: boolean }) {
+export function HousingMosaic({ name, views, statewide = false, embedded = false, title = "Explore the mix" }: { name: string; views: MosaicView[]; statewide?: boolean; embedded?: boolean; title?: string }) {
   const [viewId, setViewId] = useState(views[0]?.id);
   const [selected, setSelected] = useState(0);
   if (!views.length) return null;
@@ -16,11 +16,11 @@ export function HousingMosaic({ name, views, statewide = false, embedded = false
   const percentage = (share: number) => `${(share * 100).toFixed(1)}%`;
   return <section className={`housing-mosaic${embedded ? " mosaic-embedded" : ""}`} id="housing-mosaic" aria-labelledby="housing-mosaic-heading" data-jump-label="Housing mosaic">
     <div className="mosaic-heading">
-      <div>{!embedded && <span className="mosaic-eyebrow">{statewide ? "A state in little pieces" : "A hundred little homes"}</span>}{embedded ? <h3 id="housing-mosaic-heading">Explore the mix</h3> : <h2 id="housing-mosaic-heading">{statewide ? "Housing in motion" : "The housing mix"}</h2>}</div>
-      <div className="mosaic-views" role="group" aria-label="Housing mosaic view">
+      <div>{!embedded && <span className="mosaic-eyebrow">{statewide ? "A state in little pieces" : "A hundred little homes"}</span>}{embedded ? <h3 id="housing-mosaic-heading">{title}</h3> : <h2 id="housing-mosaic-heading">{statewide ? "Housing in motion" : "The housing mix"}</h2>}</div>
+      {views.length > 1 && <div className="mosaic-views" role="group" aria-label="Housing mosaic view">
         {views.map(v => <button key={v.id} type="button" aria-pressed={view.id === v.id}
           onClick={() => { setViewId(v.id); setSelected(0); }}>{v.label}</button>)}
-      </div>
+      </div>}
     </div>
     <div className="mosaic-body">
       <div className="mosaic-art" aria-hidden="true">
@@ -34,7 +34,10 @@ export function HousingMosaic({ name, views, statewide = false, embedded = false
             onPointerMove={() => setSelected(category)} onClick={() => setSelected(category)}
             style={{ "--x": slot % 20, "--y": Math.floor(slot / 20),
               "--mx": slot % 10, "--my": Math.floor(slot / 10) } as CSSProperties}>
-            <svg viewBox="0 0 24 32" focusable="false"><path d="M2 12 12 2l10 10v18H2Z" /><path className="mosaic-window" d="M8 15h8v7H8Z" /></svg>
+            {view.id === "commute"
+              // Workers, not homes: a person in place of the house.
+              ? <svg viewBox="0 0 24 32" focusable="false"><path d="M12 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10ZM3 30v-6a9 9 0 0 1 18 0v6Z" /></svg>
+              : <svg viewBox="0 0 24 32" focusable="false"><path d="M2 12 12 2l10 10v18H2Z" /><path className="mosaic-window" d="M8 15h8v7H8Z" /></svg>}
           </span>;
         })}
       </div>
@@ -58,7 +61,7 @@ export function HousingMosaic({ name, views, statewide = false, embedded = false
         </div>
       </div>
     </div>
-    {embedded ? <p className="mosaic-source mosaic-caption">100 tiles ≈ reported shares, not individual homes or a map; views are separate. {view.evidence ?? `Census ACS · ${view.period} five-year survey estimates.`}</p> : <>
+    {embedded ? <p className="mosaic-source mosaic-caption">100 tiles ≈ reported shares, not individual {view.id === "commute" ? "workers" : "homes"} or a map{views.length > 1 ? "; views are separate" : ""}. {view.evidence ?? `Census ACS · ${view.period} five-year survey estimates.`}</p> : <>
       <p className="mosaic-caption">100 tiles, rounded shares—not individual homes or a map. Each view is a separate picture.</p>
       <p className="mosaic-source">{view.evidence ?? `Census ACS · ${view.period} five-year survey estimates.`} Select a group to explore.</p>
     </>}

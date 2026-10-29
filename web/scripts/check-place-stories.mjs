@@ -1,0 +1,169 @@
+import assert from 'node:assert/strict';
+import { chromium } from 'playwright';
+import AxeBuilder from '@axe-core/playwright';
+
+const origin = process.env.SITE_URL ?? 'http://localhost:3002';
+const browser = await chromium.launch();
+try {
+  for (const width of [390, 1440]) for (const theme of ['light', 'dark']) {
+    const context = await browser.newContext({ viewport: { width, height: 1000 }, colorScheme: theme, reducedMotion: 'reduce' });
+    const page = await context.newPage();
+    const errors = []; page.on('pageerror', e => errors.push(e.message));
+    await page.goto(`${origin}/nj/princeton`, { waitUntil: 'networkidle' });
+    await page.evaluate(t => document.documentElement.dataset.theme = t, theme);
+    assert.equal(await page.locator('#county-market-history').count(),0,'county market history is not shown on a town page');
+    const gallery = page.locator('#place-story-gallery');
+    await gallery.scrollIntoViewIfNeeded();
+    const track=gallery.locator('#local-stories-track');
+    assert(await track.evaluate(el=>el.scrollWidth>el.clientWidth),'local stories form one scrollable rail');
+    assert((await track.boundingBox()).height<400,'local stories remain compact');
+    await gallery.hover();
+    await gallery.getByRole('button',{name:'Next local stories'}).click();
+    await page.waitForFunction(()=>document.getElementById('local-stories-track').scrollLeft>0);
+    await track.locator('a[data-preview-topic]').first().focus();
+    await page.keyboard.press('End');
+    assert(await track.locator('a[data-preview-topic]').last().evaluate(el=>el===document.activeElement));
+    await page.keyboard.press('Home');
+    assert(await track.locator('a[data-preview-topic]').first().evaluate(el=>el===document.activeElement));
+    const topics = ['market', 'sales', 'pressure', 'lending', 'building', 'migration', 'commute', 'schools', 'water','flood','sites','utilities','broadband','health'];
+    assert.equal(await gallery.locator('[data-preview-topic]').count(), topics.length);
+    assert.equal(await gallery.locator('[data-preview-topic="past"]').count(), 0, 'history card removed from gallery');
+    for (const topic of topics) {
+      const card = gallery.locator(`[data-preview-topic="${topic}"]`);
+      await card.scrollIntoViewIfNeeded();
+      await card.locator('img:visible').evaluate(async img => { await img.decode(); });
+      const headline = await card.locator('h4').innerText();
+      const snapshot = await card.getAttribute('data-preview-snapshot');
+      assert((await card.locator('img:visible').getAttribute('src')).includes(snapshot));
+      assert((await card.getAttribute('href')).endsWith('?place=224'));
+      await card.click();
+      const focus = page.locator('[data-place-story-focus][data-selected="true"]');
+      await focus.waitFor().catch(error=>{throw new Error(`${width}/${theme}/${topic}: expected selected story at ${page.url()}`,{cause:error});});
+      const chart = focus.locator('[data-place-story-shot]');
+      assert.equal(await chart.getAttribute('data-place-story-id'), '224');
+      assert.equal(await chart.getAttribute('data-place-story-snapshot'), snapshot, 'same data/wording identity as preview');
+      assert.equal(await chart.locator('figcaption strong').innerText(), headline, 'headline agrees with selected destination');
+      if (topic === 'market') {
+        assert(await focus.getByRole('heading', { name: 'Prices and paychecks over time', exact: true }).isVisible());
+        assert.equal(await page.locator('.dot.hit[data-region-id="224"]').count(), 1, 'selected town remains highlighted in statewide context');
+      }
+      if (topic === 'commute') assert(await focus.getByRole('heading', { name: 'How do people here get around?', exact: true }).isVisible());
+      if (topic === 'water') assert(await focus.getByRole('heading', { name: 'Water systems and records', exact: true }).isVisible());
+      if(topic==='sites')assert(await focus.getByRole('heading',{name:'Contaminated-site records',exact:true}).isVisible());
+      if(topic==='flood'){
+        assert(await focus.getByRole('heading',{name:'Is it at risk of flooding?',exact:true}).isVisible());
+        assert((await chart.innerText()).includes('Outside a mapped zone is not safe'));
+      }
+      if(topic==='utilities'){
+        const explorer=focus.locator('[aria-labelledby="outage-explorer-heading"]');
+        await explorer.getByRole('button',{name:'Major-event days excluded',exact:true}).click();
+        assert(await explorer.getByText('42.6 min',{exact:true}).isVisible());
+        assert((await chart.innerText()).includes('not town outages'));
+      }
+      if(topic==='broadband'){
+        assert((await chart.innerText()).includes('98.9%'));
+        await focus.getByRole('button',{name:'Published area units',exact:true}).click();
+        await focus.getByRole('heading',{name:'Mercer County · published county units',exact:true}).waitFor({state:'visible'});
+        assert(await focus.getByText('County context—not this town’s location count or availability.',{exact:true}).isVisible());
+        await focus.getByRole('button',{name:'Mapped locations',exact:true}).click();
+        await focus.locator('.broadband-place').waitFor({state:'visible'});
+        assert((await focus.locator('.broadband-place').innerText()).includes('6,903'));
+      }
+      if (topic === 'sales') assert(await focus.getByRole('heading', { name: 'What did buyers actually pay?', exact: true }).isVisible());
+      if (topic === 'lending') assert(await focus.getByRole('heading', { name: 'How do people here pay for homes?', exact: true }).isVisible());
+      if (topic === 'building') {
+        assert(await focus.getByRole('heading', { name: 'Are we adding homes—or losing them?', exact: true }).isVisible());
+        assert((await chart.innerText()).includes('Preliminary'));
+      }
+      if (topic === 'migration') {
+        assert((await chart.innerText()).includes('Mercer County'));
+        assert((await chart.innerText()).includes('not town-level migration'));
+        await focus.getByRole('button', { name: 'Where leavers went', exact: true }).click();
+        assert(await focus.getByRole('button', { name: 'Where leavers went', exact: true }).getAttribute('aria-pressed') === 'true');
+      }
+      if (topic === 'pressure') {
+        await focus.getByRole('button', { name: 'Owners', exact: true }).click();
+        await focus.getByRole('button', { name: 'Over 30–50%', exact: true }).click();
+        assert((await focus.locator('#income-band-explanation').innerText()).includes('household size'));
+      }
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'no horizontal overflow');
+      const audit = await new AxeBuilder({ page }).include('[data-place-story-focus]').analyze();
+      assert.deepEqual(audit.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })), []);
+      await focus.getByRole('link', { name: /Back to Princeton/ }).click();
+      await gallery.waitFor();
+    }
+    const audit = await new AxeBuilder({ page }).include('#place-story-gallery').analyze();
+    assert.deepEqual(audit.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })), []);
+    assert.equal(await page.locator('#about-living-there').count(),0,'retired pilot wrapper');
+    assert(await page.locator('#community-schools-heading').isVisible());
+    assert.equal(await page.locator('.community-crime,.community-health').count(),0,'reporting and health no longer duplicated on profile');
+    assert(await page.locator('#community-schools-heading').innerText().then(t=>t.includes('private school')));
+    for(const [id,topic] of [['ground-sites-heading','sites'],['flood-risk-heading','flood'],['utilities-heading','utilities'],['community-broadband-heading','broadband']])assert(await page.locator(`#${id}`).evaluate((el,t)=>Boolean(el.closest(`[data-preview-topic="${t}"]`)),topic),'legacy links still reach their topic');
+    assert((await page.getByRole('link',{name:'Open the buyer’s guide'}).getAttribute('href')).endsWith('/guide?place=224#guide-checks-heading'));
+    assert.equal(await page.locator('.exhibit-gallery .indexed-comparison').count(), 0, 'moved trends do not remain duplicated');
+    assert.equal(await page.locator('.exhibit-gallery #more-market-evidence, .exhibit-gallery #sales-heading, .exhibit-gallery .income-pressure, .exhibit-gallery .who-is-moving, .exhibit-gallery .homes-added').count(), 0, 'market exhibits have moved, not been duplicated');
+    assert(await page.locator('#sales-heading').evaluate(el => Boolean(el.closest('[data-preview-topic="sales"]'))), 'existing property-tax and guide sale links still land on sales');
+    assert.equal(await page.locator('#ground-water-heading').count(), 1, 'existing drinking-water links retain one correct target');
+    assert(await page.locator('#ground-water-heading').evaluate(el => Boolean(el.closest('[data-preview-topic="water"]'))));
+    await gallery.screenshot({ path: `/tmp/place-story-gallery-${width}-${theme}.png` });
+    assert.deepEqual(errors, []);
+    console.log(`${width}/${theme}: county history absent, thirteen true story covers, selected data/controls, compact school check and retired Living there wrapper, address checklist, no duplication/overflow and axe passed`);
+    await context.close();
+  }
+  const page = await browser.newPage();
+  await page.goto(`${origin}/stories/the-long-commute-premium?place=224`, { waitUntil: 'networkidle' });
+  const picker = page.getByRole('combobox', { name: 'Focus this story on a town, county or ZIP' });
+  await picker.fill('Hoboken');
+  await page.getByRole('option').filter({ hasText: 'Hoboken' }).first().click();
+  await page.getByRole('heading', { name: 'Exploring Hoboken', exact: true }).waitFor();
+  assert.notEqual(new URL(page.url()).searchParams.get('place'), '224');
+  await page.goBack();
+  await page.getByRole('heading', { name: 'Exploring Princeton', exact: true }).waitFor();
+  await page.reload();
+  await page.getByRole('heading', { name: 'Exploring Princeton', exact: true }).waitFor();
+  for (const [route, fixed] of [['/stories/income-and-home-value', { id: 11, name: 'Mercer County' }], ['/stories/water-you-can-check', null]]) {
+    // This ZIP id is resolved from the existing search index, not inferred from a county.
+    const selected = fixed ?? await page.evaluate(async () => (await (await fetch('/search.json')).json()).find(e => e.level === 'zip' && e.name.includes('08540')));
+    assert(selected, 'registered ZIP selection exists');
+    await page.goto(`${origin}${route}?place=${selected.id}`, { waitUntil: 'networkidle' });
+    const focused = page.locator('[data-place-story-focus][data-selected="true"]');
+    await focused.waitFor();
+    assert.equal(await focused.locator('[data-place-story-shot]').getAttribute('data-place-story-id'), String(selected.id));
+    assert(!(await focused.locator('[data-place-story-shot] figcaption').innerText()).includes('Princeton ·'), 'county/ZIP is not replaced by Princeton');
+    if (fixed) await page.getByText(/This statewide chart plots towns/).waitFor();
+  }
+  for (const suffix of ['?place=999999', '?place=bad']) {
+    await page.goto(`${origin}/stories/water-you-can-check${suffix}`, { waitUntil: 'networkidle' });
+    await page.locator('[data-place-story-focus] [role="status"]').filter({ hasText: suffix.includes('bad') ? 'Invalid place selection' : 'could not be loaded' }).waitFor();
+    assert.equal(await page.locator('[data-place-story-focus] [data-place-story-shot]').count(), 0, 'invalid/unavailable selection does not fall back to Princeton');
+  }
+  for (const slug of ['is-today-unusual', 'price-ladder', 'the-mortgage-market', 'is-new-jersey-building', 'who-moves-in', 'who-feels-housing-costs','the-flood-claims-calendar','sites-and-cleanup','when-the-power-goes-out','where-internet-reaches']) {
+    await page.goto(`${origin}/stories/${slug}?place=11`, { waitUntil: 'networkidle' });
+    const focus = page.locator('[data-place-story-focus][data-selected="true"]');
+    await focus.getByRole('heading', { name: 'Exploring Mercer County', exact: true }).waitFor();
+    assert.equal(await focus.locator('[data-place-story-shot]').getAttribute('data-place-story-id'), '11');
+    assert(!(await focus.locator('[data-place-story-shot] figcaption').innerText()).includes('Princeton'));
+  }
+  await page.goto(`${origin}/stories/who-feels-housing-costs`, { waitUntil: 'networkidle' });
+  assert.equal(await page.locator('[data-place-story-focus] [data-place-story-shot]').count(), 0, 'new story has no implicit Princeton selection');
+  assert(await page.locator('[data-story-shot] #state-income-pressure-heading').isVisible(), 'statewide burden chart remains visible without a selection');
+  await page.goto(`${origin}/stories`);
+  await page.getByRole('button', { name: /All stories/ }).click();
+  await page.getByRole('searchbox', { name: 'Search stories' }).fill('Who feels housing costs');
+  const libraryCard = page.locator('a.library-card[href="/stories/who-feels-housing-costs"]');
+  await libraryCard.waitFor();
+  await libraryCard.locator('img:visible').evaluate(async img => { await img.decode(); });
+  for(const [slug,title] of [['sites-and-cleanup','Sites and cleanup'],['when-the-power-goes-out','When the power goes out'],['where-internet-reaches','Where internet reaches']]){
+    await page.getByRole('searchbox',{name:'Search stories'}).fill(title);
+    const card=page.locator(`a.library-card[href="/stories/${slug}"]`);await card.waitFor();await card.locator('img:visible').evaluate(async img=>{await img.decode();});
+  }
+  await page.goto(`${origin}/nj/princeton`);await page.getByRole('link',{name:'Open the buyer’s guide'}).click();
+  await page.waitForURL(url=>url.pathname==='/guide'&&url.searchParams.get('place')==='224');
+  assert.equal(new URL(page.url()).searchParams.get('place'),'224');await page.locator('#guide-checks-heading').waitFor({state:'visible'});
+  for (const route of ['/nj/hoboken', '/nj/mercer-county', '/nj/zip-08540']) {
+    await page.goto(origin + route);
+    assert.equal(await page.locator('#place-story-gallery [data-preview-topic]').count(), 14, `${route}: every local story`);
+    assert.equal(await page.locator('.exhibit-gallery .ground-water').count(), 0, `${route}: stories not duplicated below`);
+  }
+  console.log('Place picker, new-topic county selections, county/ZIP identity, back/reload, invalid/missing selection, new library cover and local stories on other places passed');
+} finally { await browser.close(); }

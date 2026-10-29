@@ -333,12 +333,12 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
 /* Place-page panels in glass: the at-a-glance figures, the cost cards, the planning tools,
    the local-picture note and the deeper comparisons. Their contents are unchanged. */
 @media screen {
-  body:has(.horizon-page) main.horizon-page :is(.quiet-profile-grid, .monthly-bill, .quiet-tool-group, .local-picture-note, .indexed-comparison, .rank-plot) {
+  /* The AI highlights keep their taped paper note (owner, 2026-10-29), not glass. */
+  body:has(.horizon-page) main.horizon-page :is(.quiet-profile-grid, .monthly-bill, .quiet-tool-group, .indexed-comparison, .rank-plot) {
     background: var(--glass) !important; border: 1px solid var(--glass-edge) !important; border-radius: 22px !important;
     -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 24px 50px -36px #000c !important;
   }
   body:has(.horizon-page) main.horizon-page .quiet-profile-grid { background: radial-gradient(90% 80% at 0% 0%, color-mix(in srgb, var(--plate-accent) 16%, transparent), transparent 70%), var(--glass) !important; }
-  body:has(.horizon-page) main.horizon-page .local-picture-note::before, body:has(.horizon-page) main.horizon-page .local-picture-note::after { display: none !important; }
   body:has(.horizon-page) main.horizon-page :is(.cost-monthly-headline, .cost-cards, .calculation-toggle, .planning-preview) { background: color-mix(in srgb, var(--plate-ink) 4%, transparent) !important; border-color: var(--glass-edge) !important; }
   body:has(.horizon-page) main.horizon-page .cost-monthly-headline { background: radial-gradient(70% 120% at 50% 0%, color-mix(in srgb, var(--plate-accent) 14%, transparent), transparent 70%) !important; }
   body:has(.horizon-page) main.horizon-page .cost-evidence-omissions { background: color-mix(in srgb, #d99a3a 12%, transparent) !important; border-radius: 0 0 22px 22px; }

@@ -13,6 +13,7 @@
 .publisherIndex { display:flex; flex-wrap:wrap; gap:.3rem 1.25rem; padding:1rem 0; border-block:1px solid var(--border); }
 .publisherIndex h2 { flex-basis:100%; margin:0; font:400 24px Georgia,serif; }
 .publisherIndex a { display:inline-flex; align-items:center; min-height:44px; font-size:14px; }
+.report :global(#report-community a[href^="http"]) { color: var(--kind-state); }
 @media screen {
   .extra { display:none; }
   :global(#main-content).statePage :global(.page-title) { font-size:clamp(40px,5vw,64px) !important; line-height:1.08 !important; }

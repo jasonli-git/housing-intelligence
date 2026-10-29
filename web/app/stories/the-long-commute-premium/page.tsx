@@ -4,6 +4,9 @@ import { StoryShell } from "@/components/StoryShell";
 import { pageMetadata } from "@/lib/meta";
 import { storyTowns } from "@/lib/storyData";
 import { PRICE, relativePrices, trend } from "@/lib/stories";
+import { initialPlaceStory } from "@/lib/placeStoryData";
+import { PlaceStoryFocus } from "@/components/PlaceStoryFocus";
+import { artifactUrl } from "@/lib/api";
 import "../../horizon-theme.css";
 import "../stories.css";
 
@@ -19,6 +22,7 @@ const NYC_LINE = 0.15;
 const pct = (p: number) => `${p >= 0 ? "+" : "−"}${Math.abs(Math.round(p * 100))}%`;
 
 export default async function LongCommutePremiumPage() {
+  const initial = await initialPlaceStory("commute");
   const towns = await storyTowns([PRICE, "acs_mean_commute_minutes", "lodes_work_nyc_share"]);
   const rel = relativePrices(towns);
   const pts = towns.flatMap((t) => (rel.has(t.id) && t.values.acs_mean_commute_minutes ? [{ t, x: t.values.acs_mean_commute_minutes, y: rel.get(t.id)!, nyc: (t.values.lodes_work_nyc_share ?? 0) >= NYC_LINE }] : []));
@@ -36,6 +40,7 @@ export default async function LongCommutePremiumPage() {
   return (
     <StoryShell
       title="The long commute premium"
+      focus={<PlaceStoryFocus initial={initial} artifactUrl={artifactUrl} />}
       lede={<>You would expect a long commute to buy a cheaper house. In New Jersey it goes the other way: across all towns, each extra 10 minutes of commute goes with homes {pct(per10(all.slope))} dearer than the rest of their county. It is steepest in the orange towns, which send people into New York: {pct(per10(groups[0].fit.slope))} for every 10 minutes. But it holds everywhere else too, at {pct(per10(groups[1].fit.slope))}: a long commute is something buyers pay for, to live farther out.</>}
       note={<>Commute: the Census Bureau&rsquo;s mean travel time to work, one way. Price: Zillow&rsquo;s typical home value against the town&rsquo;s own county average. New York commuter towns: where {Math.round(NYC_LINE * 100)}% or more of working residents hold jobs in New York City (the Census Bureau&rsquo;s LEHD data). Lines are straight fits through each group; they describe, they do not explain.</>}
     >

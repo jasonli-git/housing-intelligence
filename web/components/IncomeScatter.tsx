@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { formatValue } from "@/lib/format";
 import { regionPath } from "@/lib/placeRoutes";
@@ -18,10 +18,16 @@ const BAND_LABEL = { under3: "Under 3×", "3to5": "3× to 5×", over5: "Over 5×
  * Every town as a dot, household income across and home value up, both on ratio scales so
  * the 3× and 5× lines run parallel. A search lights up the towns matching it.
  */
-export function IncomeScatter({ points }: { points: IncomePoint[] }) {
+export function IncomeScatter({ points, placeAware = false }: { points: IncomePoint[]; placeAware?: boolean }) {
   const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<number | null>(null);
+  useEffect(() => {
+    const read = () => { const raw = new URLSearchParams(location.search).get("place"); setSelected(raw && /^[1-9]\d*$/.test(raw) ? Number(raw) : null); setQuery(""); };
+    read(); window.addEventListener("popstate", read); window.addEventListener("place-story-change", read);
+    return () => { window.removeEventListener("popstate", read); window.removeEventListener("place-story-change", read); };
+  }, []);
   const q = query.trim().toLowerCase();
-  const hits = useMemo(() => (q ? new Set(points.filter((p) => p.name.toLowerCase().includes(q)).map((p) => p.id)) : null), [points, q]);
+  const hits = useMemo(() => (q ? new Set(points.filter((p) => p.name.toLowerCase().includes(q)).map((p) => p.id)) : selected !== null && points.some(p => p.id === selected) ? new Set([selected]) : null), [points, q, selected]);
   const [x0, x1] = [Math.log(Math.min(...points.map((p) => p.income)) * 0.9), Math.log(Math.max(...points.map((p) => p.income)) * 1.1)];
   const [y0, y1] = [Math.log(Math.min(...points.map((p) => p.value)) * 0.9), Math.log(Math.max(...points.map((p) => p.value)) * 1.1)];
   const x = (v: number) => Math.round((L + ((Math.log(v) - x0) / (x1 - x0)) * (W - L - R)) * 10) / 10;
@@ -38,7 +44,7 @@ export function IncomeScatter({ points }: { points: IncomePoint[] }) {
   return (
     <>
       <div className="ladder-controls">
-        <label>Find your town<input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Town name" /></label>
+        {!placeAware && <label>Find your town<input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Town name" /></label>}
         <p className="ladder-key">
           {(Object.keys(BAND) as (keyof typeof BAND)[]).map((b) => (
             <span key={b}><i style={{ background: `var(--story-${{ s1: 1, s2: 2, s3: 3 }[BAND[b]]})` }} />{BAND_LABEL[b]} income · {counts[b]} towns</span>
@@ -70,8 +76,8 @@ export function IncomeScatter({ points }: { points: IncomePoint[] }) {
             })()}
           </g>
           <g aria-hidden="true">
-            <text className="zone-label" x={W - R - 10} y={H - B - 14} textAnchor="end">Homes under 3× income · within reach</text>
-            <text className="zone-label" x={L + 10} y={T + 18}>Homes over 5× income · stretched</text>
+            <text className="zone-label" x={W - R - 10} y={H - B - 14} textAnchor="end">Homes under 3× annual household income</text>
+            <text className="zone-label" x={L + 10} y={T + 18}>Homes over 5× annual household income</text>
           </g>
           {[3, 5].map((k) => {
             const l = line(k);
@@ -80,7 +86,7 @@ export function IncomeScatter({ points }: { points: IncomePoint[] }) {
           {points.map((p) => {
             const hit = hits?.has(p.id);
             return (
-              <circle key={p.id} cx={x(p.income)} cy={y(p.value)} r={hit ? 6 : 4} className={`dot ${BAND[ratioBand(p.income, p.value)]}${hits ? (hit ? " hit" : " dim") : ""}`}>
+              <circle key={p.id} data-region-id={p.id} cx={x(p.income)} cy={y(p.value)} r={hit ? 6 : 4} className={`dot ${BAND[ratioBand(p.income, p.value)]}${hits ? (hit ? " hit" : " dim") : ""}`}>
                 <title>{`${p.name}, ${p.county}: income ${usd(p.income)}, home ${usd(p.value)}, ${(p.value / p.income).toFixed(1)}×`}</title>
               </circle>
             );
@@ -88,6 +94,7 @@ export function IncomeScatter({ points }: { points: IncomePoint[] }) {
           {found.map((p) => <text key={p.id} className="place" x={x(p.income) + 8} y={y(p.value) + 4}>{p.name}</text>)}
         </svg>
       </figure>
+      {placeAware && selected !== null && !points.some(p => p.id === selected) && <p className="story-note">This statewide chart plots towns. The selected county or ZIP is not represented by a town’s dot; its local records are above.</p>}
       {hits && (
         <p className="story-note" role="status">
           {hits.size ? found.map((p, i) => (

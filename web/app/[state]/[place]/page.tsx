@@ -7,6 +7,12 @@ import { Term } from "@/components/Term";
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { PlacePhoto } from "@/components/PlacePhoto";
 import { PlaceSectionNav } from "@/components/PlaceSectionNav";
+import { PlaceMarketOpening } from "@/components/PlaceMarketOpening";
+import { marketPortraitData } from "@/lib/marketPortraitData";
+import { makePlaceStoryRecord, PLACE_STORIES, storyHistoryMetrics, type PlaceStoryTopic } from "@/lib/placeStories";
+import { stampPlaceStory } from "@/lib/placeStoryData";
+import { PlaceStoryGallery } from "@/components/PlaceStoryGallery";
+import { PlaceComparisonRail } from "@/components/PlaceComparisonRail";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
 import "../../horizon-theme.css";
@@ -47,18 +53,20 @@ import { IndexedComparison } from "@/components/IndexedComparison";
 import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Masthead } from "@/components/Masthead";
 import { QuietAnchor, QuietCheckTopics, QuietDisclosure, QuietProfile } from "@/components/QuietCounty";
+import { CompactHousingProfile } from "@/components/CompactHousingProfile";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
-import { api, type PacketLevel, type Region, regionsWithData } from "@/lib/api";
+import { api, artifactUrl, type PacketLevel, type Region, regionsWithData } from "@/lib/api";
 import { indexedComparison } from "@/lib/chartInsights";
 import { costInputs, homePrice } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
 import { pageMetadata, regionTitle } from "@/lib/meta";
-import { hasUnplaced, ownClaimsUsable } from "@/lib/hazards";
+import { loadFloodStory } from "@/lib/placeFloodStory";
 import type { Term as GlossaryTerm } from "@/lib/glossary";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, surveyYears } from "@/lib/periods";
 import { standOuts } from "@/lib/standouts";
-import { firstEnd } from "@/lib/ranks";
+import { firstEnd, ordinal } from "@/lib/ranks";
+import { comparisonMeasures } from "@/lib/placeComparisons";
 import {
   changeMarginLabel,
   marginLabel,
@@ -68,7 +76,7 @@ import {
 } from "@/lib/uncertainty";
 import {
   housingProfile,
-  verdictHeadline,
+  verdictHeadline, verdictTitle, verdictRank,
   type PaycheckAnswer,
   paycheckAnswers,
   paychecks,
@@ -228,8 +236,6 @@ export default async function RegionPage({
   // Flood claims: exact by county and ZIP code; a town's estimated from FEMA's block
   // groups (#354), and its county's instead where FEMA's codes leave too many of its
   // claims unplaceable between it and a neighbour (`ownClaimsUsable`).
-  const claimsOf = async (id: number, metricIds: string[]) =>
-    Promise.all(metricIds.map(async (m) => (await api.observations(id, m))?.observations ?? []));
   const floodClaimsFor = async () => {
     const county = region.ancestors.find((a) => a.level === "county") ?? null;
     // The dataset's newest year, still filling, is the state's: a county, town or ZIP code
@@ -241,34 +247,7 @@ export default async function RegionPage({
         : (region.ancestors.find((a) => a.level === "state")?.region_id ??
           (await api.regions(`level=state`))?.items.find((r) => r.state_code === region.state_code)?.region_id ??
           null);
-    const newestYear = async () => {
-      const id = await stateId();
-      const observations = id === null ? [] : ((await api.observations(id, "fema_flood_claims"))?.observations ?? []);
-      return observations.length ? Math.max(...observations.map((o) => Number(o.period_end.slice(0, 4)))) : null;
-    };
-    if (region.level === "municipality") {
-      const [[claims, paid, unplaced], newest] = await Promise.all([
-        claimsOf(regionId, ["fema_flood_claims", "fema_flood_claims_paid", "fema_flood_claims_unplaced"]),
-        newestYear(),
-      ]);
-      if (ownClaimsUsable(claims, unplaced) || !county) {
-        return { claims, paid, unplaced, newest, place: null, unseparable: false };
-      }
-      const [countyClaims, countyPaid] = await claimsOf(county.region_id, ["fema_flood_claims", "fema_flood_claims_paid"]);
-      return {
-        claims: countyClaims,
-        paid: countyPaid,
-        unplaced: [],
-        newest,
-        place: displayName(county),
-        unseparable: hasUnplaced(unplaced),
-      };
-    }
-    const [[claims, paid], newest] = await Promise.all([
-      claimsOf(regionId, ["fema_flood_claims", "fema_flood_claims_paid"]),
-      newestYear(),
-    ]);
-    return { claims, paid, unplaced: [], newest, place: null, unseparable: false };
+    return loadFloodStory(region,county?{region_id:county.region_id,name:displayName(county)}:null,await stateId(),async(id,metric)=>(await api.observations(id,metric))?.observations??[]);
   };
   // BPU's reports came by public-records request (#370); the note says so beside them.
   const bpuInquiry = (await api.freshness())?.sources.find((s) => s.source_id === "nj_bpu_reports")?.inquiries?.at(-1);
@@ -322,6 +301,16 @@ export default async function RegionPage({
 
   const name = displayName(region);
   const quiet = ["county", "municipality", "zip"].includes(region.level);
+  // The market-first layout, piloted on Princeton and now every county, town and ZIP.
+  const marketFirst = quiet;
+  const marketCohorts = marketFirst ? await marketPortraitData(region.state_code, packet.levels, region.level) : [];
+  const placeStoryRecords = marketFirst ? (Object.keys(PLACE_STORIES) as PlaceStoryTopic[]).filter(topic => topic !== "past").map(topic => stampPlaceStory(makePlaceStoryRecord(topic,
+    { region_id: regionId, name: region.name, level: region.level, state_code: region.state_code, geoid: region.geoid }, packet.levels,
+    { metrics: topic === "market" ? packet.metrics : [],
+      history: topic === "market" ? series : topic === "building" ? storyHistoryMetrics(topic).map((metricId, i) => ({ metricId, observations: construction[i] })) : [],
+      water: topic === "water" ? water : null, destinations: topic === "commute" ? workDestinations : null,
+      pressure: topic === "pressure" ? pressure : null, migration: topic === "migration" ? migration : null,
+      flood:topic === "flood" ? floodClaims:null, utilities:topic === "utilities" ? utilities:null, utilityInquiry:topic === "utilities" ? bpuInquiry:null, community:(topic === "broadband" || topic === "health" || topic === "schools") ? community:null }))) : [];
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
   // (ARCHITECTURE #275), and a file published before then that still carries one is
@@ -443,23 +432,30 @@ export default async function RegionPage({
 
   // Counties only (ARCHITECTURE #368): a town's or ZIP's page never shows one.
   const photo = region.level === "county" ? photoFor(region.geoid) : undefined;
-  const housingContext = quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
+  const housingContext = !marketFirst && quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
+  // The ranked standouts: one or two fold into the profile band as figures of their own
+  // (2026-10-29); three or more keep the ranked-measure rail.
+  const standoutIds = [...new Set(standing.filter(item => item.group === "value").map(item => item.metric_id))];
+  const rankedStandouts = comparisonMeasures(packet.levels, uncertainties, standoutIds);
+  const foldRanks = rankedStandouts.length > 0 && rankedStandouts.length <= 2;
   const sections = [
     { id: "place-overview", label: "Overview" },
+    ...(marketFirst ? [{ id: "place-market", label: "Housing market" }] : []),
+    { id: quiet ? "quiet-cost" : "place-costs", label: "Monthly costs" },
+    ...(marketFirst ? [{ id: "place-understand", label: "About this place" }] : []),
+    ...(!marketFirst ? [{ id: "field-notes", label: "Market" }] : []),
+    ...(!marketFirst ? [{ id: "about-getting-around", label: "Getting around" }] : []),
+    ...(!marketFirst ? [{ id: "about-living-there", label: "Living there" }] : []),
+    ...(marketFirst && consumer ? [{ id: "place-picture", label: "AI highlights" }] : []),
     ...(countyTowns.length ? [{ id: "county-towns", label: "Towns" }] : []),
-    { id: quiet ? "quiet-cost" : "place-costs", label: "Costs" },
-    { id: "field-notes", label: "Market" },
-    { id: "about-getting-around", label: "Getting around" },
-    { id: "about-living-there", label: "Living there" },
-    ...(similar ? [{ id: "place-explore", label: "Alternatives" }] : []),
-    { id: "sources-heading", label: "Sources" },
+    ...(similar ? [{ id: "place-explore", label: "Similar cheaper places" }] : []),
   ];
 
   return (
     <>
       <Masthead affordability={affordabilityControl} />
       <AffordForward placeId={region.level === "zip" ? null : regionId} />
-      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local horizon-page ${styles.page}${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
+      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local horizon-page ${styles.page}${quiet ? " quiet-county" : ""}${marketFirst ? ` ${styles.fiveSections}` : ""}`} data-region-level={region.level}>
       <header id="place-overview" className={`page-head${photo ? " has-photo" : ""}`} data-kind={kindOf(region.level)}>
         {quiet && region.state_code === "NJ" && <GardenStateArtwork header />}
         <div className="region-head-main">
@@ -487,16 +483,18 @@ export default async function RegionPage({
               </aside>
             )}
             <Link className="eyebrow-report" href={`${regionPath(regionId)}/report`}>Full report <span aria-hidden="true">↗</span></Link>
+            <Link className="eyebrow-report place-compare" aria-label={`Compare ${name} with other places`} href={`/compare${placesQuery([regionId])}`}>Compare <span aria-hidden="true">↗</span></Link>
           </div>
           <div className="page-title-row">
             <h1 className="page-title">{name}</h1>
-            <div className="place-title-actions"><ComputedBadge /><Link className="place-compare" aria-label={`Compare ${name} with other places`} href={`/compare${placesQuery([regionId])}`}>Compare this place <span aria-hidden="true">↗</span></Link></div>
+            <div className="place-title-actions"><ComputedBadge /></div>
           </div>
           {/* Every rank names its own cohort now — "12th of 21 NJ counties" — so the
               line that named it once for the whole page is gone (Milestone 28). */}
-          {(headline || lead || trade) && (
+          {/* The pilot's market section carries these sentences itself. */}
+          {!marketFirst && (headline || lead || trade) && (
             <details className="verdict-details orientation-details">
-              <summary className="disclose">Market context and figures <span className="disclose-hint"><span className="when-closed">Details</span><span className="when-open">Hide</span></span></summary>
+              <summary className="disclose">{marketFirst ? "More market context" : "Market context and figures"} <span className="disclose-hint"><span className="when-closed">Details</span><span className="when-open">Hide</span></span></summary>
               {headline && <p className="verdict region-orientation">{headline}</p>}
               {lead && <p className="verdict-more">{lead}</p>}
               {trade && <p className="verdict-more">{trade}</p>}
@@ -519,9 +517,6 @@ export default async function RegionPage({
             </details>
           )}
         </div>
-        {region.level === "county" && countyTowns.length > 0 && (
-          <TownRow name={name} towns={countyTowns.map(t => ({ id: t.region_id, href: regionPath(t.region_id), name: countyTowns.filter(o => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, c => c.toUpperCase()) : displayName(t) }))} />
-        )}
         {photo && <PlacePhoto geoid={region.geoid} />}
       </header>
 
@@ -536,6 +531,16 @@ export default async function RegionPage({
       />}
 
       <div className="region-standard-content">
+
+      {marketFirst && <PlaceMarketOpening levels={packet.levels} metrics={packet.metrics}
+        uncertainties={uncertainties} peers={peers} ownId={regionId} cohorts={marketCohorts} histories={series}
+        reportHref={`${regionPath(regionId)}/report`}
+        standingTitle={verdictTitle(packet.metrics, packet.levels, uncertainties)} standingRank={verdictRank(packet.levels, uncertainties)}
+        standing={[lead || headline, trade].filter((sentence): sentence is string => Boolean(sentence))}
+        revisions={new Map([...revisedBy].flatMap(([id, change]) => {
+          const row = packet.levels.find(l => l.metric_id === id && l.period_start === change.period_start);
+          return row ? [[id, { from: formatMetric(change.first_value, row.unit, id), on: change.last_revised_on }] as const] : [];
+        }))} />}
 
       <div id="place-costs" className="about-anchor" />
       <QuietAnchor enabled={quiet} id="quiet-cost">
@@ -567,8 +572,13 @@ export default async function RegionPage({
       </QuietAnchor>
       {!cost && housingContext}
 
-      <section id="place-understand" className="local-understand-group" aria-label="About this place">
-      <h2>About this place</h2>
+      <section id="place-understand" className="local-understand-group" {...(marketFirst ? { "aria-labelledby": "place-about-heading" } : { "aria-label": "About this place" })}>
+      {/* The pilot titles the whole section, profile and box together, like the other three. */}
+      {marketFirst && <h2 id="place-about-heading">About this place</h2>}
+      <QuietAnchor enabled={marketFirst} id="place-about-layout">
+      {marketFirst && <CompactHousingProfile items={profile} peers={peerNoun(peer_level)} standouts={foldRanks ? rankedStandouts.map(({ row, label, best, worst }) => ({ id: row.metric_id, label, value: formatMetric(row.value, row.unit, row.metric_id), rank: `${ordinal(best)}${worst !== best ? `–${ordinal(worst)}` : ""} of ${row.of} ${peerNoun(peer_level)} · ${firstEnd("value", row.direction)}` })) : []} />}
+      <QuietAnchor enabled={marketFirst} id="place-about-frame">
+      {!marketFirst && <h2>About this place</h2>}
 
       {!quiet && householdContent}
 
@@ -578,8 +588,9 @@ export default async function RegionPage({
           sentences say what changed. */}
       <div id="about-picture" className="about-anchor" />
       <QuietAnchor enabled={quiet} id="quiet-highlights">
-      <ConsumerReading reading={consumer} section="what_stands_out" heading={quiet ? "The local picture" : `What stands out in ${name}`} annotation={editorialAnnotation} paperNote={quiet}>
-      {standing.length > 0 && (
+      {/* The market-first layout gives the reading a section of its own after this one. */}
+      <ConsumerReading reading={marketFirst ? null : consumer} section="what_stands_out" heading={quiet ? "The local picture" : `What stands out in ${name}`} annotation={editorialAnnotation} paperNote={quiet}>
+      {!marketFirst && standing.length > 0 && (
         <details className="standouts-disclosure">
           <summary>
             <span className="standouts-disclosure-copy">
@@ -617,7 +628,11 @@ export default async function RegionPage({
       )}
       </ConsumerReading>
       </QuietAnchor>
+      {marketFirst && !foldRanks && rankedStandouts.length > 0 && <div className={styles.placeData}>
+        <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`} revisions={new Map(profile.flatMap(item=>item.updated?[[item.metric_id,item.updated] as const]:[]))} measures={standoutIds}/>
+      </div>}
       <ExhibitGallery>
+      {!marketFirst && <>
       <h3 className="exhibit-group-head" id="field-notes">The market</h3>
       {!quiet && homeChecks}
       <LearningExhibit kind="The homes that sold">
@@ -629,7 +644,7 @@ export default async function RegionPage({
         <div className="place-evidence-body">
       {persistence && <LearningExhibit kind="Against its own history"><HowUnusual name={name} data={persistence} interactive={quiet} /></LearningExhibit>}
       <div className="place-exhibit-pair">
-      {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Prices and income</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
+      {!marketFirst && quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Prices and income</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
       <StateContextExhibits concise topics={["lending"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
       </div>
 
@@ -653,7 +668,7 @@ export default async function RegionPage({
         levels={packet.levels}
       />
       </LearningExhibit>}
-      {hasIndexedComparison && (
+      {!marketFirst && hasIndexedComparison && (
         <section id="trends-exhibits" className="section" aria-labelledby="trends-heading" data-jump-label="Trends">
           <h2 id="trends-heading">Trends</h2>
           <IndexedComparison series={indexedInputs} />
@@ -661,28 +676,52 @@ export default async function RegionPage({
       )}
         </div>
       </details>
-      <StateContextExhibits concise topics={["work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
-      <LocalEvidenceCharts kind="work" name={name} level={region.level} levels={packet.levels} series={construction} />
-      <details className="place-evidence-group" id="about-living-there">
-        <summary><h3>Living there</h3><span>Water, flood, services and community</span></summary>
+      </>}
+      {!marketFirst && <StateContextExhibits concise topics={["work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />}
+      {!marketFirst && <LocalEvidenceCharts kind="work" name={name} level={region.level} levels={packet.levels} series={construction} />}
+      {!marketFirst && <details className="place-evidence-group" id="about-living-there">
+        <summary><h3>Living there</h3><span>{marketFirst ? "Schools, public safety and health" : "Water, flood, services and community"}</span></summary>
         <div className="place-evidence-body">
-          <LearningExhibit kind="Ground & water"><GroundAndWater compact name={name} levels={packet.levels} water={water} /></LearningExhibit>
+          {!marketFirst && <>
+          <LearningExhibit kind="Ground & water"><GroundAndWater compact name={name} levels={packet.levels} water={water} scope={marketFirst ? "sites" : "all"} /></LearningExhibit>
           <LearningExhibit kind="Flood context"><FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} /></LearningExhibit>
           <div id="local-property-evidence" className="property-exhibit-anchor"><LearningExhibit kind="Service providers"><Utilities data={utilities} bpuInquiry={bpuInquiry} /></LearningExhibit></div>
       <StateContextExhibits concise topics={["broadband"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
-          <CommunityContext exhibits data={community} level={region.level} supporting hideBroadband={region.level === "county"} />
+          </>}
+          <CommunityContext exhibits data={community} level={region.level} supporting hideBroadband={marketFirst || region.level === "county"} />
         </div>
-      </details>
+      </details>}
       </ExhibitGallery>
+      </QuietAnchor>
+      </QuietAnchor>
+      {/* The local stories, full width under the profile (2026-10-29), not inside a card. */}
+      {marketFirst && <div className={styles.storyShowcase}><PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} guideHref={`/guide?place=${regionId}#guide-checks-heading`} /></div>}
       </section>
+      {/* The written reading (counties, 2026-10-28): after the computed figures, in a
+          section of its own, rather than above the ranked measures. */}
+      {marketFirst && consumer && <section id="place-picture" aria-labelledby="place-picture-heading">
+        <h2 id="place-picture-heading">AI highlights</h2>
+        <ConsumerReading reading={consumer} section="what_stands_out" heading="What stands out" headingLevel={3} headingHidden paperNote />
+      </section>}
+      {/* A county's towns, a section of their own after the place (2026-10-28). */}
+      {countyTowns.length > 0 && <section id="place-towns" className="place-towns">
+        <TownRow name={name} towns={countyTowns.map(t => ({ id: t.region_id, href: regionPath(t.region_id), name: countyTowns.filter(o => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, c => c.toUpperCase()) : displayName(t) }))} />
+      </section>}
       <div id="place-explore">
+      {/* The deployed alternatives section, kept for the pilot too (owner, 2026-10-28). */}
       <SimilarPlaces name={name} state={region.state_code} data={similar} />
       </div>
 
-      <p className="place-report-line" id="region-detailed-data">
-        Want every figure? <Link href={`${regionPath(regionId)}/report`}>The full report</Link> has each measure ranked, its history, sources and downloads.
-        {" "}Something look wrong? <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a>.
-      </p>
+      {/* The page's close (2026-10-29): one sentence, then its three ways onward as quiet
+          links, instead of a run-on line. */}
+      <footer className={`place-report-line${marketFirst ? ` ${styles.pageClose}` : ""}`} id="region-detailed-data">
+        <p>Want every figure? <Link href={`${regionPath(regionId)}/report`}>The full report</Link> has each measure ranked, its history, sources and downloads.</p>
+        <nav aria-label="More about this place">
+          <Link href={`${regionPath(regionId)}/report`}>Full report <span aria-hidden="true">↗</span></Link>
+          {marketFirst && <Link href={`${regionPath(regionId)}/report#report-community`}>Public-safety reporting & sources <span aria-hidden="true">↗</span></Link>}
+          <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page <span aria-hidden="true">↗</span></a>
+        </nav>
+      </footer>
       </div>
       </main>
     </>
