@@ -65,6 +65,23 @@ Each is registered only once its file lands (a manual source with no file fails
 - **Theme CSS consolidation.** Guide and support-tool modules override cross-page theme rules
   with scoped selectors; folding those rules together is separate work.
 
+### Place and state pages after #451–#453
+
+- **Reader testing** of the market-first place page against the earlier cost-first one,
+  with the Director Note's tasks; not done.
+- **Story card covers.** The local and statewide story cards are text tiles; their chart
+  previews were tried as covers and read as empty frames. Each topic needs its own art.
+- **Story-card thumbnails exist for Princeton only** (`capture-place-stories.mjs` is run by
+  hand and is not part of `make publish`); other places draw the same chart live.
+- **Story pages cannot focus on the state.** The New Jersey page's statewide cards open
+  each story at its statewide section instead.
+- **Publisher notices** in the shared footer keep the old plain styling (a site-wide pass).
+- **Stale browser scripts.** About twenty one-off `web/scripts/check-*.mjs` (state page,
+  `check-accessibility-interactions`, `check-local-refinement`, `check-place-exhibits`)
+  test layouts that no longer exist; none is in `make test` or the deploy gates.
+- **Private schools, separated further.** NJDOE enrollment by district of residence would
+  split charter and choice students out of "public" (#453).
+
 ### Home page leftovers (Milestones 57, #447)
 
 - **Unused home stylesheets.** `home-plate.css`, `home-refresh.css`, `home-horizon.css`,
