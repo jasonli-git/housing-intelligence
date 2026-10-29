@@ -278,3 +278,27 @@
 .page :global(.cost-assumptions button:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
 .page :global(.cost-history-line) { margin: 0; color: var(--text-secondary); font: 13px/1.55 var(--font-text); }
 .page :global(.cost-history-line b) { color: var(--text-primary); font-weight: 600; }
+
+/* Monthly costs, its own section (2026-10-29): no container card — the two slips sit on
+   the page, each printed whole (label, headline, lines) on paper with a perforated top;
+   the figures in mono; amber in place of the site's accent for its kicker, rule and chips. */
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview) { --plate-accent: var(--cost-accent); }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview > .cost-cards) { gap: 1.4rem 1.2rem; background: none !important; border: 0 !important; border-radius: 0; overflow: visible; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview .cost-cards > .cost-card) {
+  --receipt-paper: light-dark(color-mix(in srgb, white 80%, var(--plate-paper, var(--surface-card))), color-mix(in srgb, var(--plate-ink, var(--text-primary)) 15%, var(--plate-paper, var(--surface-card))));
+  position: relative; margin-top: 10px; padding: 1.2rem 1.2rem 1.1rem; border: 0 !important; border-radius: 4px 4px 12px 12px; background: var(--receipt-paper) !important;
+  box-shadow: 0 1px 2px light-dark(color-mix(in srgb, var(--plate-ink, black) 12%, transparent), transparent);
+}
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview .cost-cards > .cost-card)::before { content: ""; position: absolute; inset: -9px 0 auto; height: 10px; background: radial-gradient(circle at 6px 0, transparent 4px, var(--receipt-paper) 4.5px) 0 5px / 12px 10px repeat-x; }
+/* The slip inside a slip goes: its lines print straight onto the card. */
+.page.page :global(.cost-card .cost-receipt) { margin-top: .9rem; padding: .9rem 0 0; border-top: 1px dashed color-mix(in srgb, var(--text-secondary) 45%, transparent); border-radius: 0; background: none; box-shadow: none; }
+.page.page :global(.cost-card .cost-receipt)::before { content: none; }
+.page.page :global(.cost-card .cost-receipt)::after { position: static; order: -1; display: block; margin: 0 0 .7rem; }
+.page.page :global(.place-cost-overview .cost-figure b) { font-family: var(--font-mono) !important; font-weight: 500 !important; letter-spacing: -.04em; }
+.page.page :global(.place-cost-overview .cost-use-numbers) { border: 0; background: none; }
+.page :global(.cost-assumptions button) { border-color: color-mix(in srgb, var(--cost-accent) 45%, transparent); }
+.page :global(.cost-difference) { border-top: 0; padding-inline: 0; }
+.page :global(.cost-difference b) { color: var(--cost-accent); }
+@media (max-width: 760px) {
+  :global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview > .cost-cards) { grid-template-columns: minmax(0, 1fr) !important; }
+}

@@ -198,6 +198,9 @@
   --photo-ink: #f7f4ee;
   --photo-ink-soft: #e6e0d6;
   --photo-shade: #000b;
+  /* Monthly costs' own accent (2026-10-29): the amber of its fine print, deep enough
+     for small text on a light page and lighter on a dark one. */
+  --cost-accent: light-dark(#8a5d12, #e2a94a);
 }
 
 @media (prefers-color-scheme: dark) {
