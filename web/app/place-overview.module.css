@@ -241,3 +241,29 @@
 /* The omissions strip closes the cost card, so its corners follow the card's 10px radius
    inside its 1px border, not the horizon theme's 22px. */
 :global(body:has(.horizon-page)) main:global(#main-content).page :global(.cost-cards > .cost-evidence-omissions) { border-radius: 0 0 9px 9px; }
+
+/* Monthly costs as receipts (2026-10-29): the owning payment itemised on a paper-toned
+   slip with a perforated top edge, mono figures on dotted leaders; the difference from
+   renting in one line under both cards; the caveats as the slip's fine print. */
+.page :global(.cost-card:has(.cost-receipt)) { display: flex; flex-direction: column; }
+.page.page :global(.cost-receipt) { --receipt-paper: light-dark(color-mix(in srgb, white 80%, var(--plate-paper, var(--surface-card))), color-mix(in srgb, var(--plate-ink, var(--text-primary)) 15%, var(--plate-paper, var(--surface-card)))); display: flex; flex-direction: column; grid-column: auto; position: relative; margin: 1rem 0 0; padding: 1.3rem 1.1rem 1rem; border: 0; border-radius: 4px 4px 10px 10px; background: var(--receipt-paper); box-shadow: 0 1px 2px light-dark(color-mix(in srgb, var(--plate-ink, black) 12%, transparent), transparent); }
+.page :global(.cost-receipt)::before { content: ""; position: absolute; inset: -9px 0 auto; height: 10px; background: radial-gradient(circle at 6px 0, transparent 4px, var(--receipt-paper) 4.5px) 0 5px / 12px 10px repeat-x; }
+.page :global(.cost-receipt .quiet-receipt),.page :global(.cost-receipt .gone-kept-key) { display: none; }
+/* The slip reads top to bottom: the bar, the lines, the totals, then other rates. */
+.page :global(.cost-receipt > .mortgage-rate-details) { order: 9; margin: .9rem 0 0; }
+.page :global(.cost-receipt)::after { content: attr(data-slip); position: absolute; top: .45rem; right: 1.1rem; font: 600 9.5px/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--text-secondary); }
+.page :global(.cost-receipt-lines) { display: grid; gap: .35rem; margin: .9rem 0 0; padding: 0; list-style: none; }
+.page :global(:is(.cost-receipt-lines li, .cost-receipt-total, .cost-receipt-kept)) { display: flex; align-items: baseline; gap: .5rem; margin: 0; font: 13px/1.5 var(--font-text); color: var(--text-secondary); }
+.page :global(:is(.cost-receipt-lines li, .cost-receipt-kept) > i) { flex: none; width: 8px; height: 8px; border-radius: 2px; align-self: center; }
+.page :global(:is(.cost-receipt-lines li, .cost-receipt-total, .cost-receipt-kept) > span) { display: flex; flex: 1; gap: .5rem; align-items: baseline; min-width: 0; }
+.page :global(:is(.cost-receipt-lines li, .cost-receipt-total, .cost-receipt-kept) > span)::after { content: ""; flex: 1; border-bottom: 1px dotted color-mix(in srgb, currentColor 45%, transparent); transform: translateY(-.25em); }
+.page :global(:is(.cost-receipt-lines li, .cost-receipt-total, .cost-receipt-kept) > b) { font: 500 13px/1.5 var(--font-mono); color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.page :global(.cost-receipt-total) { margin-top: .55rem; padding-top: .55rem; border-top: 1px dashed color-mix(in srgb, var(--text-secondary) 50%, transparent); color: var(--text-primary); }
+.page :global(.cost-receipt-total > b) { font-weight: 600 !important; }
+.page :global(.cost-receipt-kept) { margin-top: .2rem; }
+.page :global(.cost-receipt-kept > b) { color: var(--good) !important; }
+.page :global(.cost-difference) { grid-column: 1 / -1; margin: 0; padding: .9rem 1.1rem; border-top: 1px solid var(--border); font: 400 clamp(16px, 1.6vw, 19px)/1.45 Georgia, serif; color: var(--text-primary); }
+.page :global(.cost-difference b) { font-weight: 600; }
+.page :global(.cost-fine-print) { grid-column: 1 / -1; display: grid; gap: .3rem; padding: .7rem 1.1rem .9rem; border-top: 1px dashed color-mix(in srgb, var(--text-secondary) 40%, transparent); }
+.page :global(.cost-fine-print p) { margin: 0; color: var(--text-secondary); font: 11.5px/1.55 var(--font-text); }
+.page :global(.cost-fine-print b) { color: var(--text-primary); font-weight: 600; }

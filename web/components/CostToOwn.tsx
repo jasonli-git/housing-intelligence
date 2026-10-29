@@ -770,6 +770,16 @@ export function CostToOwn({
             · not a lender quote
           </p>
           {!compactOverview && ownershipBreakdown}
+          {/* The owning payment as a receipt (2026-10-29): each cost on its own line,
+              then what is gone and what goes into the home. */}
+          {compactOverview && <div className="cost-ownership-breakdown cost-receipt" data-slip="Monthly · owning">
+            {ownershipBreakdown}
+            <ul className="cost-receipt-lines">
+              {segments.filter((p) => p.key !== "kept").map((p) => <li key={p.key}><i style={{ background: p.colour }} aria-hidden="true" /><span>{p.label}</span><b>{money(p.value)}</b></li>)}
+            </ul>
+            <p className="cost-receipt-total"><span>Money gone</span><b>{money(month.gone)}</b></p>
+            <p className="cost-receipt-kept"><i style={{ background: "var(--good)" }} aria-hidden="true" /><span>Into the home</span><b>{money(kept)}</b></p>
+          </div>}
           {!quiet && owningLedger}
         </article>
 
@@ -783,6 +793,12 @@ export function CostToOwn({
                 <b>{money(rentMonth)}</b>
                 <span>a month, all of it gone</span>
               </p>
+              {/* The shorter slip beside the owning one: one line, all of it gone. */}
+              {compactOverview && <div className="cost-receipt" data-slip="Monthly · renting">
+                <ul className="cost-receipt-lines"><li><i style={{ background: "var(--text-secondary)" }} aria-hidden="true" /><span>Rent</span><b>{money(rentMonth)}</b></li></ul>
+                <p className="cost-receipt-total"><span>Money gone</span><b>{money(rentMonth)}</b></p>
+                <p className="cost-receipt-kept"><i style={{ background: "var(--good)" }} aria-hidden="true" /><span>Into a home</span><b>{money(0)}</b></p>
+              </div>}
               {!quiet && rentingLedger}
             </>
           ) : (
@@ -792,7 +808,11 @@ export function CostToOwn({
             </p>
           )}
         </article>
-        {compactOverview && <div className="cost-ownership-breakdown"><h4>Where the ownership payment goes</h4>{ownershipBreakdown}</div>}
+        {compactOverview && rentMonth !== null && <p className="cost-difference">
+          {month.total >= rentMonth
+            ? <>Owning costs <b>{money(month.total - rentMonth)} more</b> a month than renting; <b>{money(kept)}</b> of the owning payment goes into the home.</>
+            : <>Owning costs <b>{money(rentMonth - month.total)} less</b> a month than renting, and <b>{money(kept)}</b> of it goes into the home.</>}
+        </p>}
         {quiet && <>
           {calculationToggle}
           <section id={id+"-calculation"} className="shared-calculation" hidden={!calculationOpen} aria-label="Owning and renting calculation">
@@ -801,7 +821,10 @@ export function CostToOwn({
             <div><h4>Renting</h4>{rentingLedger ?? <p>No rent figure. {planning ? "Enter one under ‘Your numbers’ to compare." : "Enter your rent in the buyer’s guide to compare."}</p>}</div>
           </section>
         </>}
-        <aside className="cost-evidence-omissions" aria-label="Costs not included in the monthly owning estimate">
+        {compactOverview ? <footer className="cost-fine-print" aria-label="Fine print">
+          <p><b>Not included:</b> <Glossed text={`the owning estimate leaves out ${listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.`} /></p>
+          {rentalCaveat && <p><b>Comparing the two:</b> {rentalCaveat} Owning includes utilities; a quoted rent usually does not.</p>}
+        </footer> : <aside className="cost-evidence-omissions" aria-label="Costs not included in the monthly owning estimate">
           <p className="cost-evidence-label">
             <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
             Not included
@@ -809,7 +832,7 @@ export function CostToOwn({
           <p>
             <Glossed text={`The monthly owning estimate leaves out ${listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.`} />
           </p>
-        </aside>
+        </aside>}
 
       </div>
 
@@ -820,7 +843,7 @@ export function CostToOwn({
         <div className="cost-strip cost-evidence">
           {beforeMoving}
           <div className="cost-evidence-grid">
-            {rentalCaveat && (
+            {rentalCaveat && !compactOverview && (
               <div className="cost-evidence-item">
                 <p className="cost-evidence-label">Comparison caveat</p>
                 <p>{rentalCaveat}</p>

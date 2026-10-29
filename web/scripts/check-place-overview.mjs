@@ -24,7 +24,7 @@ try {
       const heading = await cost.locator(':scope > .section-head h2').boundingBox();
       // The numbered kicker sits above the title; the costs follow the market section.
       assert(heading.height < 140, 'Cost heading should remain compact');
-      assert(await cost.locator('.cost-evidence-omissions').isVisible());
+      assert(await cost.locator('.cost-fine-print').isVisible());
       // The down payment is one of the reader's own numbers, behind "Use your numbers".
       await cost.locator('.cost-use-numbers > summary').click();
       const down = cost.locator('.cost-use-numbers select').first();
