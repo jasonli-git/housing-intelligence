@@ -47,6 +47,9 @@ export const metadata: Metadata = pageMetadata({ title: "New Jersey — Housing"
 // but do not fetch ranking windows or render its controls/table in this build.
 const COUNTY_COMPARISON_ENABLED = false;
 
+// Parked for now (owner, 2026-10-29): the table of every statewide figure.
+const STATE_EVIDENCE_ENABLED = false;
+
 // The figure most readers arrive for. It is where the page opens, not a limit on it.
 const DEFAULT_MEASURE = "zhvi_sfr";
 
@@ -197,7 +200,7 @@ export default async function NewJerseyPage() {
         </div>
         <PlacePhoto geoid="34" />
       </header>
-      <PlaceSectionNav label="State sections" sections={[{id:"state-overview",label:"Housing market"},{id:"state-county-navigation",label:"Counties"},{id:"state-visual-stories",label:"Visual stories"},{id:"state-data-stories",label:"Statewide data"},{id:"state-detailed-data",label:"Every figure"}]} />
+      <PlaceSectionNav label="State sections" sections={[{id:"state-overview",label:"Housing market"},{id:"state-county-navigation",label:"Counties"},{id:"state-visual-stories",label:"Visual stories"},{id:"state-data-stories",label:"Statewide data"},...(STATE_EVIDENCE_ENABLED ? [{id:"state-detailed-data",label:"Every figure"}] : [])]} />
       <div className="state-chapters">
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
         <HousingMosaic embedded statewide name="New Jersey" views={statewideMosaicViews(packet?.levels ?? [], constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter(r => r.preliminary).map(r => r.year))} />
@@ -221,7 +224,7 @@ export default async function NewJerseyPage() {
             initial={initial ?? DEFAULT_MEASURE}
           />
       </div>}
-      <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Every available state figure, with dates, definitions and sources.">
+      {STATE_EVIDENCE_ENABLED && <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Every available state figure, with dates, definitions and sources.">
         <section className="section" aria-labelledby="state-figures-heading">
           <div className="section-head"><h2 id="state-figures-heading">All statewide figures</h2></div>
           <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally"><table className="state-figures">
@@ -234,7 +237,7 @@ export default async function NewJerseyPage() {
           </table></div>
           <p className="table-note">Different measures cover different periods. Statewide sale medians describe sold homes, not the value of every home; construction totals include reporting towns only.</p>
         </section>
-      </MoreExpander>
+      </MoreExpander>}
       {statewideNotes.length > 0 && <StateFigureNotes notes={statewideNotes} />}
       </main>
     </>
