@@ -1,5 +1,6 @@
 "use client";
 
+import { Glossed } from "./Glossed";
 import Link from "next/link";
 import { useMemo, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { formatChange, formatValue } from "@/lib/format";
@@ -54,7 +55,7 @@ export function MarketPeerPlot({ cohort, ownId, value, label, scope, places = "t
         {min===max?<text x={W/2} y="69" textAnchor="middle" className={styles.axisText}>{money(min)}</text>:<><text x="18" y="69" className={styles.axisText}>{money(min)}</text><text x={W-18} y="69" textAnchor="end" className={styles.axisText}>{money(max)}</text></>}
       </svg>
     </div>
-    <p className={styles.distributionNote}>Middle 50%: {shortMoney(q1)}–{shortMoney(q3)} · median {shortMoney(median)}</p>
+    <p className={styles.distributionNote}><Glossed text={`Middle 50%: ${shortMoney(q1)}–${shortMoney(q3)} · median ${shortMoney(median)}`} /></p>
     <span className="visually-hidden">Observed range across {places}, {money(min)} to {money(max)}; lower quartile {money(q1)}, median {money(median)}, upper quartile {money(q3)}. These are area benchmarks, not individual homes.</span>
     <div className={styles.peerReading} aria-live="polite" aria-atomic="true"><span>{selected.name} <b>{money(selected.value)}</b></span>
       {index !== own ? <Link href={`/compare?places=${ownId},${selected.id}`}>Compare <span aria-hidden="true">↗</span></Link> : <span className={styles.annotation}>Highlighted</span>}

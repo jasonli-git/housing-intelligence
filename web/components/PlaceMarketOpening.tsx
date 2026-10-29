@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Glossed } from "./Glossed";
 import type { Observation, PacketLevel, PacketMetric } from "@/lib/api";
 import { formatMetric } from "@/lib/format";
 import { homePrice } from "@/lib/homePrice";
@@ -69,7 +70,7 @@ export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownI
     {occupied && occupied.value >= 0 && occupied.value <= 1 && <div className={styles.stock} data-portrait="tenure">
       <div className={styles.tenureLabels}><span><b>{formatMetric(occupied.value, occupied.unit, occupied.metric_id)}</b> Owner-occupied</span><span>Rented <b>{formatMetric(1 - occupied.value, occupied.unit, occupied.metric_id)}</b></span></div>
       <div className={styles.tenureBar} role="img" aria-label={`${formatMetric(occupied.value, occupied.unit, occupied.metric_id)} owner-occupied; ${formatMetric(1 - occupied.value, occupied.unit, occupied.metric_id)} rented, among occupied homes`}><span style={{ width: `${occupied.value * 100}%` }} /></div>
-      <p className={styles.annotation}>Occupied homes · Census ACS {surveyYears(occupied.period_start, occupied.period_end)} · 90% margin: {marginLabel(occupied.value, uncertainties.value.get(occupied.metric_id)?.margin ?? null, occupied.unit, occupied.metric_id)}</p>
+      <p className={styles.annotation}><Glossed text={`Occupied homes · Census ACS ${surveyYears(occupied.period_start, occupied.period_end)} · 90% margin: ${marginLabel(occupied.value, uncertainties.value.get(occupied.metric_id)?.margin ?? null, occupied.unit, occupied.metric_id)}`} /></p>
     </div>}
   </section>;
 }
