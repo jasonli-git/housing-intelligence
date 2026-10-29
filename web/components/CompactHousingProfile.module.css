@@ -57,3 +57,28 @@
 @media (max-width: 1000px) {
   .withStandouts > .standouts { border-top: 1px solid var(--border); }
 }
+
+/* Income's rank mark: a hairline scale, the peer range as a band, the town as a dot. */
+.rankMark { position: relative; height: 22px; margin: .1rem 0 .2rem; }
+.rankMark::before { content: ""; position: absolute; left: 0; right: 0; top: 6px; border-top: 1px solid color-mix(in srgb, var(--text-secondary) 45%, transparent); }
+.rankMark i { position: absolute; top: 3px; height: 7px; border-radius: 4px; background: color-mix(in srgb, var(--plate-accent) 28%, transparent); }
+.rankMark b { position: absolute; top: 2px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: var(--plate-accent); }
+.rankMark span { position: absolute; bottom: 0; color: var(--text-secondary); font: 9.5px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.rankMark span:last-of-type { right: 0; }
+.portrait .figure[data-metric="acs_median_hh_income"] .rankMark { order: 9; }
+
+/* The profile as a field-guide plate (2026-10-29): paper in light mode, fine hairlines
+   between figures, registration ticks at its corners. */
+.profile { border-color: color-mix(in srgb, var(--plate-accent) 30%, var(--border)); background: light-dark(color-mix(in srgb, white 70%, var(--plate-paper, var(--surface-card))), radial-gradient(ellipse at 0% 0%, color-mix(in srgb, var(--plate-accent) 9%, transparent), transparent 60%), var(--glass)); }
+.profile::before { height: 1px; background: color-mix(in srgb, var(--plate-accent) 55%, transparent); opacity: 1; }
+.profile::after { content: ""; position: absolute; inset: 7px; pointer-events: none; border-radius: 8px;
+  background:
+    linear-gradient(var(--plate-accent), var(--plate-accent)) top left / 10px 1px no-repeat,
+    linear-gradient(var(--plate-accent), var(--plate-accent)) top left / 1px 10px no-repeat,
+    linear-gradient(var(--plate-accent), var(--plate-accent)) top right / 10px 1px no-repeat,
+    linear-gradient(var(--plate-accent), var(--plate-accent)) top right / 1px 10px no-repeat,
+    linear-gradient(var(--plate-accent), var(--plate-accent)) bottom left / 10px 1px no-repeat,
+    linear-gradient(var(--plate-accent), var(--plate-accent)) bottom left / 1px 10px no-repeat,
+    linear-gradient(var(--plate-accent), var(--plate-accent)) bottom right / 10px 1px no-repeat,
+    linear-gradient(var(--plate-accent), var(--plate-accent)) bottom right / 1px 10px no-repeat; opacity: .6; }
+.portrait .figure + .figure { border-color: color-mix(in srgb, var(--plate-accent) 22%, var(--border)); }

@@ -19,6 +19,13 @@ export function CompactHousingProfile({items,peers,standouts=[]}:{items:ProfileI
     {portrait&&item.metric_id==="modiv_median_year_built"&&<svg className={styles.house} aria-hidden="true" viewBox="0 0 240 120" fill="none">
       <path d="M5 110H235M30 110V56L88 14L146 56V110M20 63L88 14L156 63M146 110V72L188 43L229 72V110M68 110V76H99V110M43 64H61V82H43ZM111 64H129V82H111ZM171 77H193V94H171ZM71 27V8H82V19"/>
     </svg>}
+    {/* Income's mark (2026-10-29): where the town falls among its peers, highest at the
+        right; a band where the survey margin leaves the rank a range. */}
+    {portrait&&item.metric_id==="acs_median_hh_income"&&item.context?.rank&&item.context.rank.of>1&&(()=>{
+      const {value,of,best=value,worst=value}=item.context.rank;
+      const at=(r:number)=>`${(1-(r-1)/(of-1))*100}%`;
+      return <div className={styles.rankMark} aria-hidden="true"><i style={{left:at(worst),right:`calc(100% - ${at(best)})`}}/><b style={{left:at(value)}}/><span>lowest</span><span>highest</span></div>;
+    })()}
     <div className={styles.label}><Term id={item.metric_id} definition={item.definition} why={null}>{item.label}</Term></div>
     <p className={styles.value}><strong>{item.value}</strong>{item.margin&&<span>{item.margin}</span>}</p>
     {item.context&&<p className={styles.context}>{item.context.words}{item.context.rank&&<> · {item.context.rank.best!==undefined&&item.context.rank.worst!==undefined?`${item.context.rank.best}–${item.context.rank.worst}`:item.context.rank.value} of {item.context.rank.of} {peers}</>}</p>}
