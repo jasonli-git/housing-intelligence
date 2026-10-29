@@ -24,7 +24,7 @@ import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { MoreExpander } from "@/components/MoreExpander";
 import Link from "next/link";
 import { Masthead } from "@/components/Masthead";
-import { api, artifactUrl, nationalMortgageRate } from "@/lib/api";
+import { api, artifactUrl } from "@/lib/api";
 import { formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
 import { periodLabel } from "@/lib/periods";
@@ -72,10 +72,9 @@ const CAVEAT_IN_DEFINITION: ReadonlySet<string> = new Set([
  * No ranking windows or map geometry are requested while that feature is retired.
  */
 export default async function NewJerseyPage() {
-  const [catalog, states, mortgage, countyRegions] = await Promise.all([
+  const [catalog, states, countyRegions] = await Promise.all([
     api.metrics(),
     api.regions("level=state&state=NJ&limit=1"),
-    nationalMortgageRate(),
     api.regions("level=county&state=NJ&limit=100"),
   ]);
   const state = states?.items[0] ?? null;
@@ -202,7 +201,7 @@ export default async function NewJerseyPage() {
       </header>
       <PlaceSectionNav label="State sections" sections={[{id:"state-overview",label:"Housing market"},{id:"state-data-stories",label:"Statewide data"},{id:"state-visual-stories",label:"Visual stories"},{id:"state-county-navigation",label:"Counties"},...(STATE_EVIDENCE_ENABLED ? [{id:"state-detailed-data",label:"Every figure"}] : [])]} />
       <div className="state-chapters">
-      <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
+      <StateOverview hasNotes={statewideNotes.length > 0} levels={levels}>
         <HousingMosaic embedded statewide name="New Jersey" views={statewideMosaicViews(packet?.levels ?? [], constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter(r => r.preliminary).map(r => r.year))} />
       </StateOverview>
       {storyRecords.length > 0 && <section id="state-data-stories" className="state-chapter" aria-labelledby="state-data-heading">

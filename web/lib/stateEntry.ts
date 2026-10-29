@@ -6,6 +6,9 @@ export function stateOverviewFigures(levels: LevelReading[]) {
   const find = (id: string) => levels.find((level) => level.metric_id === id);
   return {
     price: find("sr1a_median_sale_price_12m"),
+    tax: find("nj_effective_tax_rate"),
+    // Published over a multi-year window only; the label says which.
+    sales: find("sr1a_sales_count"),
     added: find("nj_net_units_added"),
     certified: find("nj_certificates_reporting_share"),
     demolished: find("nj_demolitions_reporting_share"),
