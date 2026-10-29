@@ -200,14 +200,11 @@ export default async function NewJerseyPage() {
         </div>
         <PlacePhoto geoid="34" />
       </header>
-      <PlaceSectionNav label="State sections" sections={[{id:"state-overview",label:"Housing market"},{id:"state-county-navigation",label:"Counties"},{id:"state-visual-stories",label:"Visual stories"},{id:"state-data-stories",label:"Statewide data"},...(STATE_EVIDENCE_ENABLED ? [{id:"state-detailed-data",label:"Every figure"}] : [])]} />
+      <PlaceSectionNav label="State sections" sections={[{id:"state-overview",label:"Housing market"},{id:"state-visual-stories",label:"Visual stories"},{id:"state-data-stories",label:"Statewide data"},{id:"state-county-navigation",label:"Counties"},...(STATE_EVIDENCE_ENABLED ? [{id:"state-detailed-data",label:"Every figure"}] : [])]} />
       <div className="state-chapters">
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
         <HousingMosaic embedded statewide name="New Jersey" views={statewideMosaicViews(packet?.levels ?? [], constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter(r => r.preliminary).map(r => r.year))} />
       </StateOverview>
-      <section id="state-county-navigation" className="state-chapter">
-        <PlaceDirectory id="state-counties" className="town-pills" title="Counties" destinations={(countyRegions?.items ?? []).map(county => ({ id: county.region_id, name: county.name, href: regionPath(county.region_id) }))} preview={Infinity} />
-      </section>
       <section id="state-visual-stories" className="state-chapter" aria-labelledby="state-visual-heading">
         <div className="state-chapter-row"><h2 id="state-visual-heading" className="state-chapter-title">Visual stories</h2><Link href="/stories">All stories <span aria-hidden="true">↗</span></Link></div>
         <p className="state-chapter-lede">Only in New Jersey: the state’s character, drawn from the data.</p>
@@ -217,6 +214,9 @@ export default async function NewJerseyPage() {
         <h2 id="state-data-heading" className="state-chapter-title">Statewide data</h2>
         <PlaceStoryGallery records={storyRecords} artifactUrl={artifactUrl} title="Statewide stories" statewide />
       </section>}
+      <section id="state-county-navigation" className="state-chapter">
+        <PlaceDirectory id="state-counties" className="town-pills" title="Counties" destinations={(countyRegions?.items ?? []).map(county => ({ id: county.region_id, name: county.name, href: regionPath(county.region_id) }))} preview={Infinity} />
+      </section>
       </div>
       {COUNTY_COMPARISON_ENABLED && <div id="state-county-comparison" className="nj-explore-anchor" data-jump-label="Compare counties">
           <StateModeWorkspace
