@@ -8,31 +8,28 @@ import { ComputedBadge } from "@/components/ComputedBadge";
 import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { StateOverview } from "@/components/StateOverview";
-import { CountyCabinet } from "@/components/CountyCabinet";
+import { PlaceDirectory } from "@/components/PlaceDirectory";
+import { PlaceStoryGallery } from "@/components/PlaceStoryGallery";
+import { StoryCard } from "@/components/StoryCard";
+import { COLLECTIONS } from "@/lib/storyLibrary";
+import { STORIES } from "@/lib/stories";
+import { makePlaceStoryRecord, PLACE_STORIES, summarizePlaceStory, type PlaceStoryTopic } from "@/lib/placeStories";
+import { stampPlaceStory } from "@/lib/placeStoryData";
+import { regionPath } from "@/lib/placeRoutes";
 import { PlaceSectionNav } from "@/components/PlaceSectionNav";
 import layout from "@/components/ExplorationResearch.module.css";
-import { StateContextExhibits } from "@/components/StateContextExhibits";
 import { HousingMosaic } from "@/components/HousingMosaic";
 import { statewideMosaicViews } from "@/lib/housingMosaic";
-import { LearningExhibit } from "@/components/LearningExhibit";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { MoreExpander } from "@/components/MoreExpander";
 import Link from "next/link";
-import { StepIcon } from "@/components/StepIcon";
-import { HomeSales } from "@/components/HomeSales";
-import { HomesAdded } from "@/components/HomesAdded";
-import { IncomePressure } from "@/components/IncomePressure";
-import "../../income-pressure.css";
-import { HowUnusual } from "@/components/HowUnusual";
-import { QuietProfile } from "@/components/QuietCounty";
 import { Masthead } from "@/components/Masthead";
-import { api, nationalMortgageRate } from "@/lib/api";
+import { api, artifactUrl, nationalMortgageRate } from "@/lib/api";
 import { formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
 import { periodLabel } from "@/lib/periods";
 import { WINDOWS } from "@/lib/windows";
 import { definitionOf } from "@/lib/definitions";
-import { stateProfile } from "@/lib/stateProfile";
 import { stateFigurePeriod } from "@/lib/stateEntry";
 import { marginLabel } from "@/lib/uncertainty";
 import { constructionYears } from "@/lib/construction";
@@ -41,6 +38,8 @@ import "../../new-jersey.css";
 import "../../housing-entry.css";
 import "../../state-navigation.css";
 import "../../horizon-theme.css";
+import "../../stories/story-cards.css";
+import "../../stories/library.css";
 
 export const metadata: Metadata = pageMetadata({ title: "New Jersey — Housing", description: "Statewide housing figures and places to explore in New Jersey.", path: "/states/new-jersey" });
 
@@ -78,8 +77,6 @@ export default async function NewJerseyPage() {
   ]);
   const state = states?.items[0] ?? null;
   const statewide = state ? await api.summary(state.region_id, "5y") : null;
-  // Milestone 52: today's price-to-income against the state's own history.
-  const persistence = state ? await api.persistence(state.region_id) : null;
   const pressure = state ? await api.housingPressure(state.region_id) : null;
   const [packet, destinations, community] = state ? await Promise.all([
     api.packet(state.region_id, "5y"), api.workDestinations(state.region_id), api.community(state.region_id),
@@ -149,6 +146,14 @@ export default async function NewJerseyPage() {
     )
   ).filter((measure): measure is Measure => measure !== null) : [];
 
+  // The state's own statewide stories (2026-10-29): the place-story cards the county and
+  // town pages show, for the topics with statewide records.
+  const storyRecords = state && packet ? (Object.keys(PLACE_STORIES) as PlaceStoryTopic[]).filter(topic => topic !== "past").map(topic => stampPlaceStory(makePlaceStoryRecord(topic,
+    { region_id: state.region_id, name: state.name, level: state.level, state_code: state.state_code, geoid: state.geoid }, packet.levels,
+    { history: topic === "building" ? ["permits_total_units", "nj_units_certified", "nj_units_demolished", "nj_net_units_added"].map((metricId, i) => ({ metricId, observations: construction[i] })) : [],
+      destinations: topic === "commute" ? destinations : null, pressure: topic === "pressure" ? pressure : null,
+      community: (topic === "broadband" || topic === "health" || topic === "schools") ? community : null }))).filter(record => summarizePlaceStory(record).available) : [];
+  const jersey = COLLECTIONS.find(c => c.id === "jersey")!.stories.flatMap(slug => STORIES.filter(story => story.href === `/stories/${slug}`));
   const sections = groupRows(measures);
   const initial = measures.some((m) => m.metric_id === DEFAULT_MEASURE)
     ? DEFAULT_MEASURE
@@ -192,43 +197,30 @@ export default async function NewJerseyPage() {
         </div>
         <PlacePhoto geoid="34" />
       </header>
-      <PlaceSectionNav label="State sections" sections={[{id:"state-county-navigation",label:"Counties"},{id:"state-overview",label:"Overview"},{id:"field-notes",label:"Market & context"},{id:"state-next-step-heading",label:"Next steps"},{id:"state-detailed-data",label:"Evidence"}]} />
-      <div id="nj-explore"><CountyCabinet counties={(countyRegions?.items ?? []).map(county => ({ id:county.region_id, name:county.name }))} /></div>
+      <PlaceSectionNav label="State sections" sections={[{id:"state-overview",label:"Housing market"},{id:"state-county-navigation",label:"Counties"},{id:"state-visual-stories",label:"Visual stories"},{id:"state-data-stories",label:"Statewide data"},{id:"state-detailed-data",label:"Every figure"}]} />
+      <div className="state-chapters">
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
         <HousingMosaic embedded statewide name="New Jersey" views={statewideMosaicViews(packet?.levels ?? [], constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter(r => r.preliminary).map(r => r.year))} />
-        <details className="state-extra-figures"><summary>More statewide figures <span aria-hidden="true">＋</span></summary>
-          <QuietProfile statewide allMetrics items={stateProfile(levels.filter((level) => ["fhfa_hpi", "fhfa_hpi_all_transactions", "nj_effective_tax_rate", "sr1a_median_price_per_sqft", "sr1a_median_year_built_sold", "water_homes_share_public"].includes(level.metric_id)), statewide?.headlines ?? [])} />
-        </details>
       </StateOverview>
+      <section id="state-county-navigation" className="state-chapter">
+        <PlaceDirectory id="state-counties" className="town-pills" title="Counties" destinations={(countyRegions?.items ?? []).map(county => ({ id: county.region_id, name: county.name, href: regionPath(county.region_id) }))} preview={Infinity} />
+      </section>
+      <section id="state-visual-stories" className="state-chapter" aria-labelledby="state-visual-heading">
+        <div className="state-chapter-row"><h2 id="state-visual-heading" className="state-chapter-title">Visual stories</h2><Link href="/stories">All stories <span aria-hidden="true">↗</span></Link></div>
+        <p className="state-chapter-lede">Only in New Jersey: the state’s character, drawn from the data.</p>
+        <div className="state-story-rail" role="region" aria-label="New Jersey visual stories" tabIndex={0}>{jersey.map(story => <StoryCard key={story.href} story={story} />)}</div>
+      </section>
+      {storyRecords.length > 0 && <section id="state-data-stories" className="state-chapter" aria-labelledby="state-data-heading">
+        <h2 id="state-data-heading" className="state-chapter-title">Statewide data</h2>
+        <PlaceStoryGallery records={storyRecords} artifactUrl={artifactUrl} title="Statewide stories" statewide />
+      </section>}
+      </div>
       {COUNTY_COMPARISON_ENABLED && <div id="state-county-comparison" className="nj-explore-anchor" data-jump-label="Compare counties">
           <StateModeWorkspace
             sections={sections}
             initial={initial ?? DEFAULT_MEASURE}
           />
       </div>}
-      <header className="field-notes-head" id="field-notes">
-        <h2>Field notes</h2>
-        <p>Closer looks at how New Jersey buys, borrows, builds and works.</p>
-      </header>
-      <div className="state-market-exhibits" id="state-market-exhibits">
-        <LearningExhibit kind="Home sales"><HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} portrait /></LearningExhibit>
-        <StateContextExhibits name="New Jersey" topics={["lending"]} levels={packet?.levels ?? []} destinations={destinations} community={community} />
-        <IncomePressure data={pressure} />
-        <LearningExhibit kind="Against its own history"><HowUnusual name="New Jersey" data={persistence} interactive />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</LearningExhibit>
-        <LearningExhibit kind="New homes"><HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} exhibit /></LearningExhibit>
-        <StateContextExhibits name="New Jersey" topics={["work","broadband"]} levels={packet?.levels ?? []} destinations={destinations} community={community} />
-      </div>
-      <section className="local-next-step-group state-next-step" aria-labelledby="state-next-step-heading">
-        <h2 id="state-next-step-heading">Your next step</h2>
-        <div className="place-next-destinations">
-          <section className="place-guide-entry" aria-labelledby="state-guide-heading">
-            <StepIcon name="guide" /><div><h3 id="state-guide-heading">Planning a purchase?</h3><p>Buying budget, rent or buy, and checks before an offer.</p><Link href="/guide">Explore the buyer’s guide →</Link></div>
-          </section>
-          <section id="housing-assistance" className="local-housing-help" aria-labelledby="state-help-heading">
-            <StepIcon name="listings" /><div><h3 id="state-help-heading">Find housing help</h3><p>Affordable homes, vouchers and local housing authorities.</p><Link href="/help">Explore your options →</Link></div>
-          </section>
-        </div>
-      </section>
       <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Every available state figure, with dates, definitions and sources.">
         <section className="section" aria-labelledby="state-figures-heading">
           <div className="section-head"><h2 id="state-figures-heading">All statewide figures</h2></div>

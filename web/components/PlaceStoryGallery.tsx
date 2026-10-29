@@ -12,7 +12,10 @@ function PreviewImage({ src, className }: { src: string; className: string }) {
   const [failed, setFailed] = useState(false);
   return failed ? null : <img className={className} src={src} alt="" loading="lazy" decoding="async" width="800" height="500" onError={() => setFailed(true)} />;
 }
-export function PlaceStoryGallery({ records, artifactUrl, guideHref }: { records: PlaceStoryRecord[]; artifactUrl: string; guideHref?: string }) {
+export function PlaceStoryGallery({ records, artifactUrl, guideHref, title = "Local stories", statewide = false }: { records: PlaceStoryRecord[]; artifactUrl: string; guideHref?: string; title?: string;
+  /** The state's own cards: story pages focus on a town, county or ZIP, so these open
+   *  each story at its statewide section, and the address checks are left off. */
+  statewide?: boolean }) {
   const name = records[0] ? placeStoryName(records[0]) : "this place";
   const track=useRef<HTMLDivElement>(null);
   const [edges,setEdges]=useState({start:true,end:false});
@@ -29,7 +32,7 @@ export function PlaceStoryGallery({ records, artifactUrl, guideHref }: { records
     el.scrollBy({left:direction*el.clientWidth*.85,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
   };
   return <section className={styles.gallery} id="place-story-gallery" aria-labelledby="place-story-gallery-heading">
-    <h3 id="place-story-gallery-heading">Local stories</h3>
+    <h3 id="place-story-gallery-heading">{title}</h3>
     <span id="field-notes" className={styles.legacyAnchor} role="group" aria-label="Market story previews" />
     <span id="more-market-evidence" className={styles.legacyAnchor} role="group" aria-label="More market stories" />
     <span id="local-price-history" className={styles.legacyAnchor} role="group" aria-label="Prices and paychecks story preview" /><span id="trends-exhibits" className={styles.legacyAnchor} role="group" aria-label="Housing trends story preview" />
@@ -45,7 +48,7 @@ export function PlaceStoryGallery({ records, artifactUrl, guideHref }: { records
     }}>{records.map(record => {
       const summary = summarizePlaceStory(record);
       const prefix = `${artifactUrl}/screenshots/place-stories/${record.place.region_id}-${record.topic}-${record.snapshot}`;
-      return <Link key={record.topic} id={record.topic === "commute" ? "about-getting-around" : record.topic === "utilities" ? "local-property-evidence" : `story-${record.topic}-preview`} className={styles.card} href={placeStoryHref(record.topic, record.place.region_id)} prefetch={false} data-preview-topic={record.topic} data-preview-snapshot={record.snapshot}>
+      return <Link key={record.topic} id={record.topic === "commute" ? "about-getting-around" : record.topic === "utilities" ? "local-property-evidence" : `story-${record.topic}-preview`} className={styles.card} href={statewide ? `/stories/${PLACE_STORIES[record.topic].slug}#story-statewide` : placeStoryHref(record.topic, record.place.region_id)} prefetch={false} data-preview-topic={record.topic} data-preview-snapshot={record.snapshot}>
         <div className={styles.cover} aria-hidden="true"><PlaceStoryChart record={record} /><PreviewImage key={`${prefix}-light`} className={styles.light} src={`${prefix}-light.jpg`} /><PreviewImage key={`${prefix}-dark`} className={styles.dark} src={`${prefix}-dark.jpg`} /></div>
         <p className={styles.topic}><span className={styles.topicName}>{PLACE_STORIES[record.topic].title}</span><span className={styles.openArrow} aria-hidden="true">↗</span></p>
         <h4 id={({ water: "ground-water-heading", commute: "getting-around-heading", sales: "sales-heading", lending: "state-loans-exhibit", building: "homes-added-heading", migration: "who-is-moving-heading", pressure: "income-pressure-heading",sites:"ground-sites-heading",flood:"flood-risk-heading",utilities:"utilities-heading",broadband:"community-broadband-heading",schools:"community-schools-heading" } as Partial<Record<string,string>>)[record.topic]}>{summary.headline}</h4>
@@ -57,6 +60,6 @@ export function PlaceStoryGallery({ records, artifactUrl, guideHref }: { records
     })}</div>
     <button type="button" className={`${styles.railArrow} ${styles.nextArrow}`} aria-label="Next local stories" aria-controls="local-stories-track" disabled={edges.end} onClick={()=>move(1)}>›</button>
     </div>
-    <p className={styles.safety}>Checking a particular home? {guideHref && <><Link href={guideHref}>Open the buyer’s guide checks →</Link> · </>}<a href="https://www9.state.nj.us/DEP_WaterWatch_public/" target="_blank" rel="noreferrer">Check the supplier’s current water records ↗</a>. System records do not describe a private well.</p>
+    {!statewide && <p className={styles.safety}>Checking a particular home? {guideHref && <><Link href={guideHref}>Open the buyer’s guide checks →</Link> · </>}<a href="https://www9.state.nj.us/DEP_WaterWatch_public/" target="_blank" rel="noreferrer">Check the supplier’s current water records ↗</a>. System records do not describe a private well.</p>}
   </section>;
 }
