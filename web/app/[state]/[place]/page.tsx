@@ -440,7 +440,7 @@ export default async function RegionPage({
     ...(!marketFirst ? [{ id: "field-notes", label: "Market" }] : []),
     ...(!marketFirst ? [{ id: "about-getting-around", label: "Getting around" }] : []),
     ...(!marketFirst ? [{ id: "about-living-there", label: "Living there" }] : []),
-    ...(marketFirst && consumer ? [{ id: "place-picture", label: "Local picture" }] : []),
+    ...(marketFirst && consumer ? [{ id: "place-picture", label: "AI highlights" }] : []),
     ...(countyTowns.length ? [{ id: "county-towns", label: "Towns" }] : []),
     ...(similar ? [{ id: "place-explore", label: "Similar cheaper places" }] : []),
   ];
@@ -693,8 +693,8 @@ export default async function RegionPage({
       {/* The written reading (counties, 2026-10-28): after the computed figures, in a
           section of its own, rather than above the ranked measures. */}
       {marketFirst && consumer && <section id="place-picture" aria-labelledby="place-picture-heading">
-        <h2 id="place-picture-heading">The local picture</h2>
-        <ConsumerReading reading={consumer} section="what_stands_out" heading="What stands out" headingLevel={3} paperNote />
+        <h2 id="place-picture-heading">AI highlights</h2>
+        <ConsumerReading reading={consumer} section="what_stands_out" heading="What stands out" headingLevel={3} headingHidden paperNote />
       </section>}
       {/* A county's towns, a section of their own after the place (2026-10-28). */}
       {countyTowns.length > 0 && <section id="place-towns" className="place-towns">

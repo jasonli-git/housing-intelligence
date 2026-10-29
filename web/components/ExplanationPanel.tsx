@@ -150,6 +150,7 @@ export function ConsumerReading({
   annotation,
   paperNote = false,
   headingLevel = 2,
+  headingHidden = false,
 }: {
   reading: Explanation | null;
   section: FocusedConsumerSection;
@@ -159,6 +160,8 @@ export function ConsumerReading({
   paperNote?: boolean;
   /** 3 when a section title of its own sits above the reading. */
   headingLevel?: 2 | 3;
+  /** Kept for screen readers when the section title above already says it. */
+  headingHidden?: boolean;
 }) {
   if (!reading || !reading.sections?.length) return children ?? null;
   const { answer, binding } = focusedConsumerAnswer(
@@ -183,7 +186,7 @@ export function ConsumerReading({
       </div>
       <Stale reading={reading} />
       <div className={`consumer-feature-main${annotation ? " consumer-feature-editorial" : ""}`}>
-        {headingLevel === 3 ? <h3 id={id}>{heading ?? answer.heading}</h3> : <h2 id={id}>{heading ?? answer.heading}</h2>}
+        {headingLevel === 3 ? <h3 id={id} className={headingHidden ? "visually-hidden" : undefined}>{heading ?? answer.heading}</h3> : <h2 id={id} className={headingHidden ? "visually-hidden" : undefined}>{heading ?? answer.heading}</h2>}
         {section === "before_moving" ? (
           <div className="consumer-moving-body">
             <ul className="consumer-feature-answer consumer-moving-list">
