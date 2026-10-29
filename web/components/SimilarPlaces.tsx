@@ -20,6 +20,10 @@ const COUNTS = ["", "one", "two", "three", "four", "five"];
 export function SimilarPlaces({ name, state, data }: { name: string; state: string; data: SimilarPlacesData | null }) {
   if (!data) return null;
   const groups = similarGroups(data);
+  const allRows = groups.flatMap((g) => g.rows);
+  const priceRow = allRows.find((r) => r.metric_id === data.price);
+  const commuteRow = allRows.find((r) => r.metric_id === data.commute);
+  const taxRow = allRows.find((r) => r.metric_id === "nj_effective_tax_rate");
   const window = priceWindow(data);
   const measures = groups[0].rows.map((r) => r.label.toLowerCase());
   const cheaper = Math.round((1 - data.cheaper_by) * 100);
@@ -66,6 +70,25 @@ export function SimilarPlaces({ name, state, data }: { name: string; state: stri
         </Link>
       </p>
 
+      {/* Destination cards (2026-10-29): each match's price and what it saves against here,
+          the commute and tax beside it; the table below is the evidence. */}
+      {data.matches.length > 0 && priceRow && <ul className="similar-destinations" aria-label={`Cheaper ${nouns} like ${name}`}>
+        {data.matches.map((m, i) => {
+          const here = priceRow.values[0], there = priceRow.values[i + 1];
+          const commuteHere = commuteRow?.values[0] ?? null, commuteThere = commuteRow?.values[i + 1] ?? null;
+          const tax = taxRow?.values[i + 1] ?? null;
+          return <li key={m.region_id}><Link href={regionPath(m.region_id)} className="similar-destination">
+            <span className="similar-destination-name">{m.name}</span>
+            {there !== null && <span className="similar-destination-price">{formatMetric(there, priceRow.unit, priceRow.metric_id)}</span>}
+            {here !== null && there !== null && here > there && <span className="similar-destination-saving"><b>{formatMetric(here - there, priceRow.unit, priceRow.metric_id)} less</b> · −{Math.round((1 - there / here) * 100)}%</span>}
+            <span className="similar-destination-chips">
+              {commuteHere !== null && commuteThere !== null && <span>Commute {commuteThere - commuteHere >= 0 ? "+" : "−"}{Math.abs(commuteThere - commuteHere).toFixed(1)} min</span>}
+              {tax !== null && taxRow && <span>Tax {formatMetric(tax, taxRow.unit, taxRow.metric_id)}</span>}
+            </span>
+          </Link></li>;
+        })}
+      </ul>}
+
       {data.matches.length > 0 && (
         <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
           <table className="change-places similar-table">
@@ -92,11 +115,12 @@ export function SimilarPlaces({ name, state, data }: { name: string; state: stri
                   </th>
                 </tr>
                 {group.rows.map((row) => (
-                  <tr key={row.metric_id}>
+                  <tr key={row.metric_id} data-similar-row={row.metric_id === data.price ? "price" : undefined}>
                     <th scope="row"><Term id={row.metric_id}>{row.label}</Term></th>
                     {row.values.map((v, i) => (
                       <td className="num" key={places[i].region_id}>
                         {v === null ? "—" : formatMetric(v, row.unit, row.metric_id)}
+                        {group.key === "matched" && i > 0 && <Closeness here={row.values[0]} there={v} unit={row.unit} />}
                       </td>
                     ))}
                   </tr>
@@ -106,6 +130,15 @@ export function SimilarPlaces({ name, state, data }: { name: string; state: stri
           </table>
         </div>
       )}
+      {data.matches.length > 0 && <p className="sales-note similar-closeness-key"><i className="similar-closeness" data-close="near" aria-hidden="true" /> within 3 points of {name} · <i className="similar-closeness" data-close="mid" aria-hidden="true" /> within 8 · <i className="similar-closeness" data-close="far" aria-hidden="true" /> further, on each matched share.</p>}
     </section>
   );
+}
+
+/** How near a match is to here on one matched share: within 3 points, within 8, or more. */
+function Closeness({ here, there, unit }: { here: number | null; there: number | null; unit: string }) {
+  if (here === null || there === null || unit !== "ratio") return null;
+  const points = Math.abs(there - here) * 100;
+  const level = points <= 3 ? "near" : points <= 8 ? "mid" : "far";
+  return <i className="similar-closeness" data-close={level} title={`${points.toFixed(1)} points from here`} aria-hidden="true" />;
 }

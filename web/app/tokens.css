@@ -203,6 +203,8 @@
   --cost-accent: light-dark(#8a5d12, #e2a94a);
   /* About this place's own accent (2026-10-29): a muted green. */
   --place-accent: light-dark(#3f6b3a, #8fc28a);
+  /* Similar cheaper places' own accent (2026-10-29): an explorer's violet. */
+  --explore-accent: light-dark(#5a4aa6, #b4a8f2);
 }
 
 @media (prefers-color-scheme: dark) {
