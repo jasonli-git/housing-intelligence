@@ -10,7 +10,7 @@ import { Crumbs, Kind } from "@/components/Crumbs";
 import { StateOverview } from "@/components/StateOverview";
 import { PlaceDirectory } from "@/components/PlaceDirectory";
 import { PlaceStoryGallery } from "@/components/PlaceStoryGallery";
-import { StoryCard } from "@/components/StoryCard";
+import { StoryCard, StoryCover } from "@/components/StoryCard";
 import { COLLECTIONS } from "@/lib/storyLibrary";
 import { STORIES } from "@/lib/stories";
 import { makePlaceStoryRecord, PLACE_STORIES, summarizePlaceStory, type PlaceStoryTopic } from "@/lib/placeStories";
@@ -211,7 +211,13 @@ export default async function NewJerseyPage() {
       <section id="state-visual-stories" className="state-chapter" aria-labelledby="state-visual-heading">
         <div className="state-chapter-row"><h2 id="state-visual-heading" className="state-chapter-title">Visual stories</h2><Link href="/stories">All stories <span aria-hidden="true">↗</span></Link></div>
         <p className="state-chapter-lede">Only in New Jersey: the state’s character, drawn from the data.</p>
-        <div className="state-story-rail" role="region" aria-label="New Jersey visual stories" tabIndex={0}>{jersey.map(story => <StoryCard key={story.href} story={story} />)}</div>
+        {/* A showcase, not a rail (owner, 2026-10-29): one story large, four beside it,
+            the rest of the collection as a line of links. */}
+        <div className="state-story-showcase">
+          {jersey[0] && <div className="state-story-feature"><StoryCard story={jersey[0]} /></div>}
+          <ul className="state-story-grid">{jersey.slice(1, 5).map(story => <li key={story.href}><Link href={story.href} prefetch={false}><StoryCover story={story} /><span>{story.title}</span></Link></li>)}</ul>
+        </div>
+        {jersey.length > 5 && <p className="state-story-more">More: {jersey.slice(5).map((story, i) => <span key={story.href}>{i > 0 && " · "}<Link href={story.href} prefetch={false}>{story.title}</Link></span>)}</p>}
       </section>
       <section id="state-county-navigation" className="state-chapter">
         <PlaceDirectory id="state-counties" className="town-pills" title="Counties" destinations={(countyRegions?.items ?? []).map(county => ({ id: county.region_id, name: county.name, href: regionPath(county.region_id) }))} preview={Infinity} />

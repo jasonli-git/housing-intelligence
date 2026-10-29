@@ -235,9 +235,21 @@
   main.nj-page .state-chapter-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
   main.nj-page .state-chapter-row a { margin-bottom: 1rem; color: var(--plate-accent); font-size: 13px; text-underline-offset: 3px; }
   main.nj-page .state-chapter-lede { margin: -.4rem 0 1.2rem; color: var(--text-secondary); font-size: 14px; }
-  main.nj-page .state-story-rail { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(240px, 280px); gap: 1.2rem; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; padding-bottom: .8rem; scrollbar-width: thin; }
-  main.nj-page .state-story-rail > * { scroll-snap-align: start; }
-  main.nj-page .state-story-rail:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; border-radius: 8px; }
+  /* Visual stories: a feature beside a 2×2 grid, about one card-row tall. */
+  main.nj-page .state-story-showcase { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 1.2rem; align-items: start; }
+  main.nj-page .state-story-feature .library-card h3 { font-size: clamp(22px, 2.2vw, 28px); margin-top: .9rem; }
+  main.nj-page .state-story-feature .library-card p { font-size: 14px; -webkit-line-clamp: 3; }
+  main.nj-page .state-story-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem .9rem; margin: 0; padding: 0; list-style: none; }
+  main.nj-page .state-story-grid a { display: grid; gap: .45rem; color: var(--text-primary); text-decoration: none; }
+  main.nj-page .state-story-grid a span { font: 400 16px/1.2 Georgia, serif; letter-spacing: -.015em; }
+  main.nj-page .state-story-grid a:hover span { text-decoration: underline; text-underline-offset: .2em; }
+  main.nj-page .state-story-grid .library-cover { aspect-ratio: 2 / 1; border-radius: 11px; }
+  main.nj-page .state-story-feature .library-cover { aspect-ratio: 2 / 1; }
+  main.nj-page .state-story-grid .library-cover-open { display: none; }
+  main.nj-page .state-story-grid a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 11px; }
+  main.nj-page .state-story-more { margin: 1rem 0 0; color: var(--text-secondary); font-size: 13px; line-height: 1.7; }
+  main.nj-page .state-story-more a { color: var(--text-primary); text-underline-offset: 3px; }
+  @media (max-width: 760px) { main.nj-page .state-story-showcase { grid-template-columns: minmax(0, 1fr); } }
   main.nj-page #state-data-stories #place-story-gallery-heading { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
   @media (min-width: 761px) {
