@@ -264,6 +264,9 @@
 .page :global(.cost-receipt-kept > b) { color: var(--good) !important; }
 .page :global(.cost-difference) { grid-column: 1 / -1; margin: 0; padding: .9rem 1.1rem; border-top: 1px solid var(--border); font: 400 clamp(16px, 1.6vw, 19px)/1.45 Georgia, serif; color: var(--text-primary); }
 .page :global(.cost-difference b) { font-weight: 600; }
-.page :global(.cost-fine-print) { grid-column: 1 / -1; display: grid; gap: .3rem; padding: .7rem 1.1rem .9rem; border-top: 1px dashed color-mix(in srgb, var(--text-secondary) 40%, transparent); }
+/* The yellow strip of the omissions, kept (owner, 2026-10-29), holding both lines. */
+.page :global(.cost-fine-print) { grid-column: 1 / -1; display: grid; gap: .3rem; }
 .page :global(.cost-fine-print p) { margin: 0; color: var(--text-secondary); font: 11.5px/1.55 var(--font-text); }
 .page :global(.cost-fine-print b) { color: var(--text-primary); font-weight: 600; }
+.page.page :global(.cost-cards > .cost-fine-print) { display: grid; grid-template-columns: minmax(0, 1fr) !important; gap: .3rem; }
+.page.page :global(.cost-cards > .cost-fine-print > p) { grid-column: 1; margin: 0; }

@@ -821,7 +821,7 @@ export function CostToOwn({
             <div><h4>Renting</h4>{rentingLedger ?? <p>No rent figure. {planning ? "Enter one under ‘Your numbers’ to compare." : "Enter your rent in the buyer’s guide to compare."}</p>}</div>
           </section>
         </>}
-        {compactOverview ? <footer className="cost-fine-print" aria-label="Fine print">
+        {compactOverview ? <footer className="cost-evidence-omissions cost-fine-print" aria-label="Fine print">
           <p><b>Not included:</b> <Glossed text={`the owning estimate leaves out ${listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.`} /></p>
           {rentalCaveat && <p><b>Comparing the two:</b> {rentalCaveat} Owning includes utilities; a quoted rent usually does not.</p>}
         </footer> : <aside className="cost-evidence-omissions" aria-label="Costs not included in the monthly owning estimate">
