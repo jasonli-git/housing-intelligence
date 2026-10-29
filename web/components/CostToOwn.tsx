@@ -752,7 +752,7 @@ export function CostToOwn({
           )}
           <p className="cost-figure" aria-live="polite">
             <b key={compactOverview ? month.total : undefined} className={compactOverview ? "cost-updated-value" : undefined}>{money(month.total)}</b>
-            <span>{compactOverview ? "estimated cash paid each month, including principal" : quiet ? <Glossed text="a month, including principal" /> : "a month, every cost below"}</span>
+            <span>{compactOverview ? <Glossed text="estimated cash paid each month, including principal" /> : quiet ? <Glossed text="a month, including principal" /> : "a month, every cost below"}</span>
           </p>
           {month.loan.fha && (
             <p className="cost-basis">
