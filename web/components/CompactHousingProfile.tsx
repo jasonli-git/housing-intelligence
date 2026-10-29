@@ -4,7 +4,9 @@ import {UpdatedMark} from "./UpdatedMark";
 import styles from "./CompactHousingProfile.module.css";
 
 /** The housing portrait stays separate from the ranked-measure carousel. */
-export function CompactHousingProfile({items,peers}:{items:ProfileItem[];peers:string}) {
+export function CompactHousingProfile({items,peers,standouts=[]}:{items:ProfileItem[];peers:string;
+  /** One or two ranked standouts, shown as figures of the band instead of a rail. */
+  standouts?:{id:string;label:string;value:string;rank:string}[]}) {
   if(!items.length)return null;
   const primary=items.filter(item=>["acs_median_hh_income","acs_renter_cost_burden","modiv_median_year_built"].includes(item.metric_id));
   const picked=primary.length?primary:items.slice(0,3);
@@ -24,7 +26,13 @@ export function CompactHousingProfile({items,peers}:{items:ProfileItem[];peers:s
   </article>)}</div>;
   return <section id="place-housing-profile" className={styles.profile} aria-labelledby="place-housing-profile-heading">
     <h3 id="place-housing-profile-heading">Housing profile</h3>
-    <div data-profile-primary>{figures(picked,true)}</div>
+    <div data-profile-primary className={standouts.length?styles.withStandouts:undefined}>{figures(picked,true)}
+      {standouts.length>0&&<div className={`${styles.figures} ${styles.portrait} ${styles.standouts}`}>{standouts.map(item=><article key={item.id} className={styles.figure} data-standout={item.id}>
+        <div className={styles.label}><span className={styles.standoutTag}>Stands out</span> {item.label}</div>
+        <p className={styles.value}><strong>{item.value}</strong></p>
+        <p className={styles.context}>{item.rank}</p>
+      </article>)}</div>}
+    </div>
     {rest.length>0&&<details className={styles.more} data-profile-more>
       <summary>More about the housing here <span aria-hidden="true">+</span></summary>
       {figures(rest)}

@@ -45,3 +45,15 @@
   .portrait .figure[data-metric="acs_renter_cost_burden"] .dots { right: 0; }
   .portrait .house { width: 48%; }
 }
+
+/* One or two ranked standouts as a fourth figure of the band (2026-10-29). */
+.standoutTag { display: inline-block; margin-right: .3rem; padding: .05rem .4rem; border-radius: 999px; background: color-mix(in srgb, var(--plate-accent) 16%, transparent); color: var(--plate-accent); font: 600 9.5px/1.5 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+.standouts.standouts { grid-template-columns: minmax(0, 1fr); }
+.standoutTag + * { display: block; }
+@media (min-width: 1001px) {
+  .withStandouts { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); column-gap: 1.6rem; }
+  .withStandouts > .standouts { padding-left: 1.6rem; border-left: 1px solid var(--border); }
+}
+@media (max-width: 1000px) {
+  .withStandouts > .standouts { border-top: 1px solid var(--border); }
+}

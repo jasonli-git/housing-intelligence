@@ -311,3 +311,10 @@
 @media (max-width: 760px) {
   :global(body:has(.horizon-page)) main:global(#main-content).page :global(.place-cost-overview > .cost-cards) { grid-template-columns: minmax(0, 1fr) !important; }
 }
+
+/* About this place, its own section (2026-10-29): a muted green accent; the local stories
+   full width beneath the profile, out of the card they shared with the ranked measures. */
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-understand) { --plate-accent: var(--place-accent); }
+.storyShowcase { margin-top: 1.6rem; }
+/* With the standouts folded into the profile, the frame below it has nothing to hold. */
+.fiveSections :global(#place-about-frame:not(:has(#place-comparisons-heading))) { display: none; }

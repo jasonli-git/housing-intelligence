@@ -201,6 +201,8 @@
   /* Monthly costs' own accent (2026-10-29): the amber of its fine print, deep enough
      for small text on a light page and lighter on a dark one. */
   --cost-accent: light-dark(#8a5d12, #e2a94a);
+  /* About this place's own accent (2026-10-29): a muted green. */
+  --place-accent: light-dark(#3f6b3a, #8fc28a);
 }
 
 @media (prefers-color-scheme: dark) {

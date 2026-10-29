@@ -65,7 +65,8 @@ import type { Term as GlossaryTerm } from "@/lib/glossary";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, surveyYears } from "@/lib/periods";
 import { standOuts } from "@/lib/standouts";
-import { firstEnd } from "@/lib/ranks";
+import { firstEnd, ordinal } from "@/lib/ranks";
+import { comparisonMeasures } from "@/lib/placeComparisons";
 import {
   changeMarginLabel,
   marginLabel,
@@ -432,6 +433,11 @@ export default async function RegionPage({
   // Counties only (ARCHITECTURE #368): a town's or ZIP's page never shows one.
   const photo = region.level === "county" ? photoFor(region.geoid) : undefined;
   const housingContext = !marketFirst && quiet && profile.length > 0 ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : null;
+  // The ranked standouts: one or two fold into the profile band as figures of their own
+  // (2026-10-29); three or more keep the ranked-measure rail.
+  const standoutIds = [...new Set(standing.filter(item => item.group === "value").map(item => item.metric_id))];
+  const rankedStandouts = comparisonMeasures(packet.levels, uncertainties, standoutIds);
+  const foldRanks = rankedStandouts.length > 0 && rankedStandouts.length <= 2;
   const sections = [
     { id: "place-overview", label: "Overview" },
     ...(marketFirst ? [{ id: "place-market", label: "Housing market" }] : []),
@@ -570,7 +576,7 @@ export default async function RegionPage({
       {/* The pilot titles the whole section, profile and box together, like the other three. */}
       {marketFirst && <h2 id="place-about-heading">About this place</h2>}
       <QuietAnchor enabled={marketFirst} id="place-about-layout">
-      {marketFirst && <CompactHousingProfile items={profile} peers={peerNoun(peer_level)} />}
+      {marketFirst && <CompactHousingProfile items={profile} peers={peerNoun(peer_level)} standouts={foldRanks ? rankedStandouts.map(({ row, label, best, worst }) => ({ id: row.metric_id, label, value: formatMetric(row.value, row.unit, row.metric_id), rank: `${ordinal(best)}${worst !== best ? `–${ordinal(worst)}` : ""} of ${row.of} ${peerNoun(peer_level)} · ${firstEnd("value", row.direction)}` })) : []} />}
       <QuietAnchor enabled={marketFirst} id="place-about-frame">
       {!marketFirst && <h2>About this place</h2>}
 
@@ -622,9 +628,8 @@ export default async function RegionPage({
       )}
       </ConsumerReading>
       </QuietAnchor>
-      {marketFirst && <div className={styles.placeData}>
-        <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`} revisions={new Map(profile.flatMap(item=>item.updated?[[item.metric_id,item.updated] as const]:[]))} measures={[...new Set(standing.filter(item=>item.group==="value").map(item=>item.metric_id))]}/>
-        <PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} guideHref={`/guide?place=${regionId}#guide-checks-heading`} />
+      {marketFirst && !foldRanks && rankedStandouts.length > 0 && <div className={styles.placeData}>
+        <PlaceComparisonRail name={name} peers={`${scopeName(peer_scope)} ${peerNoun(peer_level)}`} levels={packet.levels} uncertainties={uncertainties} reportHref={`${regionPath(regionId)}/report`} revisions={new Map(profile.flatMap(item=>item.updated?[[item.metric_id,item.updated] as const]:[]))} measures={standoutIds}/>
       </div>}
       <ExhibitGallery>
       {!marketFirst && <>
@@ -689,6 +694,8 @@ export default async function RegionPage({
       </ExhibitGallery>
       </QuietAnchor>
       </QuietAnchor>
+      {/* The local stories, full width under the profile (2026-10-29), not inside a card. */}
+      {marketFirst && <div className={styles.storyShowcase}><PlaceStoryGallery records={placeStoryRecords} artifactUrl={artifactUrl} guideHref={`/guide?place=${regionId}#guide-checks-heading`} /></div>}
       </section>
       {/* The written reading (counties, 2026-10-28): after the computed figures, in a
           section of its own, rather than above the ranked measures. */}
