@@ -680,11 +680,31 @@ export function CostToOwn({
           </div>
   </>;
 
+  // What the estimate assumes, as chips (2026-10-29): each opens "Use your numbers" (and
+  // "More assumptions" for the rate) at the field that changes it.
+  const editAssumption = (target: HTMLElement, label: string, deeper = false) => {
+    const section = target.closest("section");
+    const panel = section?.querySelector<HTMLDetailsElement>(".cost-use-numbers");
+    if (!panel) return;
+    panel.open = true;
+    if (deeper) { const more = panel.querySelector<HTMLDetailsElement>(".cost-yours"); if (more) more.open = true; }
+    requestAnimationFrame(() => {
+      const field = panel.querySelector<HTMLElement>(`[aria-label="${label}"]`);
+      field?.scrollIntoView({ block: "center", behavior: "smooth" });
+      field?.focus({ preventScroll: true });
+    });
+  };
+  const assumptionChips = <div className="cost-assumptions" role="group" aria-label="What the estimate assumes">
+    <button type="button" onClick={(e) => editAssumption(e.currentTarget, "Purchase price")}><span>Price</span> {money(input.price)}</button>
+    <button type="button" onClick={(e) => editAssumption(e.currentTarget, "Down payment")}><span>Down</span> {down}%</button>
+    <button type="button" onClick={(e) => editAssumption(e.currentTarget, "Mortgage rate, %", true)}><span>Rate</span> {input.ratePct.toFixed(2)}%</button>
+  </div>;
+
   return (
     <section className={`section cost${compactOverview ? " place-cost-overview" : ""}`} aria-labelledby={`${id}-heading`}>
       <div className="section-head">
         <h2 id={`${id}-heading`}>{compactOverview ? "Monthly costs" : "What it costs to own and to rent"}</h2>
-        {control && !compactOverview ? downControl : <span className="control-label">{down}% down payment</span>}
+        {control && !compactOverview ? downControl : compactOverview && control && planning ? assumptionChips : <span className="control-label">{down}% down payment</span>}
       </div>
 
       {compactOverview && <p className="cost-overview-meta">Published starting figures: {home.basis === "index" ? "home value" : "sale-price median"} {home.asOf}{rent && ` · rent ${rent.asOf}`} · mortgage benchmark {rate.asOf}. Your inputs adjust the estimates below.</p>}
@@ -851,9 +871,12 @@ export function CostToOwn({
             )}
             {history && (
               <div className="cost-evidence-item">
-                <ReaderDetails title="Five-year history · not a forecast">
+                {compactOverview
+                  // One line, open (2026-10-29), rather than a disclosure of its own.
+                  ? <p className="cost-history-line"><b>Five years back · not a forecast.</b> {history}</p>
+                  : <ReaderDetails title="Five-year history · not a forecast">
                 <p>{history}</p>
-                </ReaderDetails>
+                </ReaderDetails>}
               </div>
             )}
             {noTax && (
