@@ -79,6 +79,8 @@ export function MarketTrend({ points, label, change }: { points: MarketPoint[]; 
       onPointerDown={e => { e.currentTarget.focus({ preventScroll: true }); pick(e); }}>
       <svg viewBox="0 0 160 48" preserveAspectRatio="none" aria-hidden="true">
         <line x1="8" x2="152" y1="40" y2="40" className={styles.axis}/>
+        {/* The quote card's area under the line (2026-10-29). */}
+        <path d={`${marketLine(points, x, y)} L${x(end.date)},40 L${x(start.date)},40 Z`} className={styles.trendArea} />
         <path d={marketLine(points, x, y)} className={styles.trendLine} />
         <line x1={x(selected.date)} x2={x(selected.date)} y1="4" y2="44" className={styles.cursor} />
         <circle cx={x(selected.date)} cy={y(selected.value)} r="4" className={styles.ownDot} />

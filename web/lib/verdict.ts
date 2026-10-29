@@ -211,6 +211,19 @@ export function verdictTitle(metrics: PacketMetric[], levels: PacketLevel[], unc
   return null;
 }
 
+/** The title's rank as figures, for the headline strip's drop number: "79th" of 388, the
+ *  same position `standing` names in words, and null wherever `verdictTitle` is. */
+export function verdictRank(levels: PacketLevel[], uncertainties?: Uncertainties): { place: string; of: number } | null {
+  for (const home of HOME_VALUES) {
+    const level = ranked(levels, home.metric_id);
+    if (!level) continue;
+    if (spread(uncertainties?.value.get(home.metric_id))) return null;
+    const top = level.rank <= Math.ceil(level.of / 2);
+    return { place: ordinal(top ? level.rank : level.of - level.rank + 1), of: level.of };
+  }
+  return null;
+}
+
 /** A compact orientation; the full verdict retains the figures and exact cohort. */
 export function verdictHeadline(peers: Peers, metrics: PacketMetric[], levels: PacketLevel[], uncertainties?: Uncertainties): string | null {
   for (const home of HOME_VALUES) {

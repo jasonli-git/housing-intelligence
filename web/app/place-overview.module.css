@@ -318,3 +318,10 @@
 .storyShowcase { margin-top: 1.6rem; }
 /* With the standouts folded into the profile, the frame below it has nothing to hold. */
 .fiveSections :global(#place-about-frame:not(:has(#place-comparisons-heading))) { display: none; }
+/* About this place: one label style for its parts, the profile's green mono label, and
+   the address checks as a quiet row of links (2026-10-29). */
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-understand :is(#place-story-gallery-heading, #place-comparisons-heading)) { margin: 0 0 .6rem !important; padding: 0 !important; color: var(--plate-accent) !important; font: 600 11px/1.4 var(--font-mono) !important; letter-spacing: .16em !important; text-transform: uppercase; }
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-understand :is(#place-story-gallery-heading, #place-comparisons-heading))::before,
+:global(body:has(.horizon-page)) main:global(#main-content).page :global(#place-understand :is(#place-story-gallery-heading, #place-comparisons-heading))::after { content: none !important; }
+.storyShowcase :global(#place-story-gallery > p:last-child) { margin-top: .8rem; color: var(--text-secondary); font: 12px/1.6 var(--font-text); }
+.storyShowcase :global(#place-story-gallery > p:last-child a) { color: var(--plate-accent); text-underline-offset: 3px; }

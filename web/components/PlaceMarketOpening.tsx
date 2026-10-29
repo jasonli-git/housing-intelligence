@@ -23,10 +23,12 @@ type Props = {
   standing?: string[];
   /** Its short headline, "The 79th most expensive of 388, rising at about the typical pace". */
   standingTitle?: string | null;
+  /** That headline's rank as figures, set large beside it. */
+  standingRank?: { place: string; of: number } | null;
 };
 
 /** Visual evidence replaces the paragraph/rank/change stack; Princeton only for now. */
-export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownId, cohorts, histories, reportHref, revisions, standing = [], standingTitle = null }: Props) {
+export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownId, cohorts, histories, reportHref, revisions, standing = [], standingTitle = null, standingRank = null }: Props) {
   const places = peers.noun === "counties" ? "counties" : /ZIP/i.test(peers.noun) ? "ZIP codes" : "towns";
   const price = homePrice(levels);
   const home = price ? levels.find(l => l.metric_id === (price.basis === "index" ? "zhvi_sfr" : "sr1a_median_sale_price")) : undefined;
@@ -54,14 +56,16 @@ export function PlaceMarketOpening({ levels, metrics, uncertainties, peers, ownI
 
   return <section className={styles.opening} id="place-market" aria-labelledby="place-market-heading">
     <div className={styles.heading}><h2 id="place-market-heading">Housing market</h2><Link href={`${reportHref}#report-measures`}>Figures & sources <span aria-hidden="true">↗</span></Link></div>
-    {standing.length > 0 && <aside className={styles.standing} aria-label="Where it ranks"><div className={styles.standingHead}><span className={styles.standingLabel}>Where it ranks</span>{standingTitle && <p className={styles.standingTitle}>{standingTitle}</p>}</div><div className={styles.standingBody}>{standing.map((sentence) => <p key={sentence}>{sentence}</p>)}</div></aside>}
+    {standing.length > 0 && <aside className={styles.standing} aria-label="Where it ranks">{standingRank && <p className={styles.dropRank} aria-hidden="true"><b>{standingRank.place}</b><span>of {standingRank.of}</span></p>}<div className={styles.standingHead}><span className={styles.standingLabel}>Where it ranks</span>{standingTitle && <p className={styles.standingTitle}>{standingTitle}</p>}</div><div className={styles.standingBody}>{standing.map((sentence) => <p key={sentence}>{sentence}</p>)}</div></aside>}
     <div className={styles.findings}>
       {finding(home, price?.basis === "transactions" ? "Median recorded sale price" : "Typical home value", "No current home-value index or recent qualifying sale-price median is available.", price?.basis === "transactions" ? "Qualifying sales—not the value of every home." : "Modeled value—not a sale price or appraisal.")}
       {finding(rent, "Typical market rent", "No current market-rent index available; survey rents are not asking rents.", "Market benchmark, not existing tenants’ bills. Utilities extra.")}
     </div>
-    {/* The chart key reads after the charts it explains, with their other notes. */}
-    <p className={styles.instruction}>Box: middle half of {places} · line: median · ends: min–max. Hover, drag or use <kbd>←</kbd> <kbd>→</kbd> to explore {places}.</p>
-    <p className={styles.annotation}>Same-month statewide comparisons—not just nearby {places}. Trends use separate scales and nominal dollars, not inflation-adjusted.</p>
+    {/* The chart key and the charts' notes, one footnote block (2026-10-29). */}
+    <footer className={styles.footnotes}>
+      <p className={styles.instruction}>Box: middle half of {places} · line: median · ends: min–max. Hover, drag or use <kbd>←</kbd> <kbd>→</kbd> to explore {places}.</p>
+      <p className={styles.annotation}>Same-month statewide comparisons—not just nearby {places}. Trends use separate scales and nominal dollars, not inflation-adjusted.</p>
+    </footer>
     {occupied && occupied.value >= 0 && occupied.value <= 1 && <div className={styles.stock} data-portrait="tenure">
       <div className={styles.tenureLabels}><span><b>{formatMetric(occupied.value, occupied.unit, occupied.metric_id)}</b> Owner-occupied</span><span>Rented <b>{formatMetric(1 - occupied.value, occupied.unit, occupied.metric_id)}</b></span></div>
       <div className={styles.tenureBar} role="img" aria-label={`${formatMetric(occupied.value, occupied.unit, occupied.metric_id)} owner-occupied; ${formatMetric(1 - occupied.value, occupied.unit, occupied.metric_id)} rented, among occupied homes`}><span style={{ width: `${occupied.value * 100}%` }} /></div>

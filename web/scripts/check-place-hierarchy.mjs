@@ -50,7 +50,7 @@ try {
         const value=el.parentElement.firstElementChild.getBoundingClientRect(),chart=el.getBoundingClientRect();
         return chart.x<=value.x+1 && chart.right>=value.right-1 && chart.y<=value.y && chart.bottom>=value.bottom;
       }),'wide trend sits behind its overlaid headline');
-      assert.equal((await svg.boundingBox()).height,48,'wide background sparkline keeps a compact height');
+      assert.equal((await svg.boundingBox()).height,92,'the quote card area chart fills its card height (2026-10-29)');
       const before = await plot.locator('output').textContent();
       await control.focus(); await page.keyboard.press('Home');
       assert.notEqual(await plot.locator('output').textContent(), before);

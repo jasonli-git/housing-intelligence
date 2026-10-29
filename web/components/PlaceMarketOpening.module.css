@@ -75,3 +75,41 @@
 .standingBody p + p { margin-top: .35rem; }
 .standingBody:only-child { grid-column: 1 / -1; }
 @media(max-width:760px) { .standing { grid-template-columns: minmax(0,1fr); } }
+
+/* The housing market, its own section (2026-10-29): the ranked headline as a newspaper
+   markets strip with a drop number; the two figures as quote cards, each value over its
+   five-year line with the area beneath; the notes as one footnote block. */
+.standing.standing { grid-template-columns: auto minmax(0,1fr) minmax(0,1.25fr); padding: .2rem 0 1.1rem; margin: .8rem 0 1.2rem; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--plate-accent) 30%, var(--border)); border-radius: 0; background: none; }
+.dropRank { display: grid; justify-items: start; margin: 0; padding-right: 1.4rem; border-right: 1px solid var(--border); }
+.dropRank b { margin-bottom: .35rem; color: var(--plate-accent); font: 400 clamp(46px, 5.2vw, 64px)/.95 Georgia, serif; letter-spacing: -.045em; }
+.dropRank span { color: var(--text-secondary); font: 500 11px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+@media (max-width: 760px) { .standing.standing { grid-template-columns: auto minmax(0,1fr); } .standing.standing .standingBody { grid-column: 1 / -1; } }
+
+.findings.findings { gap: 1.2rem; border: 0; }
+.finding.finding { padding: 1rem 1.1rem .7rem; border: 1px solid color-mix(in srgb, var(--plate-accent) 22%, var(--glass-edge, var(--border))); border-radius: 14px; background: linear-gradient(180deg, color-mix(in srgb, var(--plate-accent) 7%, transparent), transparent 70%), var(--glass, var(--surface-card)); }
+.finding.finding + .finding { border-left: 1px solid color-mix(in srgb, var(--plate-accent) 22%, var(--glass-edge, var(--border))); padding-left: 1.1rem; padding-right: 1.1rem; }
+.finding .valueAndTrend { min-height: 104px; }
+.finding .valueAndTrend .figure { flex: none; text-align: left; font-size: clamp(34px, 3.4vw, 44px); }
+.finding .trend { height: 104px; }
+.finding .trend .plotControl { height: 104px; }
+.finding .trend .plotControl svg { height: 92px; }
+.finding .trend .plotControl :is(path, circle, line) { opacity: .75; }
+.trendArea { fill: color-mix(in srgb, var(--portrait-colour) 16%, transparent); stroke: none; }
+.finding .sparkChange { top: .1rem; left: 0; right: auto; padding: .15rem .5rem; border-radius: 999px; background: color-mix(in srgb, var(--portrait-colour) 14%, transparent); font: 600 11px/1.4 var(--font-mono); }
+
+.footnotes { display: grid; gap: .1rem; margin-top: .9rem; padding-top: .6rem; border-top: 1px dashed color-mix(in srgb, var(--text-secondary) 40%, transparent); }
+.footnotes :is(.instruction, .annotation) { margin: 0; font: 11px/1.55 var(--font-mono); letter-spacing: -.01em; }
+
+/* Owners and renters, a slim labelled strip in the quote cards' style. */
+.stock.stock { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .3rem .9rem; margin-top: 1rem; padding: .7rem 1.1rem; border: 1px solid color-mix(in srgb, var(--plate-accent) 22%, var(--glass-edge, var(--border))); border-radius: 12px; background: var(--glass, var(--surface-card)); }
+.stock .tenureLabels { display: contents; }
+.stock .tenureLabels > span:first-child { grid-column: 1; grid-row: 1; }
+.stock .tenureLabels > span:last-child { grid-column: 3; grid-row: 1; }
+.stock .tenureBar { grid-column: 2; grid-row: 1; margin: 0; }
+.stock > .annotation { grid-column: 1 / -1; margin: 0; font: 11px/1.5 var(--font-mono); }
+@media (max-width: 600px) { .finding.finding + .finding { border-top: 1px solid color-mix(in srgb, var(--plate-accent) 22%, var(--border)); padding-left: 1.1rem; } }
+@media (max-width: 600px) {
+  .stock.stock { grid-template-columns: minmax(0, 1fr) auto; }
+  .stock .tenureLabels > span:last-child { grid-column: 2; }
+  .stock .tenureBar { grid-column: 1 / -1; grid-row: 2; }
+}

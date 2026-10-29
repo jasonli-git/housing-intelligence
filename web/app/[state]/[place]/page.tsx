@@ -76,7 +76,7 @@ import {
 } from "@/lib/uncertainty";
 import {
   housingProfile,
-  verdictHeadline, verdictTitle,
+  verdictHeadline, verdictTitle, verdictRank,
   type PaycheckAnswer,
   paycheckAnswers,
   paychecks,
@@ -535,7 +535,7 @@ export default async function RegionPage({
       {marketFirst && <PlaceMarketOpening levels={packet.levels} metrics={packet.metrics}
         uncertainties={uncertainties} peers={peers} ownId={regionId} cohorts={marketCohorts} histories={series}
         reportHref={`${regionPath(regionId)}/report`}
-        standingTitle={verdictTitle(packet.metrics, packet.levels, uncertainties)}
+        standingTitle={verdictTitle(packet.metrics, packet.levels, uncertainties)} standingRank={verdictRank(packet.levels, uncertainties)}
         standing={[lead || headline, trade].filter((sentence): sentence is string => Boolean(sentence))}
         revisions={new Map([...revisedBy].flatMap(([id, change]) => {
           const row = packet.levels.find(l => l.metric_id === id && l.period_start === change.period_start);
