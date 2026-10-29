@@ -844,6 +844,8 @@ export function CostToOwn({
         {compactOverview ? <footer className="cost-evidence-omissions cost-fine-print" aria-label="Fine print">
           <p><b>Not included:</b> <Glossed text={`the owning estimate leaves out ${listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.`} /></p>
           {rentalCaveat && <p><b>Comparing the two:</b> {rentalCaveat} Owning includes utilities; a quoted rent usually does not.</p>}
+          {history && <p><b>Five years back, not a forecast:</b> {history}</p>}
+          {noTax && <p><b>Tax:</b> {noTax}</p>}
         </footer> : <aside className="cost-evidence-omissions" aria-label="Costs not included in the monthly owning estimate">
           <p className="cost-evidence-label">
             <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
@@ -859,7 +861,7 @@ export function CostToOwn({
 
       {compactOverview && overviewContext && <div className="place-overview-context">{overviewContext}</div>}
 
-      {control && (
+      {control && !compactOverview && (
         <div className="cost-strip cost-evidence">
           {beforeMoving}
           <div className="cost-evidence-grid">
@@ -871,12 +873,9 @@ export function CostToOwn({
             )}
             {history && (
               <div className="cost-evidence-item">
-                {compactOverview
-                  // One line, open (2026-10-29), rather than a disclosure of its own.
-                  ? <p className="cost-history-line"><b>Five years back · not a forecast.</b> {history}</p>
-                  : <ReaderDetails title="Five-year history · not a forecast">
+                <ReaderDetails title="Five-year history · not a forecast">
                 <p>{history}</p>
-                </ReaderDetails>}
+                </ReaderDetails>
               </div>
             )}
             {noTax && (
