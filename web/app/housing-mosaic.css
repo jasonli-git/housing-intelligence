@@ -27,6 +27,8 @@
 .housing-mosaic [data-group="1"] { --mosaic-color:var(--mosaic-1); }
 .housing-mosaic [data-group="2"] { --mosaic-color:var(--mosaic-2); }
 .housing-mosaic [data-group="3"] { --mosaic-color:var(--mosaic-3); }
+/* A fifth group (the commute mix), mixed from two of the four. */
+.housing-mosaic [data-group="4"] { --mosaic-color:color-mix(in srgb,var(--mosaic-1) 45%,var(--mosaic-2)); }
 .mosaic-denominator { font:11px/1.5 var(--font-mono); color:var(--text-muted); margin:0 0 .5rem; }
 .mosaic-selected { min-height:115px; }
 .mosaic-selected strong { font:400 38px/1.1 var(--font-display); letter-spacing:-.05em; margin-right:.55rem; }

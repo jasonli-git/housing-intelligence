@@ -19,7 +19,7 @@ import { regionPath } from "@/lib/placeRoutes";
 import { PlaceSectionNav } from "@/components/PlaceSectionNav";
 import layout from "@/components/ExplorationResearch.module.css";
 import { HousingMosaic } from "@/components/HousingMosaic";
-import { statewideMosaicViews } from "@/lib/housingMosaic";
+import { statewideCommuteView } from "@/lib/housingMosaic";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { MoreExpander } from "@/components/MoreExpander";
 import Link from "next/link";
@@ -32,7 +32,6 @@ import { WINDOWS } from "@/lib/windows";
 import { definitionOf } from "@/lib/definitions";
 import { stateFigurePeriod } from "@/lib/stateEntry";
 import { marginLabel } from "@/lib/uncertainty";
-import { constructionYears } from "@/lib/construction";
 import { pageMetadata } from "@/lib/meta";
 import "../../new-jersey.css";
 import "../../housing-entry.css";
@@ -202,7 +201,8 @@ export default async function NewJerseyPage() {
       <PlaceSectionNav label="State sections" sections={[{id:"state-overview",label:"Housing market"},{id:"state-data-stories",label:"Statewide data"},{id:"state-visual-stories",label:"Visual stories"},{id:"state-county-navigation",label:"Counties"},...(STATE_EVIDENCE_ENABLED ? [{id:"state-detailed-data",label:"Every figure"}] : [])]} />
       <div className="state-chapters">
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels}>
-        <HousingMosaic embedded statewide name="New Jersey" views={statewideMosaicViews(packet?.levels ?? [], constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter(r => r.preliminary).map(r => r.year))} />
+        {/* The commute mix (owner, 2026-10-29); the new-homes mix moved to the building story. */}
+        <HousingMosaic embedded statewide name="New Jersey" title="Where workers commute" views={[statewideCommuteView(packet?.levels ?? [])].filter((v): v is NonNullable<typeof v> => v !== null)} />
       </StateOverview>
       {storyRecords.length > 0 && <section id="state-data-stories" className="state-chapter" aria-labelledby="state-data-heading">
         <h2 id="state-data-heading" className="state-chapter-title">Statewide data</h2>

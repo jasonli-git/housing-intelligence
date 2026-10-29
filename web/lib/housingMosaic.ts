@@ -112,3 +112,27 @@ export function statewideMosaicViews(levels: PacketLevel[], preliminaryYears: nu
   }
   return views;
 }
+
+/** Where New Jersey's working residents work (2026-10-29): their own county, elsewhere in
+ *  the state, New York City, Pennsylvania or another state — five shares of one LODES
+ *  year that together are every working resident. */
+export function statewideCommuteView(levels: PacketLevel[]): MosaicView | null {
+  const total = levels.find(r => r.metric_id === "lodes_resident_jobs" && r.source_id === "census_lodes" && Number.isFinite(r.value) && r.value > 0);
+  if (!total) return null;
+  const specs = [
+    ["lodes_work_home_county_share", "Home county", "Work in the county they live in."],
+    ["lodes_work_other_nj_share", "Elsewhere in NJ", "Work in another New Jersey county."],
+    ["lodes_work_nyc_share", "New York City", "Work in one of New York City’s five boroughs."],
+    ["lodes_work_pennsylvania_share", "Pennsylvania", "Work across the Delaware, in Pennsylvania."],
+    ["lodes_work_other_state_share", "Other states", "Work in any other state."],
+  ];
+  const rows = specs.map(([id]) => levels.find(r => r.metric_id === id && r.source_id === total.source_id && r.release_id === total.release_id
+    && r.period_start === total.period_start && r.period_end === total.period_end && Number.isFinite(r.value) && r.value >= 0 && r.value <= 1));
+  if (!rows.every((r): r is PacketLevel => !!r)) return null;
+  // The five places are exhaustive; a distribution that does not add up is not drawn.
+  if (Math.abs(rows.reduce((sum, r) => sum + r.value, 0) - 1) > .005) return null;
+  const year = total.period_end.slice(0, 4);
+  return { id: "commute", label: "Where workers commute", denominator: `${Math.round(total.value).toLocaleString("en-US")} working residents`,
+    period: year, source: "census_lodes", evidence: `Census LEHD origin–destination records · ${year}. Primary jobs of New Jersey residents, by where the job is.`,
+    groups: rows.map((r, i) => ({ label: specs[i][1], share: r.value, margin: null, note: specs[i][2] })) };
+}
