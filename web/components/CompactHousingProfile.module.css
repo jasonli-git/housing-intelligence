@@ -37,3 +37,11 @@
 .more > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 @media(prefers-reduced-motion:reduce) { .more > summary > span { transition: none; } }
 @media print { .dots,.house { display: none; } }
+
+/* Wide enough, the profile is a band: its three figures side by side. */
+@media (min-width: 1001px) {
+  .figures.portrait { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 1.6rem; }
+  .portrait .figure + .figure { border-top: 0; padding-left: 1.6rem; border-left: 1px solid var(--border); }
+  .portrait .figure[data-metric="acs_renter_cost_burden"] .dots { right: 0; }
+  .portrait .house { width: 48%; }
+}

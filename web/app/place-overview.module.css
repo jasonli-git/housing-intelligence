@@ -68,8 +68,10 @@
 .placeData { margin-top: .8rem; }
 .page :global(#place-about-layout) { display: grid; grid-template-columns: minmax(0,1fr); gap: 1.25rem; align-items: start; }
 .page :global(#place-about-layout > *) { min-width: 0; margin: 0; }
+/* Stacked at every width (2026-10-29): the profile is a band across the top, the ranked
+   measures and stories a full-width card below it. */
 @media(min-width:1001px) {
-  .page :global(#place-about-layout) { grid-template-columns: minmax(290px,1fr) minmax(0,2fr); gap: 1.5rem; }
+  .page :global(#place-about-layout) { gap: 1.5rem; }
 }
 @media print { .page :global(#place-about-layout) { display: block; } }
 .placeData > section { margin: 0; }
