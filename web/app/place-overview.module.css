@@ -349,3 +349,15 @@
 .page :global(.similar-closeness[data-close="mid"]) { background: linear-gradient(90deg, var(--explore-accent) 50%, transparent 50%); }
 .page.page :global(#place-explore a.similar-destination) { border-radius: 14px !important; }
 .page.page :global(#place-explore .similar-table thead a) { color: var(--explore-accent) !important; }
+
+/* The page's close: a hairline, one sentence, and its links as quiet pills. */
+.pageClose { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .8rem 1.5rem; }
+.pageClose > p { margin: 0; max-width: 46ch; }
+.pageClose > nav { display: flex; flex-wrap: wrap; gap: .45rem; }
+:global(body:has(.horizon-page)) main .pageClose > nav a { display: inline-flex; align-items: center; gap: .35rem; min-height: 34px; padding: 0 .8rem; border: 1px solid var(--glass-edge, var(--border)); border-radius: 999px; background: var(--glass, var(--surface-card)); font-size: 13px; text-decoration: none !important; }
+:global(body:has(.horizon-page)) main .pageClose > nav a:hover { border-color: var(--plate-accent); }
+/* On a phone the destination cards scroll sideways rather than stack five deep. */
+@media (max-width: 600px) {
+  .page :global(.similar-destinations) { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(200px, 72%); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; padding-bottom: .5rem; }
+  .page :global(.similar-destinations > li) { scroll-snap-align: start; }
+}

@@ -712,11 +712,16 @@ export default async function RegionPage({
       <SimilarPlaces name={name} state={region.state_code} data={similar} />
       </div>
 
-      <p className="place-report-line" id="region-detailed-data">
-        Want every figure? <Link href={`${regionPath(regionId)}/report`}>The full report</Link> has each measure ranked, its history, sources and downloads.
-        {marketFirst && <> <Link href={`${regionPath(regionId)}/report#report-community`}>Public-safety reporting & sources →</Link></>}
-        {" "}Something look wrong? <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a>.
-      </p>
+      {/* The page's close (2026-10-29): one sentence, then its three ways onward as quiet
+          links, instead of a run-on line. */}
+      <footer className={`place-report-line${marketFirst ? ` ${styles.pageClose}` : ""}`} id="region-detailed-data">
+        <p>Want every figure? <Link href={`${regionPath(regionId)}/report`}>The full report</Link> has each measure ranked, its history, sources and downloads.</p>
+        <nav aria-label="More about this place">
+          <Link href={`${regionPath(regionId)}/report`}>Full report <span aria-hidden="true">↗</span></Link>
+          {marketFirst && <Link href={`${regionPath(regionId)}/report#report-community`}>Public-safety reporting & sources <span aria-hidden="true">↗</span></Link>}
+          <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page <span aria-hidden="true">↗</span></a>
+        </nav>
+      </footer>
       </div>
       </main>
     </>
