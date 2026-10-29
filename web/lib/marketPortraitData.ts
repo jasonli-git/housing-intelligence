@@ -2,9 +2,10 @@ import { api, type PacketLevel } from "./api";
 import { matchedMarketPeers, type MarketCohort } from "./marketPortrait";
 
 /** Local prototype only. No extra browser fetch or new published artifact. */
-export async function marketPortraitData(state: string, levels: PacketLevel[]): Promise<MarketCohort[]> {
+export async function marketPortraitData(state: string, levels: PacketLevel[], level = "municipality"): Promise<MarketCohort[]> {
+  // A place is set among places of its own kind: towns, counties or ZIP codes.
   const [towns, counties] = await Promise.all([
-    api.regions(`state=${encodeURIComponent(state)}&level=municipality&limit=1000`),
+    api.regions(`state=${encodeURIComponent(state)}&level=${level}&limit=1000`),
     api.regions(`state=${encodeURIComponent(state)}&level=county&limit=1000`),
   ]);
   if (!towns) return [];

@@ -35,7 +35,7 @@ it("keeps prices, rents, dates, interpretation limits and statewide cohorts visi
   expect(container.querySelectorAll('[data-distribution="box-range"]')).toHaveLength(2);
   expect(container.querySelector('[data-portrait="peers"] circle')).toBeNull();
   expect(container.textContent).toContain("Box: middle half of towns");
-  expect(container.textContent).toContain("Observed town range");
+  expect(container.textContent).toContain("Observed range across towns");
   expect(screen.getByRole("link", { name: /Figures & sources/ }).getAttribute("href")).toBe("/nj/princeton/report#report-measures");
   expect(screen.queryByRole("link", { name: /living here cost/ })).toBeNull();
   expect(screen.queryByRole("link", { name: /Explore your buying plans/ })).toBeNull();

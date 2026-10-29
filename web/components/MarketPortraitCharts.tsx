@@ -21,12 +21,14 @@ function pointerX(event: PointerEvent<HTMLDivElement>, width=W) {
   return (event.clientX - rect.left) / rect.width * width;
 }
 
-export function MarketPeerPlot({ cohort, ownId, value, label, scope }: { cohort?: MarketCohort; ownId: number; value: number; label: string; scope: string }) {
+export function MarketPeerPlot({ cohort, ownId, value, label, scope, places = "towns" }: { cohort?: MarketCohort; ownId: number; value: number; label: string; scope: string;
+  /** What the cohort is, plural: towns, counties or ZIP codes. */
+  places?: string }) {
   const points = useMemo(()=>[...(cohort?.points??[])].sort((a,b)=>a.value-b.value||a.id-b.id),[cohort]);
   const distribution = useMemo(()=>marketDistribution(points.map(p=>p.value)),[points]);
   const own = points.findIndex(p => p.id === ownId && Math.abs(p.value - value) < .01);
   const [index, setIndex] = useState(own < 0 ? 0 : own);
-  if (!distribution || own < 0) return <p className={styles.annotation}>Same-month town comparison unavailable.</p>;
+  if (!distribution || own < 0) return <p className={styles.annotation}>Same-month comparison unavailable.</p>;
   const selected = points[index] ?? points[own];
   const {min,q1,median,q3,max}=distribution;
   const x = (v: number) => max===min?W/2:18+(v-min)/(max-min)*(W-36);
@@ -35,8 +37,8 @@ export function MarketPeerPlot({ cohort, ownId, value, label, scope }: { cohort?
     setIndex(points.reduce((best, p, i) => Math.abs(x(p.value) - px) < Math.abs(x(points[best].value) - px) ? i : best, 0));
   };
   return <div className={styles.peerPlot} data-portrait="peers" data-peer-count={points.length}>
-    <p className={styles.chartLabel}>Where it sits <span>{points.length} of {cohort!.total} {scope} towns · {periodLabel(cohort!.period, cohort!.metricId)}</span></p>
-    <div className={styles.plotControl} role="slider" tabIndex={0} aria-label={`Explore ${label} across ${scope} towns`}
+    <p className={styles.chartLabel}>Where it sits <span>{points.length} of {cohort!.total} {scope} {places} · {periodLabel(cohort!.period, cohort!.metricId)}</span></p>
+    <div className={styles.plotControl} role="slider" tabIndex={0} aria-label={`Explore ${label} across ${scope} ${places}`}
       aria-valuemin={0} aria-valuemax={points.length - 1} aria-valuenow={index} aria-valuetext={`${selected.name}: ${money(selected.value)}`}
       onKeyDown={e => step(e, index, points.length, setIndex)} onPointerMove={e => { if (e.pointerType === "mouse" || e.buttons) pick(e); }}
       onPointerDown={e => { e.currentTarget.focus({ preventScroll: true }); pick(e); }}>
@@ -53,11 +55,11 @@ export function MarketPeerPlot({ cohort, ownId, value, label, scope }: { cohort?
       </svg>
     </div>
     <p className={styles.distributionNote}>Middle 50%: {shortMoney(q1)}–{shortMoney(q3)} · median {shortMoney(median)}</p>
-    <span className="visually-hidden">Observed town range {money(min)} to {money(max)}; lower quartile {money(q1)}, median {money(median)}, upper quartile {money(q3)}. These are town benchmarks, not individual homes.</span>
+    <span className="visually-hidden">Observed range across {places}, {money(min)} to {money(max)}; lower quartile {money(q1)}, median {money(median)}, upper quartile {money(q3)}. These are area benchmarks, not individual homes.</span>
     <div className={styles.peerReading} aria-live="polite" aria-atomic="true"><span>{selected.name} <b>{money(selected.value)}</b></span>
       {index !== own ? <Link href={`/compare?places=${ownId},${selected.id}`}>Compare <span aria-hidden="true">↗</span></Link> : <span className={styles.annotation}>Highlighted</span>}
     </div>
-    <noscript><p>Interactive town selection requires JavaScript. The marker and headline show this town; the box shows the middle half of measured towns.</p></noscript>
+    <noscript><p>Interactive selection requires JavaScript. The marker and headline show this place; the box shows the middle half of measured {places}.</p></noscript>
   </div>;
 }
 

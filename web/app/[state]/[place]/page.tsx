@@ -302,7 +302,7 @@ export default async function RegionPage({
   const quiet = ["county", "municipality", "zip"].includes(region.level);
   // The market-first layout, piloted on Princeton and now every county, town and ZIP.
   const marketFirst = quiet;
-  const marketCohorts = marketFirst ? await marketPortraitData(region.state_code, packet.levels) : [];
+  const marketCohorts = marketFirst ? await marketPortraitData(region.state_code, packet.levels, region.level) : [];
   const placeStoryRecords = marketFirst ? (Object.keys(PLACE_STORIES) as PlaceStoryTopic[]).filter(topic => topic !== "past").map(topic => stampPlaceStory(makePlaceStoryRecord(topic,
     { region_id: regionId, name: region.name, level: region.level, state_code: region.state_code, geoid: region.geoid }, packet.levels,
     { metrics: topic === "market" ? packet.metrics : [],
