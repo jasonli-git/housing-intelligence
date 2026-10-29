@@ -228,8 +228,8 @@
   }
   body:has(.horizon-page) main.nj-page #state-overview-heading::before { content: "01" / ""; }
   body:has(.horizon-page) main.nj-page #state-counties h2::before { content: "04" / ""; }
-  body:has(.horizon-page) main.nj-page #state-visual-heading::before { content: "02" / ""; }
-  body:has(.horizon-page) main.nj-page #state-data-heading::before { content: "03" / ""; }
+  body:has(.horizon-page) main.nj-page #state-visual-heading::before { content: "03" / ""; }
+  body:has(.horizon-page) main.nj-page #state-data-heading::before { content: "02" / ""; }
   /* The overview was a card; now it is a chapter like the others. */
   main.nj-page.quiet-state .state-chapters .state-overview { padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: none !important; box-shadow: none !important; }
   main.nj-page .state-chapter-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
