@@ -461,7 +461,7 @@ export default async function RegionPage({
         <div className="region-head-main">
           <Crumbs
             trail={[
-              { href: "/", label: "United States" },
+              { href: "/", label: "Home" },
               ...stateCrumbs(region.state_code),
               ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : []),
             ]}

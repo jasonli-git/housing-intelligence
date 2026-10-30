@@ -44,12 +44,13 @@ export default async function SourcesPage() {
 
   return (
     <>
-      <Masthead affordability={{ kind: "hidden" }} />
+      <Masthead affordability={{ kind: "route" }} />
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history legal-page sources-page" data-terms="off">
         <header className="page-head">
           <div>
-            <Crumbs trail={[{ href: "/", label: "United States" }]} here="Sources and notices" />
+            <Crumbs trail={[{ href: "/", label: "Home" }]} here="Sources and notices" />
             <h1 className="page-title">Sources and notices</h1>
+            <p className="meta"><Link href="/data">Explore how the data is built <span aria-hidden="true">→</span></Link></p>
             <p className="meta">
               Every figure on this site comes from one of these {external.length} sources. Each is listed with
               the terms it sets and, where it asks for one, its notice in full. How current each is

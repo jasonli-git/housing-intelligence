@@ -23,7 +23,7 @@ export default async function HousingHelpPage() {
     <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-tool housing-help-page horizon-page ${styles.helpPage}`} data-region-level="help">
       <header className="page-head" data-kind="tool">
         <div>
-        <Crumbs trail={[{href: "/", label: "United States"}]} here="Housing help" />
+        <Crumbs trail={[{href: "/", label: "Home"}]} here="Housing help" />
         <Kind kind="tool" />
         <h1 className={`page-title ${styles.title}`}>Housing help</h1>
         <p className="tool-subtitle">Find an official assistance route or search New Jersey’s reported affordable properties.</p>

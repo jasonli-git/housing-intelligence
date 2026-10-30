@@ -20,14 +20,14 @@ it("searches the catalog and traces a figure into lineage", () => {
   expect(screen.getByRole("status").textContent).toBe("0 matching");
   fireEvent.change(screen.getByRole("searchbox"), { target: { value: "rent" } });
   fireEvent.click(screen.getByRole("button", { name: /Trace this figure/ }));
-  expect(screen.getByRole("tab", { name: "Lineage" }).getAttribute("aria-selected")).toBe("true");
+  expect(screen.getByRole("tab", { name: "Interactive lineage" }).getAttribute("aria-selected")).toBe("true");
   expect(location.hash).toBe("#lineage");
   expect(screen.getByRole("button", { name: "stg_fred" })).toBeTruthy();
 });
 
 it("opens the area named in the address", () => {
-  history.replaceState(null, "", "#quality");
+  history.replaceState(null, "", "#profiling");
   render(<DataExplorer catalog={catalog} />);
-  expect(screen.getByRole("tab", { name: "Quality" }).getAttribute("aria-selected")).toBe("true");
-  expect(screen.getByText("Tests declared")).toBeTruthy();
+  expect(screen.getByRole("tab", { name: "Data profiling" }).getAttribute("aria-selected")).toBe("true");
+  expect(screen.getByText(/tests are declared/)).toBeTruthy();
 });

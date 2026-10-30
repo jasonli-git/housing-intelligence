@@ -8,7 +8,7 @@ export type CatalogSource = { id: string; name: string; publisher: string; caden
 export type CatalogModel = { name: string; description: string; rows: number | null; columns: CatalogColumn[]; tests: number; upstream: string[]; sources: string[]; metrics: string[] };
 export type CatalogTable = { name: string; rows: number; bytes: number; columns: CatalogColumn[]; foreign_keys: { column: string; references: string }[] };
 export type CatalogMetric = { id: string; label: string; unit: string; frequency: string; kind: string; description: string; source: string; inputs: string[]; observations: number; places: number; first: string | null; last: string | null };
-export type Catalog = { sources: CatalogSource[]; models: CatalogModel[]; tables: CatalogTable[]; metrics: CatalogMetric[] };
+export type Catalog = { sources: CatalogSource[]; models: CatalogModel[]; tables: CatalogTable[]; metrics: CatalogMetric[]; storage?: { name: string; bytes: number }[] };
 
 export type FlowNode = { id: string; label: string };
 export type FlowColumn = { title: string; nodes: FlowNode[]; hidden?: number };
@@ -81,5 +81,6 @@ export function tableFlow(tables: CatalogTable[]): Flow {
 }
 
 export function shortBytes(bytes: number) {
+  if (bytes >= 1073741824) return `${(bytes / 1073741824).toFixed(1)} GB`;
   return bytes >= 1048576 ? `${Math.round(bytes / 1048576).toLocaleString("en-US")} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }

@@ -51,6 +51,7 @@ export function Masthead({
     <Link className="bar-link" href="/guide" aria-current={guideActive ? "page" : undefined}>Buyer’s guide</Link>
     <Link className="bar-link" href="/tax" aria-current={taxActive ? "page" : undefined}>Property tax</Link>
     <Link className="bar-link" href="/help" aria-current={helpActive ? "page" : undefined}>Housing help</Link>
+    <Link className="bar-link" href="/data">Data explorer</Link>
   </>;
   return (
     <>

@@ -9,7 +9,7 @@ export type AffordabilityControl =
   | { kind: "local"; fallbackHref?: string }
   | { kind: "route"; active?: boolean }
   | { kind: "disabled"; reason: string }
-  // Not shown on policy/source-history pages. The home page explicitly opts into
+  // Every page shows it today; the kind remains for a page that should not. The home page opts into
   // the tool link. "disabled" stays where the control belongs but cannot work.
   | { kind: "hidden" };
 

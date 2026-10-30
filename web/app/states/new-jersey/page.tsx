@@ -179,7 +179,7 @@ export default async function NewJerseyPage() {
       <header className="page-head nj-head has-photo" data-kind="state">
         <GardenStateArtwork header />
         <div className="region-head-main">
-          <Crumbs trail={[{ href: "/", label: "United States" }]} here="New Jersey" hereKind="state" />
+          <Crumbs trail={[{ href: "/", label: "Home" }]} here="New Jersey" hereKind="state" />
           <div className="page-head-eyebrow">
             <Kind kind="state" />
             {population && (

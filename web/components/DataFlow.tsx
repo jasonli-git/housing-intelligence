@@ -8,7 +8,7 @@ const ROW = 46;
 const WIDTH = 1000;
 
 /** Columns of nodes joined by curves. On a phone the columns stack and the curves go. */
-export function DataFlow({ flow, active, label, onSelect }: { flow: Flow; active: string; label: string; onSelect: (id: string) => void }) {
+export function DataFlow({ flow, active, label, onSelect, focused = false }: { flow: Flow; active: string; label: string; onSelect: (id: string) => void; focused?: boolean }) {
   const count = flow.columns.length;
   const gap = 90;
   const width = (WIDTH - gap * (count - 1)) / count;
@@ -22,13 +22,16 @@ export function DataFlow({ flow, active, label, onSelect }: { flow: Flow; active
     return at;
   }, [flow, width, height]);
   const touched = (a: string, b: string) => a === active || b === active;
+  // With many joins, only the selected node's are drawn, and the rest of the graph recedes.
+  const edges = focused ? flow.edges.filter(([a, b]) => touched(a, b)) : flow.edges;
+  const linked = new Set(edges.flat());
   return <div className={styles.flow} role="group" aria-label={label}>
     <div className={styles.flowHeads} style={{ gridTemplateColumns: `repeat(${count}, 1fr)` }}>
       {flow.columns.map((column) => <span key={column.title}>{column.title}</span>)}
     </div>
     <div className={styles.flowBody} style={{ height }}>
       <svg className={styles.flowLines} viewBox={`0 0 ${WIDTH} ${height}`} preserveAspectRatio="none" aria-hidden="true">
-        {flow.edges.map(([a, b]) => {
+        {edges.map(([a, b]) => {
           const from = places.get(a);
           const to = places.get(b);
           if (!from || !to || from.x === to.x) return null;
@@ -43,7 +46,7 @@ export function DataFlow({ flow, active, label, onSelect }: { flow: Flow; active
         <h3>{column.title}</h3>
         {column.nodes.map((node) => {
           const place = places.get(node.id)!;
-          return <button key={node.id} type="button" title={node.label} aria-pressed={node.id === active} onClick={() => onSelect(node.id)}
+          return <button key={node.id} type="button" title={node.label} aria-pressed={node.id === active} data-quiet={(focused && !linked.has(node.id) && node.id !== active) || undefined} onClick={() => onSelect(node.id)}
             style={{ "--x": `${place.x / WIDTH * 100}%`, "--y": `${place.y - 18}px`, "--w": `${width / WIDTH * 100}%` } as React.CSSProperties}>{node.label}</button>;
         })}
         {column.hidden ? <p>and {column.hidden} more</p> : null}

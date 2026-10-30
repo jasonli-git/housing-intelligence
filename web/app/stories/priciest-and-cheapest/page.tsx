@@ -32,7 +32,7 @@ export default async function PriciestAndCheapestPage() {
       <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories">
         <header className="page-head">
           <div>
-            <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/stories", label: "Visual stories" }]} here="Priciest and cheapest in each county" />
+            <Crumbs trail={[{ href: "/", label: "Home" }, { href: "/stories", label: "Visual stories" }]} here="Priciest and cheapest in each county" />
             <Kind kind="story" />
             <h1 className="page-title">Priciest and cheapest in each county</h1>
             <p className="story-lede">

@@ -34,7 +34,7 @@ export default async function ChangesPage() {
   if (!report) {
     return (
       <>
-        <Masthead affordability={{ kind: "hidden" }} />
+        <Masthead affordability={{ kind: "route" }} />
         <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history">
           <h1 className="page-title">Figures revised after they were published</h1>
           <p className="meta">
@@ -50,11 +50,11 @@ export default async function ChangesPage() {
 
   return (
     <>
-      <Masthead affordability={{ kind: "hidden" }} />
+      <Masthead affordability={{ kind: "route" }} />
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history quiet-revisions horizon-page" data-region-level="data">
         <header className="page-head" data-kind="data">
           <div>
-            <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="What changed" />
+            <Crumbs trail={[{ href: "/", label: "Home" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="What changed" />
             <Kind kind="data" />
             <h1 className="page-title">Figures revised after they were published</h1>
             <p className="meta history-intro">

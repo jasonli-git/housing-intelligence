@@ -43,7 +43,7 @@ export default async function FreshnessPage() {
   if (!report) {
     return (
       <>
-        <Masthead affordability={{ kind: "hidden" }} />
+        <Masthead affordability={{ kind: "route" }} />
         <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history">
           <h1 className="page-title">How current is each source</h1>
           <p className="meta">
@@ -59,11 +59,11 @@ export default async function FreshnessPage() {
 
   return (
     <>
-      <Masthead affordability={{ kind: "hidden" }} />
+      <Masthead affordability={{ kind: "route" }} />
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history horizon-page" data-region-level="data">
         <header className="page-head" data-kind="data">
           <div>
-            <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="Data freshness" />
+            <Crumbs trail={[{ href: "/", label: "Home" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="Data freshness" />
             <Kind kind="data" />
             <h1 className="page-title">How current is each source</h1>
             <p className="meta history-intro">Every source behind the site: how recent its data is, and when we last checked for newer.</p>
