@@ -145,7 +145,7 @@ function ChangeGroup({ group, day }: { group: RevisionGroup; day: string }) {
       <p className="change-summary">{summaryLine(group)}</p>
       <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
         <table className="change-places">
-          <caption className="visually-hidden">
+          <caption className="visually-hidden" data-terms="off">
             The places whose {group.label.toLowerCase()} moved most, one row per place
           </caption>
           <thead>
