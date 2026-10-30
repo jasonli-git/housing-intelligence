@@ -23,6 +23,8 @@ are not yet recorded here.
 
 ### Added
 
+- **A simpler logo and link preview** (ARCHITECTURE #455): a plain house mark, a dark
+  shared-link image, and no `JL` link in the bar.
 - **Place pages lead with the housing market** (ARCHITECTURE #451): every county, town and
   ZIP page opens on its market, then monthly costs as receipts, the place as a field-guide
   plate with its local stories, and similar cheaper places as destination cards — each
