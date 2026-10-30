@@ -23,6 +23,9 @@ are not yet recorded here.
 
 ### Added
 
+- **A Data Explorer at `/data`** (Milestone 59, ARCHITECTURE #456): search every figure and
+  table, trace a figure back to its publisher, see coverage and empty shares, and see how
+  the tables join. Generated at publish time; it shows totals, never records.
 - **A simpler logo and link preview** (ARCHITECTURE #455): a plain house mark, a dark
   shared-link image, and no `JL` link in the bar.
 - **Place pages lead with the housing market** (ARCHITECTURE #451): every county, town and

@@ -19,6 +19,7 @@
 import type { IncomeLimits } from "./household";
 import type { AffordableHousing } from "./affordableHousing";
 import type { ScoreSeries } from "./nationalScoreboard";
+import type { Catalog } from "./dataCatalog";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -721,6 +722,7 @@ export const api = {
       `/regions/${id}/explanations?window=${window}`,
     ),
   sources: () => tryGet<SourceEntry[]>(`/sources`),
+  catalog: () => tryGet<Catalog>(`/catalog`),
   /** How current each source is (Milestone 27). */
   freshness: () => tryGet<FreshnessReport>(`/freshness`),
   revisions: () => tryGet<RevisionReport>(`/revisions`),

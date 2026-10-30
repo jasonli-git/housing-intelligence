@@ -83,7 +83,8 @@ export async function SourceFooter() {
               </div>
             ))}
             <p className="publisher-notice-more">
-              <Link href="/sources">Every source&rsquo;s terms and notices <span aria-hidden="true">→</span></Link>
+              <Link href="/sources">Every source&rsquo;s terms and notices <span aria-hidden="true">→</span></Link>{" "}
+              <Link href="/data">Explore how the data is built <span aria-hidden="true">→</span></Link>
             </p>
           </div>
         )}

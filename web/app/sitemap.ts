@@ -20,6 +20,7 @@ const PAGES = [
   "/changes",
   "/terms",
   "/sources",
+  "/data",
   "/privacy",
 ];
 

@@ -1,0 +1,53 @@
+.explorer { margin-top: 1.5rem; }
+.explorer h2 { margin: 1.25rem 0 .25rem; font-size: 1.5rem; }
+.explorer h3 { margin: 1.75rem 0 .6rem; font-size: 1.1rem; }
+.explorer code { font-family: var(--font-mono); font-size: .92em; overflow-wrap: anywhere; }
+.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; }
+.tabs button { min-height: 44px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-card); color: var(--text-primary); font: 600 15px/1.2 var(--font-text); cursor: pointer; }
+.tabs button[aria-selected="true"] { border-color: var(--text-primary); box-shadow: inset 0 0 0 1px var(--text-primary); }
+.intro, .note { color: var(--text-secondary); }
+.note { font-size: 14px; }
+.controls { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1rem 0 .5rem; }
+.controls label { display: grid; gap: .25rem; flex: 1 1 260px; max-width: 520px; font-size: 14px; color: var(--text-secondary); }
+.controls input, .controls select { min-height: 44px; width: 100%; padding: 0 .7rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-card); color: var(--text-primary); font: 16px var(--font-text); }
+.entry { border-bottom: 1px solid var(--border); }
+.entry summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .1rem 1rem; min-height: 44px; align-items: center; padding: .4rem 0; cursor: pointer; }
+.entry summary span { color: var(--text-secondary); font-size: 14px; }
+.entry strong { font-weight: 600; }
+.entry dl { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; margin: .5rem 0; }
+.entry dt { color: var(--text-secondary); font-size: 13px; }
+.entry dd { margin: 0; }
+.link, .more { min-height: 44px; background: none; border: 0; padding: 0; color: var(--text-primary); text-decoration: underline; font: inherit; cursor: pointer; }
+.scroll { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th { text-align: left; color: var(--text-secondary); font-weight: 500; }
+.table th, .table td { padding: .4rem .75rem .4rem 0; border-bottom: 1px solid var(--border); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; margin-top: 1rem; }
+.tiles div { display: grid; padding: .8rem 1rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-card); }
+.tiles strong { font-size: 1.5rem; }
+.tiles span { color: var(--text-secondary); font-size: 14px; }
+.stages { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .5rem; padding: 0; margin: 1rem 0; list-style: none; }
+.stages li { display: grid; align-content: start; gap: .2rem; padding: .7rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-card); }
+.stages span { color: var(--text-secondary); font-size: 13px; }
+.detail { margin-top: 1rem; padding: .8rem 1rem; border: 1px solid var(--border); border-radius: 10px; }
+.detail h4 { margin: 0; }
+.flow { margin-top: 1rem; }
+.flowHeads { display: grid; gap: 1rem; margin-bottom: .5rem; color: var(--text-secondary); font-size: 14px; }
+.flowBody { position: relative; }
+.flowLines { position: absolute; inset: 0; width: 100%; height: 100%; }
+.flowLines path { fill: none; stroke: var(--border); stroke-width: 1; }
+.flowLines path[data-on] { stroke: var(--text-primary); stroke-width: 1.5; }
+.flowColumn { display: contents; }
+.flowColumn h3, .flowColumn p { display: none; }
+.flowColumn button { position: absolute; left: var(--x); top: var(--y); width: var(--w); height: 36px; padding: 0 .6rem; overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-card); color: var(--text-primary); font: 13px/34px var(--font-text); white-space: nowrap; text-overflow: ellipsis; cursor: pointer; }
+.flowColumn button[aria-pressed="true"] { border-color: var(--text-primary); box-shadow: inset 0 0 0 1px var(--text-primary); }
+@media (max-width: 760px) {
+  .tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stages { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .flowHeads, .flowLines { display: none; }
+  .flowBody { position: static; height: auto !important; }
+  .flowColumn { display: block; margin-bottom: 1rem; }
+  .flowColumn h3 { display: block; margin: 0 0 .4rem; }
+  .flowColumn p { display: block; font-size: 14px; }
+  .flowColumn button { position: static; display: block; width: 100%; height: auto; min-height: 44px; margin-bottom: .35rem; white-space: normal; line-height: 1.3; text-align: left; }
+}

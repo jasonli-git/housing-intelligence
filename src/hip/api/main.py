@@ -14,6 +14,7 @@ from hip import __version__
 from hip.api.routers import (
     affordable_housing,
     analytics,
+    catalog,
     community,
     explanations,
     freshness,
@@ -51,6 +52,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(housing_pressure.router)
 app.include_router(regions.router)
+app.include_router(catalog.router)
 app.include_router(metrics.router)
 app.include_router(analytics.router)
 app.include_router(packets.router)
