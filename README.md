@@ -17,9 +17,8 @@ optional AI layer only explains figures that were already computed.
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** The site moved to a Cloudflare Worker, with room for about seven New
-> Jersey-sized states (#454). Every county, town and ZIP page now leads with its housing
-> market, then monthly costs, the place and similar cheaper places (#451).
+> **Latest.** A Data Explorer at `/data` (Milestone 59): a data dictionary, schema explorer,
+> interactive lineage, profiling and table diagrams, generated from the pipeline's own records.
 >
 > **Next.** Clearing TODO and the open Director Notes; then the rest of the work for a
 > second state, on hold until they are cleared. See [ROADMAP.md](docs/ROADMAP.md) and

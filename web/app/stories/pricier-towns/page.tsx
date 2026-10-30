@@ -28,7 +28,7 @@ export default async function PricierTownsPage() {
       <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories">
         <header className="page-head">
           <div>
-            <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/stories", label: "Visual stories" }]} here="What goes with pricier towns" />
+            <Crumbs trail={[{ href: "/", label: "Home" }, { href: "/stories", label: "Visual stories" }]} here="What goes with pricier towns" />
             <Kind kind="story" />
             <h1 className="page-title">What goes with pricier towns</h1>
             <p className="story-lede">

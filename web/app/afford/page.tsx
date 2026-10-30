@@ -53,7 +53,7 @@ export default async function AffordPage() {
       <header className="page-head" data-kind="tool">
         <div>
           <Crumbs
-            trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]}
+            trail={[{ href: "/", label: "Home" }, { href: "/states/new-jersey", label: "New Jersey" }]}
             here="Budget explorer"
           />
           <Kind kind="tool" />

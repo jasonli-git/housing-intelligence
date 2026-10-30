@@ -26,11 +26,11 @@ export const metadata: Metadata = pageMetadata({
 export default function TermsPage() {
   return (
     <>
-      <Masthead affordability={{ kind: "hidden" }} />
+      <Masthead affordability={{ kind: "route" }} />
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history legal-page">
         <header className="page-head">
           <div>
-            <Crumbs trail={[{ href: "/", label: "United States" }]} here="Terms of use" />
+            <Crumbs trail={[{ href: "/", label: "Home" }]} here="Terms of use" />
             <h1 className="page-title">Terms of use</h1>
             <p className="meta">Last updated {dayLabel(POLICIES_UPDATED)}. See also the <Link href="/privacy">privacy policy</Link>.</p>
             <nav className="page-section-nav" aria-label="Page sections"><SectionJump /></nav>

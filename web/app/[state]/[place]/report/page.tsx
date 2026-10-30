@@ -196,7 +196,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
         <div>
           <Crumbs
             trail={[
-              { href: "/", label: "United States" },
+              { href: "/", label: "Home" },
               ...stateCrumbs(region.state_code),
               ...(region.parent && region.parent.level !== "state"
                 ? [{ href: regionPath(region.parent.region_id), label: displayName(region.parent) }]

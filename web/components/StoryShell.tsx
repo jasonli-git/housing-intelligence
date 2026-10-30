@@ -12,7 +12,7 @@ export function StoryShell({ title, lede, note, children, focus }: { title: stri
       <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories">
         <header className="page-head">
           <div>
-            <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/stories", label: "Visual stories" }]} here={title} />
+            <Crumbs trail={[{ href: "/", label: "Home" }, { href: "/stories", label: "Visual stories" }]} here={title} />
             <Kind kind="story" />
             <h1 className="page-title">{title}</h1>
             {!focus && <p className="story-lede">{lede}</p>}

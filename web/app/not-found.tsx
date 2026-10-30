@@ -6,7 +6,7 @@ import { PlaceSearch } from "@/components/PlaceSearch";
 export default function NotFound() {
   return (
     <>
-      <Masthead affordability={{ kind: "hidden" }} search={false} />
+      <Masthead affordability={{ kind: "route" }} search={false} />
       <main id="main-content" tabIndex={-1} className="shell recovery-page">
         <div className="recovery-art" aria-hidden="true"><span>404</span><img src="/icon.svg" width="96" height="96" alt="" /></div>
         <header className="page-head">

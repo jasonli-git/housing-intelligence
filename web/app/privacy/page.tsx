@@ -28,11 +28,11 @@ export const metadata: Metadata = pageMetadata({
 export default function PrivacyPage() {
   return (
     <>
-      <Masthead affordability={{ kind: "hidden" }} />
+      <Masthead affordability={{ kind: "route" }} />
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history legal-page">
         <header className="page-head">
           <div>
-            <Crumbs trail={[{ href: "/", label: "United States" }]} here="Privacy policy" />
+            <Crumbs trail={[{ href: "/", label: "Home" }]} here="Privacy policy" />
             <h1 className="page-title">Privacy policy</h1>
             <p className="meta">Last updated {dayLabel(POLICIES_UPDATED)}. See also the <Link href="/terms">terms of use</Link>.</p>
             <nav className="page-section-nav" aria-label="Page sections"><SectionJump /></nav>

@@ -247,6 +247,8 @@ def _plan(
     # The attribution the site footer renders. Static like everything else, so the terms
     # travel with the artifacts rather than depending on an API being up.
     yield "/sources", "sources.json"
+    # The Data Explorer (Milestone 59).
+    yield "/catalog", "catalog.json"
     for level in ("county", "tract", "zip"):
         yield f"/community/health/{level}", f"community/health/{level}.json"
     yield "/sources/unresolved", "sources/unresolved.json"

@@ -3769,3 +3769,7 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
 }
 :root[data-theme="dark"] .shot-dark { display: block !important; }
 :root[data-theme="dark"] .shot-light { display: none !important; }
+
+/* Two links side by side: each needs its own 24px target. */
+.publisher-notice-more { display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; }
+.publisher-notice-more a { display: inline-flex; align-items: center; min-height: 24px; }

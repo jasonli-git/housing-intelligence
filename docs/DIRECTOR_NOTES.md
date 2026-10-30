@@ -1030,3 +1030,14 @@ Possible areas:
 - **Architecture:** a warehouse relationship diagram and an ERD.
 
 Do not implement yet.
+
+---
+
+## Decision: build the Data Explorer
+
+**Status:** Approved direction — Milestone 59
+**Recorded:** 2026-10-30
+
+The owner promoted *Data Explorer* to Milestone 59, ahead of clearing TODO and the open
+notes. Metadata and aggregates only, generated at publish time, linked from the footer
+rather than the main navigation.
