@@ -354,7 +354,7 @@ def rollback_command(
     """Restore the published data to the build before the last deploy (#359).
 
     Refuses if the Daniel's Law removal list has changed since that build. Restores the
-    R2 half only; the pages are rolled back in Cloudflare's dashboard, as it prints.
+    R2 half only; the pages are rolled back with `wrangler rollback`, as it prints.
     """
     settings = get_settings()
     try:
@@ -372,10 +372,10 @@ def rollback_command(
     run_rollback(remote, bucket, backup, planned)
     typer.secho(f"data restored to build {planned.built}", fg=typer.colors.GREEN)
     typer.echo(
-        "Now roll the pages back to match: Cloudflare dashboard → Workers & Pages → "
-        "housing-intelligence → Deployments → the production deployment before the "
-        f"last one (built around {planned.built}) → Rollback. Then `make check-live` "
-        "against a dist/ of that build, or spot-check the site."
+        "Now roll the pages back to match: `wrangler rollback` from the repository root "
+        "(or Cloudflare dashboard → Workers & Pages → housing-site → Deployments), "
+        f"choosing the version before the last one (built around {planned.built}). "
+        "Then `make check-live` against a dist/ of that build, or spot-check the site."
     )
 
 

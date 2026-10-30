@@ -1,0 +1,26 @@
+// The site's host (ARCHITECTURE #454): Workers static assets, 100,000 files on Workers
+// Paid where Pages stops this account at 20,000. `make publish` fills dist/; `make
+// deploy` uploads it. Data stays on R2 (housing-data.jasonli.app), not here.
+{
+  "name": "housing-site",
+  "main": "web/worker/index.mjs",
+  // No later than wrangler 4.129's local runtime supports (2026-09-10).
+  "compatibility_date": "2026-09-01",
+  // The domain moves here from the Pages project at the cutover (Milestone 58): remove
+  // it from Pages first, or this deploy is refused because the hostname is taken.
+  "routes": [{ "pattern": "housing.jasonli.app", "custom_domain": true }],
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "dist/site",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash",
+    // With a 404 page set, a browser navigation to a path with no file gets that page
+    // without the Worker running (curl got the 301; a browser did not, 2026-10-30).
+    // Old addresses all start /regions/, so the Worker runs first there and only there.
+    "run_worker_first": ["/regions/*"]
+  },
+  // Off: from 2026-12-01 logs are billed by volume, and a redirect Worker has none worth keeping.
+  "observability": { "enabled": false }
+}

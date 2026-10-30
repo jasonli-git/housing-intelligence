@@ -65,7 +65,8 @@ const CAVEAT_IN_DEFINITION: ReadonlySet<string> = new Set([
  *
  * Since Milestone 18 this is also the state's own page. `/regions/1` carried two FHFA
  * index values, their caveat and the footer; its figures are here now, and
- * `public/_redirects` sends the old URL to this one (ARCHITECTURE #127).
+ * The site's Worker sends the old URL to this one (ARCHITECTURE #127, #454;
+ * `lib/legacyFixedRoutes.json`).
  *
  * County comparison assembly and components are parked behind the disabled flag.
  * No ranking windows or map geometry are requested while that feature is retired.

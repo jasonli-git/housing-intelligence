@@ -24,19 +24,8 @@ for (const r of local) {
   }
 }
 const routes = allocatePlaceSlugs(local, Object.fromEntries(Object.entries(pinned).map(([id, record]) => [id, typeof record === "string" ? record : record.slug])));
-const redirectFile = new URL("public/_redirects", root);
-const marker = "# Generated place redirects; update with npm run routes:refresh.";
-const original = (await readFile(redirectFile, "utf8")).split(marker)[0].trimEnd();
-const path = (r) => `/${r.state_code.toLowerCase()}/${routes[r.region_id]}`;
-const nation = regions.filter(r => r.level === "nation").flatMap(r => [`/regions/${r.region_id} / 301`, `/regions/${r.region_id}/report / 301`]);
-const rules = [...nation, ...local.flatMap(r => [
-  `/regions/${r.region_id} ${path(r)} 301`,
-  ...(r.level === "zip" ? [] : [`/regions/${r.region_id}/report ${path(r)}/report 301`]),
-])];
-const originalRules = original.split("\n").filter(line => line.trim() && !line.trim().startsWith("#")).length;
-if (rules.length + originalRules > 2000) throw new Error("Cloudflare static redirect limit exceeded; revise the compatibility strategy before updating.");
 const identities = { ...pinned };
 for (const r of local) identities[r.region_id] = { slug: routes[r.region_id], state: r.state_code.toLowerCase(), geoid: r.geoid, level: r.level };
 await writeFile(registry, `${JSON.stringify(identities, null, 2)}\n`);
-await writeFile(redirectFile, `${original}\n\n${marker}\n${rules.join("\n")}\n`);
-console.log(`${local.length} readable routes; ${rules.length + originalRules} static redirects. ZIP reports retain browser redirects and canonical aliases.`);
+// The old numeric addresses follow from this registry at build time (write-legacy-routes).
+console.log(`${local.length} readable routes.`);

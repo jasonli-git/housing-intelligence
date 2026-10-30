@@ -444,46 +444,38 @@ async function checkPhotos() {
 }
 
 /**
- * Old numeric addresses (ARCHITECTURE #367, #400). Since #400 each has exactly one way
- * through: a Pages rule in `_redirects`, or a small redirect page where no rule fits
- * (ZIP reports). The rule path relies on Pages applying `_redirects` before any file at
- * the same address, and nothing else checks that live: a place page and a county report
- * must answer 301 to their readable address, and a ZIP report must serve its redirect
- * page pointing at its own.
+ * Old numeric addresses (ARCHITECTURE #367, #400, #454). The site's Worker answers each
+ * from the manifest it bundled; nothing else checks that live. A place page, a county
+ * report and a ZIP report must answer 301 to their readable address, and an unknown id
+ * must reach the 404 page rather than a guess.
  */
 async function checkLegacyRedirects() {
-  const rules = new Map(
-    (await readFile(path.join(siteDir, "_redirects"), "utf8"))
-      .split("\n")
-      .map((line) => line.trim().split(/\s+/))
-      .filter(([from, , status]) => from?.startsWith("/regions/") && status === "301")
-      .map(([from, to]) => [from, to]),
-  );
-  const routes = JSON.parse(await readFile(path.join(siteDir, "place-routes.json"), "utf8"));
+  const { entries } = JSON.parse(await readFile(path.join(dist, "legacy-redirects.json"), "utf8"));
+  const redirects = new Map(entries.map(({ from, to }) => [from, to]));
   const search = JSON.parse(await readFile(path.join(siteDir, "search.json"), "utf8"));
   const levelOf = new Map(search.map((entry) => [String(entry.id), entry.level]));
   const pick = (level, report) => {
-    const id = Object.keys(routes).find((candidate) => levelOf.get(candidate) === level &&
-      rules.has(`/regions/${candidate}${report ? "/report" : ""}`) === (level !== "zip" || !report));
+    const suffix = report ? "/report" : "";
+    const id = [...levelOf].find(([id, l]) => l === level && redirects.has(`/regions/${id}${suffix}`))?.[0];
     if (!id) throw new Error(`no published ${level} for the legacy-address check`);
-    return { from: `/regions/${id}${report ? "/report" : ""}`, to: `${routes[id]}${report ? "/report" : ""}` };
+    return { from: `/regions/${id}${suffix}`, to: redirects.get(`/regions/${id}${suffix}`) };
   };
-  for (const { from, to } of [pick("municipality", false), pick("county", true)]) {
-    if (rules.get(from) !== to) throw new Error(`_redirects sends ${from} to ${rules.get(from)}, not ${to}`);
-    const response = await fetch(liveUrl(siteUrl, from), { redirect: "manual", signal: AbortSignal.timeout(20_000) });
+  for (const { from, to } of [pick("municipality", false), pick("county", true), pick("zip", true)]) {
+    // As a browser navigation, which Workers routes differently from a plain fetch (#454).
+    const response = await fetch(liveUrl(siteUrl, from), {
+      redirect: "manual",
+      headers: { accept: "text/html", "sec-fetch-mode": "navigate", "sec-fetch-dest": "document" },
+      signal: AbortSignal.timeout(20_000),
+    });
     const location = new URL(response.headers.get("location") ?? "", siteUrl).pathname;
     if (response.status !== 301 || location !== to) {
       throw new Error(`${from} answered ${response.status} → ${location || "(no Location)"}, expected 301 → ${to}`);
     }
     console.log(`ok legacy     ${from} · 301 → ${to}`);
   }
-  const { from, to } = pick("zip", true);
-  const response = await fetch(liveUrl(siteUrl, from), { signal: AbortSignal.timeout(20_000) });
-  const body = await response.text();
-  if (response.status !== 200 || !body.includes(`location.replace(${JSON.stringify(to)}`)) {
-    throw new Error(`${from} answered ${response.status} without its redirect page to ${to}`);
-  }
-  console.log(`ok legacy     ${from} · redirect page → ${to}`);
+  const unknown = await fetch(liveUrl(siteUrl, "/regions/999999999"), { redirect: "manual", signal: AbortSignal.timeout(20_000) });
+  if (unknown.status !== 404) throw new Error(`/regions/999999999 answered ${unknown.status}, expected 404`);
+  console.log("ok legacy     /regions/999999999 · 404");
 }
 
 /**

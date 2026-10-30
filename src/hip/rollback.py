@@ -1,11 +1,11 @@
 """Undo the last deploy's data half (ARCHITECTURE #359).
 
-A deploy has two halves. Cloudflare Pages keeps every deployment of the site, so the
-pages can be rolled back from its dashboard; but `rclone sync` overwrote the R2
-artifacts in place, so the data behind them could not. Now `make deploy` keeps, in a
-private bucket, every file the sync replaced or deleted (`--backup-dir`) and the list of
-keys that were live before it (`_keys.txt`). Restoring is the reverse: copy those files
-back, and delete what the deploy added.
+A deploy has two halves. The site's Worker keeps every version it was deployed as
+(ARCHITECTURE #454), so the pages can be rolled back with `wrangler rollback`; but
+`rclone sync` overwrote the R2 artifacts in place, so the data behind them could
+not. Now `make deploy` keeps, in a private bucket, every file the sync replaced or
+deleted (`--backup-dir`) and the list of keys that were live before it (`_keys.txt`).
+Restoring is the reverse: copy those files back, and delete what the deploy added.
 
 **A rollback must never bring back an address withdrawn under Daniel's Law.** The backup
 is the build before the last one; if a removal was recorded since, restoring it would
