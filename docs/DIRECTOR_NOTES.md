@@ -1010,3 +1010,23 @@ Consider:
 - Which formats and sizes an export would need.
 
 Do not implement yet.
+
+---
+
+## Data Explorer
+
+**Status:** Exploratory — not approved for implementation
+**Recorded:** 2026-10-30
+
+Explore a dedicated Data Explorer showing how the data is organized, where it comes from,
+how it's transformed and how datasets relate, kept separate from the reader-facing pages.
+
+Possible areas:
+
+- **Catalog:** a schema explorer and an interactive data dictionary, probably connected to
+  the popup definitions.
+- **Lineage:** interactive data lineage.
+- **Quality:** data profiling.
+- **Architecture:** a warehouse relationship diagram and an ERD.
+
+Do not implement yet.
