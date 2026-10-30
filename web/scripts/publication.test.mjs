@@ -1,9 +1,11 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
+import {mkdtemp,mkdir,readFile,writeFile,rm} from 'node:fs/promises';
+import {createServer} from 'node:http';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fixedRoutes,publishedPlaces,legacyManifest,validateManifest,inventory} from './lib/publication.mjs';
+import {navigate} from './lib/navigate.mjs';
 import {createLegacyRedirect,createHandler} from '../worker/legacy.mjs';
 
 test('fixed routes reject wildcards, external and unsafe targets',()=>{
@@ -49,4 +51,17 @@ test('the Worker hands everything it does not redirect to the static assets',asy
 test('per-place attribution excludes adjacent slugs and includes nested report payloads',()=>{
  const report=inventory([{path:'nj/town.html',bytes:10},{path:'nj/town.txt',bytes:2},{path:'nj/town/report.html',bytes:20},{path:'nj/township.html',bytes:50}],[{id:'2',route:'/nj/town',level:'municipality'}]);
  assert.equal(report.byPlace[0].files,3);assert.equal(report.files,4);assert.equal(report.headroom.files,99996);
+});
+test('navigate really sends a navigation and follows no redirect',async()=>{
+ const server=createServer((request,response)=>{response.writeHead(301,{location:'/there','x-mode':request.headers['sec-fetch-mode']});response.end('moved');});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try {
+  const seen=[];server.on('request',request=>seen.push(request.headers['sec-fetch-mode']));
+  const answer=await navigate(`http://127.0.0.1:${server.address().port}/here`);
+  assert.deepEqual([answer.status,answer.location,answer.text,seen],[301,'/there','moved',['navigate']]);
+ } finally {server.closeAllConnections();server.close();}
+});
+test('the Worker runs first on old addresses, or browsers get the 404 page (#454)',async()=>{
+ const config=await readFile(new URL('../../wrangler.jsonc',import.meta.url),'utf8');
+ assert.match(config,/^\s*"run_worker_first":\s*\[\s*"\/regions\/\*"\s*\]/m);
 });

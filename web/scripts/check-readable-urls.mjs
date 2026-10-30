@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile, stat } from "node:fs/promises";
 import { chromium } from "playwright";
+import {navigate} from './lib/navigate.mjs';
 import {fixedRoutes,legacyManifest,publishedPlaces,validateManifest} from './lib/publication.mjs';
 
 // Run against `wrangler dev` serving dist/ (the Worker and its assets, ARCHITECTURE #454),
@@ -30,11 +31,10 @@ for (const [id, r] of Object.entries(registry)) {
 // Every old address through the real runtime, ZIP reports included, with its query,
 // asked for as a browser navigation: Workers answers those with the 404 page without
 // running the Worker unless `run_worker_first` covers the path (#454).
-const navigation = { accept: "text/html", "sec-fetch-mode": "navigate", "sec-fetch-dest": "document" };
 for (const { from, to } of entries) {
-  const response = await fetch(`${origin}${from}?verify=1`, { redirect: "manual", headers: navigation });
+  const response = await navigate(`${origin}${from}?verify=1`);
   assert.equal(response.status, 301, from);
-  const location = new URL(response.headers.get("location"), origin);
+  const location = new URL(response.location, origin);
   assert.equal(location.pathname, to, from);
   assert.equal(location.search, "?verify=1", from);
 }
@@ -48,9 +48,9 @@ for (const loc of sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)) {
   await response.arrayBuffer();
 }
 for (const path of ["/regions/999999999", "/regions/12/metrics.json", "/no-such-page"]) {
-  const response = await fetch(`${origin}${path}`, { redirect: "manual", headers: navigation });
+  const response = await navigate(`${origin}${path}`);
   assert.equal(response.status, 404, path);
-  assert.match(await response.text(), /<html/i, `${path} should serve the 404 page`);
+  assert.match(response.text, /<html/i, `${path} should serve the 404 page`);
 }
 
 const browser = await chromium.launch();

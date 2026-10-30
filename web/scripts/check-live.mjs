@@ -6,6 +6,7 @@ import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright";
+import { navigate } from "./lib/navigate.mjs";
 
 const root = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -462,12 +463,8 @@ async function checkLegacyRedirects() {
   };
   for (const { from, to } of [pick("municipality", false), pick("county", true), pick("zip", true)]) {
     // As a browser navigation, which Workers routes differently from a plain fetch (#454).
-    const response = await fetch(liveUrl(siteUrl, from), {
-      redirect: "manual",
-      headers: { accept: "text/html", "sec-fetch-mode": "navigate", "sec-fetch-dest": "document" },
-      signal: AbortSignal.timeout(20_000),
-    });
-    const location = new URL(response.headers.get("location") ?? "", siteUrl).pathname;
+    const response = await navigate(liveUrl(siteUrl, from));
+    const location = new URL(response.location ?? "", siteUrl).pathname;
     if (response.status !== 301 || location !== to) {
       throw new Error(`${from} answered ${response.status} → ${location || "(no Location)"}, expected 301 → ${to}`);
     }

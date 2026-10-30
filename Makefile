@@ -123,15 +123,19 @@ test:  ## Run both test suites, slow Python tests left out (about a minute)
 	@# The dashboard suite covers the pure chart arithmetic. Skipped rather than failed
 	@# when node_modules is absent, so `make test` still works before `make setup`.
 	@# publication:test holds the site Worker's redirect tests (#454).
-	@test -d web/node_modules \
-		&& (cd web && npm test --silent && npm run --silent publication:test) \
-		|| echo "web/node_modules missing — skipping dashboard tests (run make setup)"
+	@if [ -d web/node_modules ]; then \
+		cd web && npm test --silent && npm run --silent publication:test; \
+	else \
+		echo "web/node_modules missing — skipping dashboard tests (run make setup)"; \
+	fi
 
 test-all:  ## Every test, the slow analytics and publish ones too — before a merge
 	uv run pytest
-	@test -d web/node_modules \
-		&& (cd web && npm test --silent) \
-		|| echo "web/node_modules missing — skipping dashboard tests (run make setup)"
+	@if [ -d web/node_modules ]; then \
+		cd web && npm test --silent && npm run --silent publication:test; \
+	else \
+		echo "web/node_modules missing — skipping dashboard tests (run make setup)"; \
+	fi
 
 test-py:  ## Run the Python test suite alone, slow tests included
 	uv run pytest
