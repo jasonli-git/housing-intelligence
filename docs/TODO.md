@@ -29,12 +29,11 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — Milestone 58, hosting on Workers static assets (2026-10-30)
+## Now — between milestones (2026-10-30)
 
-On `milestone/m58-workers-hosting` (ARCHITECTURE #454). The Worker `housing-site` is
-deployed at its `workers.dev` address and checked there. Left: move housing.jasonli.app
-from the Pages project to the Worker outside the Friday refresh hour, `make check-live`,
-and the PR. Then the Pages project waits two weeks for rollback and is deleted (Open).
+Milestone 58 shipped: housing.jasonli.app is served by the Worker `housing-site`
+(ARCHITECTURE #454). The first weekly refresh on the Worker is due 2026-10-30 08:00; if it
+reports a problem, look there first. Next is clearing Open and the Director Notes.
 
 ## Open
 
@@ -185,7 +184,7 @@ Not open work: each comes round on a date. The steps live where the row says.
       33 files (2026-10-20), frozen in `web/lib/colourBaseline.json`; the largest are
       `horizon-theme.css` (187), the atlas (86 + 67) and `state-exhibits.css` (83). Take
       them file by file when a file is touched for other work, lowering the baseline.
-- [ ] **Delete the Pages project two weeks after the cutover.** (Milestone 58, ARCHITECTURE
+- [ ] **Delete the Pages project on or after 2026-11-13, two weeks after the cutover.** (Milestone 58, ARCHITECTURE
       #454) `housing-intelligence` on Pages is kept as the rollback for the move to the
       `housing-site` Worker; delete it once the Worker has served two weeks without a
       rollback. Pages' file and rule caps that blocked a second state (#367, #400) no
