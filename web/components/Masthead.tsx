@@ -10,17 +10,9 @@ import { LicenceLine } from "@/components/LicenceLine";
 const REPOSITORY = "https://github.com/jasonli-git/housing-intelligence";
 
 /**
- * The bar shared with jasonli.app: `JL` leads home to the gateway, then this
- * site's own wordmark and code link, with search and theme controls alongside.
- *
- * The trail is set in jasonli.app's type and ink, whatever the page below it, because
- * it is the one element that says these are the same person's sites (ARCHITECTURE
- * #122). Jasonli.app's own masthead is not a link — it *is* that page — so the inversion
- * is deliberate: here the same wordmark is the way back.
- *
- * `Jason Li` navigates in place, as jasonli.app's own project links do: the two are one
- * ecosystem, not a site and an external one. Search replaced the county picker in
- * Milestone 23, and the GitHub mark joined it so a reader can reach the repository behind
+ * The site's wordmark and code link, with search and theme controls alongside. Search
+ * replaced the county picker in Milestone 23, and the GitHub mark joined it so a reader
+ * can reach the repository behind
  * every figure from any page. The property-tax lookup (Milestone 37) and the buyer's
  * guide (Milestone 49) are the pages linked from the bar, as short pills beside the
  * icons — tools for any place rather than New Jersey's budget finder; the theme is one
@@ -65,12 +57,6 @@ export function Masthead({
       <nav className={`bar print-hide ${styles.navigation}`} aria-label="Sites">
         <div className="bar-inner">
           <div className="bar-trail">
-            <a className="bar-home" href="https://jasonli.app" aria-label="Jason Li — portfolio">
-              JL
-            </a>
-            <span className="bar-sep" aria-hidden="true">
-              /
-            </span>
             <Link className="wordmark" href="/">
               <img className="housing-mark" src="/icon.svg" width="24" height="24" alt="" />
               <span className="wordmark-text">Housing</span>
