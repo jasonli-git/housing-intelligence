@@ -20,7 +20,6 @@ export function StoryShell({ title, lede, note, children, focus }: { title: stri
         </header>
         {focus}
         {focus && <><h2 className="story-h" id="story-statewide">Across New Jersey</h2><p className="story-lede">{lede}</p></>}
-        {/* The first screenful of this is what the home page shows of the story (capture-readme.mjs). */}
         <div data-story-shot>{children}</div>
         <p className="story-note">{note} <Link href="/stories">More visual stories →</Link></p>
       </main>

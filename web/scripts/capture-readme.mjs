@@ -33,10 +33,10 @@ const VIEWPORTS = [
   { name: 'mobile', width: 390, height: 844, scale: 2 },
 ];
 
-// The home page's showcase of the visual stories: the first screenful of each story's
-// chart, light and dark, as JPEGs into screenshots/stories/. The list is read from the
+// The home page's showcase of the visual stories: each story as a reader first sees it,
+// light and dark, as JPEGs into screenshots/stories/. The list is read from the
 // stories index, so a new story is pictured without touching this file.
-const SHOT = { width: 820, height: 900, aspect: 0.62, scale: 1 };
+const SHOT = { width: 1440, height: 900, scale: 1 };
 const INDEX = { width: 1800, height: 1600, aspect: 0.5625, columns: 10 };
 const only = process.env.SCREENSHOT_ONLY;
 
@@ -59,16 +59,8 @@ try {
         if (!response?.ok()) throw new Error(`${href}: ${response?.status() ?? 'no response'}`);
         await page.evaluate(() => document.fonts.ready);
         await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
-        const box = await page.locator('[data-story-shot]').first().boundingBox();
-        if (!box) throw new Error(`${href}: no [data-story-shot] element`);
         const slug = href.split('/').pop();
-        await page.screenshot({
-          path: resolve(outDir, 'stories', `${slug}-${scheme}.jpg`),
-          type: 'jpeg',
-          quality: 78,
-          fullPage: true,
-          clip: { x: box.x, y: box.y, width: box.width, height: Math.min(box.height, Math.round(box.width * SHOT.aspect)) },
-        });
+        await page.screenshot({ path: resolve(outDir, 'stories', `${slug}-${scheme}.jpg`), type: 'jpeg', quality: 78 });
         console.log(`screenshot: stories/${slug}-${scheme}`);
       }
       // Then the stories page itself, for the home page. Its cards show the pictures just

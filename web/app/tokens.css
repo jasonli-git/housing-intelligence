@@ -71,16 +71,16 @@
   --home-tool-help: #59654a;
   --home-tool-atlas: #2368a0;
   --home-tool-text: #fff;
-  --home-paper: light-dark(#f7f5ef, #111614);
-  --home-ink: light-dark(#242b27, #e8ece6);
+  --home-paper: light-dark(#f7f5ef, #141414);
+  --home-ink: light-dark(#242b27, #ebebeb);
   /* Ink, not a hue (owner, 2026-10-25): colour on the home page belongs to the data and
      to the tools' own glows, so the page's accent is its ink. */
   --home-accent: light-dark(#2a2622, #ece7df);
-  --home-secondary: light-dark(#566258, #b4beb6);
-  --home-muted: light-dark(#626d64, #a7b4aa);
-  --home-border: light-dark(#d6ddd5, #3b463e);
-  --home-card: light-dark(#fdfcf8, #1b211e);
-  --home-surface: light-dark(#eef0e9, #242d27);
+  --home-secondary: light-dark(#566258, #bababa);
+  --home-muted: light-dark(#626d64, #aeaeae);
+  --home-border: light-dark(#d6ddd5, #414141);
+  --home-card: light-dark(#fdfcf8, #1e1e1e);
+  --home-surface: light-dark(#eef0e9, #292929);
 
   --series-1: #0071e3;
   --series-2: #e07227;
