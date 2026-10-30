@@ -1,5 +1,5 @@
-// Shared by the local-only Worker and Pages Function candidates. Exact allowlist:
-// no guessing unknown ids, redirecting API/download paths, or accepting open targets.
+// Old numeric addresses (ARCHITECTURE #367, #400, #454). Exact allowlist: no guessing
+// unknown ids, redirecting API/download paths, or accepting open targets.
 export function createLegacyRedirect(entries) {
   const paths=new Map(entries.map(({from,to})=>[from,to]));
   return request=>{
@@ -11,4 +11,11 @@ export function createLegacyRedirect(entries) {
     // to the server. No new fragment is specified in Location.
     return new Response(null,{status:301,headers:{Location:url.href}});
   };
+}
+
+// Workers static assets answer every request that matches a file without running this
+// script, so it only sees addresses with no file: an old numeric one, or a 404.
+export function createHandler(entries) {
+  const redirect=createLegacyRedirect(entries);
+  return {fetch(request,env){return redirect(request)??env.ASSETS.fetch(request);}};
 }

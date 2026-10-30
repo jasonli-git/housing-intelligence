@@ -12,18 +12,17 @@ and not a chatbot: pages, maps, tools, reports and an API are the product, and a
 optional AI layer only explains figures that were already computed.
 
 > **Status — <!-- fill:version -->v0.50.0 (2026-10-08)<!-- /fill -->, updated
-> 2026-10-29.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
+> 2026-10-30.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
 > published in full: the state, <!-- fill:counties -->21<!-- /fill --> counties,
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** Every county, town and ZIP page now leads with its housing market, then
-> monthly costs, the place and similar cheaper places, each section with its own look
-> (#451); a streamlined New Jersey page (#452); and a story on where students go to
-> school (#453).
+> **Latest.** The site moved to a Cloudflare Worker, with room for about seven New
+> Jersey-sized states (#454). Every county, town and ZIP page now leads with its housing
+> market, then monthly costs, the place and similar cheaper places (#451).
 >
-> **Next.** Clearing TODO and the open Director Notes; then the hosting move for a second
-> state, on hold until they are cleared. See [ROADMAP.md](docs/ROADMAP.md) and
+> **Next.** Clearing TODO and the open Director Notes; then the rest of the work for a
+> second state, on hold until they are cleared. See [ROADMAP.md](docs/ROADMAP.md) and
 > [CHANGELOG.md](CHANGELOG.md).
 
 [SPEC.md](docs/SPEC.md) says what the platform is for, [ARCHITECTURE.md](docs/ARCHITECTURE.md) how
@@ -92,7 +91,7 @@ On a phone:
 | Warehouse | PostgreSQL <!-- fill:postgres -->16<!-- /fill --> + PostGIS | Concurrent readers, constraints, spatial queries |
 | API | FastAPI + SQLAlchemy | Read-only, typed, OpenAPI for free |
 | Site | Next.js <!-- fill:nextjs -->16<!-- /fill --> + React <!-- fill:react -->19<!-- /fill --> | Static export over the published files |
-| Hosting | Cloudflare Pages + R2 | Pages for the site, R2 for the data files |
+| Hosting | Cloudflare Workers + R2 | A Worker with static assets for the site, R2 for the data files |
 | Packaging | `uv`, Docker Compose | Locked Python env; Postgres is the only container |
 
 The reasoning behind each, and what was rejected, is in ARCHITECTURE.md's Decisions Log.
@@ -204,7 +203,7 @@ sends them.
 
 ```bash
 make publish     # dist/artifacts (~19,200 files) + dist/site (~14,950 files)
-make deploy      # checks, then artifacts -> R2 (keeping what it replaces), site -> Pages
+make deploy      # checks, then artifacts -> R2 (keeping what it replaces), site -> Worker
 make check-live  # the live site and data against dist/
 make clean-dist  # after check-live passes: free the ~5 GB dist/
 make rollback    # what restoring the previous build's data would do; ARGS=--yes to do it
@@ -219,7 +218,7 @@ published content, not on every push: the R2 half is an `rclone sync`, which del
 
 **Place addresses.** Place pages live at pinned addresses such as `/nj/princeton`, listed
 in `web/lib/placeRoutes.json` and never recomputed by a build; old numeric links
-(`/regions/224`) still redirect. A place gaining data for the first time stops the build
+(`/regions/224`) still redirect, answered by the site's Worker from a list each build writes. A place gaining data for the first time stops the build
 until it has an address: run `cd web && npm run routes:refresh`, review and commit.
 
 **Place photos** come from Wikimedia Commons, listed in `web/lib/photos.json` with credit,
@@ -234,13 +233,13 @@ and alerts only if both fail. Then:
 1. Run `make check-live` again — a CDN settling usually passes now. If `dist/` is gone,
    `make publish` first.
 2. Read what it names. A **manifest mismatch** (R2 holds another build) or a **page
-   mismatch** (the Pages upload did not finish): run `make deploy` again. A **CORS or
+   mismatch** (the Worker upload did not finish): run `make deploy` again. A **CORS or
    search failure**: run `make r2-cors`.
 3. If `dist/` itself is wrong, fix forward: correct the cause, then `make publish`,
    `make deploy`, `make check-live`.
 4. If readers are seeing a broken page meanwhile, roll back both halves: `make rollback
-   ARGS=--yes`, then the previous deployment in Cloudflare's dashboard (Pages →
-   housing-intelligence → Deployments → Rollback). It refuses if a Daniel's Law removal
+   ARGS=--yes`, then the pages: `wrangler rollback` from the repository root, choosing
+   the version before the last one. It refuses if a Daniel's Law removal
    was recorded since that build; fix forward instead.
 
 ### Removing an address under Daniel's Law
@@ -263,8 +262,9 @@ missing or still an iCloud placeholder.
 **One-time hosting setup** (Cloudflare; nothing in the files is Cloudflare-specific): an
 R2 bucket with a custom domain; an R2 token with Object Read & Write on that bucket; an
 `rclone` remote named `r2` (type `s3`, provider `Cloudflare`, `no_check_bucket = true`);
-and `ARTIFACT_URL`, `R2_BUCKET` and `PAGES_PROJECT` set in the Makefile. Deploys are
-direct uploads: the build reads a local warehouse that is never committed.
+`ARTIFACT_URL` and `R2_BUCKET` set in the Makefile; and Workers Paid, for the site's
+100,000-file allowance (`wrangler.jsonc` names the Worker). Deploys are direct uploads:
+the build reads a local warehouse that is never committed.
 
 ## License
 

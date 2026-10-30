@@ -11,6 +11,16 @@ gate (ARCHITECTURE #404), all 2026-10-20, and fixture-based data guards (2026-10
 This section holds those changes only; other changes merged since 0.50.0
 are not yet recorded here.
 
+### Changed
+
+- **The site is served by a Cloudflare Worker with static assets instead of Pages**
+  (Milestone 58, ARCHITECTURE #454). Pages stops this account at 20,000 files; the Worker
+  allows 100,000 on Workers Paid, about seven New Jersey-sized states. Old numeric links
+  (`/regions/224`) are answered by the Worker's code from a list each build writes, ZIP
+  reports included, so `_redirects`, its 2,000-rule cap and the 598 ZIP-report redirect
+  pages are gone. `make deploy` runs `wrangler deploy`; `wrangler rollback` rolls the
+  pages back.
+
 ### Added
 
 - **Place pages lead with the housing market** (ARCHITECTURE #451): every county, town and

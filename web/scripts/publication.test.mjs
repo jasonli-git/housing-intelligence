@@ -1,35 +1,35 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
+import {mkdtemp,mkdir,readFile,writeFile,rm} from 'node:fs/promises';
+import {createServer} from 'node:http';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {parseRedirects,publishedPlaces,legacyManifest,validateCoverage,inventory} from './lib/publication.mjs';
-import {createLegacyRedirect} from './lib/legacy-resolver.mjs';
+import {fixedRoutes,publishedPlaces,legacyManifest,validateManifest,inventory} from './lib/publication.mjs';
+import {navigate} from './lib/navigate.mjs';
+import {createLegacyRedirect,createHandler} from '../worker/legacy.mjs';
 
-test('strict rules reject duplicate, dynamic, rewrite, external and unsafe targets',()=>{
- for(const text of ['/regions/1 / 301\n/regions/1 / 301','/regions/* / 301','/regions/1 / 200','/regions/1 https://evil.test 301','/regions/1 //evil/path 301','/regions/1 /../x 301'])assert.throws(()=>parseRedirects(text));
- assert.equal(parseRedirects('/regions/1 / 301').size,1);
- // Other addresses are the site's own rules: kept out of the legacy set, never refused.
- assert.equal(parseRedirects('/old-page /new-page 301\n/blog/* /news/:splat 302\n/regions/1 / 301').size,1);
- assert.throws(()=>parseRedirects(Array.from({length:2001},(_,i)=>`/page-${i} /x 301`).join('\n')),/limit/);
+test('fixed routes reject wildcards, external and unsafe targets',()=>{
+ for(const [from,to] of [['/regions/*','/'],['/regions/1','https://evil.test'],['/regions/1','//evil/path'],['/regions/1','/../x'],['/regions/01','/'],['/other','/']])assert.throws(()=>fixedRoutes({[from]:to}));
+ assert.deepEqual(fixedRoutes({'/regions/1':'/states/new-jersey'}),[{from:'/regions/1',to:'/states/new-jersey'}]);
 });
-test('only sitemap places; local targets checked against pinned registry',()=>{
- const registry={2:{state:'nj',slug:'town',level:'municipality'},3:{state:'nj',slug:'retained',level:'zip'}};
- const places=publishedPlaces(registry,'<loc>https://test.example/nj/town</loc>');assert.equal(places.length,1);
- assert.throws(()=>legacyManifest(places,parseRedirects('/regions/2 /nj/wrong 301')));
- assert.deepEqual(legacyManifest(places,new Map()).map(e=>e.coverage),['alias','alias']);
+test('only sitemap places; every page and report, ZIPs included; fixed routes cannot shadow a place',()=>{
+ const registry={2:{state:'nj',slug:'town',level:'municipality'},3:{state:'nj',slug:'zip-07030',level:'zip'},4:{state:'nj',slug:'gone',level:'zip'}};
+ const places=publishedPlaces(registry,'<loc>https://test.example/nj/town</loc><loc>https://test.example/nj/zip-07030</loc>');
+ assert.equal(places.length,2);
+ assert.deepEqual(legacyManifest(places,[{from:'/regions/1',to:'/'}]).map(e=>`${e.from} ${e.to}`),
+  ['/regions/1 /','/regions/2 /nj/town','/regions/2/report /nj/town/report','/regions/3 /nj/zip-07030','/regions/3/report /nj/zip-07030/report']);
+ assert.throws(()=>legacyManifest(places,[{from:'/regions/2',to:'/'}]),/shadows/);
 });
-test('coverage rejects both, neither, wrong alias and missing targets',async()=>{
+test('validation needs every target and refuses files that would shadow the Worker',async()=>{
  const root=await mkdtemp(path.join(tmpdir(),'hip-publication-test-'));
  try {
-  await mkdir(path.join(root,'nj'),{recursive:true});await mkdir(path.join(root,'regions'),{recursive:true});
-  await writeFile(path.join(root,'nj/town.html'),'canonical');await writeFile(path.join(root,'_redirects'),'/regions/2 /nj/town 301\n');
-  const entries=[{from:'/regions/2',to:'/nj/town',coverage:'rule'}];await validateCoverage(root,entries);
-  await writeFile(path.join(root,'regions/2.html'),'duplicate');await assert.rejects(validateCoverage(root,entries),/exactly one/);
-  await writeFile(path.join(root,'_redirects'),'');await assert.rejects(validateCoverage(root,entries),/Wrong alias/);
-  await writeFile(path.join(root,'regions/2.html'),'location.replace("/nj/town"+location.search+location.hash) url=/nj/town');await validateCoverage(root,entries);
-  await rm(path.join(root,'regions/2.html'));await assert.rejects(validateCoverage(root,entries),/exactly one/);
-  await rm(path.join(root,'nj/town.html'));await assert.rejects(validateCoverage(root,entries),/Missing redirect target/);
+  await mkdir(path.join(root,'nj'),{recursive:true});await writeFile(path.join(root,'nj/town.html'),'canonical');
+  const entries=[{from:'/regions/2',to:'/nj/town'}];await validateManifest(root,entries);
+  for(const name of ['_redirects','regions.html']) {
+   await writeFile(path.join(root,name),'');await assert.rejects(validateManifest(root,entries),/shadow/);await rm(path.join(root,name));
+  }
+  await mkdir(path.join(root,'regions'));await assert.rejects(validateManifest(root,entries),/shadow/);await rm(path.join(root,'regions'),{recursive:true});
+  await rm(path.join(root,'nj/town.html'));await assert.rejects(validateManifest(root,entries),/Missing redirect target/);
  }finally{await rm(root,{recursive:true,force:true});}
 });
 test('runtime exact allowlist preserves queries; unknown and artifact paths pass through',async()=>{
@@ -41,7 +41,27 @@ test('runtime exact allowlist preserves queries; unknown and artifact paths pass
  for(const suffix of ['/3','/02','/2/metrics.json','/2/','/2/report/extra'])assert.equal(redirect(new Request(`https://housing.test/regions${suffix}`)),null);
  assert.equal(redirect(new Request('https://housing.test/regions/2',{method:'POST'})).status,405);
 });
+test('the Worker hands everything it does not redirect to the static assets',async()=>{
+ const worker=createHandler([{from:'/regions/2',to:'/nj/town'}]);
+ const env={ASSETS:{fetch:request=>new Response(`asset ${new URL(request.url).pathname}`,{status:404})}};
+ assert.equal((await worker.fetch(new Request('https://housing.test/regions/2'),env)).status,301);
+ const passed=await worker.fetch(new Request('https://housing.test/regions/999'),env);
+ assert.equal(passed.status,404);assert.equal(await passed.text(),'asset /regions/999');
+});
 test('per-place attribution excludes adjacent slugs and includes nested report payloads',()=>{
- const report=inventory([{path:'nj/town.html',bytes:10},{path:'nj/town.txt',bytes:2},{path:'nj/town/report.html',bytes:20},{path:'nj/township.html',bytes:50},{path:'regions/2/report.html',bytes:1}], [{id:'2',route:'/nj/town',level:'municipality'}],[{from:'/regions/2/report',coverage:'alias'}],1);
- assert.equal(report.byPlace[0].files,3);assert.equal(report.byPlace[0].aliases,1);assert.equal(report.files,5);
+ const report=inventory([{path:'nj/town.html',bytes:10},{path:'nj/town.txt',bytes:2},{path:'nj/town/report.html',bytes:20},{path:'nj/township.html',bytes:50}],[{id:'2',route:'/nj/town',level:'municipality'}]);
+ assert.equal(report.byPlace[0].files,3);assert.equal(report.files,4);assert.equal(report.headroom.files,99996);
+});
+test('navigate really sends a navigation and follows no redirect',async()=>{
+ const server=createServer((request,response)=>{response.writeHead(301,{location:'/there','x-mode':request.headers['sec-fetch-mode']});response.end('moved');});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try {
+  const seen=[];server.on('request',request=>seen.push(request.headers['sec-fetch-mode']));
+  const answer=await navigate(`http://127.0.0.1:${server.address().port}/here`);
+  assert.deepEqual([answer.status,answer.location,answer.text,seen],[301,'/there','moved',['navigate']]);
+ } finally {server.closeAllConnections();server.close();}
+});
+test('the Worker runs first on old addresses, or browsers get the 404 page (#454)',async()=>{
+ const config=await readFile(new URL('../../wrangler.jsonc',import.meta.url),'utf8');
+ assert.match(config,/^\s*"run_worker_first":\s*\[\s*"\/regions\/\*"\s*\]/m);
 });

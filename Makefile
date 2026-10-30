@@ -122,15 +122,20 @@ test:  ## Run both test suites, slow Python tests left out (about a minute)
 	uv run pytest -m "not slow"
 	@# The dashboard suite covers the pure chart arithmetic. Skipped rather than failed
 	@# when node_modules is absent, so `make test` still works before `make setup`.
-	@test -d web/node_modules \
-		&& (cd web && npm test --silent) \
-		|| echo "web/node_modules missing — skipping dashboard tests (run make setup)"
+	@# publication:test holds the site Worker's redirect tests (#454).
+	@if [ -d web/node_modules ]; then \
+		cd web && npm test --silent && npm run --silent publication:test; \
+	else \
+		echo "web/node_modules missing — skipping dashboard tests (run make setup)"; \
+	fi
 
 test-all:  ## Every test, the slow analytics and publish ones too — before a merge
 	uv run pytest
-	@test -d web/node_modules \
-		&& (cd web && npm test --silent) \
-		|| echo "web/node_modules missing — skipping dashboard tests (run make setup)"
+	@if [ -d web/node_modules ]; then \
+		cd web && npm test --silent && npm run --silent publication:test; \
+	else \
+		echo "web/node_modules missing — skipping dashboard tests (run make setup)"; \
+	fi
 
 test-py:  ## Run the Python test suite alone, slow tests included
 	uv run pytest
@@ -174,7 +179,6 @@ R2_REMOTE     ?= r2
 # Private: what the last deploy replaced, for `make rollback` (#359). Never served — it
 # can hold addresses withdrawn under Daniel's Law since.
 R2_BACKUP_BUCKET ?= housing-artifacts-previous
-PAGES_PROJECT ?= housing-intelligence
 # A clock line before each step of publish, deploy and check-live, so a slow run says
 # which step was slow: on 2026-10-07 a full deploy took 18-27 minutes, and only the two
 # uploads could be timed from their own output.
@@ -215,14 +219,20 @@ publish:  ## Build both halves of the deployable site into dist/
 	@# by the next publish anyway (the `rm -rf` above), and keeping them held two more
 	@# copies of the site, about 6.4 GB of disk at 14,000 pages (2026-10-02).
 	mkdir -p dist && mv web/out dist/site && rm -rf web/.next
+	@# The Worker bundles this beside the site, not in it (ARCHITECTURE #454).
+	cp web/.publication/legacy-redirects.json dist/legacy-redirects.json
 	$(call STAMP,publish: done)
 	@echo
 	@echo "dist/artifacts  $$(find dist/artifacts -type f | wc -l | tr -d ' ') files, $$(du -sh dist/artifacts | cut -f1)  -> object storage (R2)"
-	@echo "dist/site       $$(find dist/site -type f | wc -l | tr -d ' ') files, $$(du -sh dist/site | cut -f1)  -> static host (Pages)"
+	@echo "dist/site       $$(find dist/site -type f | wc -l | tr -d ' ') files, $$(du -sh dist/site | cut -f1)  -> Workers static assets"
 
 check-dist:  ## Verify dist/ is complete and was built for production
 	@test -f dist/artifacts/manifest.json || { \
 	  echo "dist/artifacts/manifest.json missing — run 'make publish' first"; exit 1; }
+	@test -f dist/legacy-redirects.json || { \
+	  echo "dist/legacy-redirects.json missing — the Worker cannot be built; run 'make publish'"; exit 1; }
+	@test ! -e dist/site/_redirects || { \
+	  echo "dist/site/_redirects would bring back the 2,000-rule cap (ARCHITECTURE #454)"; exit 1; }
 	@test -f dist/site/index.html || { \
 	  echo "dist/site/index.html missing — run 'make publish' first"; exit 1; }
 	uv run python scripts/check_list_completeness.py dist/artifacts
@@ -282,7 +292,7 @@ screenshots: check-dist  ## Capture the README's screenshots from dist/site into
 	  pid=$$!; sleep 1; SCREENSHOT_ORIGIN=http://localhost:3006 node scripts/capture-readme.mjs; status=$$?; \
 	  kill $$pid; exit $$status; }
 
-deploy: check-dist check-terms check-accessibility screenshots  ## Upload artifacts to R2 and the site to Pages
+deploy: check-dist check-terms check-accessibility screenshots  ## Upload artifacts to R2 and the site to its Worker
 	@# Keep a way back (#359): the private backup bucket is emptied, then given the list of
 	@# keys live now and, through `--backup-dir`, every file this sync replaces or deletes.
 	@# `make rollback` restores from it. Refuses up front if the bucket is unreachable,
@@ -305,13 +315,12 @@ deploy: check-dist check-terms check-accessibility screenshots  ## Upload artifa
 	@# file, which would otherwise keep whatever cache header it was first uploaded with.
 	rclone copy dist/artifacts/screenshots $(R2_REMOTE):$(R2_BUCKET)/screenshots \
 	  --ignore-times --header-upload "Cache-Control: public, max-age=300"
-	@# `--branch` pinned: wrangler otherwise names the deployment after the checked-out git
-	@# branch, and anything but `main` becomes a Preview. On 2026-09-23 a deploy run from a
-	@# docs branch did exactly that — the artifacts above went live, the pages did not, and
-	@# production served old HTML over new artifacts until it was redeployed. The R2 half
-	@# has no preview, so the site half must not have one either.
-	$(call STAMP,deploy: site to Pages started)
-	wrangler pages deploy dist/site --project-name=$(PAGES_PROJECT) --branch=main
+	@# One Worker version holds the pages and the old-address redirects together
+	@# (ARCHITECTURE #454); `wrangler.jsonc` names it. Unlike `wrangler pages deploy` it
+	@# has no git-branch previews, so a deploy from any branch is production (#400's
+	@# 2026-09-23 lesson no longer needs `--branch`).
+	$(call STAMP,deploy: site to Workers started)
+	wrangler deploy
 	$(call STAMP,deploy: done)
 
 publish-status:  ## Publish when the sources were last checked (CHECKED_AT=, OUTCOME=current|unreachable)
