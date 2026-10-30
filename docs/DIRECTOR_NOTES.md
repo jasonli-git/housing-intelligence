@@ -995,3 +995,18 @@ sources and practical checks.
 
 The owner approved a local pilot covering one market topic, commute and water on
 Princeton. This does not approve migrating every component or rolling out to all places.
+
+### Social export for visual stories
+
+**Status:** Exploratory
+
+Explore a way to export visual story pages for sharing on social media, as part of getting
+real users to the site.
+
+Consider:
+
+- Posting stories to r/dataisbeautiful, which needs a Reddit account and a review of its
+  current rules.
+- Which formats and sizes an export would need.
+
+Do not implement yet.
