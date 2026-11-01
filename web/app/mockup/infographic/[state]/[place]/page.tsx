@@ -20,6 +20,7 @@ import { comparisonMeasures } from "@/lib/placeComparisons";
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { makePlaceStoryRecord, PLACE_STORIES, placeStoryHref, storyHistoryMetrics, summarizePlaceStory, type PlaceStorySummary, type PlaceStoryTopic } from "@/lib/placeStories";
 import { stampPlaceStory } from "@/lib/placeStoryData";
+import { surveyYears } from "@/lib/periods";
 import { loadFloodStory } from "@/lib/placeFloodStory";
 import { TREND_METRICS } from "@/lib/trendMetrics";
 import { marketDistribution } from "@/lib/marketPortrait";
@@ -278,6 +279,24 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     return i < year ? "lived" : i < year + held ? "seasonal" : "empty";
   });
 
+  // Income and home value: every town on one log-log chart, where each multiple is a straight line.
+  const incomeRow = level("acs_median_hh_income"), valueRow = level("acs_median_home_value");
+  const [townIncomes, townValuesAcs] = await Promise.all([townValues("acs_median_hh_income", incomeRow?.period_start), townValues("acs_median_home_value", valueRow?.period_start)]);
+  const pairs = [...townIncomes].flatMap(([id, inc]) => { const val = townValuesAcs.get(id); return inc > 0 && val && val > 0 ? [{ id, income: inc, value: val }] : []; });
+  const multiple = incomeRow && valueRow && incomeRow.value > 0 ? valueRow.value / incomeRow.value : null;
+  const SW = 640, SH = 340, SL = 58, SB = 28, ST = 10, SR = 12;
+  const logRange = (values: number[]) => [Math.log(Math.min(...values) * 0.95), Math.log(Math.max(...values) * 1.05)] as const;
+  const [x0, x1] = pairs.length ? logRange(pairs.map((p) => p.income)) : [0, 1];
+  const [y0, y1] = pairs.length ? logRange(pairs.map((p) => p.value)) : [0, 1];
+  const sx = (v: number) => SL + ((Math.log(v) - x0) / (x1 - x0)) * (SW - SL - SR);
+  const sy = (v: number) => SH - SB - ((Math.log(v) - y0) / (y1 - y0)) * (SH - SB - ST);
+  const surveyPeriod = incomeRow ? surveyYears(incomeRow.period_start, incomeRow.period_end) : "";
+  const moneyTick = (v: number) => (v >= 1e6 ? `$${v / 1e6}M` : `$${v / 1e3}K`);
+  const xTicks = [50000, 100000, 200000, 400000].filter((v) => Math.log(v) > x0 && Math.log(v) < x1);
+  const yTicks = [200000, 500000, 1000000, 2000000].filter((v) => Math.log(v) > y0 && Math.log(v) < y1);
+  const multipleLine = (k: number) => { const a = Math.max(Math.exp(x0), Math.exp(y0) / k), b = Math.min(Math.exp(x1), Math.exp(y1) / k); return { a, b, k }; };
+  const lessThanHere = multiple !== null && pairs.length ? (pairs.filter((p) => p.value / p.income < multiple).length / pairs.length) * 100 : null;
+
   // The workday: where residents' jobs are, as lines from the town on the state's map.
   const WORK_W = 340;
   const workFrame = countyGeo ? projector(countyGeo.features.flatMap((f) => ringsOf(f.geometry)), WORK_W, 8) : null;
@@ -368,6 +387,19 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <strong>{(share as number).toFixed(0)}%</strong>
         </div>)}
         <p className={styles.caption}>The typical home against the median household income, not any one household. The mark is the common 30% guideline. Census ACS.</p>
+      </section>}
+
+      {multiple !== null && pairs.length > 10 && <section id="ratio" className={`${styles.panel} ${styles.ratio}`}>
+        <h2>A typical home here costs {multiple.toFixed(1)} times the typical income</h2>
+        <svg className={styles.scatter} viewBox={`0 0 ${SW} ${SH}`} role="img" aria-label={`Every New Jersey town by median household income and median home value. ${name} is ${multiple.toFixed(1)} times income, more than ${lessThanHere?.toFixed(0)}% of towns.`}>
+          {yTicks.map((tick) => <g key={tick}><line x1={SL} x2={SW - SR} y1={sy(tick)} y2={sy(tick)} stroke="currentColor" strokeOpacity="0.12" /><text x={SL - 8} y={sy(tick) + 4} textAnchor="end">{moneyTick(tick)}</text></g>)}
+          {xTicks.map((tick) => <text key={tick} x={sx(tick)} y={SH - 8} textAnchor="middle">{moneyTick(tick)}</text>)}
+          {[3, 5].map((k) => { const { a, b } = multipleLine(k); return <g key={k}><line x1={sx(a)} y1={sy(a * k)} x2={sx(b)} y2={sy(b * k)} stroke="currentColor" strokeOpacity="0.6" strokeDasharray="5 4" /><text x={sx(b) - 4} y={sy(b * k) + 14} textAnchor="end">{k}× income</text></g>; })}
+          {pairs.filter((p) => p.id !== regionId).map((p) => <circle key={p.id} cx={sx(p.income)} cy={sy(p.value)} r="2.5" fill="currentColor" fillOpacity="0.28" />)}
+          <circle cx={sx(incomeRow!.value)} cy={sy(valueRow!.value)} r="7" fill="var(--series-2)" stroke="var(--on-dot)" strokeWidth="2" />
+          <text className={styles.scatterName} x={sx(incomeRow!.value) - 12} y={sy(valueRow!.value) - 10} textAnchor="end">{name}</text>
+        </svg>
+        <p className={styles.caption}>Every dot is a New Jersey town: median household income across, median owner-reported home value up. A higher multiple than {lessThanHere?.toFixed(0)}% of towns. Both axes are proportional. Census ACS, {surveyPeriod}. · <Link href={placeStoryHref("market", regionId)}>Full story</Link></p>
       </section>}
 
       {taxBill && <section id="tax" className={`${styles.panel} ${styles.tax}`}>

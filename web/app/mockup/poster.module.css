@@ -186,3 +186,7 @@
 .waffle i[data-kind="lived"], .seasonal .key i[data-kind="lived"] { background: var(--series-1); }
 .waffle i[data-kind="seasonal"], .seasonal .key i[data-kind="seasonal"] { background: var(--series-2); }
 .waffle i[data-kind="empty"], .seasonal .key i[data-kind="empty"] { background: color-mix(in srgb, currentColor 25%, transparent); }
+.ratio { --on-dot: light-dark(#fff, #10202f); background: light-dark(#fff0d6, #2d2a3f); color: var(--text-primary); }
+.scatter { display: block; width: 100%; height: auto; }
+.scatter text { fill: currentColor; font-size: 12px; }
+.scatter .scatterName { font-size: 14px; font-weight: 700; }
