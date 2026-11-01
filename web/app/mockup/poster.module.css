@@ -170,3 +170,7 @@
 .deepRail > button:last-child { right: -14px; }
 .deepRail > button:disabled { display: none; }
 @media (max-width: 640px) { .deepRail > button { display: none; } .deepRail ul { grid-auto-columns: 78%; } }
+.sameHouse { background: light-dark(#fbd9b5, #4d2f0c); color: var(--text-primary); }
+.sameHouse .townBar { grid-template-columns: minmax(0, 13rem) minmax(0, 1fr) 5rem; margin-bottom: 8px; }
+.sameHouse .townBar i { height: 18px; }
+@media (min-width: 1000px) { .poster > .sameHouse { flex: 7 1 55%; } }

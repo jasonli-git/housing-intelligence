@@ -222,6 +222,23 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const milestones = [500000, 1000000].flatMap((mark) => { const year = passed(mark); return year && year !== obs[0]?.period_end.slice(0, 4) ? [`passed ${dollars(mark)} in ${year}`] : []; });
   const perAcre = homeRow && level("modiv_median_lot_acres")?.value ? homeRow.value / level("modiv_median_lot_acres")!.value : null;
   const starter = level("zhvi_bottom_tier");
+  // The same $500,000 house at each town's effective rate. Rates above 6 are the mutual
+  // housing towns, whose small assessments are no guide to a house bought outright.
+  const HOUSE = 500_000;
+  const billFor = (rate: number) => (rate / 100) * HOUSE;
+  const rates = new Map([...(await townValues("nj_effective_tax_rate", taxRate?.period_start))].filter(([, rate]) => rate > 0 && rate <= 6));
+  const stateRates = [...rates.values()].sort((a, b) => a - b);
+  const countyRates = countyTowns.flatMap((t) => { const rate = rates.get(t.region_id); return rate === undefined ? [] : [{ id: t.region_id, name: displayName(t), rate }]; }).sort((a, b) => a.rate - b.rate);
+  const sameHouseRows = taxRate && taxRate.value <= 6 && stateRates.length ? [
+    { key: "own", label: name, rate: taxRate.value, own: true },
+    ...(countyRates.length > 1 && countyRates[0].id !== regionId ? [{ key: "low", label: `${countyRates[0].name}, lowest in county`, rate: countyRates[0].rate, own: false }] : []),
+    ...(countyRates.length > 1 && countyRates.at(-1)!.id !== regionId ? [{ key: "high", label: `${countyRates.at(-1)!.name}, highest in county`, rate: countyRates.at(-1)!.rate, own: false }] : []),
+    { key: "state", label: "Typical NJ town", rate: stateRates[Math.floor(stateRates.length / 2)], own: false },
+  ] : [];
+  const sameHousePeak = Math.max(...sameHouseRows.map((row) => row.rate), 0.01);
+  const ratio = level("nj_director_ratio")?.value ?? null;
+  const assessment = ratio === null ? null : ratio >= 95 ? "current" : ratio >= 85 ? "slipping" : "overdue";
+  const revaluedIn = (await latest("nj_revaluation_year"))?.value ?? null;
   const vacant = level("acs_vacancy_rate"), seasonal = level("acs_vacant_seasonal_share");
   // Every panel's title states its finding, from the same figures the picture draws.
   const asOf = (row?: { period_end: string }) => row ? new Date(`${row.period_end.slice(0, 7)}-15`).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }) : "";
@@ -327,6 +344,14 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <p className={styles.giant}>{dollars(taxBill.value)}</p>
         <p className={styles.caption}>Median yearly bill{taxRate ? ` · ${taxRate.value.toFixed(2)}% effective rate` : ""}{taxBillMeasure ? ` · ${taxBillMeasure.row.rank}th of ${taxBillMeasure.row.of} towns` : ""}</p>
         <p className={styles.actions}><Link href={taxHref}>Look up a property</Link></p>
+      </section>}
+
+      {sameHouseRows.length > 0 && taxRate && <section className={`${styles.panel} ${styles.sameHouse}`}>
+        <h2>The same {dollars(HOUSE)} house pays {dollars(billFor(taxRate.value))} a year here</h2>
+        {sameHouseRows.map((row) => <div key={row.key} className={styles.townBar} data-own={row.own || undefined}>
+          <span>{row.label}</span><div><i style={{ width: `${(row.rate / sameHousePeak) * 100}%` }} /></div><strong>{dollars(billFor(row.rate))}</strong>
+        </div>)}
+        <p className={styles.caption}>{ratio !== null ? `Assessments are ${assessment}: ${ratio.toFixed(0)}% of market value. ` : ""}{revaluedIn ? `Last revaluation ${Math.round(revaluedIn)}. ` : ""}Each town’s effective rate applied to one price, not any home’s actual bill. NJ Division of Taxation, {taxRate.period_end.slice(0, 4)}.</p>
       </section>}
 
       {strips.length > 0 && <section id="ranks" className={`${styles.panel} ${styles.rank}`}>
