@@ -2,12 +2,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import styles from "../../../poster.module.css";
+import { CostToOwn } from "@/components/CostToOwn";
+import { Crumbs } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
+import { similarGroups } from "@/lib/similar";
+import { stateCrumbs } from "@/lib/states";
+import { placesQuery } from "@/lib/compare";
 import { PlaceStoryGallery } from "@/components/PlaceStoryGallery";
 import { api, artifactUrl, regionsWithData } from "@/lib/api";
 import { ownershipInputs } from "@/lib/budgetScenario";
 import { costInputs } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
+import { regionTitle } from "@/lib/meta";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { eachMonth } from "@/lib/ownership";
 import { comparisonMeasures } from "@/lib/placeComparisons";
@@ -19,16 +25,15 @@ import { TREND_METRICS } from "@/lib/trendMetrics";
 import { marketDistribution } from "@/lib/marketPortrait";
 import { marketPortraitData } from "@/lib/marketPortraitData";
 import { projector, ringsOf, shapes } from "@/lib/storyMap";
+import { ordinal } from "@/lib/ranks";
 import { uncertaintiesFrom } from "@/lib/uncertainty";
 import { verdictHeadline } from "@/lib/verdict";
 
 const dollars = (value: number) => `$${Math.round(value).toLocaleString("en-US")}`;
 const STRIPS = [
-  ["sr1a_median_sale_price", "Recent sale price"],
   ["acs_median_hh_income", "Household income"],
   ["acs_mean_commute_minutes", "Commute"],
   ["fema_flood_homes_share", "Homes in flood zone"],
-  ["acs_homeownership_rate", "Homes owner-occupied"],
   ["acs_work_from_home_share", "Work from home"],
 ] as const;
 const WORK = [
@@ -41,6 +46,13 @@ const WORK = [
 
 export async function generateStaticParams() {
   return placeRouteParams(await regionsWithData());
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ state: string; place: string }> }) {
+  const { state, place } = await params;
+  const regionId = resolvePlace(state, place);
+  const region = regionId === null ? null : await api.region(regionId);
+  return { title: region ? `${regionTitle(region)} — Housing` : "Housing" };
 }
 
 /** A place page as one poster: every panel makes one point, and the picture makes it. */
@@ -122,6 +134,50 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     const x = (v: number) => (Math.log(v / box.min) / Math.log(box.max / box.min)) * 100;
     return [{ id: cohort.metricId, label: cohort.metricId === "zhvi_sfr" ? "Home value" : "Monthly rent", box, own, x, count: cohort.points.length }];
   });
+  // Open cleanups have no published rank, so towns are compared per thousand homes here.
+  const towns = (await api.regions(`state=${region.state_code}&level=municipality&limit=1000`))?.items ?? [];
+  const batches = Array.from({ length: Math.ceil(towns.length / 100) }, (_, i) => towns.slice(i * 100, i * 100 + 100).map((t) => t.region_id));
+  const townValues = async (id: string, period?: string) => period ? new Map((await Promise.all(batches.map((ids) => api.marketObservations(id, ids, period))))
+    .flatMap((part) => part?.regions.flatMap((r) => r.series.map((p) => [r.region_id, p.value] as const)) ?? [])) : new Map<number, number>();
+  const sitesRow = level("njdep_sites_open"), homesRow = level("acs_housing_units");
+  const [siteCounts, homeCounts, similar] = await Promise.all([townValues("njdep_sites_open", sitesRow?.period_start), townValues("acs_housing_units", homesRow?.period_start), api.similarPlaces(regionId)]);
+  const siteRates = [...siteCounts].flatMap(([id, n]) => (homeCounts.get(id) ?? 0) > 0 ? [(n / homeCounts.get(id)!) * 1000] : []).sort((a, b) => a - b);
+  const siteRate = sitesRow && homesRow?.value ? (sitesRow.value / homesRow.value) * 1000 : null;
+  const typicalSites = siteRates.length ? siteRates[Math.floor(siteRates.length / 2)] : null;
+
+  const pct = (id: string, digits = 0) => { const v = level(id)?.value; return v === undefined ? null : `${(v * 100).toFixed(digits)}%`; };
+  const reading = community?.districts.length === 1 ? community.districts[0].performance?.payload.indicators.find((i) => i.label.startsWith("English language arts")) : undefined;
+  const fiber = community?.broadband_place?.payload;
+  const uninsured = community?.health.find((h) => h.payload.measure === "ACCESS2")?.payload;
+  const floodYears = [...flood.claims].slice(-10);
+  const floodClaims = floodYears.reduce((sum, o) => sum + o.value, 0);
+  const violations = water?.systems.reduce((sum, w) => sum + w.violations, 0) ?? null;
+  const electric = utilities?.providers.find((p) => p.fuel === "electric")?.provider;
+  const facts = [
+    reading?.value != null && { value: `${reading.value.toFixed(0)}%`, label: "of students met English expectations" },
+    fiber && fiber.locations > 0 && { value: `${((fiber.fiber / fiber.locations) * 100).toFixed(0)}%`, label: "of locations can get fiber" },
+    pct("transit_any_homes_share") && { value: pct("transit_any_homes_share")!, label: "of homes near a transit stop" },
+    flood.claims.length > 0 && { value: `${flood.estimated ? "~" : ""}${Math.round(floodClaims).toLocaleString("en-US")}`, label: `flood claims in ${flood.place ?? "town"}${flood.estimated ? " (estimated)" : ""}, ${floodYears.length} years on file` },
+    siteRate !== null && { value: siteRate.toFixed(1), label: `open site cleanups per 1,000 homes${typicalSites !== null ? ` (typical town ${typicalSites.toFixed(1)})` : ""}` },
+    violations !== null && { value: violations.toLocaleString("en-US"), label: `drinking-water violations, ${water?.first_year}–${water?.last_year}` },
+    uninsured?.value != null && { value: `${uninsured.value.toFixed(0)}%`, label: `of adults 18–64 uninsured (county, ${uninsured.year})` },
+  ].flatMap((fact) => (fact ? [fact] : []));
+  const bedrooms = [["acs_share_0_1_bedrooms", "0–1 bed"], ["acs_share_2_bedrooms", "2 bed"], ["acs_share_3_bedrooms", "3 bed"], ["acs_share_4plus_bedrooms", "4+ bed"]].flatMap(([id, label], i) => { const v = level(id)?.value; return v ? [{ label, value: v * 100, color: ["var(--series-3)", "var(--series-1)", "var(--series-2)", "var(--text-secondary)"][i] }] : []; });
+  const stock = [
+    level("modiv_median_year_built") && { value: String(Math.round(level("modiv_median_year_built")!.value)), label: "typical year built" },
+    level("modiv_median_lot_acres") && { value: level("modiv_median_lot_acres")!.value.toFixed(2), label: "acre median lot" },
+    level("permits_total_units") && { value: level("permits_total_units")!.value.toLocaleString("en-US"), label: `homes permitted, ${level("permits_total_units")!.period_end.slice(0, 4)}` },
+    level("nj_ah_prospective_need") && { value: level("nj_ah_prospective_need")!.value.toLocaleString("en-US"), label: "affordable homes in the prospective need" },
+  ].flatMap((fact) => (fact ? [fact] : []));
+  const q1 = level("sr1a_price_lower_quartile"), q3 = level("sr1a_price_upper_quartile"), medianSale = level("sr1a_median_sale_price"), salesCount = level("sr1a_sales_count");
+  const movers = migration?.years.at(-1)?.net_per_1000 != null ? migration.years.filter((y) => y.net_per_1000 !== null) : [];
+  const moverPeak = Math.max(...movers.map((y) => Math.abs(y.net_per_1000!)), 1);
+  const taxBill = level("modiv_median_tax_bill"), taxRate = level("nj_effective_tax_rate");
+  const taxBillMeasure = comparisonMeasures(packet.levels, uncertainties, ["modiv_median_tax_bill"])[0];
+  const groups = similar ? similarGroups(similar) : [];
+  const priceRow = similar ? groups.flatMap((g) => g.rows).find((r) => r.metric_id === similar.price) : undefined;
+  const taxHref = `/tax?town=${region.geoid}`;
+
   const townFeature = townGeo?.features.find((f) => f.properties.region_id === regionId);
   const frame = countyGeo ? projector(countyGeo.features.flatMap((f) => ringsOf(f.geometry)), 180, 4) : null;
   const counties = countyGeo && frame ? shapes(countyGeo.features, 180, frame).shapes : [];
@@ -131,10 +187,12 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     <Masthead affordability={{ kind: "route" }} simple />
     <main id="main-content" tabIndex={-1} className={styles.poster}>
       <p className={styles.flag}>Infographic mockup · <Link href={regionPath(regionId)}>current page</Link> · <Link href={`/mockup/${state}/${slug}`}>first mockup</Link></p>
+      <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
+      <nav className={styles.topics} aria-label="On this page"><a href="#price">Price</a><a href="#cost">Cost</a><a href="#tax">Tax</a><a href="#ranks">Compared</a><a href="#living">Living here</a><a href="#homes">Homes</a><a href="#people">People</a><a href="#county">County</a><a href="#stories">Stories</a></nav>
 
       <header className={`${styles.panel} ${styles.hero}`}>
         <div>
-          <p className={styles.kicker}>{county ? `${displayName(county)}, ` : ""}{scopeName(region.state_code)}</p>
+          <p className={styles.kicker}>{county ? `${displayName(county)}, ` : ""}{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""}</p>
           <h1>{name}</h1>
           {headline && <p className={styles.headline}>{headline}</p>}
         </div>
@@ -144,7 +202,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         </svg>}
       </header>
 
-      {homeRow && <section className={`${styles.panel} ${styles.price}`}>
+      {homeRow && <section id="price" className={`${styles.panel} ${styles.price}`}>
         <h2>The typical home</h2>
         <p className={styles.giant}>{formatMetric(homeRow.value, homeRow.unit, homeRow.metric_id)}</p>
         {recent.length > 1 && <svg className={styles.area} viewBox="0 0 600 200" preserveAspectRatio="none" role="img" aria-label="Typical home value over the last ten years">
@@ -152,6 +210,11 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <polyline points={area} fill="none" stroke="currentColor" strokeWidth="3" vectorEffect="non-scaling-stroke" />
         </svg>}
         <p className={styles.caption}>Last ten years · {dollars(recent[0] ?? 0)} to {dollars(recent.at(-1) ?? 0)}</p>
+        {medianSale && q1 && q3 && <div className={styles.sales}>
+          <h3>What homes actually sold for</h3>
+          <div className={styles.saleBar}><span><b>{dollars(q1.value)}</b>lower quarter</span><span><b>{dollars(medianSale.value)}</b>median</span><span><b>{dollars(q3.value)}</b>upper quarter</span></div>
+          <p className={styles.caption}>{salesCount ? `${formatMetric(salesCount.value, "count", "sr1a_sales_count")} sales` : "Recent sales"}{level("sr1a_median_price_per_sqft") ? ` · ${dollars(level("sr1a_median_price_per_sqft")!.value)} per square foot` : ""}</p>
+        </div>}
       </section>}
 
       {boxes.length > 0 && <section className={`${styles.panel} ${styles.boxes}`}>
@@ -169,7 +232,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <p className={styles.caption}>Box: the middle half of towns. Line: the median. Ends: lowest and highest. Dot: {name}. Spacing is proportional, not linear.</p>
       </section>}
 
-      {month && <section className={`${styles.panel} ${styles.cost}`}>
+      {month && <section id="cost" className={`${styles.panel} ${styles.cost}`}>
         <h2>Own or rent, each month</h2>
         <div className={styles.versus}>
           <div><span>Own</span><strong>{dollars(month.total)}</strong>
@@ -178,6 +241,12 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
             <div className={styles.stack} style={{ width: `${(rent / month.total) * 100}%` }}><i style={{ flexGrow: 1, background: "var(--text-secondary)" }} /></div></div>}
         </div>
         <ul className={styles.key}>{parts.map((p) => <li key={p.label}><i style={{ background: p.color }} />{p.label} {dollars(p.value)}</li>)}</ul>
+        <p className={styles.caption}>{month.principal > 0 ? `About ${dollars(month.principal)} of owning goes into the home. ` : ""}20% down at {cost!.rate.value.toFixed(2)}%.</p>
+        <details className={styles.tool}>
+          <summary>Use your own numbers</summary>
+          <div className="atlas-local quiet-county"><CostToOwn {...cost!} quiet compactOverview guidePlaceId={regionId} comparePlaceId={regionId} showHelp={false} /></div>
+        </details>
+        <p className={styles.actions}><Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link><Link href={`/afford?place=${regionId}&county=${county?.region_id ?? "all"}`}>Places within my budget</Link><Link href="/help">Housing help</Link></p>
       </section>}
 
       {ownShare !== null && <section className={`${styles.panel} ${styles.income}`}>
@@ -187,10 +256,17 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <div><i style={{ width: `${Math.min(share as number, 100)}%` }} /><b style={{ left: "30%" }} /></div>
           <strong>{(share as number).toFixed(0)}%</strong>
         </div>)}
-        <p className={styles.caption}>Share of the {formatMetric(income!, "usd", "acs_median_hh_income")} median household income · the mark is the common 30% guideline</p>
+        <p className={styles.caption}>Share of the median household income · the mark is the common 30% guideline</p>
       </section>}
 
-      {strips.length > 0 && <section className={`${styles.panel} ${styles.rank}`}>
+      {taxBill && <section id="tax" className={`${styles.panel} ${styles.tax}`}>
+        <h2>Property tax</h2>
+        <p className={styles.giant}>{dollars(taxBill.value)}</p>
+        <p className={styles.caption}>Median yearly bill{taxRate ? ` · ${taxRate.value.toFixed(2)}% effective rate` : ""}{taxBillMeasure ? ` · ${taxBillMeasure.row.rank}th of ${taxBillMeasure.row.of} towns` : ""}</p>
+        <p className={styles.actions}><Link href={taxHref}>Look up a property</Link></p>
+      </section>}
+
+      {strips.length > 0 && <section id="ranks" className={`${styles.panel} ${styles.rank}`}>
         <h2>Among {scopeName(peer_scope)} {peerNoun(peer_level)}</h2>
         <p className={styles.caption}>Lowest on the left, highest on the right. A wide band means the survey can’t place it exactly.</p>
         {strips.map((s) => <div key={s.id} className={styles.strip}>
@@ -200,25 +276,47 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         </div>)}
       </section>}
 
-      {(work.length > 0 || owned !== null) && <section className={`${styles.panel} ${styles.people}`}>
+      {facts.length > 0 && <section id="living" className={`${styles.panel} ${styles.living}`}>
+        <h2>Living here</h2>
+        <div className={styles.facts}>{facts.map((fact) => <div key={fact.label}><strong>{fact.value}</strong><span>{fact.label}</span></div>)}</div>
+        {electric && <p className={styles.caption}>Electricity: {electric}</p>}
+      </section>}
+
+      {(bedrooms.length > 0 || stock.length > 0) && <section id="homes" className={`${styles.panel} ${styles.homes}`}>
+        <h2>The homes here</h2>
+        {bedrooms.length > 0 && <><div className={styles.stack}>{bedrooms.map((b) => <i key={b.label} title={`${b.label}: ${b.value.toFixed(0)}%`} style={{ flexGrow: b.value, background: b.color }} />)}</div>
+          <ul className={styles.key}>{bedrooms.map((b) => <li key={b.label}><i style={{ background: b.color }} />{b.label} {b.value.toFixed(0)}%</li>)}</ul></>}
+        <div className={styles.facts}>{stock.map((fact) => <div key={fact.label}><strong>{fact.value}</strong><span>{fact.label}</span></div>)}</div>
+      </section>}
+
+      {(work.length > 0 || owned !== null) && <section id="people" className={`${styles.panel} ${styles.people}`}>
         {owned !== null && <><h2>Who holds the keys</h2>
           <div className={styles.split}><i style={{ flexGrow: owned }}>{(owned * 100).toFixed(0)}% own</i><i style={{ flexGrow: 1 - owned }}>{((1 - owned) * 100).toFixed(0)}% rent</i></div></>}
         {work.length > 0 && <><h2>Where residents work</h2>
           {work.map((w) => <div key={w.label} className={styles.meter}><span>{w.label}</span><div><i style={{ width: `${w.value}%`, background: w.color }} /></div><strong>{w.value.toFixed(0)}%</strong></div>)}</>}
+        {movers.length > 1 && <><h2>Moving in and out of {migration!.county_name} County</h2>
+          <div className={styles.moves}>{movers.map((y) => <div key={y.year} title={`${y.year}: ${y.net_per_1000!.toFixed(1)} per 1,000 households`}><i data-gain={y.net_per_1000! > 0 || undefined} style={{ height: `${(Math.abs(y.net_per_1000!) / moverPeak) * 50}%` }} /><span>{String(y.year).slice(2)}</span></div>)}</div>
+          <p className={styles.caption}>Net households per 1,000, by year · above the line, more arrived than left{migration!.arrivals[0] ? ` · most arrivals from ${migration!.arrivals[0].name}` : ""}</p></>}
       </section>}
 
-      {ranked.length > 1 && county && <section className={`${styles.panel} ${styles.county}`}>
+      {ranked.length > 1 && county && <section id="county" className={`${styles.panel} ${styles.county}`}>
         <h2>Across {displayName(county)}</h2>
         {ranked.slice(0, 12).map((t) => <div key={t.id} className={styles.townBar} data-own={t.id === regionId || undefined}>
           <span>{t.name}</span><div><i style={{ width: `${(t.value / ranked[0].value) * 100}%` }} /></div><strong>{dollars(t.value)}</strong>
         </div>)}
       </section>}
 
-      <section className={`${styles.panel} ${styles.stories}`}>
+      {similar && similar.matches.length > 0 && priceRow && <section className={`${styles.panel} ${styles.similar}`}>
+        <h2>Similar, but cheaper</h2>
+        <div className={styles.towns}>{similar.matches.map((m, i) => { const there = priceRow.values[i + 1], here = priceRow.values[0]; return <Link key={m.region_id} href={regionPath(m.region_id)}><strong>{m.name}</strong>{there !== null && <span>{dollars(there)}</span>}{there !== null && here !== null && <small>{dollars(here - there)} less</small>}</Link>; })}</div>
+        <p className={styles.actions}><Link href={`/compare${placesQuery([regionId, ...similar.matches.slice(0, 3).map((m) => m.region_id)])}`}>Compare side by side</Link></p>
+      </section>}
+
+      <section id="stories" className={`${styles.panel} ${styles.stories}`}>
         <PlaceStoryGallery records={records} artifactUrl={artifactUrl} title={`Stories about ${name}`} />
       </section>
 
-      <footer className={styles.close}>Sources: Zillow, Census Bureau, FEMA, NJ Division of Taxation. <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link></footer>
+      <footer className={styles.close}>Sources: Zillow, Census Bureau, FEMA, NJ Division of Taxation. <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <Link href="/sources">About the data</Link></footer>
     </main>
   </>;
 }
