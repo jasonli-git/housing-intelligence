@@ -78,13 +78,17 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const [region, packet, summary] = await Promise.all([api.region(regionId), api.packet(regionId, "5y"), api.summary(regionId, "5y")]);
   if (!region || !packet) notFound();
 
-  const county = region.ancestors.find((a) => a.level === "county") ?? null;
+  // A ZIP code crosses town lines, so its county comes from the migration crosswalk.
+  const isZip = region.level === "zip";
+  const zipCounty = isZip ? (await api.migration(regionId))?.county_id : undefined;
+  const county = region.ancestors.find((a) => a.level === "county") ?? (zipCounty ? await api.region(zipCounty) : null);
+  const unitWord = isZip ? "ZIP code" : "town";
   const [cost, history, countyGeo, townGeo, siblings] = await Promise.all([
     costInputs(region.state_code, region.level, packet.levels, packet.metrics),
     api.observations(regionId, "zhvi_sfr"),
     api.geo("county", region.state_code, 0.002),
     api.geo("municipality", region.state_code, 0.0005),
-    county ? api.regions(`level=municipality&parent_id=${county.region_id}&limit=1000`) : null,
+    county && !isZip ? api.regions(`level=municipality&parent_id=${county.region_id}&limit=1000`) : null,
   ]);
   const name = displayName(region);
   const uncertainties = uncertaintiesFrom(summary);
@@ -153,7 +157,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const stories = new Map(records.map((record) => [record.topic, summarizePlaceStory(record)]));
   const story = (topic: PlaceStoryTopic) => { const found = stories.get(topic); return found?.available ? found : null; };
   // Open cleanups have no published rank, so towns are compared per thousand homes here.
-  const towns = (await api.regions(`state=${region.state_code}&level=municipality&limit=1000`))?.items ?? [];
+  const towns = (await api.regions(`state=${region.state_code}&level=${region.level}&limit=1000`))?.items ?? [];
   const batches = Array.from({ length: Math.ceil(towns.length / 100) }, (_, i) => towns.slice(i * 100, i * 100 + 100).map((t) => t.region_id));
   const townValues = async (id: string, period?: string) => period ? new Map((await Promise.all(batches.map((ids) => api.marketObservations(id, ids, period))))
     .flatMap((part) => part?.regions.flatMap((r) => r.series.map((p) => [r.region_id, p.value] as const)) ?? [])) : new Map<number, number>();
@@ -172,7 +176,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const facts = [
     fiber && fiber.locations > 0 && { value: `${((fiber.fiber / fiber.locations) * 100).toFixed(0)}%`, label: "of locations can get fiber" },
     pct("transit_any_homes_share") && { value: pct("transit_any_homes_share")!, label: "of homes near a transit stop" },
-    siteRate !== null && { value: siteRate.toFixed(1), label: `open site cleanups per 1,000 homes${typicalSites !== null ? ` (typical town ${typicalSites.toFixed(1)})` : ""}` },
+    siteRate !== null && { value: siteRate.toFixed(1), label: `open site cleanups per 1,000 homes${typicalSites !== null ? ` (typical ${unitWord} ${typicalSites.toFixed(1)})` : ""}` },
     violations !== null && { value: violations.toLocaleString("en-US"), label: `drinking-water violations, ${water?.first_year}–${water?.last_year}` },
     story("utilities")?.rows[0] && { value: story("utilities")!.rows[0].formatted, label: "without power per customer, utility-wide" },
     uninsured?.value != null && { value: `${uninsured.value.toFixed(0)}%`, label: `of adults 18–64 uninsured (county, ${uninsured.year})` },
@@ -258,7 +262,8 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const STORY_GROUP: Record<string, string> = { market: "Money", sales: "Money", pressure: "Money", lending: "Money", building: "Homes", utilities: "Homes", water: "Surroundings", flood: "Surroundings", sites: "Surroundings", broadband: "Surroundings", commute: "People", migration: "People", schools: "People", health: "People" };
   const deepStories = records.flatMap(({ topic }) => { const found = story(topic); return found ? [{ topic, title: PLACE_STORIES[topic].title, headline: found.headline, source: found.source, href: placeStoryHref(topic, regionId), slug: PLACE_STORIES[topic].slug, group: STORY_GROUP[topic] ?? "Homes" }] : []; });
 
-  const townFeature = townGeo?.features.find((f) => f.properties.region_id === regionId);
+  const placeGeo = isZip ? await api.geo("zip", region.state_code, 0.0005) : townGeo;
+  const townFeature = placeGeo?.features.find((f) => f.properties.region_id === regionId);
   const frame = countyGeo ? projector(countyGeo.features.flatMap((f) => ringsOf(f.geometry)), 180, 4) : null;
   const counties = countyGeo && frame ? shapes(countyGeo.features, 180, frame).shapes : [];
   const town = townFeature && frame ? shapes([townFeature], 180, frame).shapes[0] : null;
@@ -446,7 +451,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           </div>
           <p className={styles.boxScale}><span>{dollars(box.min)}</span><span>median {dollars(box.median)}</span><span>{dollars(box.max)}</span></p>
         </figure>)}
-        <p className={styles.caption}>Box: the middle half of towns. Line: the median. Ends: lowest and highest. Dot: {name}. Spacing is proportional, not linear. Zillow, {asOf(homeRow)}.</p>
+        <p className={styles.caption}>Box: the middle half of {unitWord}s. Line: the median. Ends: lowest and highest. Dot: {name}. Spacing is proportional, not linear. Zillow, {asOf(homeRow)}.</p>
       </section>}
 
       {growthSeries.length > 1 && <section className={`${styles.panel} ${styles.growth}`}>
@@ -476,7 +481,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <summary>Use your own numbers</summary>
           <OwnNumbers income={income} guideHref={`/guide?place=${regionId}`} source={{ state: region.state_code, price: cost!.home.value, ratePct: cost!.rate.value, taxYear: cost!.tax?.value ?? null, insuranceYear: cost!.insurance?.value ?? null, utilitiesMonth: cost!.utilities?.month ?? null, rentMonth: cost!.rent?.value ?? null }} />
         </details>
-        <p className={styles.actions}><Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link><Link href={`/afford?place=${regionId}&county=${county?.region_id ?? "all"}`}>Places within my budget</Link><Link href="/help">Housing help</Link></p>
+        <p className={styles.actions}><Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link>{!isZip && <Link href={`/afford?place=${regionId}&county=${county?.region_id ?? "all"}`}>Places within my budget</Link>}<Link href="/help">Housing help</Link></p>
       </section>}
 
       {ownShare !== null && <section className={`${styles.panel} ${styles.income}`}>
@@ -491,7 +496,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
       {multiple !== null && pairs.length > 10 && <section id="ratio" className={`${styles.panel} ${styles.ratio}`}>
         <h2>A typical home here costs {multiple.toFixed(1)} times the typical income</h2>
-        <svg className={styles.scatter} viewBox={`0 0 ${SW} ${SH}`} role="img" aria-label={`Every New Jersey town by median household income and median home value. ${name} is ${multiple.toFixed(1)} times income, more than ${lessThanHere?.toFixed(0)}% of towns.`}>
+        <svg className={styles.scatter} viewBox={`0 0 ${SW} ${SH}`} role="img" aria-label={`Every New Jersey ${unitWord} by median household income and median home value. ${name} is ${multiple.toFixed(1)} times income, more than ${lessThanHere?.toFixed(0)}% of ${unitWord}s.`}>
           {yTicks.map((tick) => <g key={tick}><line x1={SL} x2={SW - SR} y1={sy(tick)} y2={sy(tick)} stroke="currentColor" strokeOpacity="0.12" /><text x={SL - 8} y={sy(tick) + 4} textAnchor="end">{moneyTick(tick)}</text></g>)}
           {xTicks.map((tick) => <text key={tick} x={sx(tick)} y={SH - 8} textAnchor="middle">{moneyTick(tick)}</text>)}
           {[3, 5].map((k) => { const { a, b } = multipleLine(k); return <g key={k}><line x1={sx(a)} y1={sy(a * k)} x2={sx(b)} y2={sy(b * k)} stroke="currentColor" strokeOpacity="0.6" strokeDasharray="5 4" /><text x={sx(b) - 4} y={sy(b * k) + 14} textAnchor="end">{k}× income</text></g>; })}
@@ -499,7 +504,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <circle cx={sx(incomeRow!.value)} cy={sy(valueRow!.value)} r="7" fill="var(--series-2)" stroke="var(--on-dot)" strokeWidth="2" />
           <text className={styles.scatterName} x={sx(incomeRow!.value) - 12} y={sy(valueRow!.value) - 10} textAnchor="end">{name}</text>
         </svg>
-        <p className={styles.caption}>Every dot is a New Jersey town: median household income across, median owner-reported home value up. A higher multiple than {lessThanHere?.toFixed(0)}% of towns. Both axes are proportional. Census ACS, {surveyPeriod}. · <Link href={placeStoryHref("market", regionId)}>Full story</Link></p>
+        <p className={styles.caption}>Every dot is a New Jersey {unitWord}: median household income across, median owner-reported home value up. A higher multiple than {lessThanHere?.toFixed(0)}% of {unitWord}s. Both axes are proportional. Census ACS, {surveyPeriod}. · <Link href={placeStoryHref("market", regionId)}>Full story</Link></p>
       </section>}
 
       {taxBill && <section id="tax" className={`${styles.panel} ${styles.tax}`}>
@@ -560,7 +565,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       </section>}
 
       {workBars.length > 0 && <section id="workday" className={`${styles.panel} ${styles.workday}`}>
-        <h2>{elsewhere !== null ? `${elsewhere.toFixed(0)}% of residents work outside town` : "Where the workday goes"}{leadPlace ? `, most often in ${leadPlace.name}` : ""}</h2>
+        <h2>{elsewhere !== null ? `${elsewhere.toFixed(0)}% of residents work outside ${isZip ? "the ZIP code" : "town"}` : "Where the workday goes"}{leadPlace ? `, most often in ${leadPlace.name}` : ""}</h2>
         {modes.length > 0 && <div className={styles.commute}>
           <div className={styles.stack}>{modes.map((mode) => <i key={mode.label} title={`${mode.label}: ${mode.value.toFixed(0)}%`} style={{ flexGrow: mode.value, background: mode.color }} />)}{modeOther > 0 && <i title={`Other: ${modeOther.toFixed(0)}%`} style={{ flexGrow: modeOther, background: "var(--tick)" }} />}</div>
           <ul className={styles.key}>{modes.map((mode) => <li key={mode.label}><i style={{ background: mode.color }} />{mode.label} {mode.value.toFixed(0)}%</li>)}{modeOther > 0 && <li><i style={{ background: "var(--tick)" }} />Other {modeOther.toFixed(0)}%</li>}</ul>
@@ -649,7 +654,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
       {ground.length > 0 && <section id="surroundings" className={`${styles.panel} ${styles.ground}`}>
         <h2>{groundLead.label}: {groundLead.position >= 0.5 ? "higher" : "lower"} than {Math.round(Math.max(groundLead.position, 1 - groundLead.position) * 100)}% of {peers}</h2>
-        <p className={styles.caption}>Around the homes, lowest towns on the left, highest on the right.</p>
+        <p className={styles.caption}>Around the homes, lowest {unitWord}s on the left, highest on the right.</p>
         {ground.map((g) => <div key={g.id} className={styles.strip}><span>{g.label}</span><div><i style={{ left: `${g.position * 100}%` }} /></div><strong>{g.value}</strong></div>)}
       </section>}
 
@@ -677,7 +682,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       </section>}
 
       {similar && similar.matches.length > 0 && priceRow && <section className={`${styles.panel} ${styles.similar}`}>
-        <h2>{similar.matches.length} similar {similar.matches.length === 1 ? "town costs" : "towns cost"} at least {Math.round((1 - similar.cheaper_by) * 100)}% less</h2>
+        <h2>{similar.matches.length} similar {similar.matches.length === 1 ? `${unitWord} costs` : `${unitWord}s cost`} at least {Math.round((1 - similar.cheaper_by) * 100)}% less</h2>
         <div className={styles.towns}>{similar.matches.map((m, i) => { const there = priceRow.values[i + 1], here = priceRow.values[0]; return <Link key={m.region_id} href={regionPath(m.region_id)}><strong>{m.name}</strong>{there !== null && <span>{dollars(there)}</span>}{there !== null && here !== null && <small>{dollars(here - there)} less</small>}</Link>; })}</div>
         <p className={styles.actions}><Link href={`/compare${placesQuery([regionId, ...similar.matches.slice(0, 3).map((m) => m.region_id)])}`}>Compare side by side</Link></p>
       </section>}
