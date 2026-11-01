@@ -297,6 +297,22 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const multipleLine = (k: number) => { const a = Math.max(Math.exp(x0), Math.exp(y0) / k), b = Math.min(Math.exp(x1), Math.exp(y1) / k); return { a, b, k }; };
   const lessThanHere = multiple !== null && pairs.length ? (pairs.filter((p) => p.value / p.income < multiple).length / pairs.length) * 100 : null;
 
+  // How long homes sit: published by county, so a town reads its county's market. Each month
+  // is set against the county's own usual wait, and the latest against other counties.
+  const domSeries = county ? (await api.observations(county.region_id, "realtor_median_days_on_market"))?.observations ?? [] : [];
+  const domNow = domSeries.at(-1);
+  const domSorted = domSeries.map((o) => o.value).sort((a, b) => a - b);
+  const domUsual = domSorted.length ? domSorted[Math.floor(domSorted.length / 2)] : null;
+  const domYearAgo = domNow ? domSeries.find((o) => o.period_end.slice(0, 7) === `${Number(domNow.period_end.slice(0, 4)) - 1}${domNow.period_end.slice(4, 7)}`) : undefined;
+  const countyWaits = domNow ? (await Promise.all((countyGeo?.features ?? []).map(async (f) => (await api.observations(f.properties.region_id, "realtor_median_days_on_market"))?.observations.at(-1)))).flatMap((o) => (o && o.period_end === domNow.period_end ? [o.value] : [])).sort((a, b) => a - b) : [];
+  const domRank = domNow ? countyWaits.findIndex((v) => v >= domNow.value) + 1 : 0;
+  const DW = 640, DH = 220, DL = 34, DB = 24;
+  const domPeak = Math.max(...domSeries.map((o) => o.value), 1);
+  const dx = (i: number) => DL + (i / Math.max(domSeries.length - 1, 1)) * (DW - DL - 8);
+  const dy = (v: number) => DH - DB - (v / domPeak) * (DH - DB - 8);
+  const domYears = domSeries.flatMap((o, i) => (o.period_end.slice(5, 7) === "01" && Number(o.period_end.slice(0, 4)) % 2 === 0 ? [{ year: o.period_end.slice(0, 4), i }] : []));
+  const domGap = domNow && domUsual ? domNow.value - domUsual : 0;
+
   // The workday: where residents' jobs are, as lines from the town on the state's map.
   const WORK_W = 340;
   const workFrame = countyGeo ? projector(countyGeo.features.flatMap((f) => ringsOf(f.geometry)), WORK_W, 8) : null;
@@ -318,7 +334,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     <main id="main-content" tabIndex={-1} className={styles.poster}>
       <p className={styles.flag}>Infographic mockup · <Link href={regionPath(regionId)}>current page</Link> · <Link href={`/mockup/${state}/${slug}`}>first mockup</Link></p>
       <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
-      <nav className={styles.topics} aria-label="On this page"><a href="#price">Price</a><a href="#cost">Cost</a><a href="#tax">Tax</a><a href="#ranks">Compared</a><a href="#living">Living here</a><a href="#homes">Homes</a><a href="#workday">Work</a><a href="#schools">Schools</a><a href="#people">People</a><a href="#county">County</a><a href="#stories">Stories</a></nav>
+      <nav className={styles.topics} aria-label="On this page"><a href="#price">Price</a><a href="#cost">Cost</a><a href="#tax">Tax</a><a href="#ranks">Compared</a><a href="#living">Living here</a><a href="#homes">Homes</a><a href="#workday">Work</a><a href="#schools">Schools</a><a href="#people">People</a><a href="#pace">Pace</a><a href="#county">County</a><a href="#stories">Stories</a></nav>
 
       <header className={`${styles.panel} ${styles.hero}`}>
         <div>
@@ -481,6 +497,19 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <div className={styles.waffle} role="img" aria-label={`Of every 100 homes, ${homeDots.filter((d) => d === "lived").length} are lived in year-round and ${homeDots.filter((d) => d === "seasonal").length} are seasonal.`}>{homeDots.map((dot, i) => <i key={i} data-kind={dot} />)}</div>
         <ul className={styles.key}><li><i data-kind="lived" />Lived in</li><li><i data-kind="seasonal" />Seasonal</li><li><i data-kind="empty" />Empty for other reasons</li></ul>
         <p className={styles.caption}>Every 100 homes. Census ACS, a five-year survey. “Lived in” means occupied when surveyed; seasonal homes can still be rented in summer.</p>
+      </section>}
+
+      {domNow && domUsual !== null && county && <section id="pace" className={`${styles.panel} ${styles.pace}`}>
+        <h2>Homes in {displayName(county)} sit about {Math.round(domNow.value)} days, {Math.abs(domGap) < 3 ? "close to usual" : domGap < 0 ? `${Math.round(-domGap)} faster than usual` : `${Math.round(domGap)} slower than usual`}</h2>
+        <svg className={styles.scatter} viewBox={`0 0 ${DW} ${DH}`} role="img" aria-label={`Median days on market in ${displayName(county)} by month, now ${Math.round(domNow.value)} days, usually ${Math.round(domUsual)}.`}>
+          <line x1={DL} x2={DW} y1={dy(domUsual)} y2={dy(domUsual)} stroke="currentColor" strokeOpacity="0.6" strokeDasharray="5 4" />
+          <text x={DL + 4} y={dy(domUsual) - 6}>Usual, {Math.round(domUsual)} days</text>
+          <line x1={DL} x2={DW} y1={dy(0)} y2={dy(0)} stroke="currentColor" strokeOpacity="0.25" />
+          <polyline points={domSeries.map((o, i) => `${dx(i)},${dy(o.value)}`).join(" ")} fill="none" stroke="var(--series-1)" strokeWidth="2" strokeLinejoin="round" />
+          <circle cx={dx(domSeries.length - 1)} cy={dy(domNow.value)} r="5" fill="var(--series-2)" />
+          {domYears.map(({ year, i }) => <text key={year} x={dx(i)} y={DH - 6} textAnchor="middle">{year}</text>)}
+        </svg>
+        <p className={styles.caption}>Median days on market, by month{domYearAgo ? ` · ${Math.round(domYearAgo.value)} days a year earlier` : ""}{domRank && countyWaits.length ? ` · ${ordinal(domRank)} quickest of ${countyWaits.length} NJ counties` : ""}. County figures, not this town alone, and they rise and fall with the seasons. Realtor.com via FRED, {asOf(domNow)}.</p>
       </section>}
 
       {eras.length > 0 && <section className={`${styles.panel} ${styles.era}`}>

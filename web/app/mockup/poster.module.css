@@ -190,3 +190,4 @@
 .scatter { display: block; width: 100%; height: auto; }
 .scatter text { fill: currentColor; font-size: 12px; }
 .scatter .scatterName { font-size: 14px; font-weight: 700; }
+.pace { background: light-dark(#e7f0d0, #2b3a10); color: var(--text-primary); }
