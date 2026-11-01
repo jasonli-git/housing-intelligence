@@ -178,3 +178,5 @@
 .workLayout { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 32px; align-items: center; }
 .workLayout svg { width: 100%; height: auto; }
 @media (max-width: 640px) { .workLayout { grid-template-columns: minmax(0, 1fr); } .workLayout svg { max-width: 240px; margin-inline: auto; } }
+.schools { background: light-dark(#d7e8ff, #16305c); color: var(--text-primary); }
+.schools .split { margin-bottom: 16px; }

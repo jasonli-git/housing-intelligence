@@ -169,7 +169,6 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const violations = water?.systems.reduce((sum, w) => sum + w.violations, 0) ?? null;
   const electric = utilities?.providers.find((p) => p.fuel === "electric")?.provider;
   const facts = [
-    reading?.value != null && { value: `${reading.value.toFixed(0)}%`, label: "of students met English expectations" },
     fiber && fiber.locations > 0 && { value: `${((fiber.fiber / fiber.locations) * 100).toFixed(0)}%`, label: "of locations can get fiber" },
     pct("transit_any_homes_share") && { value: pct("transit_any_homes_share")!, label: "of homes near a transit stop" },
     flood.claims.length > 0 && { value: `${flood.estimated ? "~" : ""}${Math.round(floodClaims).toLocaleString("en-US")}`, label: `flood claims in ${flood.place ?? "town"}${flood.estimated ? " (estimated)" : ""}, ${floodYears.length} years on file` },
@@ -264,6 +263,14 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const counties = countyGeo && frame ? shapes(countyGeo.features, 180, frame).shapes : [];
   const town = townFeature && frame ? shapes([townFeature], 180, frame).shapes[0] : null;
 
+  // Where students go: the survey counts by where children live, so charter, vocational and
+  // choice schools sit inside "public". District results are shown only where one covers the town.
+  const privateShare = level("acs_k12_private_share")?.value ?? null;
+  const stages = [["acs_k8_private_share", "Kindergarten to grade 8"], ["acs_hs_private_share", "Grades 9 to 12"]].flatMap(([id, label]) => { const row = level(id); return row ? [{ id, label, value: row.value * 100, margin: uncertainties.value.get(id)?.margin ?? null }] : []; });
+  const districts = (community?.districts ?? []).map((d) => ({ name: d.boundary.payload.name, share: d.boundary.payload.approximate_share }));
+  const results = community?.districts.length === 1 ? (community.districts[0].performance?.payload.indicators ?? []).filter((i) => i.value !== null) : [];
+  const resultYear = community?.districts[0]?.performance?.payload.school_year;
+
   // The workday: where residents' jobs are, as lines from the town on the state's map.
   const WORK_W = 340;
   const workFrame = countyGeo ? projector(countyGeo.features.flatMap((f) => ringsOf(f.geometry)), WORK_W, 8) : null;
@@ -285,7 +292,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     <main id="main-content" tabIndex={-1} className={styles.poster}>
       <p className={styles.flag}>Infographic mockup · <Link href={regionPath(regionId)}>current page</Link> · <Link href={`/mockup/${state}/${slug}`}>first mockup</Link></p>
       <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
-      <nav className={styles.topics} aria-label="On this page"><a href="#price">Price</a><a href="#cost">Cost</a><a href="#tax">Tax</a><a href="#ranks">Compared</a><a href="#living">Living here</a><a href="#homes">Homes</a><a href="#workday">Work</a><a href="#people">People</a><a href="#county">County</a><a href="#stories">Stories</a></nav>
+      <nav className={styles.topics} aria-label="On this page"><a href="#price">Price</a><a href="#cost">Cost</a><a href="#tax">Tax</a><a href="#ranks">Compared</a><a href="#living">Living here</a><a href="#homes">Homes</a><a href="#workday">Work</a><a href="#schools">Schools</a><a href="#people">People</a><a href="#county">County</a><a href="#stories">Stories</a></nav>
 
       <header className={`${styles.panel} ${styles.hero}`}>
         <div>
@@ -420,6 +427,14 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
             <p className={styles.caption}>Share of {destinations!.total_jobs.toLocaleString("en-US")} jobs held by residents, {destinations!.year} · Census LODES · lines show the mapped places.</p>
           </div>
         </div>
+      </section>}
+
+      {privateShare !== null && <section id="schools" className={`${styles.panel} ${styles.schools}`}>
+        <h2>{((1 - privateShare) * 100).toFixed(0)}% of K–12 students here go to public school</h2>
+        <div className={styles.split}><i style={{ flexGrow: 1 - privateShare }}>{((1 - privateShare) * 100).toFixed(0)}% public</i><i style={{ flexGrow: privateShare }}>{(privateShare * 100).toFixed(0)}% private</i></div>
+        <StoryBars rows={stages.map((stage) => ({ label: `${stage.label}, private`, value: stage.value, formatted: `${stage.value.toFixed(0)}%` }))} />
+        {results.length > 0 && <div className={styles.facts}>{results.map((result) => <div key={result.id}><strong>{result.value!.toFixed(0)}%</strong><span>{result.label.replace(": met or exceeded expectations", " met expectations")}</span></div>)}</div>}
+        <p className={styles.caption}>{districts.length ? `${districts.map((d) => d.name).join(", ")}${resultYear ? `, ${resultYear}` : ""}. ` : ""}Where students live, not where schools are. Charter and vocational schools count as public. Census ACS, NJ Department of Education. · {storyLink("schools")}</p>
       </section>}
 
       {eras.length > 0 && <section className={`${styles.panel} ${styles.era}`}>
