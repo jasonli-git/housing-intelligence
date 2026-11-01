@@ -11,11 +11,11 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
-it("shows the feature and five labelled rails with real story links", () => {
+it("shows the feature and four labelled rails with real story links", () => {
   render(<StoryLibrary />);
   expect(screen.queryByText("Chart detail")).toBeNull();
   expect(screen.getByRole("link", { name: /Where South Jersey/ }).getAttribute("href")).toBe("/stories/the-wawa-line");
-  expect(screen.getAllByRole("region")).toHaveLength(5);
+  expect(screen.getAllByRole("region")).toHaveLength(4);
   const rail = screen.getByRole("region", { name: "Only in New Jersey" });
   expect(within(rail).getAllByRole("link")).toHaveLength(8);
   expect(screen.getByRole("button", { name: "Previous stories in Only in New Jersey" }).hasAttribute("disabled")).toBe(true);
