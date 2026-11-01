@@ -93,8 +93,8 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const obs = history?.observations ?? [];
   const end = obs.at(-1)?.period_end;
   const recent = end ? obs.filter((o) => o.period_end >= `${Number(end.slice(0, 4)) - 10}${end.slice(4)}`).map((o) => o.value) : [];
-  const low = Math.min(...recent), high = Math.max(...recent);
-  const area = recent.map((v, i) => `${(i / Math.max(recent.length - 1, 1)) * 600},${190 - ((v - low * 0.8) / (high - low * 0.8 || 1)) * 180}`).join(" ");
+  const high = Math.max(...recent);
+  const area = recent.map((v, i) => `${(i / Math.max(recent.length - 1, 1)) * 600},${190 - (v / (high || 1)) * 180}`).join(" ");
 
   const strips = STRIPS.flatMap(([id, label]) => {
     const row = level(id);
@@ -132,7 +132,8 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     if (!box || own === undefined) return [];
     // A log axis: a few very dear towns would otherwise squeeze every other town to the left.
     const x = (v: number) => (Math.log(v / box.min) / Math.log(box.max / box.min)) * 100;
-    return [{ id: cohort.metricId, label: cohort.metricId === "zhvi_sfr" ? "Home value" : "Monthly rent", box, own, x, count: cohort.points.length }];
+    const below = cohort.points.filter((p) => p.value < own).length / cohort.points.length * 100;
+    return [{ id: cohort.metricId, label: cohort.metricId === "zhvi_sfr" ? "Home value" : "Monthly rent", box, own, x, count: cohort.points.length, below }];
   });
   // Open cleanups have no published rank, so towns are compared per thousand homes here.
   const towns = (await api.regions(`state=${region.state_code}&level=municipality&limit=1000`))?.items ?? [];
@@ -177,6 +178,18 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const groups = similar ? similarGroups(similar) : [];
   const priceRow = similar ? groups.flatMap((g) => g.rows).find((r) => r.metric_id === similar.price) : undefined;
   const taxHref = `/tax?town=${region.geoid}`;
+  // Every panel's title states its finding, from the same figures the picture draws.
+  const asOf = (row?: { period_end: string }) => row ? new Date(`${row.period_end.slice(0, 7)}-15`).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }) : "";
+  const homeBox = boxes.find((b) => b.id === "zhvi_sfr"), rentBox = boxes.find((b) => b.id !== "zhvi_sfr");
+  const versusTypical = homeBox ? (homeBox.own / homeBox.box.median - 1) * 100 : null;
+  const peers = `${region.state_code} ${peerNoun(peer_level)}`;
+  const priceTitle = versusTypical === null ? "The typical home" : `${Math.abs(versusTypical).toFixed(0)}% ${versusTypical >= 0 ? "above" : "below"} the typical ${peers.replace(/ies$/, "y").replace(/s$/, "")}`;
+  const boxTitle = homeBox ? (homeBox.below < 1 ? `The lowest home value of ${homeBox.count} ${peers}` : `Pricier than ${homeBox.below.toFixed(0)}% of ${peers}${rentBox ? `, and ${rentBox.below.toFixed(0)}% on rent` : ""}`) : "";
+  const costTitle = month && rent ? (month.total >= rent ? `Owning costs ${(month.total / rent).toFixed(1)} times renting` : `Owning costs less than renting`) : "What owning costs each month";
+  const incomeTitle = ownShare !== null ? `Owning takes ${ownShare.toFixed(0)}% of a typical income${rentShare !== null ? `, renting ${rentShare.toFixed(0)}%` : ""}` : "";
+  const threePlus = (level("acs_share_3_bedrooms")?.value ?? 0) + (level("acs_share_4plus_bedrooms")?.value ?? 0);
+  const elsewhere = level("lodes_work_same_town_share") ? (1 - level("lodes_work_same_town_share")!.value) * 100 : null;
+  const countyRank = ranked.findIndex((t) => t.id === regionId);
 
   const townFeature = townGeo?.features.find((f) => f.properties.region_id === regionId);
   const frame = countyGeo ? projector(countyGeo.features.flatMap((f) => ringsOf(f.geometry)), 180, 4) : null;
@@ -203,13 +216,13 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       </header>
 
       {homeRow && <section id="price" className={`${styles.panel} ${styles.price}`}>
-        <h2>The typical home</h2>
+        <h2>The typical home, {priceTitle}</h2>
         <p className={styles.giant}>{formatMetric(homeRow.value, homeRow.unit, homeRow.metric_id)}</p>
         {recent.length > 1 && <svg className={styles.area} viewBox="0 0 600 200" preserveAspectRatio="none" role="img" aria-label="Typical home value over the last ten years">
           <polygon points={`0,200 ${area} 600,200`} fill="currentColor" fillOpacity="0.16" />
           <polyline points={area} fill="none" stroke="currentColor" strokeWidth="3" vectorEffect="non-scaling-stroke" />
         </svg>}
-        <p className={styles.caption}>Last ten years · {dollars(recent[0] ?? 0)} to {dollars(recent.at(-1) ?? 0)}</p>
+        <p className={styles.caption}>Last ten years, from $0 · {dollars(recent[0] ?? 0)} to {dollars(recent.at(-1) ?? 0)} · Zillow estimate, {asOf(homeRow)}</p>
         {medianSale && q1 && q3 && <div className={styles.sales}>
           <h3>What homes actually sold for</h3>
           <div className={styles.saleBar}><span><b>{dollars(q1.value)}</b>lower quarter</span><span><b>{dollars(medianSale.value)}</b>median</span><span><b>{dollars(q3.value)}</b>upper quarter</span></div>
@@ -218,7 +231,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       </section>}
 
       {boxes.length > 0 && <section className={`${styles.panel} ${styles.boxes}`}>
-        <h2>Where it sits among {scopeName(peer_scope)} {peerNoun(peer_level)}</h2>
+        <h2>{boxTitle}</h2>
         {boxes.map(({ id, label, box, own, x, count }) => <figure key={id} className={styles.boxPlot} aria-label={`${label}: ${name} ${dollars(own)}, median ${dollars(box.median)} of ${count}`} role="img">
           <figcaption><span>{label}</span><strong>{dollars(own)}</strong></figcaption>
           <div className={styles.boxTrack}>
@@ -229,11 +242,11 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           </div>
           <p className={styles.boxScale}><span>{dollars(box.min)}</span><span>median {dollars(box.median)}</span><span>{dollars(box.max)}</span></p>
         </figure>)}
-        <p className={styles.caption}>Box: the middle half of towns. Line: the median. Ends: lowest and highest. Dot: {name}. Spacing is proportional, not linear.</p>
+        <p className={styles.caption}>Box: the middle half of towns. Line: the median. Ends: lowest and highest. Dot: {name}. Spacing is proportional, not linear. Zillow, {asOf(homeRow)}.</p>
       </section>}
 
       {month && <section id="cost" className={`${styles.panel} ${styles.cost}`}>
-        <h2>Own or rent, each month</h2>
+        <h2>{costTitle}</h2>
         <div className={styles.versus}>
           <div><span>Own</span><strong>{dollars(month.total)}</strong>
             <div className={styles.stack}>{parts.map((p) => <i key={p.label} title={`${p.label}: ${dollars(p.value)}`} style={{ flexGrow: p.value, background: p.color }} />)}</div></div>
@@ -241,7 +254,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
             <div className={styles.stack} style={{ width: `${(rent / month.total) * 100}%` }}><i style={{ flexGrow: 1, background: "var(--text-secondary)" }} /></div></div>}
         </div>
         <ul className={styles.key}>{parts.map((p) => <li key={p.label}><i style={{ background: p.color }} />{p.label} {dollars(p.value)}</li>)}</ul>
-        <p className={styles.caption}>{month.principal > 0 ? `About ${dollars(month.principal)} of owning goes into the home. ` : ""}20% down at {cost!.rate.value.toFixed(2)}%.</p>
+        <p className={styles.caption}>{month.principal > 0 ? `About ${dollars(month.principal)} of owning goes into the home. ` : ""}An estimate, not a quote: 20% down at {cost!.rate.value.toFixed(2)}%, {homeRow ? "typical home and typical rental" : "at a recent sale price"}.</p>
         <details className={styles.tool}>
           <summary>Use your own numbers</summary>
           <div className="atlas-local quiet-county"><CostToOwn {...cost!} quiet compactOverview guidePlaceId={regionId} comparePlaceId={regionId} showHelp={false} /></div>
@@ -250,17 +263,17 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       </section>}
 
       {ownShare !== null && <section className={`${styles.panel} ${styles.income}`}>
-        <h2>Against a typical income</h2>
+        <h2>{incomeTitle}</h2>
         {[["Owning", ownShare], ...(rentShare !== null ? [["Renting", rentShare]] : [])].map(([label, share]) => <div key={label as string} className={styles.meter}>
           <span>{label as string}</span>
           <div><i style={{ width: `${Math.min(share as number, 100)}%` }} /><b style={{ left: "30%" }} /></div>
           <strong>{(share as number).toFixed(0)}%</strong>
         </div>)}
-        <p className={styles.caption}>Share of the median household income · the mark is the common 30% guideline</p>
+        <p className={styles.caption}>The typical home against the median household income, not any one household. The mark is the common 30% guideline. Census ACS.</p>
       </section>}
 
       {taxBill && <section id="tax" className={`${styles.panel} ${styles.tax}`}>
-        <h2>Property tax</h2>
+        <h2>Property tax adds {dollars(taxBill.value / 12)} a month</h2>
         <p className={styles.giant}>{dollars(taxBill.value)}</p>
         <p className={styles.caption}>Median yearly bill{taxRate ? ` · ${taxRate.value.toFixed(2)}% effective rate` : ""}{taxBillMeasure ? ` · ${taxBillMeasure.row.rank}th of ${taxBillMeasure.row.of} towns` : ""}</p>
         <p className={styles.actions}><Link href={taxHref}>Look up a property</Link></p>
@@ -279,20 +292,20 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       {facts.length > 0 && <section id="living" className={`${styles.panel} ${styles.living}`}>
         <h2>Living here</h2>
         <div className={styles.facts}>{facts.map((fact) => <div key={fact.label}><strong>{fact.value}</strong><span>{fact.label}</span></div>)}</div>
-        {electric && <p className={styles.caption}>Electricity: {electric}</p>}
+        <p className={styles.caption}>{electric ? `Electricity: ${electric}. ` : ""}NJ Education, FCC, BTS, FEMA, NJDEP, EPA and CDC.</p>
       </section>}
 
       {(bedrooms.length > 0 || stock.length > 0) && <section id="homes" className={`${styles.panel} ${styles.homes}`}>
-        <h2>The homes here</h2>
+        <h2>{threePlus > 0 ? `${(threePlus * 100).toFixed(0)}% of homes have three or more bedrooms` : "The homes here"}</h2>
         {bedrooms.length > 0 && <><div className={styles.stack}>{bedrooms.map((b) => <i key={b.label} title={`${b.label}: ${b.value.toFixed(0)}%`} style={{ flexGrow: b.value, background: b.color }} />)}</div>
           <ul className={styles.key}>{bedrooms.map((b) => <li key={b.label}><i style={{ background: b.color }} />{b.label} {b.value.toFixed(0)}%</li>)}</ul></>}
         <div className={styles.facts}>{stock.map((fact) => <div key={fact.label}><strong>{fact.value}</strong><span>{fact.label}</span></div>)}</div>
       </section>}
 
       {(work.length > 0 || owned !== null) && <section id="people" className={`${styles.panel} ${styles.people}`}>
-        {owned !== null && <><h2>Who holds the keys</h2>
+        {owned !== null && <><h2>{(owned * 100).toFixed(0)}% of homes are owner-occupied</h2>
           <div className={styles.split}><i style={{ flexGrow: owned }}>{(owned * 100).toFixed(0)}% own</i><i style={{ flexGrow: 1 - owned }}>{((1 - owned) * 100).toFixed(0)}% rent</i></div></>}
-        {work.length > 0 && <><h2>Where residents work</h2>
+        {work.length > 0 && <><h2>{elsewhere !== null ? `${elsewhere.toFixed(0)}% of residents work outside town` : "Where residents work"}</h2>
           {work.map((w) => <div key={w.label} className={styles.meter}><span>{w.label}</span><div><i style={{ width: `${w.value}%`, background: w.color }} /></div><strong>{w.value.toFixed(0)}%</strong></div>)}</>}
         {movers.length > 1 && <><h2>Moving in and out of {migration!.county_name} County</h2>
           <div className={styles.moves}>{movers.map((y) => <div key={y.year} title={`${y.year}: ${y.net_per_1000!.toFixed(1)} per 1,000 households`}><i data-gain={y.net_per_1000! > 0 || undefined} style={{ height: `${(Math.abs(y.net_per_1000!) / moverPeak) * 50}%` }} /><span>{String(y.year).slice(2)}</span></div>)}</div>
@@ -300,14 +313,14 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       </section>}
 
       {ranked.length > 1 && county && <section id="county" className={`${styles.panel} ${styles.county}`}>
-        <h2>Across {displayName(county)}</h2>
-        {ranked.slice(0, 12).map((t) => <div key={t.id} className={styles.townBar} data-own={t.id === regionId || undefined}>
+        <h2>{countyRank === 0 ? `The priciest of ${ranked.length} Zillow-covered towns in ${displayName(county)}` : `${ordinal(countyRank + 1)} of ${ranked.length} Zillow-covered towns in ${displayName(county)}`}</h2>
+        {ranked.filter((t, i) => i < 6 || i >= ranked.length - 5 || t.id === regionId).map((t) => <div key={t.id} className={styles.townBar} data-own={t.id === regionId || undefined}>
           <span>{t.name}</span><div><i style={{ width: `${(t.value / ranked[0].value) * 100}%` }} /></div><strong>{dollars(t.value)}</strong>
         </div>)}
       </section>}
 
       {similar && similar.matches.length > 0 && priceRow && <section className={`${styles.panel} ${styles.similar}`}>
-        <h2>Similar, but cheaper</h2>
+        <h2>{similar.matches.length} similar {similar.matches.length === 1 ? "town costs" : "towns cost"} at least {Math.round((1 - similar.cheaper_by) * 100)}% less</h2>
         <div className={styles.towns}>{similar.matches.map((m, i) => { const there = priceRow.values[i + 1], here = priceRow.values[0]; return <Link key={m.region_id} href={regionPath(m.region_id)}><strong>{m.name}</strong>{there !== null && <span>{dollars(there)}</span>}{there !== null && here !== null && <small>{dollars(here - there)} less</small>}</Link>; })}</div>
         <p className={styles.actions}><Link href={`/compare${placesQuery([regionId, ...similar.matches.slice(0, 3).map((m) => m.region_id)])}`}>Compare side by side</Link></p>
       </section>}

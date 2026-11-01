@@ -1,4 +1,4 @@
-.poster { --poster-hero: light-dark(#17324d, #0f2c4a); --on-series: #fff; --paper: light-dark(#fff, #17191d); --paper-2: light-dark(#f1f2f4, #1f2227); max-width: var(--shell); margin-inline: auto; padding: 0 16px 48px; }
+.poster { --poster-hero: light-dark(#17324d, #0f2c4a); --on-series: light-dark(#fff, #10202f); --paper: light-dark(#fff, #17191d); --paper-2: light-dark(#f1f2f4, #1f2227); max-width: var(--shell); margin-inline: auto; padding: 0 16px 48px; }
 .flag { margin: 12px 0; font-size: var(--text-note); color: var(--text-secondary); }
 .panel { padding: clamp(24px, 5vw, 40px); }
 .panel h2 { margin: 0 0 16px; font-size: var(--text-small); font-weight: 700; letter-spacing: var(--track-label); text-transform: uppercase; }
@@ -96,16 +96,20 @@
 .panel { scroll-margin-top: 64px; }
 /* Desktop: the poster becomes a two-column spread, wide panel beside narrow, in reading order. */
 @media (min-width: 1000px) {
-  .poster { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); }
-  .poster > * { grid-column: 1 / -1; }
+  .poster { display: flex; flex-wrap: wrap; }
+  .poster > * { flex: 1 1 100%; min-width: 0; }
   .poster > .hero { grid-template-columns: minmax(0, 1fr) 220px; }
   .hero h1 { font-size: clamp(84px, 9vw, 128px); }
   .headline { max-width: 44rem; font-size: 22px; }
-  .poster > :is(.price, .cost, .ranks, .rank, .living, .people) { grid-column: span 7; }
-  .poster > :is(.boxes, .income, .tax, .homes, .county) { grid-column: span 5; }
-  .poster > .tax { grid-column: span 5; }
-  .poster > .rank { grid-column: span 7; }
-  .poster > .cost:has(details[open]) { grid-column: 1 / -1; }
+  /* Wide beside narrow; a town missing one panel lets its neighbour take the row. */
+  .poster > :is(.price, .cost, .rank, .living, .people) { flex: 7 1 55%; }
+  .poster > :is(.boxes, .income, .tax, .homes, .county) { flex: 5 1 38%; }
+  .poster > .cost:has(details[open]) { flex-basis: 100%; }
   .boxes, .income { display: flex; flex-direction: column; justify-content: center; }
   .similar .towns { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+.panel h2 { text-transform: none; letter-spacing: -.01em; font-size: clamp(19px, 2.4vw, 24px); line-height: 1.2; }
+@media print {
+  .topics, .flag, .tool, .actions { display: none; }
+  .panel { break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
