@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { StoryCard, StoryCover } from "./StoryCard";
-import { STORIES } from "@/lib/stories";
-import { COLLECTIONS, EDITOR_PICKS, FEATURED_HEADLINE, FEATURED_STORY, findStories, storyBySlug, storyPreview, type Story } from "@/lib/storyLibrary";
+import { COLLECTIONS, EDITOR_PICKS, LIBRARY_STORIES, FEATURED_HEADLINE, FEATURED_STORY, findStories, storyBySlug, storyPreview, type Story } from "@/lib/storyLibrary";
 
 function StoryRail({ id, title, stories, viewAll }: {
   id: string; title: string; stories: Story[]; viewAll?: () => void;
@@ -70,7 +69,7 @@ export function StoryLibrary() {
     <div className="library-toolbar" ref={directory} tabIndex={-1}>
       <div role="group" aria-label="Story browsing view" className="library-modes">
         <button aria-pressed={mode === "curated"} onClick={() => setMode("curated")}>Discover</button>
-        <button aria-pressed={mode === "all"} onClick={() => setMode("all")}>All stories <span>{STORIES.length}</span></button>
+        <button aria-pressed={mode === "all"} onClick={() => setMode("all")}>All stories <span>{LIBRARY_STORIES.length}</span></button>
       </div>
       <span className="library-scope">New Jersey</span>
     </div>
@@ -86,7 +85,7 @@ export function StoryLibrary() {
       </Link>
       <StoryRail id="editors" title="Editor’s picks" stories={EDITOR_PICKS.map(storyBySlug)} />
       {COLLECTIONS.map((c) => <StoryRail key={c.id} id={c.id} title={c.title} stories={c.stories.map(storyBySlug)} viewAll={() => showCollection(c.id)} />)}
-      <div className="library-end"><button onClick={() => showCollection("all")}>All {STORIES.length} stories ↑</button></div>
+      <div className="library-end"><button onClick={() => showCollection("all")}>All {LIBRARY_STORIES.length} stories ↑</button></div>
     </> : <section className="library-directory" aria-labelledby="library-directory-heading">
       <h2 id="library-directory-heading">{topic === "all" ? "All stories" : COLLECTIONS.find((c) => c.id === topic)?.title}</h2>
       <div className="library-filters">

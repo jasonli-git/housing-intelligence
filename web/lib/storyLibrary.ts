@@ -1,12 +1,17 @@
 import { STORIES } from "./stories";
 
 export type Story = (typeof STORIES)[number];
+/**
+ * Stories a place page now tells for each town (the infographic mockup). Their pages stay
+ * published and linked from place pages; the library keeps the statewide patterns.
+ */
+export const ON_PLACE_PAGES: ReadonlySet<string> = new Set(["who-feels-housing-costs", "the-mortgage-market", "is-new-jersey-building", "price-ladder", "the-true-monthly-cost", "what-the-housing-is", "who-moves-in", "your-towns-time-machine", "what-a-house-buys-in-land", "sites-and-cleanup", "where-internet-reaches", "water-you-can-check", "when-the-power-goes-out", "health-in-context", "living-higher", "how-big-the-houses-are", "same-house-different-tax-bill", "where-the-workday-goes", "where-students-go", "the-winter-empty-shore", "income-and-home-value", "how-long-homes-sit", "the-hottest-counties", "is-today-unusual"]);
+export const LIBRARY_STORIES = STORIES.filter((story) => !ON_PLACE_PAGES.has(story.href.split("/").at(-1)!));
 export const COLLECTIONS = [
-  { id: "jersey", title: "Only in New Jersey", description: "The state’s unmistakable character.", stories: ["the-wawa-line", "boroughitis", "the-pizza-bagel-line", "diner-capital", "the-winter-empty-shore", "whats-in-a-name", "the-starbucks-index", "court-circle-lane", "hometown-famous"] },
-  { id: "money", title: "What your money buys", description: "Beyond the asking price.", stories: ["twin-towns", "the-true-monthly-cost", "price-ladder", "same-house-different-tax-bill", "priciest-and-cheapest", "income-and-home-value", "who-feels-housing-costs", "pricier-towns", "the-mortgage-market", "your-towns-time-machine", "is-today-unusual"] },
-  { id: "place", title: "The feel of a place", description: "Trees, streets, space and quiet.", stories: ["the-leafy-premium", "what-quiet-costs", "where-you-can-see-the-stars", "what-a-house-buys-in-land", "what-the-housing-is", "how-big-the-houses-are", "the-long-commute-premium"] },
-  { id: "motion", title: "Places in motion", description: "People move. Towns change.", stories: ["who-moves-in", "where-the-workday-goes", "is-new-jersey-building", "how-long-homes-sit", "when-the-town-was-built"] },
-  { id: "surface", title: "Look beneath the surface", description: "The patterns you might otherwise miss.", stories: ["health-in-context", "the-flood-claims-calendar", "sites-and-cleanup", "when-the-power-goes-out", "where-internet-reaches", "where-students-go", "water-you-can-check", "living-higher", "the-hottest-counties", "pavement-or-lawn", "how-data-gets-rewritten"] },
+  { id: "jersey", title: "Only in New Jersey", description: "The state’s unmistakable character.", stories: ["the-wawa-line", "boroughitis", "the-pizza-bagel-line", "diner-capital", "whats-in-a-name", "the-starbucks-index", "court-circle-lane", "hometown-famous"] },
+  { id: "money", title: "What your money buys", description: "Beyond the asking price.", stories: ["twin-towns", "priciest-and-cheapest", "pricier-towns", "the-long-commute-premium"] },
+  { id: "place", title: "The feel of a place", description: "Trees, streets, space and quiet.", stories: ["the-leafy-premium", "what-quiet-costs", "where-you-can-see-the-stars", "pavement-or-lawn", "when-the-town-was-built"] },
+  { id: "surface", title: "Look beneath the surface", description: "The patterns you might otherwise miss.", stories: ["the-flood-claims-calendar", "how-data-gets-rewritten"] },
 ] as const;
 
 export type CollectionId = (typeof COLLECTIONS)[number]["id"];
@@ -17,7 +22,7 @@ export type CollectionId = (typeof COLLECTIONS)[number]["id"];
  */
 export const FEATURED_STORY = "the-wawa-line";
 export const FEATURED_HEADLINE = ["Where South Jersey", "begins."] as const;
-export const EDITOR_PICKS = ["twin-towns", "the-flood-claims-calendar", "boroughitis", "how-long-homes-sit", "where-you-can-see-the-stars", "the-true-monthly-cost"];
+export const EDITOR_PICKS = ["twin-towns", "the-flood-claims-calendar", "boroughitis", "pricier-towns", "where-you-can-see-the-stars", "when-the-town-was-built"];
 export const storySlug = (story: Story) => story.href.split("/").at(-1)!;
 
 /** Short library previews; full story descriptions and search vocabulary stay intact. */
@@ -81,7 +86,7 @@ export function collectionFor(story: Story): CollectionId {
 
 export function findStories(query: string, collection: string = "all"): Story[] {
   const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
-  return STORIES.filter((s) => {
+  return LIBRARY_STORIES.filter((s) => {
     if (collection !== "all" && collectionFor(s) !== collection) return false;
     const text = `${s.title} ${storyPreview(s)} ${s.blurb}`.toLocaleLowerCase();
     return words.every((word) => text.includes(word));

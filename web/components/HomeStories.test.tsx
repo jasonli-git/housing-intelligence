@@ -2,7 +2,7 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
 import { HomeStories } from "./HomeStories";
-import { STORIES } from "@/lib/stories";
+import { LIBRARY_STORIES } from "@/lib/storyLibrary";
 
 afterEach(cleanup);
 
@@ -12,7 +12,7 @@ it("provides one collection gateway with the real story count and decorative cha
   const links = within(section).getAllByRole("link");
   expect(links).toHaveLength(1);
   expect(links[0].getAttribute("href")).toBe("/stories");
-  expect(within(section).getByText(`${STORIES.length} stories`)).toBeTruthy();
+  expect(within(section).getByText(`${LIBRARY_STORIES.length} stories`)).toBeTruthy();
   expect(links[0].textContent).toContain("New Jersey");
   expect(within(section).queryByText(/Explore collection/)).toBeNull();
   expect(section.querySelectorAll(".gallery-fragment")).toHaveLength(3);

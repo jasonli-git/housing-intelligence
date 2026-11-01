@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { StoryLibrary } from "./StoryLibrary";
-import { STORIES } from "@/lib/stories";
+import { LIBRARY_STORIES } from "@/lib/storyLibrary";
 
 beforeEach(() => {
   vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
@@ -11,13 +11,13 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
-it("shows the feature and six labelled rails with real story links", () => {
+it("shows the feature and five labelled rails with real story links", () => {
   render(<StoryLibrary />);
   expect(screen.queryByText("Chart detail")).toBeNull();
   expect(screen.getByRole("link", { name: /Where South Jersey/ }).getAttribute("href")).toBe("/stories/the-wawa-line");
-  expect(screen.getAllByRole("region")).toHaveLength(6);
+  expect(screen.getAllByRole("region")).toHaveLength(5);
   const rail = screen.getByRole("region", { name: "Only in New Jersey" });
-  expect(within(rail).getAllByRole("link")).toHaveLength(9);
+  expect(within(rail).getAllByRole("link")).toHaveLength(8);
   expect(screen.getByRole("button", { name: "Previous stories in Only in New Jersey" }).hasAttribute("disabled")).toBe(true);
   expect(rail.querySelector(".library-rail-head .library-arrow")).toBeNull();
   expect(rail.querySelectorAll(".library-rail-stage > .library-arrow")).toHaveLength(2);
@@ -26,22 +26,22 @@ it("shows the feature and six labelled rails with real story links", () => {
 it("provides every story in a searchable normal grid", () => {
   render(<StoryLibrary />);
   fireEvent.click(screen.getByRole("button", { name: /All stories/ }));
-  expect(screen.getAllByRole("link")).toHaveLength(STORIES.length);
+  expect(screen.getAllByRole("link")).toHaveLength(LIBRARY_STORIES.length);
   fireEvent.change(screen.getByRole("searchbox", { name: "Search stories" }), { target: { value: "Wawa" } });
   expect(screen.getAllByRole("link")).toHaveLength(1);
   expect(screen.getByRole("status").textContent).toContain("1 story");
   fireEvent.change(screen.getByRole("searchbox"), { target: { value: "not-a-story" } });
   expect(screen.queryAllByRole("link")).toHaveLength(0);
   fireEvent.click(screen.getByRole("button", { name: "Show all stories" }));
-  expect(screen.getAllByRole("link")).toHaveLength(STORIES.length);
+  expect(screen.getAllByRole("link")).toHaveLength(LIBRARY_STORIES.length);
 });
 it("view all opens the chosen collection without losing other stories", () => {
   render(<StoryLibrary />);
   fireEvent.click(within(screen.getByRole("region", { name: "Only in New Jersey" })).getByRole("button", { name: /View all/ }));
   expect((screen.getByRole("combobox", { name: "Collection" }) as HTMLSelectElement).value).toBe("jersey");
-  expect(screen.getAllByRole("link")).toHaveLength(9);
+  expect(screen.getAllByRole("link")).toHaveLength(8);
   fireEvent.change(screen.getByRole("combobox"), { target: { value: "all" } });
-  expect(screen.getAllByRole("link")).toHaveLength(STORIES.length);
+  expect(screen.getAllByRole("link")).toHaveLength(LIBRARY_STORIES.length);
 });
 
 it("moves focus between story links with the keyboard", () => {
