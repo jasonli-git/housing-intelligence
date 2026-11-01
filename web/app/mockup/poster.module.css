@@ -210,3 +210,15 @@
 .poster .topics a { color: var(--text-secondary) !important; }
 .poster .topics a[aria-current] { color: var(--surface-1) !important; background: var(--text-primary); }
 .poster :global(.crumbs a), .poster :global(.crumbs li) { padding: 0 !important; font-family: var(--font-text) !important; font-size: var(--text-note) !important; text-transform: none !important; letter-spacing: 0 !important; background: none !important; border: 0 !important; }
+/* Rounded panels with a small gutter, so the poster reads as a set of cards in a frame. */
+.poster .panel { border-radius: 16px; }
+.poster .panel + .panel { margin-top: 10px; }
+.context > summary { list-style: none; }
+@media (min-width: 1000px) {
+  .poster { gap: 10px; }
+  .poster > * { flex-basis: 100%; }
+  .poster .panel + .panel { margin-top: 0; }
+  .poster > :is(.price, .cost, .rank, .living, .people, .era, .ground, .pressure, .sameHouse) { flex: 7 1 calc(58.33% - 10px); }
+  .poster > :is(.boxes, .income, .tax, .homes, .county, .bills, .street, .lending) { flex: 5 1 calc(41.67% - 10px); }
+  .poster > .tax { flex: 5 1 calc(41.67% - 10px); }
+}

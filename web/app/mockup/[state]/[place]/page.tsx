@@ -363,8 +363,9 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   }) : [];
 
   const navLinks = ([
-    ["price", "Price", !!homeRow], ["cost", "Costs", !!month], ["ranks", "Compare", strips.length > 0], ["living", "Living here", facts.length > 0],
-    ["workday", "People", workBars.length > 0], ["stories", "Stories", deepStories.length > 0],
+    ["price", "Home prices", !!homeRow], ["cost", "Monthly costs", !!month], ["tax", "Property tax", !!taxBill], ["ranks", "Compared to NJ", strips.length > 0],
+    ["affordability", "Affordability", !!pressureStory], ["living", "Daily life", facts.length > 0], ["workday", "Jobs & schools", workBars.length > 0 || privateShare !== null],
+    ["county-context", "County trends", contextFacts.length > 0], ["surroundings", "Surroundings", ground.length > 0], ["county", "Nearby towns", ranked.length > 1], ["stories", "Stories", deepStories.length > 0],
   ] as const).filter(([, , shown]) => shown).map(([id, label]) => ({ id, label }));
 
   return <>
@@ -480,7 +481,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         </div>)}
       </section>}
 
-      {pressureStory && <section className={`${styles.panel} ${styles.pressure}`}>
+      {pressureStory && <section id="affordability" className={`${styles.panel} ${styles.pressure}`}>
         <h2>{pressureStory.headline}</h2>
         <StoryBars rows={pressureStory.rows} />
         <p className={styles.caption}>{pressureStory.source}, {pressureStory.period} · {storyLink("pressure")}</p>
@@ -554,7 +555,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       {heatSeries.length > 20 && county && <section className={styles.contextItem}>
         <h2>{displayName(county)} now passes 90°F about {Math.round(heatNow)} days a year, {heatNow >= heatBase ? "up" : "down"} from {Math.round(heatBase)}</h2>
         <svg className={styles.scatter} viewBox={`0 0 ${HW} ${HH}`} role="img" aria-label={`Days over 90 degrees in ${displayName(county)} each year since ${yearOf(heatSeries[0])}. The last ten years average ${Math.round(heatNow)} days, against ${Math.round(heatBase)} from 1951 to 1980.`}>
-          {heatSeries.map((o, i) => <rect key={o.period_end} x={HL + i * barW} y={hy(o.value)} width={Math.max(barW - 1, 1)} height={hy(0) - hy(o.value)} fill={i >= heatSeries.length - 10 ? "var(--series-2)" : "currentColor"} fillOpacity={i >= heatSeries.length - 10 ? 1 : 0.35}><title>{yearOf(o)}: {Math.round(o.value)} days</title></rect>)}
+          {heatSeries.map((o, i) => <rect key={o.period_end} x={HL + i * barW} y={hy(o.value)} width={Math.max(barW - 1, 1)} height={hy(0) - hy(o.value)} fill={i >= heatSeries.length - 10 ? "var(--series-2)" : "currentColor"} fillOpacity={i >= heatSeries.length - 10 ? 1 : 0.35}><title>{`${yearOf(o)}: ${Math.round(o.value)} days`}</title></rect>)}
           <line x1={HL} x2={HW} y1={hy(heatBase)} y2={hy(heatBase)} stroke="currentColor" strokeDasharray="5 4" />
           <text x={HL + 4} y={hy(heatBase) - 6}>1951–80 average, {Math.round(heatBase)} days</text>
           {heatSeries.filter((o) => yearOf(o) % 20 === 0).map((o) => <text key={o.period_end} x={HL + heatSeries.indexOf(o) * barW} y={HH - 6} textAnchor="middle">{yearOf(o)}</text>)}
@@ -565,7 +566,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       {persistence && county && <section className={styles.contextItem}>
         <h2>Against incomes, {displayName(county)} homes are {againstUsual(persistence.vs_median!)} their usual level</h2>
         <svg className={styles.scatter} viewBox={`0 0 ${UW} ${UH}`} role="img" aria-label={`Home prices against income in ${displayName(county)} from ${persistence.first_year} to ${persistence.last_year}, above or below the usual level.`}>
-          {persistence.series.map((p) => { const top = Math.min(uY(p.vs_median), uY(0)); return <rect key={p.year} x={UP + (p.year - persistence.first_year) * uStep + 1} y={top} width={Math.max(uStep - 2, 1)} height={Math.max(Math.abs(uY(p.vs_median) - uY(0)), 1)} fill={p.year === persistence.last_year ? "var(--series-2)" : "currentColor"} fillOpacity={p.year === persistence.last_year ? 1 : p.vs_median > 0 ? 0.55 : 0.25}><title>{p.year}: {againstUsual(p.vs_median)} the usual level</title></rect>; })}
+          {persistence.series.map((p) => { const top = Math.min(uY(p.vs_median), uY(0)); return <rect key={p.year} x={UP + (p.year - persistence.first_year) * uStep + 1} y={top} width={Math.max(uStep - 2, 1)} height={Math.max(Math.abs(uY(p.vs_median) - uY(0)), 1)} fill={p.year === persistence.last_year ? "var(--series-2)" : "currentColor"} fillOpacity={p.year === persistence.last_year ? 1 : p.vs_median > 0 ? 0.55 : 0.25}><title>{`${p.year}: ${againstUsual(p.vs_median)} the usual level`}</title></rect>; })}
           <line x1={UP} x2={UW - UP} y1={uY(0)} y2={uY(0)} stroke="currentColor" />
           <text x={UP} y={UH - 6}>{persistence.first_year}</text>
           <text x={UW - UP} y={UH - 6} textAnchor="end">{persistence.last_year}</text>
@@ -591,7 +592,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <p className={styles.caption}>Typical bills for homes billed for each, Census ACS. Already counted in the cost to own.</p>
       </section>}
 
-      {ground.length > 0 && <section className={`${styles.panel} ${styles.ground}`}>
+      {ground.length > 0 && <section id="surroundings" className={`${styles.panel} ${styles.ground}`}>
         <h2>{groundLead.label}: {groundLead.position >= 0.5 ? "higher" : "lower"} than {Math.round(Math.max(groundLead.position, 1 - groundLead.position) * 100)}% of {peers}</h2>
         <p className={styles.caption}>Around the homes, lowest towns on the left, highest on the right.</p>
         {ground.map((g) => <div key={g.id} className={styles.strip}><span>{g.label}</span><div><i style={{ left: `${g.position * 100}%` }} /></div><strong>{g.value}</strong></div>)}
