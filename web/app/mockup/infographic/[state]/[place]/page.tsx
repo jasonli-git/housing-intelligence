@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { GoDeeper } from "../../../GoDeeper";
+import { OwnNumbers } from "../../../OwnNumbers";
 import styles from "../../../poster.module.css";
-import { CostToOwn } from "@/components/CostToOwn";
 import { Crumbs } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
 import { similarGroups } from "@/lib/similar";
@@ -237,10 +238,8 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
   const storyLink = (topic: PlaceStoryTopic) => <Link href={placeStoryHref(topic, regionId)}>Full story</Link>;
   const pressureStory = story("pressure"), lendingStory = story("lending"), buildingStory = story("building");
-  // Told in full by a panel above, so each keeps a link here rather than a second card.
-  const FEATURED: PlaceStoryTopic[] = ["migration", "schools", "health"];
-  const featured = FEATURED.flatMap((topic) => { const found = story(topic); return found ? [{ topic, found }] : []; });
-  const others = records.map((record) => record.topic).filter((topic) => !FEATURED.includes(topic) && story(topic));
+  const STORY_GROUP: Record<string, string> = { market: "Money", sales: "Money", pressure: "Money", lending: "Money", building: "Homes", utilities: "Homes", water: "Surroundings", flood: "Surroundings", sites: "Surroundings", broadband: "Surroundings", commute: "People", migration: "People", schools: "People", health: "People" };
+  const deepStories = records.flatMap(({ topic }) => { const found = story(topic); return found ? [{ topic, title: PLACE_STORIES[topic].title, headline: found.headline, source: found.source, href: placeStoryHref(topic, regionId), slug: PLACE_STORIES[topic].slug, group: STORY_GROUP[topic] ?? "Homes" }] : []; });
 
   const townFeature = townGeo?.features.find((f) => f.properties.region_id === regionId);
   const frame = countyGeo ? projector(countyGeo.features.flatMap((f) => ringsOf(f.geometry)), 180, 4) : null;
@@ -308,7 +307,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <p className={styles.caption}>{month.principal > 0 ? `About ${dollars(month.principal)} of owning goes into the home. ` : ""}An estimate, not a quote: 20% down at {cost!.rate.value.toFixed(2)}%, {homeRow ? "typical home and typical rental" : "at a recent sale price"}.</p>
         <details className={styles.tool}>
           <summary>Use your own numbers</summary>
-          <div className="atlas-local quiet-county"><CostToOwn {...cost!} quiet compactOverview guidePlaceId={regionId} comparePlaceId={regionId} showHelp={false} /></div>
+          <OwnNumbers income={income} guideHref={`/guide?place=${regionId}`} source={{ state: region.state_code, price: cost!.home.value, ratePct: cost!.rate.value, taxYear: cost!.tax?.value ?? null, insuranceYear: cost!.insurance?.value ?? null, utilitiesMonth: cost!.utilities?.month ?? null, rentMonth: cost!.rent?.value ?? null }} />
         </details>
         <p className={styles.actions}><Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link><Link href={`/afford?place=${regionId}&county=${county?.region_id ?? "all"}`}>Places within my budget</Link><Link href="/help">Housing help</Link></p>
       </section>}
@@ -415,12 +414,8 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <p className={styles.actions}><Link href={`/compare${placesQuery([regionId, ...similar.matches.slice(0, 3).map((m) => m.region_id)])}`}>Compare side by side</Link></p>
       </section>}
 
-      {(featured.length > 0 || others.length > 0) && <section id="stories" className={`${styles.panel} ${styles.stories}`}>
-        <h2>Go deeper on {name}</h2>
-        <div className={styles.featured}>{featured.map(({ topic, found }) => <Link key={topic} href={placeStoryHref(topic, regionId)}>
-          <span>{PLACE_STORIES[topic].title}</span><strong>{found.headline}</strong><small>{found.source}</small>
-        </Link>)}</div>
-        <p className={styles.storyIndex}>{others.map((topic) => <Link key={topic} href={placeStoryHref(topic, regionId)}>{PLACE_STORIES[topic].title}</Link>)}</p>
+      {deepStories.length > 0 && <section id="stories" className={`${styles.panel} ${styles.stories}`}>
+        <GoDeeper name={name} stories={deepStories} />
       </section>}
 
       <footer className={styles.close}>Sources: Zillow, Census Bureau, FEMA, NJ Division of Taxation. <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <Link href="/sources">About the data</Link></footer>
