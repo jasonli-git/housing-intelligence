@@ -193,3 +193,11 @@
 .pace { background: light-dark(#e7f0d0, #2b3a10); color: var(--text-primary); }
 .heat { background: light-dark(#ffd6c9, #54200f); color: var(--text-primary); }
 .unusual { background: light-dark(#e8dcf9, #3a2460); color: var(--text-primary); }
+.context { background: light-dark(#e4e6ea, #1c1e23); color: var(--text-primary); }
+.context > summary { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 32px; cursor: pointer; }
+.context > summary strong { display: block; font-size: clamp(19px, 2.4vw, 24px); }
+.context > summary small { font-size: var(--text-note); }
+.contextFacts { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: var(--text-small); font-weight: 600; }
+.contextItem { margin-top: 28px; padding-top: 24px; border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
+.context > summary::after { content: "+"; font-size: 24px; line-height: 1; }
+.context[open] > summary::after { content: "−"; }
