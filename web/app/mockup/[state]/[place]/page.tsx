@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { GoDeeper } from "../../GoDeeper";
 import { OwnNumbers } from "../../OwnNumbers";
 import { PosterNav } from "../../PosterNav";
+import { TownTable, type TownRow } from "../../TownTable";
 import styles from "../../poster.module.css";
 import { Crumbs } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
@@ -371,12 +372,29 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     return to ? [{ name: d.name, d: arc(townCentre, to), to, weight: 1 + (d.share / workPeak) * 3 }] : [];
   }) : [];
 
+  // A county page leads with its towns: every one, by what has actually sold, so towns
+  // Zillow does not cover still count.
+  const readTowns = async (id: string, row?: { period_start: string }) => (isCounty && row ? new Map((await Promise.all(Array.from({ length: Math.ceil(countyTowns.length / 100) }, (_, i) => api.marketObservations(id, countyTowns.slice(i * 100, i * 100 + 100).map((t) => t.region_id), row.period_start))))
+    .flatMap((part) => part?.regions.flatMap((r) => r.series.map((p) => [r.region_id, p.value] as const)) ?? [])) : new Map<number, number>());
+  const [townSales, townIncomes2] = await Promise.all([readTowns("sr1a_median_sale_price", level("sr1a_median_sale_price")), readTowns("acs_median_hh_income", incomeRow)]);
+  const homeByTown = new Map(ranked.map((t) => [t.id, t.value]));
+  const townRows: TownRow[] = isCounty ? countyTowns.map((t) => ({ id: t.region_id, name: countyTowns.filter((o) => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, (c) => c.toUpperCase()) : displayName(t), href: regionPath(t.region_id), sale: townSales.get(t.region_id) ?? null, value: homeByTown.get(t.region_id) ?? null, tax: ownTownRates.get(t.region_id) ?? null, income: townIncomes2.get(t.region_id) ?? null })) : [];
+  const bySale = townRows.filter((t) => t.sale !== null).sort((a, b) => b.sale! - a.sale!);
+  const byTax = townRows.filter((t) => t.tax !== null && t.tax > 0 && t.tax <= 6).sort((a, b) => a.tax! - b.tax!);
+  const byIncome = townRows.filter((t) => t.income !== null).sort((a, b) => a.income! - b.income!);
+  const townRanges = [
+    bySale.length > 1 && { label: "Recent sale", low: dollars(bySale.at(-1)!.sale!), lowName: bySale.at(-1)!.name, high: dollars(bySale[0].sale!), highName: bySale[0].name },
+    byTax.length > 1 && { label: "Tax rate", low: `${byTax[0].tax!.toFixed(2)}%`, lowName: byTax[0].name, high: `${byTax.at(-1)!.tax!.toFixed(2)}%`, highName: byTax.at(-1)!.name },
+    byIncome.length > 1 && { label: "Household income", low: dollars(byIncome[0].income!), lowName: byIncome[0].name, high: dollars(byIncome.at(-1)!.income!), highName: byIncome.at(-1)!.name },
+  ].flatMap((range) => (range ? [range] : []));
+
   // Town prices across the county: darker is dearer, by rank, so one costly town cannot wash out the rest.
   const countyIds = new Set(countyTowns.map((t) => t.region_id));
   const countyFeatures = townGeo?.features.filter((f) => countyIds.has(f.properties.region_id)) ?? [];
   const countyFrame = countyFeatures.length ? projector(countyFeatures.flatMap((f) => ringsOf(f.geometry)), 360, 6) : null;
   const countyShapes = countyFrame ? shapes(countyFeatures, 360, countyFrame).shapes : [];
-  const priceShade = (id: number) => { const i = ranked.findIndex((t) => t.id === id); return i < 0 ? null : 1 - (i / Math.max(ranked.length - 1, 1)) * 0.8; };
+  const shadeOrder = isCounty ? bySale : ranked;
+  const priceShade = (id: number) => { const i = shadeOrder.findIndex((t) => t.id === id); return i < 0 ? null : 1 - (i / Math.max(shadeOrder.length - 1, 1)) * 0.8; };
 
   // Rent by size, from the survey's gross rents.
   const rentSizes = [["acs_median_rent_studio", "Studio"], ["acs_median_rent_1br", "1 bedroom"], ["acs_median_rent_2br", "2 bedrooms"], ["acs_median_rent_3br", "3 bedrooms"], ["acs_median_rent_4br", "4+ bedrooms"]].flatMap(([id, label]) => { const row = level(id); return row ? [{ label, value: row.value, formatted: dollars(row.value) }] : []; });
@@ -410,14 +428,38 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const navLinks = ([
     ["price", "Home prices", !!homeRow], ["cost", "Monthly costs", !!month], ["tax", "Property tax", !!taxBill], ["ranks", "Compared to NJ", strips.length > 0],
     ["affordability", "Affordability", !!pressureStory], ["living", "Daily life", facts.length > 0], ["workday", "Jobs & schools", workBars.length > 0 || privateShare !== null],
-    ["county-context", isCounty ? "Market trends" : "County trends", contextFacts.length > 0], ["surroundings", "Surroundings", ground.length > 0], ["county", isCounty ? "Its towns" : "Nearby towns", ranked.length > 1], ["stories", "Stories", deepStories.length > 0],
+    ["county-context", isCounty ? "Market trends" : "County trends", contextFacts.length > 0], ["surroundings", "Surroundings", ground.length > 0], ["county", isCounty ? "Its towns" : "Nearby towns", isCounty ? townRows.length > 1 : ranked.length > 1], ["stories", "Stories", deepStories.length > 0],
   ] as const).filter(([, , shown]) => shown).map(([id, label]) => ({ id, label }));
+  // The towns come first on a county page, so their link does too.
+  const orderedLinks = isCounty ? [...navLinks.filter((l) => l.id === "county"), ...navLinks.filter((l) => l.id !== "county")] : navLinks;
+
+  const townsPanel = isCounty ? townRows.length > 1 && county ? <section id="county" className={`${styles.panel} ${styles.county} ${styles.townsFull}`}>
+        <h2>{bySale.length > 1 ? `The ${townRows.length} towns of ${name}, from ${bySale[0].name} to ${bySale.at(-1)!.name}` : `The ${townRows.length} towns of ${name}`}</h2>
+        {townRanges.length > 0 && <div className={styles.ranges}>{townRanges.map((range) => <div key={range.label}><span>{range.label}</span><strong>{range.low} – {range.high}</strong><small>{range.lowName} to {range.highName}</small></div>)}</div>}
+        <div className={styles.townsLayout}>
+          {countyFrame && <div><svg className={styles.countyMap} viewBox={`0 0 ${countyFrame.width} ${countyFrame.height}`} role="img" aria-label={`Towns in ${name} shaded by recent sale price.`}>
+            {countyShapes.map((shape) => { const shade = priceShade(shape.id); return <path key={shape.id} d={shape.d} fill={shade === null ? "currentColor" : "var(--series-1)"} fillOpacity={shade ?? 0.12} stroke="var(--county-line)" strokeWidth="0.75"><title>{shape.name}</title></path>; })}
+          </svg><p className={styles.caption}>Darker towns have higher recent sale prices. Faint towns have too few sales.</p></div>}
+          <TownTable towns={townRows} />
+        </div>
+        <p className={styles.caption}>Recent sale: median recorded price. Home value: Zillow, which does not cover every town. Tax rate: effective. Income: Census ACS. Select a column to sort.</p>
+      </section> : null : (ranked.length > 1 || townRows.length > 1) && county ? <section id="county" className={`${styles.panel} ${styles.county}`}>
+        <h2>{isCounty ? `From ${ranked[0].name} to ${ranked.at(-1)!.name}: ${ranked.length} Zillow-covered towns by home value` : countyRank === 0 ? `The priciest of ${ranked.length} Zillow-covered towns in ${displayName(county)}` : `${ordinal(countyRank + 1)} of ${ranked.length} Zillow-covered towns in ${displayName(county)}`}</h2>
+        {countyFrame && <svg className={styles.countyMap} viewBox={`0 0 ${countyFrame.width} ${countyFrame.height}`} role="img" aria-label={`Towns in ${displayName(county)} shaded by typical home value, with ${name} outlined.`}>
+          {countyShapes.map((shape) => { const shade = priceShade(shape.id); return <path key={shape.id} d={shape.d} fill={shade === null ? "currentColor" : "var(--series-1)"} fillOpacity={shade ?? 0.12} stroke="var(--county-line)" strokeWidth="0.75"><title>{shape.name}</title></path>; })}
+          {countyShapes.filter((shape) => shape.id === regionId).map((shape) => <path key="own" d={shape.d} fill="none" stroke="var(--series-2)" strokeWidth="2.5" />)}
+        </svg>}
+        {countyFrame && <p className={styles.caption}>Darker towns cost more. Faint towns have no Zillow figure.</p>}
+        {ranked.filter((t, i) => i < 6 || i >= ranked.length - 5 || t.id === regionId).map((t) => <div key={t.id} className={styles.townBar} data-own={t.id === regionId || undefined}>
+          <span>{t.name}</span><div><i style={{ width: `${(t.value / ranked[0].value) * 100}%` }} /></div><strong>{dollars(t.value)}</strong>
+        </div>)}
+      </section> : null;
 
   return <>
     <Masthead affordability={{ kind: "route" }} simple />
     <main id="main-content" tabIndex={-1} className={styles.poster}>
       <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county && !isCounty ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
-      <PosterNav links={navLinks} />
+      <PosterNav links={orderedLinks} />
 
       <header className={`${styles.panel} ${styles.hero}`}>
         <div>
@@ -430,6 +472,8 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <circle cx={town.centre[0]} cy={town.centre[1]} r="8" fill="var(--series-2)" stroke="var(--poster-hero)" strokeWidth="2" />
         </svg>}
       </header>
+
+      {isCounty && townsPanel}
 
       {homeRow && <section id="price" className={`${styles.panel} ${styles.price}`}>
         <h2>The typical home, {priceTitle}</h2>
@@ -604,7 +648,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <p className={styles.caption}>Every 100 homes. Census ACS, a five-year survey. “Lived in” means occupied when surveyed; seasonal homes can still be rented in summer.</p>
       </section>}
 
-      {county && contextFacts.length > 0 && <details id="county-context" open={isCounty} className={`${styles.panel} ${styles.context}`}>
+      {county && contextFacts.length > 0 && <details id="county-context" className={`${styles.panel} ${styles.context}`}>
         <summary><span><strong>{isCounty ? "Market trends" : `${displayName(county)} context`}</strong><small>{isCounty ? "Pace of sales, heat, prices against incomes, and moves" : `The wider market, published by county, not ${name} alone`}</small></span><span className={styles.contextFacts}>{contextFacts.map((fact) => <span key={fact}>{fact}</span>)}</span></summary>
       {domNow && domUsual !== null && county && <section className={styles.contextItem}>
         <h2>Homes in {displayName(county)} sit about {Math.round(domNow.value)} days, {Math.abs(domGap) < 3 ? "close to usual" : domGap < 0 ? `${Math.round(-domGap)} faster than usual` : `${Math.round(domGap)} slower than usual`}</h2>
@@ -665,7 +709,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         {ground.map((g) => <div key={g.id} className={styles.strip}><span>{g.label}</span><div><i style={{ left: `${g.position * 100}%` }} /></div><strong>{g.value}</strong></div>)}
       </section>}
 
-      {shops.length > 0 && <section className={`${styles.panel} ${styles.street}`}>
+      {shops.length > 0 && !isCounty && <section className={`${styles.panel} ${styles.street}`}>
         <h2>On the map in {name}</h2>
         <div className={styles.facts}>{shops.map((shop) => <div key={shop.label}><strong>{shop.value}</strong><span>{shop.label}</span></div>)}</div>
         <p className={styles.caption}>Mapped in OpenStreetMap, so some may be missing.</p>
@@ -676,17 +720,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <div className={styles.split}><i style={{ flexGrow: owned }}>{(owned * 100).toFixed(0)}% own</i><i style={{ flexGrow: 1 - owned }}>{((1 - owned) * 100).toFixed(0)}% rent</i></div></>}
       </section>}
 
-      {ranked.length > 1 && county && <section id="county" className={`${styles.panel} ${styles.county}`}>
-        <h2>{isCounty ? `From ${ranked[0].name} to ${ranked.at(-1)!.name}: ${ranked.length} Zillow-covered towns by home value` : countyRank === 0 ? `The priciest of ${ranked.length} Zillow-covered towns in ${displayName(county)}` : `${ordinal(countyRank + 1)} of ${ranked.length} Zillow-covered towns in ${displayName(county)}`}</h2>
-        {countyFrame && <svg className={styles.countyMap} viewBox={`0 0 ${countyFrame.width} ${countyFrame.height}`} role="img" aria-label={`Towns in ${displayName(county)} shaded by typical home value, with ${name} outlined.`}>
-          {countyShapes.map((shape) => { const shade = priceShade(shape.id); return <path key={shape.id} d={shape.d} fill={shade === null ? "currentColor" : "var(--series-1)"} fillOpacity={shade ?? 0.12} stroke="var(--county-line)" strokeWidth="0.75"><title>{shape.name}</title></path>; })}
-          {countyShapes.filter((shape) => shape.id === regionId).map((shape) => <path key="own" d={shape.d} fill="none" stroke="var(--series-2)" strokeWidth="2.5" />)}
-        </svg>}
-        {countyFrame && <p className={styles.caption}>Darker towns cost more. Faint towns have no Zillow figure.</p>}
-        {ranked.filter((t, i) => i < 6 || i >= ranked.length - 5 || t.id === regionId).map((t) => <div key={t.id} className={styles.townBar} data-own={t.id === regionId || undefined}>
-          <span>{t.name}</span><div><i style={{ width: `${(t.value / ranked[0].value) * 100}%` }} /></div><strong>{dollars(t.value)}</strong>
-        </div>)}
-      </section>}
+      {!isCounty && townsPanel}
 
       {similar && similar.matches.length > 0 && priceRow && <section className={`${styles.panel} ${styles.similar}`}>
         <h2>{similar.matches.length} similar {similar.matches.length === 1 ? `${unitWord} costs` : `${unitPlural} cost`} at least {Math.round((1 - similar.cheaper_by) * 100)}% less</h2>

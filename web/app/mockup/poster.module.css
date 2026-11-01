@@ -236,3 +236,17 @@
 .commute .stack { margin-bottom: 8px; }
 .county { --county-line: light-dark(#eadfce, #33291d); }
 .countyMap { display: block; width: 100%; max-width: 320px; max-height: 340px; margin-inline: auto; }
+.ranges { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 16px; margin-bottom: 24px; }
+.ranges span, .ranges small { display: block; font-size: var(--text-note); }
+.ranges strong { display: block; margin-block: 2px; font-size: clamp(19px, 2.2vw, 24px); font-weight: 800; }
+.townsLayout { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 28px; align-items: start; }
+.townTable { max-height: 430px; overflow: auto; font-size: var(--text-small); }
+.townTable table { width: 100%; border-collapse: collapse; }
+.townTable thead th { position: sticky; top: 0; z-index: 1; background: light-dark(#eadfce, #33291d); text-align: right; }
+.townTable thead th:first-child, .townTable tbody th { text-align: left; font-weight: 500; }
+.townTable button { padding: 8px; font: inherit; font-weight: 700; color: inherit; background: none; border: 0; cursor: pointer; white-space: nowrap; }
+.townTable td, .townTable tbody th { padding: 6px 8px; border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
+.townTable td { text-align: right; font-variant-numeric: tabular-nums; }
+.townTable a { color: inherit; }
+.poster > .townsFull { flex: 1 1 100%; }
+@media (max-width: 760px) { .townsLayout { grid-template-columns: minmax(0, 1fr); } .countyMap { max-width: 220px; } }
