@@ -5,12 +5,12 @@ export type Story = (typeof STORIES)[number];
  * Stories a place page now tells for each town (the infographic mockup). Their pages stay
  * published and linked from place pages; the library keeps the statewide patterns.
  */
-export const ON_PLACE_PAGES: ReadonlySet<string> = new Set(["who-feels-housing-costs", "the-mortgage-market", "is-new-jersey-building", "price-ladder", "the-true-monthly-cost", "what-the-housing-is", "who-moves-in", "your-towns-time-machine", "what-a-house-buys-in-land", "sites-and-cleanup", "where-internet-reaches", "water-you-can-check", "when-the-power-goes-out", "health-in-context", "living-higher", "how-big-the-houses-are", "same-house-different-tax-bill", "where-the-workday-goes", "where-students-go", "the-winter-empty-shore", "income-and-home-value", "how-long-homes-sit", "the-hottest-counties", "is-today-unusual"]);
+export const ON_PLACE_PAGES: ReadonlySet<string> = new Set(["who-feels-housing-costs", "the-mortgage-market", "is-new-jersey-building", "price-ladder", "the-true-monthly-cost", "what-the-housing-is", "who-moves-in", "your-towns-time-machine", "what-a-house-buys-in-land", "sites-and-cleanup", "where-internet-reaches", "water-you-can-check", "when-the-power-goes-out", "health-in-context", "same-house-different-tax-bill", "where-the-workday-goes", "where-students-go", "the-winter-empty-shore", "income-and-home-value", "how-long-homes-sit", "the-hottest-counties", "is-today-unusual"]);
 export const LIBRARY_STORIES = STORIES.filter((story) => !ON_PLACE_PAGES.has(story.href.split("/").at(-1)!));
 export const COLLECTIONS = [
   { id: "jersey", title: "Only in New Jersey", description: "The state’s unmistakable character.", stories: ["the-wawa-line", "boroughitis", "the-pizza-bagel-line", "diner-capital", "whats-in-a-name", "the-starbucks-index", "court-circle-lane", "hometown-famous"] },
   { id: "money", title: "What your money buys", description: "Beyond the asking price.", stories: ["twin-towns", "priciest-and-cheapest", "pricier-towns", "the-long-commute-premium"] },
-  { id: "place", title: "The feel of a place", description: "Trees, streets, space and quiet.", stories: ["the-leafy-premium", "what-quiet-costs", "where-you-can-see-the-stars", "pavement-or-lawn", "when-the-town-was-built"] },
+  { id: "place", title: "The feel of a place", description: "Trees, streets, space and quiet.", stories: ["the-leafy-premium", "what-quiet-costs", "where-you-can-see-the-stars", "pavement-or-lawn", "living-higher", "how-big-the-houses-are", "when-the-town-was-built"] },
   { id: "surface", title: "Look beneath the surface", description: "The patterns you might otherwise miss.", stories: ["the-flood-claims-calendar", "how-data-gets-rewritten"] },
 ] as const;
 
