@@ -290,3 +290,18 @@
 .compact .reading :global(.consumer-feature-answer) { font-size: 17px; line-height: 1.5; }
 @media (min-width: 1000px) { .poster.compact > .reading { grid-column: 1 / -1; } }
 .poster.compact .reading { padding: 8px 4px; }
+/* A county's photograph fills the right of its header; the text stays on solid navy. */
+.poster.compact > .hero:has(:global(.place-photo)) { grid-template-columns: minmax(0, 1fr) 70px minmax(0, 340px); align-items: stretch; padding: 0 0 0 20px; overflow: hidden; }
+.compact .hero:has(:global(.place-photo)) > div { align-self: center; padding-block: 18px; }
+.compact .hero:has(:global(.place-photo)) > svg { align-self: center; }
+.compact .hero :global(.place-photo) { display: flex; flex-direction: column; min-width: 0; }
+.compact .hero :global(.place-photo picture) { flex: 1; min-height: 0; }
+.compact .hero :global(.place-photo) img { width: 100%; height: 100%; min-height: 170px; aspect-ratio: auto; border-radius: 0; }
+.compact .hero :global(.place-photo figcaption) { margin: 0; padding: 5px 10px 6px; color: #fff; }
+.compact .hero :global(.place-photo-caption) { color: inherit; }
+@media (max-width: 760px) {
+  .poster.compact > .hero:has(:global(.place-photo)) { grid-template-columns: minmax(0, 1fr) 56px; gap: 12px; padding: 0 16px 16px; }
+  .compact .hero :global(.place-photo) { grid-column: 1 / -1; grid-row: 1; margin-inline: -16px; }
+  .compact .hero :global(.place-photo) img { height: 170px; }
+  .compact .hero:has(:global(.place-photo)) > div { padding-block: 0; }
+}

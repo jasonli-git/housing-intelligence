@@ -5,11 +5,13 @@ import { GoDeeper } from "../../GoDeeper";
 import { OwnNumbers } from "../../OwnNumbers";
 import { CountyAtlas, type AtlasTown as AtlasTownRow } from "../../CountyAtlas";
 import { PosterNav } from "../../PosterNav";
+import "../../../place-photo.css";
 import styles from "../../poster.module.css";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { Crumbs } from "@/components/Crumbs";
 import { ConsumerReading } from "@/components/ExplanationPanel";
 import { Masthead } from "@/components/Masthead";
+import { PlacePhoto } from "@/components/PlacePhoto";
 import { similarGroups } from "@/lib/similar";
 import { stateCrumbs } from "@/lib/states";
 import { placesQuery } from "@/lib/compare";
@@ -495,6 +497,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           {frame && town && <svg viewBox={`0 0 ${frame.width} ${frame.height}`} role="img" aria-label={`${name} on a map of ${scopeName(region.state_code)}`}>
             {counties.map((c) => <path key={c.id} d={c.d} fill="currentColor" fillOpacity={c.id === regionId ? 1 : 0.2} />)}
           </svg>}
+          <PlacePhoto geoid={region.geoid} />
         </header>
 
         {readingPanel}
