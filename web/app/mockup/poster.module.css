@@ -281,3 +281,12 @@
   .poster.compact > .cost:has(details[open]) { grid-column: 1 / -1; }
 }
 @media (max-width: 560px) { .poster.compact > .hero { grid-template-columns: minmax(0, 1fr) 56px; gap: 12px; } .compact .hero svg { width: 100%; } .compact .strip, .compact .townBar { grid-template-columns: minmax(0, 1fr) auto; } }
+/* The model's reading keeps the paper note of the current page, so it never reads as a computed panel. */
+.poster .reading { padding: 8px 4px; background: none; }
+.reading :global(.interpretation) { margin: 0; padding: 0; background: none; border: 0; box-shadow: none; }
+.hero :global(.computed-line) { display: block; margin-top: 10px; color: inherit; font-size: var(--text-note); }
+.hero :global(.computed) { color: inherit; }
+.hero :global(.computed) svg { width: 12px; height: 12px; fill: none; stroke: currentColor; }
+.compact .reading :global(.consumer-feature-answer) { font-size: 17px; line-height: 1.5; }
+@media (min-width: 1000px) { .poster.compact > .reading { grid-column: 1 / -1; } }
+.poster.compact .reading { padding: 8px 4px; }

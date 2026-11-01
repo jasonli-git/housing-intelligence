@@ -6,12 +6,15 @@ import { OwnNumbers } from "../../OwnNumbers";
 import { CountyAtlas, type AtlasTown as AtlasTownRow } from "../../CountyAtlas";
 import { PosterNav } from "../../PosterNav";
 import styles from "../../poster.module.css";
+import { ComputedBadge } from "@/components/ComputedBadge";
 import { Crumbs } from "@/components/Crumbs";
+import { ConsumerReading } from "@/components/ExplanationPanel";
 import { Masthead } from "@/components/Masthead";
 import { similarGroups } from "@/lib/similar";
 import { stateCrumbs } from "@/lib/states";
 import { placesQuery } from "@/lib/compare";
 import { api, regionsWithData } from "@/lib/api";
+import { focusedConsumerAnswer } from "@/lib/citations";
 import { ownershipInputs } from "@/lib/budgetScenario";
 import { costInputs } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
@@ -115,6 +118,14 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   ]);
   const name = displayName(region);
   const uncertainties = uncertaintiesFrom(summary);
+
+  // The model's reading is allowed to be absent, as on the current page: no reading, no panel.
+  const explanations = await api.explanations(regionId, "5y");
+  const consumer = explanations?.explanations?.find((r) => r.audience === "consumer") ?? null;
+  const hasReading = !!consumer?.sections?.length && !!focusedConsumerAnswer(consumer.body, consumer.sections, consumer.binding ?? null, "what_stands_out").answer;
+  const readingPanel = hasReading ? <section id="reading" className={`${styles.panel} ${styles.reading}`}>
+    <ConsumerReading reading={consumer} section="what_stands_out" heading="What stands out" headingLevel={3} headingHidden paperNote />
+  </section> : null;
   const { peer_count, peer_level, peer_scope } = packet.comparisons;
   const headline = verdictHeadline({ name, count: peer_count, noun: peerNoun(peer_level), scope: scopeName(peer_scope) }, packet.metrics, packet.levels, uncertainties);
   const level = (id: string) => packet.levels.find((l) => l.metric_id === id);
@@ -445,12 +456,12 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const modeOther = Math.max(100 - modes.reduce((sum, m) => sum + m.value, 0), 0);
 
   const navLinks = ([
-    ["price", "Home prices", !!homeRow], ["cost", "Monthly costs", !!month], ["tax", "Property tax", !!taxBill], ["ranks", "Compared to NJ", strips.length > 0],
+    ["reading", "AI highlights", hasReading], ["price", "Home prices", !!homeRow], ["cost", "Monthly costs", !!month], ["tax", "Property tax", !!taxBill], ["ranks", "Compared to NJ", strips.length > 0],
     ["affordability", "Affordability", !!pressureStory], ["living", "Daily life", facts.length > 0], ["workday", "Jobs & schools", workBars.length > 0 || privateShare !== null],
     ["county-context", isCounty ? "Market trends" : "County trends", contextFacts.length > 0], ["surroundings", "Surroundings", ground.length > 0], ["county", isCounty ? "Its towns" : "Nearby towns", isCounty ? townRows.length > 1 : ranked.length > 1], ["stories", "Stories", deepStories.length > 0],
   ] as const).filter(([, , shown]) => shown).map(([id, label]) => ({ id, label }));
   // The towns come first on a county page, so their link does too.
-  const orderedLinks = isCounty ? [...navLinks.filter((l) => l.id === "county"), ...navLinks.filter((l) => l.id !== "county")] : navLinks;
+  const orderedLinks = isCounty ? [...navLinks.filter((l) => l.id === "reading" || l.id === "county"), ...navLinks.filter((l) => l.id !== "reading" && l.id !== "county")] : navLinks;
 
   const townsPanel = ranked.length > 1 && county ? <section id="county" className={`${styles.panel} ${styles.county}`}>
         <h2>{countyRank === 0 ? `The priciest of ${ranked.length} Zillow-covered towns in ${displayName(county)}` : `${ordinal(countyRank + 1)} of ${ranked.length} Zillow-covered towns in ${displayName(county)}`}</h2>
@@ -467,7 +478,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   // A county is the same infographic at a smaller scale: the colour panels of a town poster,
   // packed into a grid of short cards around one working map of its towns.
   if (isCounty) {
-    const countyLinks = orderedLinks.filter((l) => ["county", "price", "cost", "tax", "ranks", "county-context", "affordability", "workday", "stories"].includes(l.id));
+    const countyLinks = orderedLinks.filter((l) => ["reading", "county", "price", "cost", "tax", "ranks", "county-context", "affordability", "workday", "stories"].includes(l.id));
     return <>
       <Masthead affordability={{ kind: "route" }} simple />
       <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact}`}>
@@ -479,11 +490,14 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
             <p className={styles.kicker}>{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""} · {townRows.length} towns</p>
             <h1>{name}</h1>
             {headline && <p className={styles.headline}>{headline}</p>}
+            <ComputedBadge />
           </div>
           {frame && town && <svg viewBox={`0 0 ${frame.width} ${frame.height}`} role="img" aria-label={`${name} on a map of ${scopeName(region.state_code)}`}>
             {counties.map((c) => <path key={c.id} d={c.d} fill="currentColor" fillOpacity={c.id === regionId ? 1 : 0.2} />)}
           </svg>}
         </header>
+
+        {readingPanel}
 
         {countyFrame && <section id="county" className={`${styles.panel} ${styles.county}`}>
           <h2>Its {townRows.length} towns</h2>
@@ -611,12 +625,15 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <p className={styles.kicker}>{county && !isCounty ? `${displayName(county)}, ` : ""}{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""}</p>
           <h1>{name}</h1>
           {headline && <p className={styles.headline}>{headline}</p>}
+          <ComputedBadge />
         </div>
         {frame && town && <svg viewBox={`0 0 ${frame.width} ${frame.height}`} role="img" aria-label={`${name} on a map of ${scopeName(region.state_code)}`}>
           {counties.map((c) => <path key={c.id} d={c.d} fill="currentColor" fillOpacity={c.id === county?.region_id ? 0.55 : 0.2} />)}
           <circle cx={town.centre[0]} cy={town.centre[1]} r="8" fill="var(--series-2)" stroke="var(--poster-hero)" strokeWidth="2" />
         </svg>}
       </header>
+
+      {readingPanel}
 
       {homeRow && <section id="price" className={`${styles.panel} ${styles.price}`}>
         <h2>The typical home, {priceTitle}</h2>
