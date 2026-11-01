@@ -313,6 +313,21 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const domYears = domSeries.flatMap((o, i) => (o.period_end.slice(5, 7) === "01" && Number(o.period_end.slice(0, 4)) % 2 === 0 ? [{ year: o.period_end.slice(0, 4), i }] : []));
   const domGap = domNow && domUsual ? domNow.value - domUsual : 0;
 
+  // Summer heat: by county, against the thirty years from 1951 as the story does.
+  const heatFor = async (id: number) => (await api.observations(id, "nclimgrid_days_over_90"))?.observations ?? [];
+  const yearOf = (o: { period_end: string }) => Number(o.period_end.slice(0, 4));
+  const mean = (values: number[]) => values.reduce((sum, v) => sum + v, 0) / Math.max(values.length, 1);
+  const heatRecent = (rows: { period_end: string; value: number }[]) => mean(rows.slice(-10).map((o) => o.value));
+  const heatSeries = county ? await heatFor(county.region_id) : [];
+  const heatBase = mean(heatSeries.filter((o) => yearOf(o) <= 1980).map((o) => o.value));
+  const heatNow = heatRecent(heatSeries);
+  const allHeat = heatSeries.length ? (await Promise.all((countyGeo?.features ?? []).map(async (f) => heatRecent(await heatFor(f.properties.region_id))))).filter((v) => v > 0).sort((a, b) => b - a) : [];
+  const heatRank = allHeat.findIndex((v) => v <= heatNow) + 1;
+  const HW = 640, HH = 200, HB = 24, HL = 30;
+  const heatPeak = Math.max(...heatSeries.map((o) => o.value), 1);
+  const hy = (v: number) => HH - HB - (v / heatPeak) * (HH - HB - 8);
+  const barW = (HW - HL) / Math.max(heatSeries.length, 1);
+
   // The workday: where residents' jobs are, as lines from the town on the state's map.
   const WORK_W = 340;
   const workFrame = countyGeo ? projector(countyGeo.features.flatMap((f) => ringsOf(f.geometry)), WORK_W, 8) : null;
@@ -334,7 +349,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     <main id="main-content" tabIndex={-1} className={styles.poster}>
       <p className={styles.flag}>Infographic mockup · <Link href={regionPath(regionId)}>current page</Link> · <Link href={`/mockup/${state}/${slug}`}>first mockup</Link></p>
       <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
-      <nav className={styles.topics} aria-label="On this page"><a href="#price">Price</a><a href="#cost">Cost</a><a href="#tax">Tax</a><a href="#ranks">Compared</a><a href="#living">Living here</a><a href="#homes">Homes</a><a href="#workday">Work</a><a href="#schools">Schools</a><a href="#people">People</a><a href="#pace">Pace</a><a href="#county">County</a><a href="#stories">Stories</a></nav>
+      <nav className={styles.topics} aria-label="On this page"><a href="#price">Price</a><a href="#cost">Cost</a><a href="#tax">Tax</a><a href="#ranks">Compared</a><a href="#living">Living here</a><a href="#homes">Homes</a><a href="#workday">Work</a><a href="#schools">Schools</a><a href="#people">People</a><a href="#pace">Pace</a><a href="#heat">Heat</a><a href="#county">County</a><a href="#stories">Stories</a></nav>
 
       <header className={`${styles.panel} ${styles.hero}`}>
         <div>
@@ -510,6 +525,17 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           {domYears.map(({ year, i }) => <text key={year} x={dx(i)} y={DH - 6} textAnchor="middle">{year}</text>)}
         </svg>
         <p className={styles.caption}>Median days on market, by month{domYearAgo ? ` · ${Math.round(domYearAgo.value)} days a year earlier` : ""}{domRank && countyWaits.length ? ` · ${ordinal(domRank)} quickest of ${countyWaits.length} NJ counties` : ""}. County figures, not this town alone, and they rise and fall with the seasons. Realtor.com via FRED, {asOf(domNow)}.</p>
+      </section>}
+
+      {heatSeries.length > 20 && county && <section id="heat" className={`${styles.panel} ${styles.heat}`}>
+        <h2>{displayName(county)} now passes 90°F about {Math.round(heatNow)} days a year, {heatNow >= heatBase ? "up" : "down"} from {Math.round(heatBase)}</h2>
+        <svg className={styles.scatter} viewBox={`0 0 ${HW} ${HH}`} role="img" aria-label={`Days over 90 degrees in ${displayName(county)} each year since ${yearOf(heatSeries[0])}. The last ten years average ${Math.round(heatNow)} days, against ${Math.round(heatBase)} from 1951 to 1980.`}>
+          {heatSeries.map((o, i) => <rect key={o.period_end} x={HL + i * barW} y={hy(o.value)} width={Math.max(barW - 1, 1)} height={hy(0) - hy(o.value)} fill={i >= heatSeries.length - 10 ? "var(--series-2)" : "currentColor"} fillOpacity={i >= heatSeries.length - 10 ? 1 : 0.35}><title>{yearOf(o)}: {Math.round(o.value)} days</title></rect>)}
+          <line x1={HL} x2={HW} y1={hy(heatBase)} y2={hy(heatBase)} stroke="currentColor" strokeDasharray="5 4" />
+          <text x={HL + 4} y={hy(heatBase) - 6}>1951–80 average, {Math.round(heatBase)} days</text>
+          {heatSeries.filter((o) => yearOf(o) % 20 === 0).map((o) => <text key={o.period_end} x={HL + heatSeries.indexOf(o) * barW} y={HH - 6} textAnchor="middle">{yearOf(o)}</text>)}
+        </svg>
+        <p className={styles.caption}>Days over 90°F each year; orange is the latest ten, the average in the title{heatRank && allHeat.length ? ` · ${ordinal(heatRank)} hottest of ${allHeat.length} NJ counties` : ""}. A county average from NOAA nClimGrid-Daily, not this town’s readings.{ground.find((g) => g.id === "tree_canopy_homes_share") ? ` Shade: ${ground.find((g) => g.id === "tree_canopy_homes_share")!.value} tree canopy over ${name}’s homes.` : ""}</p>
       </section>}
 
       {eras.length > 0 && <section className={`${styles.panel} ${styles.era}`}>
