@@ -20,6 +20,7 @@ import { comparisonMeasures } from "@/lib/placeComparisons";
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { makePlaceStoryRecord, PLACE_STORIES, placeStoryHref, storyHistoryMetrics, summarizePlaceStory, type PlaceStorySummary, type PlaceStoryTopic } from "@/lib/placeStories";
 import { stampPlaceStory } from "@/lib/placeStoryData";
+import { againstUsual } from "@/lib/persistence";
 import { surveyYears } from "@/lib/periods";
 import { loadFloodStory } from "@/lib/placeFloodStory";
 import { TREND_METRICS } from "@/lib/trendMetrics";
@@ -328,6 +329,15 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const hy = (v: number) => HH - HB - (v / heatPeak) * (HH - HB - 8);
   const barW = (HW - HL) / Math.max(heatSeries.length, 1);
 
+  // Is today unusual: prices against incomes, against the county's own history. A county
+  // figure, withheld by the source where the series is too thin.
+  const countyHistory = county ? await api.persistence(county.region_id) : null;
+  const persistence = countyHistory && !countyHistory.withheld && countyHistory.vs_median !== null && countyHistory.series.length > 5 ? countyHistory : null;
+  const UW = 640, UH = 200, UP = 24;
+  const uSpan = persistence ? Math.max(...persistence.series.map((p) => Math.abs(p.vs_median)), 1) : 1;
+  const uStep = persistence ? (UW - UP * 2) / (persistence.last_year - persistence.first_year + 1) : 1;
+  const uY = (v: number) => (UH - 24) / 2 - (v / uSpan) * ((UH - 24) / 2 - 8);
+
   // The workday: where residents' jobs are, as lines from the town on the state's map.
   const WORK_W = 340;
   const workFrame = countyGeo ? projector(countyGeo.features.flatMap((f) => ringsOf(f.geometry)), WORK_W, 8) : null;
@@ -349,7 +359,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     <main id="main-content" tabIndex={-1} className={styles.poster}>
       <p className={styles.flag}>Infographic mockup · <Link href={regionPath(regionId)}>current page</Link> · <Link href={`/mockup/${state}/${slug}`}>first mockup</Link></p>
       <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
-      <nav className={styles.topics} aria-label="On this page"><a href="#price">Price</a><a href="#cost">Cost</a><a href="#tax">Tax</a><a href="#ranks">Compared</a><a href="#living">Living here</a><a href="#homes">Homes</a><a href="#workday">Work</a><a href="#schools">Schools</a><a href="#people">People</a><a href="#pace">Pace</a><a href="#heat">Heat</a><a href="#county">County</a><a href="#stories">Stories</a></nav>
+      <nav className={styles.topics} aria-label="On this page"><a href="#price">Price</a><a href="#cost">Cost</a><a href="#tax">Tax</a><a href="#ranks">Compared</a><a href="#living">Living here</a><a href="#homes">Homes</a><a href="#workday">Work</a><a href="#schools">Schools</a><a href="#people">People</a><a href="#pace">Pace</a><a href="#heat">Heat</a><a href="#unusual">History</a><a href="#county">County</a><a href="#stories">Stories</a></nav>
 
       <header className={`${styles.panel} ${styles.hero}`}>
         <div>
@@ -536,6 +546,17 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           {heatSeries.filter((o) => yearOf(o) % 20 === 0).map((o) => <text key={o.period_end} x={HL + heatSeries.indexOf(o) * barW} y={HH - 6} textAnchor="middle">{yearOf(o)}</text>)}
         </svg>
         <p className={styles.caption}>Days over 90°F each year; orange is the latest ten, the average in the title{heatRank && allHeat.length ? ` · ${ordinal(heatRank)} hottest of ${allHeat.length} NJ counties` : ""}. A county average from NOAA nClimGrid-Daily, not this town’s readings.{ground.find((g) => g.id === "tree_canopy_homes_share") ? ` Shade: ${ground.find((g) => g.id === "tree_canopy_homes_share")!.value} tree canopy over ${name}’s homes.` : ""}</p>
+      </section>}
+
+      {persistence && county && <section id="unusual" className={`${styles.panel} ${styles.unusual}`}>
+        <h2>Against incomes, {displayName(county)} homes are {againstUsual(persistence.vs_median!)} their usual level</h2>
+        <svg className={styles.scatter} viewBox={`0 0 ${UW} ${UH}`} role="img" aria-label={`Home prices against income in ${displayName(county)} from ${persistence.first_year} to ${persistence.last_year}, above or below the usual level.`}>
+          {persistence.series.map((p) => { const top = Math.min(uY(p.vs_median), uY(0)); return <rect key={p.year} x={UP + (p.year - persistence.first_year) * uStep + 1} y={top} width={Math.max(uStep - 2, 1)} height={Math.max(Math.abs(uY(p.vs_median) - uY(0)), 1)} fill={p.year === persistence.last_year ? "var(--series-2)" : "currentColor"} fillOpacity={p.year === persistence.last_year ? 1 : p.vs_median > 0 ? 0.55 : 0.25}><title>{p.year}: {againstUsual(p.vs_median)} the usual level</title></rect>; })}
+          <line x1={UP} x2={UW - UP} y1={uY(0)} y2={uY(0)} stroke="currentColor" />
+          <text x={UP} y={UH - 6}>{persistence.first_year}</text>
+          <text x={UW - UP} y={UH - 6} textAnchor="end">{persistence.last_year}</text>
+        </svg>
+        <p className={styles.caption}>{persistence.vs_median_low !== null && persistence.vs_median_high !== null ? `Likely between ${againstUsual(persistence.vs_median_low)} and ${againstUsual(persistence.vs_median_high)}. ` : ""}The line is the usual level, the middle of {persistence.years} years{persistence.peak_year ? `; the peak was ${persistence.peak_year}` : ""}. County figures through {persistence.last_year}, not this town. FHFA and Census SAIPE. · <Link href="/stories/is-today-unusual">Full story</Link></p>
       </section>}
 
       {eras.length > 0 && <section className={`${styles.panel} ${styles.era}`}>
