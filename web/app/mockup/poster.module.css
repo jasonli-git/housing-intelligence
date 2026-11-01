@@ -236,17 +236,36 @@
 .commute .stack { margin-bottom: 8px; }
 .county { --county-line: light-dark(#eadfce, #33291d); }
 .countyMap { display: block; width: 100%; max-width: 320px; max-height: 340px; margin-inline: auto; }
-.ranges { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 16px; margin-bottom: 24px; }
+/* County pages: the same panels at a smaller scale, packed into a four-column grid. */
+.poster.compact { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.poster.compact > :is(:global(.crumbs), .topics, .close) { grid-column: 1 / -1; min-width: 0; }
+.poster.compact .panel { margin: 0; padding: 18px 20px; }
+.compact .panel h2 { margin-bottom: 10px; font-size: 17px; }
+.compact .caption { margin-top: 6px; }
+.poster.compact > .hero { grid-template-columns: minmax(0, 1fr) 70px; gap: 20px; padding-block: 16px; }
+.compact .hero h1 { margin: 2px 0 6px; font-size: clamp(36px, 5vw, 56px); }
+.compact .headline { max-width: 52rem; font-size: 16px; }
+.compact .giant, .compact .tax .giant { font-size: clamp(38px, 4.5vw, 52px); }
+.compact .area { height: 84px; margin-top: 8px; }
+.compact .versus > div { margin-bottom: 10px; }
+.compact .versus strong { margin-bottom: 4px; font-size: 26px; }
+.compact .stack { height: 20px; }
+.compact .strip { grid-template-columns: 9rem minmax(0, 1fr) 5rem; margin-top: 12px; }
+.compact .meter { grid-template-columns: 3.5rem minmax(0, 1fr) 2.5rem; }
+.compact .split { margin-bottom: 0; }
+.compact .split i { min-width: 3.5rem; padding: 10px; }
+.compact .commute { margin-bottom: 12px; }
+.compact .townBar { grid-template-columns: 8rem minmax(0, 1fr) 3rem; }
+.ranges { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 8px 20px; margin-bottom: 14px; }
 .ranges span, .ranges small { display: block; font-size: var(--text-note); }
-.ranges strong { display: block; margin-block: 2px; font-size: clamp(19px, 2.2vw, 24px); font-weight: 800; }
-.townsLayout { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 28px; align-items: start; }
-.townTable { max-height: 430px; overflow: auto; font-size: var(--text-small); }
-.townTable table { width: 100%; border-collapse: collapse; }
-.townTable thead th { position: sticky; top: 0; z-index: 1; background: light-dark(#eadfce, #33291d); text-align: right; }
-.townTable thead th:first-child, .townTable tbody th { text-align: left; font-weight: 500; }
-.townTable button { padding: 8px; font: inherit; font-weight: 700; color: inherit; background: none; border: 0; cursor: pointer; white-space: nowrap; }
-.townTable td, .townTable tbody th { padding: 6px 8px; border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
-.townTable td { text-align: right; font-variant-numeric: tabular-nums; }
-.townTable a { color: inherit; }
-.poster > .townsFull { flex: 1 1 100%; }
-@media (max-width: 760px) { .townsLayout { grid-template-columns: minmax(0, 1fr); } .countyMap { max-width: 220px; } }
+.ranges strong { display: block; font-size: 19px; font-weight: 800; }
+.trends { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 10px; scroll-margin-top: 24px; }
+.trends svg { display: block; width: 100%; height: 76px; overflow: visible; color: var(--series-1); }
+.compact .stories { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; font-size: var(--text-small); }
+.compact .stories a { color: inherit; }
+@media (min-width: 1000px) {
+  .poster.compact { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: dense; }
+  .poster.compact > :is(.hero, .county, .trends, .stories) { grid-column: 1 / -1; }
+  .poster.compact > :is(.price, .cost, .rank, .workday) { grid-column: span 2; }
+}
+@media (max-width: 560px) { .poster.compact > .hero { grid-template-columns: minmax(0, 1fr) 56px; gap: 12px; } .compact .hero svg { width: 100%; } .compact .strip, .compact .townBar { grid-template-columns: minmax(0, 1fr) auto; } }

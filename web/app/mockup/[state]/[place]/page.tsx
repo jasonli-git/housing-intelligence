@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 
 import { GoDeeper } from "../../GoDeeper";
 import { OwnNumbers } from "../../OwnNumbers";
+import { CountyAtlas, type AtlasTown as AtlasTownRow } from "../../CountyAtlas";
 import { PosterNav } from "../../PosterNav";
-import { TownTable, type TownRow } from "../../TownTable";
 import styles from "../../poster.module.css";
 import { Crumbs } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
@@ -48,6 +48,22 @@ const WORK = [
   ["lodes_work_nyc_share", "New York City", "var(--text-secondary)"],
   ["lodes_work_pennsylvania_share", "Pennsylvania", "var(--tick)"],
 ] as const;
+
+function MiniLine({ values, base }: { values: number[]; base?: number }) {
+  const low = Math.min(...values, base ?? Infinity), high = Math.max(...values, base ?? -Infinity), span = high - low || 1;
+  const y = (v: number) => 68 - ((v - low) / span) * 64;
+  return <svg viewBox="0 0 200 72" preserveAspectRatio="none" aria-hidden="true">
+    {base !== undefined && <line x1="0" x2="200" y1={y(base)} y2={y(base)} stroke="currentColor" strokeOpacity="0.4" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />}
+    <polyline points={values.map((v, i) => `${(i / Math.max(values.length - 1, 1)) * 200},${y(v)}`).join(" ")} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+  </svg>;
+}
+
+function MiniBars({ values, recent = 1 }: { values: number[]; recent?: number }) {
+  const low = Math.min(...values, 0), high = Math.max(...values, 0), span = high - low || 1, y = (v: number) => 70 - ((v - low) / span) * 68, w = 200 / Math.max(values.length, 1);
+  return <svg viewBox="0 0 200 72" preserveAspectRatio="none" aria-hidden="true">
+    {values.map((v, i) => <rect key={i} x={i * w} width={Math.max(w - 0.6, 0.6)} y={Math.min(y(v), y(0))} height={Math.max(Math.abs(y(v) - y(0)), 0.5)} fill={i >= values.length - recent ? "var(--series-2)" : "currentColor"} fillOpacity={i >= values.length - recent ? 1 : 0.5} />)}
+  </svg>;
+}
 
 /** A story's own rows as bars: shares on a 0–100% scale, counts against the largest. */
 function StoryBars({ rows }: { rows: PlaceStorySummary["rows"] }) {
@@ -376,9 +392,9 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   // Zillow does not cover still count.
   const readTowns = async (id: string, row?: { period_start: string }) => (isCounty && row ? new Map((await Promise.all(Array.from({ length: Math.ceil(countyTowns.length / 100) }, (_, i) => api.marketObservations(id, countyTowns.slice(i * 100, i * 100 + 100).map((t) => t.region_id), row.period_start))))
     .flatMap((part) => part?.regions.flatMap((r) => r.series.map((p) => [r.region_id, p.value] as const)) ?? [])) : new Map<number, number>());
-  const [townSales, townIncomes2] = await Promise.all([readTowns("sr1a_median_sale_price", level("sr1a_median_sale_price")), readTowns("acs_median_hh_income", incomeRow)]);
+  const [townSales, townIncomes2, townCommutes, townFlood] = await Promise.all([readTowns("sr1a_median_sale_price", level("sr1a_median_sale_price")), readTowns("acs_median_hh_income", incomeRow), readTowns("acs_mean_commute_minutes", level("acs_mean_commute_minutes")), readTowns("fema_flood_homes_share", level("fema_flood_homes_share"))]);
   const homeByTown = new Map(ranked.map((t) => [t.id, t.value]));
-  const townRows: TownRow[] = isCounty ? countyTowns.map((t) => ({ id: t.region_id, name: countyTowns.filter((o) => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, (c) => c.toUpperCase()) : displayName(t), href: regionPath(t.region_id), sale: townSales.get(t.region_id) ?? null, value: homeByTown.get(t.region_id) ?? null, tax: ownTownRates.get(t.region_id) ?? null, income: townIncomes2.get(t.region_id) ?? null })) : [];
+  const townRows: AtlasTownRow[] = isCounty ? countyTowns.map((t) => ({ commute: townCommutes.get(t.region_id) ?? null, flood: townFlood.get(t.region_id) ?? null, id: t.region_id, name: countyTowns.filter((o) => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, (c) => c.toUpperCase()) : displayName(t), href: regionPath(t.region_id), sale: townSales.get(t.region_id) ?? null, value: homeByTown.get(t.region_id) ?? null, tax: ownTownRates.get(t.region_id) ?? null, income: townIncomes2.get(t.region_id) ?? null })) : [];
   const bySale = townRows.filter((t) => t.sale !== null).sort((a, b) => b.sale! - a.sale!);
   const byTax = townRows.filter((t) => t.tax !== null && t.tax > 0 && t.tax <= 6).sort((a, b) => a.tax! - b.tax!);
   const byIncome = townRows.filter((t) => t.income !== null).sort((a, b) => a.income! - b.income!);
@@ -433,18 +449,8 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   // The towns come first on a county page, so their link does too.
   const orderedLinks = isCounty ? [...navLinks.filter((l) => l.id === "county"), ...navLinks.filter((l) => l.id !== "county")] : navLinks;
 
-  const townsPanel = isCounty ? townRows.length > 1 && county ? <section id="county" className={`${styles.panel} ${styles.county} ${styles.townsFull}`}>
-        <h2>{bySale.length > 1 ? `The ${townRows.length} towns of ${name}, from ${bySale[0].name} to ${bySale.at(-1)!.name}` : `The ${townRows.length} towns of ${name}`}</h2>
-        {townRanges.length > 0 && <div className={styles.ranges}>{townRanges.map((range) => <div key={range.label}><span>{range.label}</span><strong>{range.low} – {range.high}</strong><small>{range.lowName} to {range.highName}</small></div>)}</div>}
-        <div className={styles.townsLayout}>
-          {countyFrame && <div><svg className={styles.countyMap} viewBox={`0 0 ${countyFrame.width} ${countyFrame.height}`} role="img" aria-label={`Towns in ${name} shaded by recent sale price.`}>
-            {countyShapes.map((shape) => { const shade = priceShade(shape.id); return <path key={shape.id} d={shape.d} fill={shade === null ? "currentColor" : "var(--series-1)"} fillOpacity={shade ?? 0.12} stroke="var(--county-line)" strokeWidth="0.75"><title>{shape.name}</title></path>; })}
-          </svg><p className={styles.caption}>Darker towns have higher recent sale prices. Faint towns have too few sales.</p></div>}
-          <TownTable towns={townRows} />
-        </div>
-        <p className={styles.caption}>Recent sale: median recorded price. Home value: Zillow, which does not cover every town. Tax rate: effective. Income: Census ACS. Select a column to sort.</p>
-      </section> : null : (ranked.length > 1 || townRows.length > 1) && county ? <section id="county" className={`${styles.panel} ${styles.county}`}>
-        <h2>{isCounty ? `From ${ranked[0].name} to ${ranked.at(-1)!.name}: ${ranked.length} Zillow-covered towns by home value` : countyRank === 0 ? `The priciest of ${ranked.length} Zillow-covered towns in ${displayName(county)}` : `${ordinal(countyRank + 1)} of ${ranked.length} Zillow-covered towns in ${displayName(county)}`}</h2>
+  const townsPanel = ranked.length > 1 && county ? <section id="county" className={`${styles.panel} ${styles.county}`}>
+        <h2>{countyRank === 0 ? `The priciest of ${ranked.length} Zillow-covered towns in ${displayName(county)}` : `${ordinal(countyRank + 1)} of ${ranked.length} Zillow-covered towns in ${displayName(county)}`}</h2>
         {countyFrame && <svg className={styles.countyMap} viewBox={`0 0 ${countyFrame.width} ${countyFrame.height}`} role="img" aria-label={`Towns in ${displayName(county)} shaded by typical home value, with ${name} outlined.`}>
           {countyShapes.map((shape) => { const shade = priceShade(shape.id); return <path key={shape.id} d={shape.d} fill={shade === null ? "currentColor" : "var(--series-1)"} fillOpacity={shade ?? 0.12} stroke="var(--county-line)" strokeWidth="0.75"><title>{shape.name}</title></path>; })}
           {countyShapes.filter((shape) => shape.id === regionId).map((shape) => <path key="own" d={shape.d} fill="none" stroke="var(--series-2)" strokeWidth="2.5" />)}
@@ -454,6 +460,114 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <span>{t.name}</span><div><i style={{ width: `${(t.value / ranked[0].value) * 100}%` }} /></div><strong>{dollars(t.value)}</strong>
         </div>)}
       </section> : null;
+
+  // A county is the same infographic at a smaller scale: the colour panels of a town poster,
+  // packed into a grid of short cards around one working map of its towns.
+  if (isCounty) {
+    const countyLinks = orderedLinks.filter((l) => ["county", "price", "cost", "tax", "ranks", "county-context", "workday", "stories"].includes(l.id));
+    return <>
+      <Masthead affordability={{ kind: "route" }} simple />
+      <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact}`}>
+        <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code)]} here={name} />
+        <PosterNav links={countyLinks} />
+
+        <header className={`${styles.panel} ${styles.hero}`}>
+          <div>
+            <p className={styles.kicker}>{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""} · {townRows.length} towns</p>
+            <h1>{name}</h1>
+            {headline && <p className={styles.headline}>{headline}</p>}
+          </div>
+          {frame && town && <svg viewBox={`0 0 ${frame.width} ${frame.height}`} role="img" aria-label={`${name} on a map of ${scopeName(region.state_code)}`}>
+            {counties.map((c) => <path key={c.id} d={c.d} fill="currentColor" fillOpacity={c.id === regionId ? 1 : 0.2} />)}
+          </svg>}
+        </header>
+
+        {countyFrame && <section id="county" className={`${styles.panel} ${styles.county}`}>
+          <h2>Its {townRows.length} towns</h2>
+          {townRanges.length > 0 && <div className={styles.ranges}>{townRanges.map((range) => <div key={range.label}><span>{range.label}</span><strong>{range.low} – {range.high}</strong><small>{range.lowName} to {range.highName}</small></div>)}</div>}
+          <CountyAtlas name={name} width={countyFrame.width} height={countyFrame.height} shapes={countyShapes.map(({ id, d }) => ({ id, d }))} towns={townRows} />
+        </section>}
+
+        {homeRow && <section id="price" className={`${styles.panel} ${styles.price}`}>
+          <h2>The typical home, {priceTitle}</h2>
+          <p className={styles.giant}>{formatMetric(homeRow.value, homeRow.unit, homeRow.metric_id)}</p>
+          {recent.length > 1 && <svg className={styles.area} viewBox="0 0 600 200" preserveAspectRatio="none" role="img" aria-label="Typical home value over the last ten years">
+            <polygon points={`0,200 ${area} 600,200`} fill="currentColor" fillOpacity="0.16" />
+            <polyline points={area} fill="none" stroke="currentColor" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+          </svg>}
+          <p className={styles.caption}>Last ten years, from {dollars(recent[0] ?? 0)}. Zillow, {asOf(homeRow)}</p>
+        </section>}
+
+        {month && <section id="cost" className={`${styles.panel} ${styles.cost}`}>
+          <h2>{costTitle}</h2>
+          <div className={styles.versus}>
+            <div><span>Own</span><strong>{dollars(month.total)}</strong>
+              <div className={styles.stack}>{parts.map((p) => <i key={p.label} title={`${p.label}: ${dollars(p.value)}`} style={{ flexGrow: p.value, background: p.color }} />)}</div></div>
+            {rent !== null && <div><span>Rent</span><strong>{dollars(rent)}</strong>
+              <div className={styles.stack} style={{ width: `${(rent / month.total) * 100}%` }}><i style={{ flexGrow: 1, background: "var(--text-secondary)" }} /></div></div>}
+          </div>
+          <ul className={styles.key}>{parts.map((p) => <li key={p.label}><i style={{ background: p.color }} />{p.label} {dollars(p.value)}</li>)}</ul>
+          <p className={styles.caption}>An estimate, with 20% down at {cost!.rate.value.toFixed(2)}%.</p>
+        </section>}
+
+        {taxBill && <section id="tax" className={`${styles.panel} ${styles.tax}`}>
+          <h2>Property tax adds {dollars(taxBill.value / 12)} a month</h2>
+          <p className={styles.giant}>{dollars(taxBill.value)}</p>
+          <p className={styles.caption}>Median yearly bill{taxRate ? ` · ${taxRate.value.toFixed(2)}% effective rate` : ""}{taxBillMeasure ? ` · ${ordinal(taxBillMeasure.row.rank!)} highest of ${taxBillMeasure.row.of}` : ""}</p>
+        </section>}
+
+        {strips.length > 0 && <section id="ranks" className={`${styles.panel} ${styles.rank}`}>
+          <h2>Among {scopeName(peer_scope)} {peerNoun(peer_level)}</h2>
+          {strips.map((s) => <div key={s.id} className={styles.strip}>
+            <span>{s.label}</span>
+            <div><u style={{ left: `${s.low * 100}%`, width: `${(s.high - s.low) * 100}%` }} /><i style={{ left: `${s.position * 100}%` }} /></div>
+            <strong>{s.value}</strong>
+          </div>)}
+        </section>}
+
+        {ownShare !== null && <section className={`${styles.panel} ${styles.income}`}>
+          <h2>{incomeTitle}</h2>
+          {[["Owning", ownShare], ...(rentShare !== null ? [["Renting", rentShare]] : [])].map(([label, share]) => <div key={label as string} className={styles.meter}>
+            <span>{label as string}</span>
+            <div><i style={{ width: `${Math.min(share as number, 100)}%` }} /><b style={{ left: "30%" }} /></div>
+            <strong>{(share as number).toFixed(0)}%</strong>
+          </div>)}
+          <p className={styles.caption}>The mark is the common 30% guideline.</p>
+        </section>}
+
+        {(domNow || heatSeries.length > 20 || persistence) && <div id="county-context" className={styles.trends}>
+          {domNow && domUsual !== null && <section className={`${styles.panel} ${styles.pace}`}><h2>Homes sit {Math.round(domNow.value)} days, {Math.abs(domGap) < 3 ? "close to usual" : domGap < 0 ? `${Math.round(-domGap)} faster than usual` : `${Math.round(domGap)} slower than usual`}</h2><MiniLine values={domSeries.map((o) => o.value)} base={domUsual} /><p className={styles.caption}>{domRank ? `${ordinal(domRank)} quickest of ${countyWaits.length} counties. ` : ""}Realtor.com via FRED, {asOf(domNow)}</p></section>}
+          {heatSeries.length > 20 && <section className={`${styles.panel} ${styles.heat}`}><h2>{Math.round(heatNow)} days over 90°F a year, {heatNow >= heatBase ? "up" : "down"} from {Math.round(heatBase)}</h2><MiniBars values={heatSeries.map((o) => o.value)} recent={10} /><p className={styles.caption}>Since {yearOf(heatSeries[0])}, latest ten in orange. NOAA</p></section>}
+          {persistence && <section className={`${styles.panel} ${styles.unusual}`}><h2>Prices against incomes: {againstUsual(persistence.vs_median!)} usual</h2><MiniBars values={persistence.series.map((p) => p.vs_median)} /><p className={styles.caption}>{persistence.first_year}–{persistence.last_year}. FHFA and Census</p></section>}
+        </div>}
+
+        {workBars.length > 0 && <section id="workday" className={`${styles.panel} ${styles.workday}`}>
+          <h2>{elsewhere !== null ? `${(100 - elsewhere).toFixed(0)}% of residents’ jobs are in the county` : "Where the workday goes"}{leadPlace ? `, led by ${leadPlace.name}` : ""}</h2>
+          {modes.length > 0 && <div className={styles.commute}>
+            <div className={styles.stack}>{modes.map((mode) => <i key={mode.label} title={`${mode.label}: ${mode.value.toFixed(0)}%`} style={{ flexGrow: mode.value, background: mode.color }} />)}{modeOther > 0 && <i title={`Other: ${modeOther.toFixed(0)}%`} style={{ flexGrow: modeOther, background: "var(--tick)" }} />}</div>
+            <ul className={styles.key}>{modes.map((mode) => <li key={mode.label}><i style={{ background: mode.color }} />{mode.label} {mode.value.toFixed(0)}%</li>)}</ul>
+          </div>}
+          {workBars.slice(0, 4).map((d) => <div key={d.name} className={styles.townBar}><span>{d.name}</span><div><i style={{ width: `${(d.share / workPeak) * 100}%` }} /></div><strong>{(d.share * 100).toFixed(0)}%</strong></div>)}
+        </section>}
+
+        {privateShare !== null && <section id="schools" className={`${styles.panel} ${styles.schools}`}>
+          <h2>{((1 - privateShare) * 100).toFixed(0)}% of K–12 students go to public school</h2>
+          <div className={styles.split}><i style={{ flexGrow: 1 - privateShare }}>{((1 - privateShare) * 100).toFixed(0)}%</i><i style={{ flexGrow: privateShare }}>{(privateShare * 100).toFixed(0)}%</i></div>
+          <p className={styles.caption}>Public, then private. Census ACS.</p>
+        </section>}
+
+        {owned !== null && <section id="people" className={`${styles.panel} ${styles.people}`}>
+          <h2>{(owned * 100).toFixed(0)}% of homes are owner-occupied</h2>
+          <div className={styles.split}><i style={{ flexGrow: owned }}>{(owned * 100).toFixed(0)}%</i><i style={{ flexGrow: 1 - owned }}>{((1 - owned) * 100).toFixed(0)}%</i></div>
+          <p className={styles.caption}>Owners, then renters. Census ACS.</p>
+        </section>}
+
+        {deepStories.length > 0 && <nav id="stories" className={`${styles.panel} ${styles.stories}`} aria-label="Stories"><strong>Go deeper</strong>{deepStories.map((item) => <Link key={item.topic} href={item.href}>{item.title}</Link>)}</nav>}
+
+        <footer className={styles.close}>Sources: Zillow, Census Bureau, NJ Division of Taxation, FEMA, NOAA, FHFA and Realtor.com. <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <Link href="/sources">About the data</Link> · <Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link> · Mockup: <Link href={regionPath(regionId)}>current page</Link></footer>
+      </main>
+    </>;
+  }
 
   return <>
     <Masthead affordability={{ kind: "route" }} simple />
@@ -472,8 +586,6 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <circle cx={town.centre[0]} cy={town.centre[1]} r="8" fill="var(--series-2)" stroke="var(--poster-hero)" strokeWidth="2" />
         </svg>}
       </header>
-
-      {isCounty && townsPanel}
 
       {homeRow && <section id="price" className={`${styles.panel} ${styles.price}`}>
         <h2>The typical home, {priceTitle}</h2>
@@ -720,7 +832,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <div className={styles.split}><i style={{ flexGrow: owned }}>{(owned * 100).toFixed(0)}% own</i><i style={{ flexGrow: 1 - owned }}>{((1 - owned) * 100).toFixed(0)}% rent</i></div></>}
       </section>}
 
-      {!isCounty && townsPanel}
+      {townsPanel}
 
       {similar && similar.matches.length > 0 && priceRow && <section className={`${styles.panel} ${styles.similar}`}>
         <h2>{similar.matches.length} similar {similar.matches.length === 1 ? `${unitWord} costs` : `${unitPlural} cost`} at least {Math.round((1 - similar.cheaper_by) * 100)}% less</h2>
