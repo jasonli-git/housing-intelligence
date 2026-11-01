@@ -8,8 +8,7 @@ import { Masthead } from "@/components/Masthead";
 import { similarGroups } from "@/lib/similar";
 import { stateCrumbs } from "@/lib/states";
 import { placesQuery } from "@/lib/compare";
-import { PlaceStoryGallery } from "@/components/PlaceStoryGallery";
-import { api, artifactUrl, regionsWithData } from "@/lib/api";
+import { api, regionsWithData } from "@/lib/api";
 import { ownershipInputs } from "@/lib/budgetScenario";
 import { costInputs } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
@@ -18,7 +17,7 @@ import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { eachMonth } from "@/lib/ownership";
 import { comparisonMeasures } from "@/lib/placeComparisons";
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
-import { makePlaceStoryRecord, PLACE_STORIES, storyHistoryMetrics, type PlaceStoryTopic } from "@/lib/placeStories";
+import { makePlaceStoryRecord, PLACE_STORIES, placeStoryHref, storyHistoryMetrics, summarizePlaceStory, type PlaceStorySummary, type PlaceStoryTopic } from "@/lib/placeStories";
 import { stampPlaceStory } from "@/lib/placeStoryData";
 import { loadFloodStory } from "@/lib/placeFloodStory";
 import { TREND_METRICS } from "@/lib/trendMetrics";
@@ -43,6 +42,17 @@ const WORK = [
   ["lodes_work_nyc_share", "New York City", "var(--text-secondary)"],
   ["lodes_work_pennsylvania_share", "Pennsylvania", "var(--tick)"],
 ] as const;
+
+/** A story's own rows as bars: shares on a 0–100% scale, counts against the largest. */
+function StoryBars({ rows }: { rows: PlaceStorySummary["rows"] }) {
+  const percent = rows.every((row) => row.formatted.endsWith("%"));
+  const peak = Math.max(...rows.map((row) => row.value), 1);
+  return <>{rows.map((row) => <div key={row.label} className={styles.storyBar}>
+    <span>{row.label}</span>
+    <div><i style={{ width: `${percent ? parseFloat(row.formatted) : (row.value / peak) * 100}%` }} /></div>
+    <strong>{row.formatted}</strong>
+  </div>)}</>;
+}
 
 export async function generateStaticParams() {
   return placeRouteParams(await regionsWithData());
@@ -135,6 +145,8 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     const below = cohort.points.filter((p) => p.value < own).length / cohort.points.length * 100;
     return [{ id: cohort.metricId, label: cohort.metricId === "zhvi_sfr" ? "Home value" : "Monthly rent", box, own, x, count: cohort.points.length, below }];
   });
+  const stories = new Map(records.map((record) => [record.topic, summarizePlaceStory(record)]));
+  const story = (topic: PlaceStoryTopic) => { const found = stories.get(topic); return found?.available ? found : null; };
   // Open cleanups have no published rank, so towns are compared per thousand homes here.
   const towns = (await api.regions(`state=${region.state_code}&level=municipality&limit=1000`))?.items ?? [];
   const batches = Array.from({ length: Math.ceil(towns.length / 100) }, (_, i) => towns.slice(i * 100, i * 100 + 100).map((t) => t.region_id));
@@ -161,6 +173,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     flood.claims.length > 0 && { value: `${flood.estimated ? "~" : ""}${Math.round(floodClaims).toLocaleString("en-US")}`, label: `flood claims in ${flood.place ?? "town"}${flood.estimated ? " (estimated)" : ""}, ${floodYears.length} years on file` },
     siteRate !== null && { value: siteRate.toFixed(1), label: `open site cleanups per 1,000 homes${typicalSites !== null ? ` (typical town ${typicalSites.toFixed(1)})` : ""}` },
     violations !== null && { value: violations.toLocaleString("en-US"), label: `drinking-water violations, ${water?.first_year}–${water?.last_year}` },
+    story("utilities")?.rows[0] && { value: story("utilities")!.rows[0].formatted, label: "without power per customer, utility-wide" },
     uninsured?.value != null && { value: `${uninsured.value.toFixed(0)}%`, label: `of adults 18–64 uninsured (county, ${uninsured.year})` },
   ].flatMap((fact) => (fact ? [fact] : []));
   const bedrooms = [["acs_share_0_1_bedrooms", "0–1 bed"], ["acs_share_2_bedrooms", "2 bed"], ["acs_share_3_bedrooms", "3 bed"], ["acs_share_4plus_bedrooms", "4+ bed"]].flatMap(([id, label], i) => { const v = level(id)?.value; return v ? [{ label, value: v * 100, color: ["var(--series-3)", "var(--series-1)", "var(--series-2)", "var(--text-secondary)"][i] }] : []; });
@@ -190,6 +203,13 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const threePlus = (level("acs_share_3_bedrooms")?.value ?? 0) + (level("acs_share_4plus_bedrooms")?.value ?? 0);
   const elsewhere = level("lodes_work_same_town_share") ? (1 - level("lodes_work_same_town_share")!.value) * 100 : null;
   const countyRank = ranked.findIndex((t) => t.id === regionId);
+
+  const storyLink = (topic: PlaceStoryTopic) => <Link href={placeStoryHref(topic, regionId)}>Full story</Link>;
+  const pressureStory = story("pressure"), lendingStory = story("lending"), buildingStory = story("building");
+  // Told in full by a panel above, so each keeps a link here rather than a second card.
+  const FEATURED: PlaceStoryTopic[] = ["migration", "schools", "health"];
+  const featured = FEATURED.flatMap((topic) => { const found = story(topic); return found ? [{ topic, found }] : []; });
+  const others = records.map((record) => record.topic).filter((topic) => !FEATURED.includes(topic) && story(topic));
 
   const townFeature = townGeo?.features.find((f) => f.properties.region_id === regionId);
   const frame = countyGeo ? projector(countyGeo.features.flatMap((f) => ringsOf(f.geometry)), 180, 4) : null;
@@ -289,6 +309,18 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         </div>)}
       </section>}
 
+      {pressureStory && <section className={`${styles.panel} ${styles.pressure}`}>
+        <h2>{pressureStory.headline}</h2>
+        <StoryBars rows={pressureStory.rows} />
+        <p className={styles.caption}>{pressureStory.source}, {pressureStory.period} · {storyLink("pressure")}</p>
+      </section>}
+
+      {lendingStory && <section className={`${styles.panel} ${styles.lending}`}>
+        <h2>{lendingStory.headline}</h2>
+        <StoryBars rows={lendingStory.rows} />
+        <p className={styles.caption}>{lendingStory.source}, {lendingStory.period} · {storyLink("lending")}</p>
+      </section>}
+
       {facts.length > 0 && <section id="living" className={`${styles.panel} ${styles.living}`}>
         <h2>Living here</h2>
         <div className={styles.facts}>{facts.map((fact) => <div key={fact.label}><strong>{fact.value}</strong><span>{fact.label}</span></div>)}</div>
@@ -300,6 +332,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         {bedrooms.length > 0 && <><div className={styles.stack}>{bedrooms.map((b) => <i key={b.label} title={`${b.label}: ${b.value.toFixed(0)}%`} style={{ flexGrow: b.value, background: b.color }} />)}</div>
           <ul className={styles.key}>{bedrooms.map((b) => <li key={b.label}><i style={{ background: b.color }} />{b.label} {b.value.toFixed(0)}%</li>)}</ul></>}
         <div className={styles.facts}>{stock.map((fact) => <div key={fact.label}><strong>{fact.value}</strong><span>{fact.label}</span></div>)}</div>
+        {buildingStory && <div className={styles.building}><h3>{buildingStory.headline}</h3><StoryBars rows={buildingStory.rows} /><p className={styles.caption}>{buildingStory.source}, {buildingStory.period} · {storyLink("building")}</p></div>}
       </section>}
 
       {(work.length > 0 || owned !== null) && <section id="people" className={`${styles.panel} ${styles.people}`}>
@@ -325,9 +358,13 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <p className={styles.actions}><Link href={`/compare${placesQuery([regionId, ...similar.matches.slice(0, 3).map((m) => m.region_id)])}`}>Compare side by side</Link></p>
       </section>}
 
-      <section id="stories" className={`${styles.panel} ${styles.stories}`}>
-        <PlaceStoryGallery records={records} artifactUrl={artifactUrl} title={`Stories about ${name}`} />
-      </section>
+      {(featured.length > 0 || others.length > 0) && <section id="stories" className={`${styles.panel} ${styles.stories}`}>
+        <h2>Go deeper on {name}</h2>
+        <div className={styles.featured}>{featured.map(({ topic, found }) => <Link key={topic} href={placeStoryHref(topic, regionId)}>
+          <span>{PLACE_STORIES[topic].title}</span><strong>{found.headline}</strong><small>{found.source}</small>
+        </Link>)}</div>
+        <p className={styles.storyIndex}>{others.map((topic) => <Link key={topic} href={placeStoryHref(topic, regionId)}>{PLACE_STORIES[topic].title}</Link>)}</p>
+      </section>}
 
       <footer className={styles.close}>Sources: Zillow, Census Bureau, FEMA, NJ Division of Taxation. <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <Link href="/sources">About the data</Link></footer>
     </main>
