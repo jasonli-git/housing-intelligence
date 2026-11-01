@@ -1,5 +1,4 @@
 .poster { --poster-hero: light-dark(#17324d, #0f2c4a); --on-series: light-dark(#fff, #10202f); --paper: light-dark(#fff, #17191d); --paper-2: light-dark(#f1f2f4, #1f2227); max-width: var(--shell); margin-inline: auto; padding: 0 16px 48px; }
-.flag { margin: 12px 0; font-size: var(--text-note); color: var(--text-secondary); }
 .panel { padding: clamp(24px, 5vw, 40px); }
 .panel h2 { margin: 0 0 16px; font-size: var(--text-small); font-weight: 700; letter-spacing: var(--track-label); text-transform: uppercase; }
 .caption { margin: 10px 0 0; font-size: var(--text-note); opacity: .85; }
@@ -60,7 +59,6 @@
 .boxTrack b { position: absolute; top: 4px; bottom: 4px; width: 3px; margin-left: -1px; background: currentColor; }
 .boxTrack i { position: absolute; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: var(--series-2); box-shadow: 0 0 0 2px light-dark(#fff, #1c1e23); }
 .boxScale { display: flex; justify-content: space-between; margin: 6px 0 0; font-size: var(--text-note); color: var(--text-secondary); }
-.topics { display: flex; gap: 16px; padding-block: 12px; overflow-x: auto; font-size: var(--text-small); white-space: nowrap; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 16px 0 0; font-size: var(--text-small); }
 .actions a { color: inherit; font-weight: 600; }
 .sales { margin-top: 24px; padding-top: 16px; border-top: 2px solid currentColor; }
@@ -93,7 +91,7 @@
 .panel h2 { margin-top: 0; }
 .people h2 + .meter { margin-top: 0; }
 .split + h2, .meter + h2 { margin-top: 32px; }
-.panel { scroll-margin-top: 64px; }
+.panel { scroll-margin-top: 24px; }
 /* Desktop: the poster becomes a two-column spread, wide panel beside narrow, in reading order. */
 @media (min-width: 1000px) {
   .poster { display: flex; flex-wrap: wrap; }
@@ -201,3 +199,14 @@
 .contextItem { margin-top: 28px; padding-top: 24px; border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
 .context > summary::after { content: "+"; font-size: 24px; line-height: 1; }
 .context[open] > summary::after { content: "−"; }
+.topics { position: sticky; top: var(--poster-bar, 62px); z-index: 20; display: flex; gap: 4px; margin-inline: -16px; padding: 8px 16px; overflow-x: auto; font-size: var(--text-small); white-space: nowrap; background: var(--surface-1); scrollbar-width: none; }
+.topics a { padding: 6px 12px; color: var(--text-secondary); text-decoration: none; border-radius: 16px; }
+.topics a:hover { color: var(--text-primary); }
+.topics a[aria-current] { color: var(--surface-1); background: var(--text-primary); }
+.poster :global(.crumbs) { margin: 14px 0 4px; font-family: var(--font-text); font-size: var(--text-note); letter-spacing: 0; text-transform: none; }
+.poster :global(.crumbs a) { padding: 0; color: var(--text-secondary); background: none; border: 0; font: inherit; text-transform: none; letter-spacing: 0; }
+.poster :global(.crumbs li) { font: inherit; text-transform: none; letter-spacing: 0; background: none; }
+.poster :global(.crumbs li a span) { display: none; }
+.poster .topics a { color: var(--text-secondary) !important; }
+.poster .topics a[aria-current] { color: var(--surface-1) !important; background: var(--text-primary); }
+.poster :global(.crumbs a), .poster :global(.crumbs li) { padding: 0 !important; font-family: var(--font-text) !important; font-size: var(--text-note) !important; text-transform: none !important; letter-spacing: 0 !important; background: none !important; border: 0 !important; }

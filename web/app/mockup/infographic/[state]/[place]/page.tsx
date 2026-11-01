@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { GoDeeper } from "../../../GoDeeper";
 import { OwnNumbers } from "../../../OwnNumbers";
+import { PosterNav } from "../../../PosterNav";
 import styles from "../../../poster.module.css";
 import { Crumbs } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
@@ -361,12 +362,16 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     return to ? [{ name: d.name, d: arc(townCentre, to), to, weight: 1 + (d.share / workPeak) * 3 }] : [];
   }) : [];
 
+  const navLinks = ([
+    ["price", "Price", !!homeRow], ["cost", "Costs", !!month], ["ranks", "Compare", strips.length > 0], ["living", "Living here", facts.length > 0],
+    ["workday", "People", workBars.length > 0], ["stories", "Stories", deepStories.length > 0],
+  ] as const).filter(([, , shown]) => shown).map(([id, label]) => ({ id, label }));
+
   return <>
     <Masthead affordability={{ kind: "route" }} simple />
     <main id="main-content" tabIndex={-1} className={styles.poster}>
-      <p className={styles.flag}>Infographic mockup · <Link href={regionPath(regionId)}>current page</Link> · <Link href={`/mockup/${state}/${slug}`}>first mockup</Link></p>
       <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
-      <nav className={styles.topics} aria-label="On this page"><a href="#price">Price</a><a href="#cost">Cost</a><a href="#tax">Tax</a><a href="#ranks">Compared</a><a href="#living">Living here</a><a href="#homes">Homes</a><a href="#workday">Work</a><a href="#schools">Schools</a><a href="#people">People</a><a href="#county-context">County context</a><a href="#county">County</a><a href="#stories">Stories</a></nav>
+      <PosterNav links={navLinks} />
 
       <header className={`${styles.panel} ${styles.hero}`}>
         <div>
@@ -620,7 +625,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <GoDeeper name={name} stories={deepStories} />
       </section>}
 
-      <footer className={styles.close}>Sources: Zillow, Census Bureau, FEMA, NJ Division of Taxation. <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <Link href="/sources">About the data</Link></footer>
+      <footer className={styles.close}>Sources: Zillow, Census Bureau, FEMA, NJ Division of Taxation. <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <Link href="/sources">About the data</Link> · Mockup: <Link href={regionPath(regionId)}>current page</Link>, <Link href={`/mockup/${state}/${slug}`}>first mockup</Link></footer>
     </main>
   </>;
 }
