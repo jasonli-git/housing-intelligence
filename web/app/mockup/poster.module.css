@@ -229,3 +229,10 @@
 .poster :global(.crumbs li + li::before) { content: "/"; color: var(--text-muted); font-weight: 400; }
 .poster :global(.crumbs li a) { color: var(--text-secondary) !important; font-size: var(--text-small) !important; font-weight: 400; text-decoration: none !important; box-shadow: none !important; }
 .poster :global(.crumbs li a:hover) { color: var(--text-primary) !important; text-decoration: underline !important; text-underline-offset: 3px; }
+.growth { background: light-dark(#e8eaf6, #232a4d); color: var(--text-primary); }
+.floodBars { display: flex; align-items: flex-end; gap: 3px; height: 70px; }
+.floodBars i { flex: 1; min-width: 0; background: var(--series-1); }
+.commute { margin-bottom: 24px; }
+.commute .stack { margin-bottom: 8px; }
+.county { --county-line: light-dark(#eadfce, #33291d); }
+.countyMap { display: block; width: 100%; max-width: 320px; max-height: 340px; margin-inline: auto; }

@@ -167,14 +167,11 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const reading = community?.districts.length === 1 ? community.districts[0].performance?.payload.indicators.find((i) => i.label.startsWith("English language arts")) : undefined;
   const fiber = community?.broadband_place?.payload;
   const uninsured = community?.health.find((h) => h.payload.measure === "ACCESS2")?.payload;
-  const floodYears = [...flood.claims].slice(-10);
-  const floodClaims = floodYears.reduce((sum, o) => sum + o.value, 0);
   const violations = water?.systems.reduce((sum, w) => sum + w.violations, 0) ?? null;
   const electric = utilities?.providers.find((p) => p.fuel === "electric")?.provider;
   const facts = [
     fiber && fiber.locations > 0 && { value: `${((fiber.fiber / fiber.locations) * 100).toFixed(0)}%`, label: "of locations can get fiber" },
     pct("transit_any_homes_share") && { value: pct("transit_any_homes_share")!, label: "of homes near a transit stop" },
-    flood.claims.length > 0 && { value: `${flood.estimated ? "~" : ""}${Math.round(floodClaims).toLocaleString("en-US")}`, label: `flood claims in ${flood.place ?? "town"}${flood.estimated ? " (estimated)" : ""}, ${floodYears.length} years on file` },
     siteRate !== null && { value: siteRate.toFixed(1), label: `open site cleanups per 1,000 homes${typicalSites !== null ? ` (typical town ${typicalSites.toFixed(1)})` : ""}` },
     violations !== null && { value: violations.toLocaleString("en-US"), label: `drinking-water violations, ${water?.first_year}–${water?.last_year}` },
     story("utilities")?.rows[0] && { value: story("utilities")!.rows[0].formatted, label: "without power per customer, utility-wide" },
@@ -362,6 +359,42 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     return to ? [{ name: d.name, d: arc(townCentre, to), to, weight: 1 + (d.share / workPeak) * 3 }] : [];
   }) : [];
 
+  // Town prices across the county: darker is dearer, by rank, so one costly town cannot wash out the rest.
+  const countyIds = new Set(countyTowns.map((t) => t.region_id));
+  const countyFeatures = townGeo?.features.filter((f) => countyIds.has(f.properties.region_id)) ?? [];
+  const countyFrame = countyFeatures.length ? projector(countyFeatures.flatMap((f) => ringsOf(f.geometry)), 360, 6) : null;
+  const countyShapes = countyFrame ? shapes(countyFeatures, 360, countyFrame).shapes : [];
+  const priceShade = (id: number) => { const i = ranked.findIndex((t) => t.id === id); return i < 0 ? null : 1 - (i / Math.max(ranked.length - 1, 1)) * 0.8; };
+
+  // Rent by size, from the survey's gross rents.
+  const rentSizes = [["acs_median_rent_studio", "Studio"], ["acs_median_rent_1br", "1 bedroom"], ["acs_median_rent_2br", "2 bedrooms"], ["acs_median_rent_3br", "3 bedrooms"], ["acs_median_rent_4br", "4+ bedrooms"]].flatMap(([id, label]) => { const row = level(id); return row ? [{ label, value: row.value, formatted: dollars(row.value) }] : []; });
+
+  // Home values, rent and income from one starting date, indexed so unlike units share an axis.
+  const GROWTH = [["zhvi_sfr", "Home value", "var(--series-1)"], ["zori_all", "Rent", "var(--series-2)"], ["acs_median_hh_income", "Income", "var(--series-3)"]] as const;
+  const growthRows = GROWTH.flatMap(([id, label, color]) => { const rows = series.find((item) => item.metricId === id)?.observations ?? []; return rows.length >= 2 ? [{ label, color, rows }] : []; });
+  const growthStart = growthRows.length > 1 ? growthRows.map((g) => g.rows[0].period_end).sort().at(-1)! : null;
+  const growthSeries = growthStart ? growthRows.flatMap((g) => {
+    const rows = g.rows.filter((o) => o.period_end >= growthStart);
+    return rows.length >= 2 && rows[0].value > 0 ? [{ ...g, points: rows.map((o) => ({ time: Date.parse(o.period_end), index: (o.value / rows[0].value) * 100 })) }] : [];
+  }) : [];
+  const GW = 640, GH = 240, GL = 40, GR = 124, GT = 12, GB = 24;
+  const growthTimes = growthSeries.flatMap((g) => g.points.map((p) => p.time));
+  const growthHigh = Math.max(...growthSeries.flatMap((g) => g.points.map((p) => p.index)), 100);
+  const growthLow = Math.min(...growthSeries.flatMap((g) => g.points.map((p) => p.index)), 100);
+  const gx = (time: number) => GL + ((time - Math.min(...growthTimes)) / Math.max(Math.max(...growthTimes) - Math.min(...growthTimes), 1)) * (GW - GL - GR);
+  const gy = (index: number) => GH - GB - ((index - growthLow) / Math.max(growthHigh - growthLow, 1)) * (GH - GB - GT);
+  const growthLeader = [...growthSeries].sort((a, b) => b.points.at(-1)!.index - a.points.at(-1)!.index)[0];
+
+  // Flood claims by year, with years of no claim drawn as zero. The newest year is still filling.
+  const floodByYear = new Map(flood.claims.map((o) => [Number(o.period_end.slice(0, 4)), o.value]));
+  const floodEnd = flood.newest ?? Math.max(...floodByYear.keys(), 0);
+  const floodBars = floodByYear.size ? Array.from({ length: 20 }, (_, i) => { const year = floodEnd - 19 + i; return { year, value: floodByYear.get(year) ?? 0 }; }) : [];
+  const floodPeak = Math.max(...floodBars.map((bar) => bar.value), 1);
+
+  // How residents get to work; the remainder is everything the survey groups as other.
+  const modes = [["acs_commute_drove_alone_share", "Drive alone", "var(--series-1)"], ["acs_commute_transit_share", "Transit", "var(--series-2)"], ["acs_commute_walked_share", "Walk", "var(--series-3)"], ["acs_work_from_home_share", "Work from home", "var(--text-secondary)"]].flatMap(([id, label, color]) => { const v = level(id)?.value; return v !== undefined ? [{ label, color, value: v * 100 }] : []; });
+  const modeOther = Math.max(100 - modes.reduce((sum, m) => sum + m.value, 0), 0);
+
   const navLinks = ([
     ["price", "Home prices", !!homeRow], ["cost", "Monthly costs", !!month], ["tax", "Property tax", !!taxBill], ["ranks", "Compared to NJ", strips.length > 0],
     ["affordability", "Affordability", !!pressureStory], ["living", "Daily life", facts.length > 0], ["workday", "Jobs & schools", workBars.length > 0 || privateShare !== null],
@@ -416,6 +449,18 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <p className={styles.caption}>Box: the middle half of towns. Line: the median. Ends: lowest and highest. Dot: {name}. Spacing is proportional, not linear. Zillow, {asOf(homeRow)}.</p>
       </section>}
 
+      {growthSeries.length > 1 && <section className={`${styles.panel} ${styles.growth}`}>
+        <h2>{growthLeader.label} grew fastest: up {(growthLeader.points.at(-1)!.index - 100).toFixed(0)}% since {growthStart!.slice(0, 4)}</h2>
+        <svg className={styles.scatter} viewBox={`0 0 ${GW} ${GH}`} role="img" aria-label={`${growthSeries.map((g) => `${g.label} ${(g.points.at(-1)!.index - 100).toFixed(0)}%`).join(", ")} since ${growthStart!.slice(0, 4)}.`}>
+          <line x1={GL} x2={GW - GR} y1={gy(100)} y2={gy(100)} stroke="currentColor" strokeOpacity="0.4" />
+          <text x={GL - 6} y={gy(100) + 4} textAnchor="end">0%</text>
+          {growthSeries.map((g) => { const last = g.points.at(-1)!; return <g key={g.label}><polyline points={g.points.map((p) => `${gx(p.time)},${gy(p.index)}`).join(" ")} fill="none" stroke={g.color} strokeWidth="2.5" strokeLinejoin="round" /><text x={gx(last.time) + 8} y={gy(last.index) + 4}>{`${g.label} ${last.index >= 100 ? "+" : ""}${(last.index - 100).toFixed(0)}%`}</text></g>; })}
+          <text x={GL} y={GH - 6}>{growthStart!.slice(0, 4)}</text>
+          <text x={GW - GR} y={GH - 6} textAnchor="end">{new Date(Math.max(...growthTimes)).getUTCFullYear()}</text>
+        </svg>
+        <p className={styles.caption}>Each line starts at 0% in {growthStart!.slice(0, 4)}, in dollars not adjusted for inflation. Zillow and Census ACS; income is a five-year survey, so it moves slowly.</p>
+      </section>}
+
       {month && <section id="cost" className={`${styles.panel} ${styles.cost}`}>
         <h2>{costTitle}</h2>
         <div className={styles.versus}>
@@ -426,6 +471,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         </div>
         <ul className={styles.key}>{parts.map((p) => <li key={p.label}><i style={{ background: p.color }} />{p.label} {dollars(p.value)}</li>)}</ul>
         <p className={styles.caption}>{month.principal > 0 ? `About ${dollars(month.principal)} of owning goes into the home. ` : ""}An estimate, not a quote: 20% down at {cost!.rate.value.toFixed(2)}%, {homeRow ? "typical home and typical rental" : "at a recent sale price"}.</p>
+        {rentSizes.length > 1 && <div className={styles.building}><h3>Rent by size</h3><StoryBars rows={rentSizes} /><p className={styles.caption}>Median gross rent, Census ACS. Lower than the typical market rent above, partly because it includes long-time tenants.</p></div>}
         <details className={styles.tool}>
           <summary>Use your own numbers</summary>
           <OwnNumbers income={income} guideHref={`/guide?place=${regionId}`} source={{ state: region.state_code, price: cost!.home.value, ratePct: cost!.rate.value, taxYear: cost!.tax?.value ?? null, insuranceYear: cost!.insurance?.value ?? null, utilitiesMonth: cost!.utilities?.month ?? null, rentMonth: cost!.rent?.value ?? null }} />
@@ -497,6 +543,11 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       {facts.length > 0 && <section id="living" className={`${styles.panel} ${styles.living}`}>
         <h2>Living here</h2>
         <div className={styles.facts}>{facts.map((fact) => <div key={fact.label}><strong>{fact.value}</strong><span>{fact.label}</span></div>)}</div>
+        {floodBars.length > 0 && <div className={styles.building}>
+          <h3>Flood claims in {flood.place ?? name}, last 20 years{flood.estimated ? " (estimated)" : ""}</h3>
+          <div className={styles.floodBars} role="img" aria-label={`${Math.round(floodBars.reduce((sum, bar) => sum + bar.value, 0))} insured flood claims from ${floodBars[0].year} to ${floodEnd}.`}>{floodBars.map((bar) => <i key={bar.year} title={`${bar.year}: ${Math.round(bar.value)} claims`} style={{ height: `${Math.max((bar.value / floodPeak) * 100, bar.value > 0 ? 4 : 1)}%` }} />)}</div>
+          <p className={styles.boxScale}><span>{floodBars[0].year}</span><span>Peak {Math.round(floodPeak)} in a year</span><span>{floodEnd}</span></p>
+        </div>}
         <p className={styles.caption}>{electric ? `Electricity: ${electric}. ` : ""}NJ Education, FCC, BTS, FEMA, NJDEP, EPA and CDC.</p>
       </section>}
 
@@ -510,6 +561,10 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
       {workBars.length > 0 && <section id="workday" className={`${styles.panel} ${styles.workday}`}>
         <h2>{elsewhere !== null ? `${elsewhere.toFixed(0)}% of residents work outside town` : "Where the workday goes"}{leadPlace ? `, most often in ${leadPlace.name}` : ""}</h2>
+        {modes.length > 0 && <div className={styles.commute}>
+          <div className={styles.stack}>{modes.map((mode) => <i key={mode.label} title={`${mode.label}: ${mode.value.toFixed(0)}%`} style={{ flexGrow: mode.value, background: mode.color }} />)}{modeOther > 0 && <i title={`Other: ${modeOther.toFixed(0)}%`} style={{ flexGrow: modeOther, background: "var(--tick)" }} />}</div>
+          <ul className={styles.key}>{modes.map((mode) => <li key={mode.label}><i style={{ background: mode.color }} />{mode.label} {mode.value.toFixed(0)}%</li>)}{modeOther > 0 && <li><i style={{ background: "var(--tick)" }} />Other {modeOther.toFixed(0)}%</li>}</ul>
+        </div>}
         <div className={styles.workLayout}>
           {workFrame && townCentre && <svg viewBox={`0 0 ${workFrame.width} ${workFrame.height}`} role="img" aria-label={`Lines from ${name} to where its residents work`}>
             {workCounties.map((c) => <path key={c.id} d={c.d} fill="currentColor" fillOpacity="0.14" />)}
@@ -611,6 +666,11 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
       {ranked.length > 1 && county && <section id="county" className={`${styles.panel} ${styles.county}`}>
         <h2>{countyRank === 0 ? `The priciest of ${ranked.length} Zillow-covered towns in ${displayName(county)}` : `${ordinal(countyRank + 1)} of ${ranked.length} Zillow-covered towns in ${displayName(county)}`}</h2>
+        {countyFrame && <svg className={styles.countyMap} viewBox={`0 0 ${countyFrame.width} ${countyFrame.height}`} role="img" aria-label={`Towns in ${displayName(county)} shaded by typical home value, with ${name} outlined.`}>
+          {countyShapes.map((shape) => { const shade = priceShade(shape.id); return <path key={shape.id} d={shape.d} fill={shade === null ? "currentColor" : "var(--series-1)"} fillOpacity={shade ?? 0.12} stroke="var(--county-line)" strokeWidth="0.75"><title>{shape.name}</title></path>; })}
+          {countyShapes.filter((shape) => shape.id === regionId).map((shape) => <path key="own" d={shape.d} fill="none" stroke="var(--series-2)" strokeWidth="2.5" />)}
+        </svg>}
+        {countyFrame && <p className={styles.caption}>Darker towns cost more. Faint towns have no Zillow figure.</p>}
         {ranked.filter((t, i) => i < 6 || i >= ranked.length - 5 || t.id === regionId).map((t) => <div key={t.id} className={styles.townBar} data-own={t.id === regionId || undefined}>
           <span>{t.name}</span><div><i style={{ width: `${(t.value / ranked[0].value) * 100}%` }} /></div><strong>{dollars(t.value)}</strong>
         </div>)}
