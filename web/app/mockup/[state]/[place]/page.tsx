@@ -5,6 +5,7 @@ import { GoDeeper } from "../../GoDeeper";
 import { OwnNumbers } from "../../OwnNumbers";
 import { CountyAtlas, type AtlasTown as AtlasTownRow } from "../../CountyAtlas";
 import { PosterNav } from "../../PosterNav";
+import { StoryBars } from "../../StoryBars";
 import "../../../place-photo.css";
 import styles from "../../poster.module.css";
 import { ComputedBadge } from "@/components/ComputedBadge";
@@ -70,19 +71,9 @@ function MiniBars({ values, recent = 1 }: { values: number[]; recent?: number })
   </svg>;
 }
 
-/** A story's own rows as bars: shares on a 0–100% scale, counts against the largest. */
-function StoryBars({ rows }: { rows: PlaceStorySummary["rows"] }) {
-  const percent = rows.every((row) => row.formatted.endsWith("%"));
-  const peak = Math.max(...rows.map((row) => row.value), 1);
-  return <>{rows.map((row) => <div key={row.label} className={styles.storyBar}>
-    <span>{row.label}</span>
-    <div><i style={{ width: `${percent ? parseFloat(row.formatted) : (row.value / peak) * 100}%` }} /></div>
-    <strong>{row.formatted}</strong>
-  </div>)}</>;
-}
-
 /** Places link to their mockups, so a reader can move around without leaving the trial. */
 const mockupPath = (id: number | string) => `/mockup${regionPath(id)}`;
+const mockupStateCrumbs = (code: string | null | undefined) => stateCrumbs(code).map((crumb) => ({ ...crumb, href: `/mockup${crumb.href}` }));
 
 export async function generateStaticParams() {
   return placeRouteParams(await regionsWithData());
@@ -484,7 +475,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     return <>
       <Masthead affordability={{ kind: "route" }} simple />
       <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact}`}>
-        <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code)]} here={name} />
+        <Crumbs trail={[{ href: "/", label: "Home" }, ...mockupStateCrumbs(region.state_code)]} here={name} />
         <PosterNav links={countyLinks} />
 
         <header className={`${styles.panel} ${styles.hero}`}>
@@ -620,7 +611,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   return <>
     <Masthead affordability={{ kind: "route" }} simple />
     <main id="main-content" tabIndex={-1} className={styles.poster}>
-      <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county && !isCounty ? [{ href: mockupPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
+      <Crumbs trail={[{ href: "/", label: "Home" }, ...mockupStateCrumbs(region.state_code), ...(county && !isCounty ? [{ href: mockupPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
       <PosterNav links={orderedLinks} />
 
       <header className={`${styles.panel} ${styles.hero}`}>

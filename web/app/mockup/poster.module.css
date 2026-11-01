@@ -305,3 +305,15 @@
   .compact .hero :global(.place-photo) img { height: 170px; }
   .compact .hero:has(:global(.place-photo)) > div { padding-block: 0; }
 }
+/* The state page: a county grid, with its figures in two-column story cards. */
+.compact .nickname { margin: 0 0 6px; font-size: 18px; font-style: italic; }
+.storyGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 10px; grid-column: 1 / -1; min-width: 0; }
+.jersey { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 12px; margin: 0 0 12px; padding: 0; list-style: none; }
+.jersey a { display: grid; gap: 6px; color: inherit; font-size: var(--text-small); font-weight: 600; text-decoration: none; }
+.jersey a:hover span { text-decoration: underline; }
+.poster.compact > .visual { grid-column: 1 / -1; background: light-dark(#c9e0f7, #0f2c4a); color: var(--text-primary); }
+.visual .deepHead { margin-bottom: 10px; }
+.poster.compact > .hero:has(:global(.place-photo)):not(:has(> svg)) { grid-template-columns: minmax(0, 1fr) minmax(0, 340px); }
+@media (min-width: 1000px) { .poster.compact > .tax[data-wide] { grid-column: span 2; } }
+@media (max-width: 760px) { .poster.compact > .hero:has(:global(.place-photo)):not(:has(> svg)) { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 1000px) { .storyGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
