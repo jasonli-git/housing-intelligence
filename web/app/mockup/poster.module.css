@@ -261,11 +261,23 @@
 .ranges strong { display: block; font-size: 19px; font-weight: 800; }
 .trends { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 10px; scroll-margin-top: 24px; }
 .trends svg { display: block; width: 100%; height: 76px; overflow: visible; color: var(--series-1); }
+.moving { background: light-dark(#d9efe4, #123a30); color: var(--text-primary); }
+.compact .moves { height: 76px; }
+.compact .sales { margin-top: 10px; padding-top: 10px; }
+.compact .saleBar b { font-size: 17px; }
+.compact .saleBar span { padding: 6px 8px; }
+.compact .storyBar { grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr) 3rem; margin-bottom: 6px; }
+.compact .storyBar > div { height: 12px; }
+.compact .pressure .storyBar { grid-template-columns: minmax(0, 16rem) minmax(0, 1fr) 3rem; }
+.compact .tool { margin-top: 10px; }
+.compact .tool summary { padding-block: 8px; }
+.compact .actions { margin-top: 10px; }
 .compact .stories { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; font-size: var(--text-small); }
 .compact .stories a { color: inherit; }
 @media (min-width: 1000px) {
   .poster.compact { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: dense; }
   .poster.compact > :is(.hero, .county, .trends, .stories) { grid-column: 1 / -1; }
-  .poster.compact > :is(.price, .cost, .rank, .workday) { grid-column: span 2; }
+  .poster.compact > :is(.price, .cost, .rank, .workday, .pressure, .era[data-wide]) { grid-column: span 2; }
+  .poster.compact > .cost:has(details[open]) { grid-column: 1 / -1; }
 }
 @media (max-width: 560px) { .poster.compact > .hero { grid-template-columns: minmax(0, 1fr) 56px; gap: 12px; } .compact .hero svg { width: 100%; } .compact .strip, .compact .townBar { grid-template-columns: minmax(0, 1fr) auto; } }

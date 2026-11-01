@@ -467,7 +467,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   // A county is the same infographic at a smaller scale: the colour panels of a town poster,
   // packed into a grid of short cards around one working map of its towns.
   if (isCounty) {
-    const countyLinks = orderedLinks.filter((l) => ["county", "price", "cost", "tax", "ranks", "county-context", "workday", "stories"].includes(l.id));
+    const countyLinks = orderedLinks.filter((l) => ["county", "price", "cost", "tax", "ranks", "county-context", "affordability", "workday", "stories"].includes(l.id));
     return <>
       <Masthead affordability={{ kind: "route" }} simple />
       <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact}`}>
@@ -499,6 +499,10 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
             <polyline points={area} fill="none" stroke="currentColor" strokeWidth="3" vectorEffect="non-scaling-stroke" />
           </svg>}
           <p className={styles.caption}>Last ten years, from {dollars(recent[0] ?? 0)}. Zillow, {asOf(homeRow)}</p>
+          {medianSale && q1 && q3 && <div className={styles.sales}>
+            <div className={styles.saleBar}><span><b>{dollars(q1.value)}</b>lower quarter</span><span><b>{dollars(medianSale.value)}</b>median sale</span><span><b>{dollars(q3.value)}</b>upper quarter</span></div>
+            <p className={styles.caption}>{salesCount ? `${formatMetric(salesCount.value, "count", "sr1a_sales_count")} recent sales` : "Recent sales"}{level("sr1a_median_price_per_sqft") ? ` · ${dollars(level("sr1a_median_price_per_sqft")!.value)} per square foot` : ""}{starter ? ` · starter home ${dollars(starter.value)}` : ""}</p>
+          </div>}
         </section>}
 
         {month && <section id="cost" className={`${styles.panel} ${styles.cost}`}>
@@ -511,6 +515,11 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           </div>
           <ul className={styles.key}>{parts.map((p) => <li key={p.label}><i style={{ background: p.color }} />{p.label} {dollars(p.value)}</li>)}</ul>
           <p className={styles.caption}>An estimate, with 20% down at {cost!.rate.value.toFixed(2)}%.</p>
+          <details className={styles.tool}>
+            <summary>Use your own numbers</summary>
+            <OwnNumbers income={income} guideHref={`/guide?place=${regionId}`} source={{ state: region.state_code, price: cost!.home.value, ratePct: cost!.rate.value, taxYear: cost!.tax?.value ?? null, insuranceYear: cost!.insurance?.value ?? null, utilitiesMonth: cost!.utilities?.month ?? null, rentMonth: cost!.rent?.value ?? null }} />
+          </details>
+          <p className={styles.actions}><Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link><Link href={`/afford?place=${regionId}&county=${regionId}`}>Places within my budget</Link><Link href="/help">Housing help</Link></p>
         </section>}
 
         {taxBill && <section id="tax" className={`${styles.panel} ${styles.tax}`}>
@@ -538,11 +547,30 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <p className={styles.caption}>The mark is the common 30% guideline.</p>
         </section>}
 
-        {(domNow || heatSeries.length > 20 || persistence) && <div id="county-context" className={styles.trends}>
+        {(domNow || heatSeries.length > 20 || persistence || movers.length > 1) && <div id="county-context" className={styles.trends}>
           {domNow && domUsual !== null && <section className={`${styles.panel} ${styles.pace}`}><h2>Homes sit {Math.round(domNow.value)} days, {Math.abs(domGap) < 3 ? "close to usual" : domGap < 0 ? `${Math.round(-domGap)} faster than usual` : `${Math.round(domGap)} slower than usual`}</h2><MiniLine values={domSeries.map((o) => o.value)} base={domUsual} /><p className={styles.caption}>{domRank ? `${ordinal(domRank)} quickest of ${countyWaits.length} counties. ` : ""}Realtor.com via FRED, {asOf(domNow)}</p></section>}
           {heatSeries.length > 20 && <section className={`${styles.panel} ${styles.heat}`}><h2>{Math.round(heatNow)} days over 90°F a year, {heatNow >= heatBase ? "up" : "down"} from {Math.round(heatBase)}</h2><MiniBars values={heatSeries.map((o) => o.value)} recent={10} /><p className={styles.caption}>Since {yearOf(heatSeries[0])}, latest ten in orange. NOAA</p></section>}
           {persistence && <section className={`${styles.panel} ${styles.unusual}`}><h2>Prices against incomes: {againstUsual(persistence.vs_median!)} usual</h2><MiniBars values={persistence.series.map((p) => p.vs_median)} /><p className={styles.caption}>{persistence.first_year}–{persistence.last_year}. FHFA and Census</p></section>}
+          {movers.length > 1 && <section className={`${styles.panel} ${styles.moving}`}><h2>Moving in and out</h2><div className={styles.moves}>{movers.map((y) => <div key={y.year} title={`${y.year}: ${y.net_per_1000!.toFixed(1)} per 1,000 households`}><i data-gain={y.net_per_1000! > 0 || undefined} style={{ height: `${(Math.abs(y.net_per_1000!) / moverPeak) * 50}%` }} /><span>{String(y.year).slice(2)}</span></div>)}</div><p className={styles.caption}>Net households per 1,000; above the line, more arrived{migration!.arrivals[0] ? `. Most from ${migration!.arrivals[0].name}` : ""}</p></section>}
         </div>}
+
+        {pressureStory && <section id="affordability" className={`${styles.panel} ${styles.pressure}`}>
+          <h2>{pressureStory.headline}</h2>
+          <StoryBars rows={pressureStory.rows} />
+          <p className={styles.caption}>{pressureStory.source}, {pressureStory.period} · {storyLink("pressure")}</p>
+        </section>}
+
+        {eras.length > 0 && <section className={`${styles.panel} ${styles.era}`} data-wide={seasonalHomes < 0.1 || undefined}>
+          <h2>{eraLead.value.toFixed(0)}% of homes date from {eraLead.label === "Before 1940" ? "before 1940" : eraLead.label === "2000 on" ? "2000 or later" : eraLead.label}</h2>
+          <StoryBars rows={eras.map((e) => ({ label: e.label, value: e.value, formatted: `${e.value.toFixed(0)}%` }))} />
+          <p className={styles.caption}>Census ACS</p>
+        </section>}
+
+        {seasonalHomes >= 0.1 && <section className={`${styles.panel} ${styles.seasonal}`}>
+          <h2>{(seasonalHomes * 100).toFixed(0)}% of homes are kept for seasonal use</h2>
+          <div className={styles.waffle} role="img" aria-label={`Of every 100 homes, ${homeDots.filter((d) => d === "lived").length} are lived in year-round and ${homeDots.filter((d) => d === "seasonal").length} are seasonal.`}>{homeDots.map((dot, i) => <i key={i} data-kind={dot} />)}</div>
+          <ul className={styles.key}><li><i data-kind="lived" />Lived in</li><li><i data-kind="seasonal" />Seasonal</li><li><i data-kind="empty" />Other empty</li></ul>
+        </section>}
 
         {workBars.length > 0 && <section id="workday" className={`${styles.panel} ${styles.workday}`}>
           <h2>{elsewhere !== null ? `${(100 - elsewhere).toFixed(0)}% of residents’ jobs are in the county` : "Where the workday goes"}{leadPlace ? `, led by ${leadPlace.name}` : ""}</h2>
