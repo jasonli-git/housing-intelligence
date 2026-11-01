@@ -87,7 +87,7 @@ export function Masthead({
               a native disclosure beside search, with theme on the brand row. */}
           <div className="bar-tools">
             <div className={simple ? "bar-controls" : "bar-controls bar-desktop-tools"}>{simple ? simpleLinks : primaryLinks}</div>
-            {search && <PlaceSearch />}
+            {search && <PlaceSearch prefix={simple ? "/mockup" : ""} />}
             {!simple && <details className="bar-tool-menu">
               <summary><span className={styles.desktopLabel}>Tools</span><span className={styles.mobileLabel}>Menu</span> <span aria-hidden="true">⌄</span></summary>
               <div className="bar-controls">

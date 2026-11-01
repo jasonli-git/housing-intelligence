@@ -76,6 +76,9 @@ function StoryBars({ rows }: { rows: PlaceStorySummary["rows"] }) {
   </div>)}</>;
 }
 
+/** Places link to their mockups, so a reader can move around without leaving the trial. */
+const mockupPath = (id: number | string) => `/mockup${regionPath(id)}`;
+
 export async function generateStaticParams() {
   return placeRouteParams(await regionsWithData());
 }
@@ -394,7 +397,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     .flatMap((part) => part?.regions.flatMap((r) => r.series.map((p) => [r.region_id, p.value] as const)) ?? [])) : new Map<number, number>());
   const [townSales, townIncomes2, townCommutes, townFlood] = await Promise.all([readTowns("sr1a_median_sale_price", level("sr1a_median_sale_price")), readTowns("acs_median_hh_income", incomeRow), readTowns("acs_mean_commute_minutes", level("acs_mean_commute_minutes")), readTowns("fema_flood_homes_share", level("fema_flood_homes_share"))]);
   const homeByTown = new Map(ranked.map((t) => [t.id, t.value]));
-  const townRows: AtlasTownRow[] = isCounty ? countyTowns.map((t) => ({ commute: townCommutes.get(t.region_id) ?? null, flood: townFlood.get(t.region_id) ?? null, id: t.region_id, name: countyTowns.filter((o) => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, (c) => c.toUpperCase()) : displayName(t), href: regionPath(t.region_id), sale: townSales.get(t.region_id) ?? null, value: homeByTown.get(t.region_id) ?? null, tax: ownTownRates.get(t.region_id) ?? null, income: townIncomes2.get(t.region_id) ?? null })) : [];
+  const townRows: AtlasTownRow[] = isCounty ? countyTowns.map((t) => ({ commute: townCommutes.get(t.region_id) ?? null, flood: townFlood.get(t.region_id) ?? null, id: t.region_id, name: countyTowns.filter((o) => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, (c) => c.toUpperCase()) : displayName(t), href: mockupPath(t.region_id), sale: townSales.get(t.region_id) ?? null, value: homeByTown.get(t.region_id) ?? null, tax: ownTownRates.get(t.region_id) ?? null, income: townIncomes2.get(t.region_id) ?? null })) : [];
   const bySale = townRows.filter((t) => t.sale !== null).sort((a, b) => b.sale! - a.sale!);
   const byTax = townRows.filter((t) => t.tax !== null && t.tax > 0 && t.tax <= 6).sort((a, b) => a.tax! - b.tax!);
   const byIncome = townRows.filter((t) => t.income !== null).sort((a, b) => a.income! - b.income!);
@@ -572,7 +575,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   return <>
     <Masthead affordability={{ kind: "route" }} simple />
     <main id="main-content" tabIndex={-1} className={styles.poster}>
-      <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county && !isCounty ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
+      <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county && !isCounty ? [{ href: mockupPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
       <PosterNav links={orderedLinks} />
 
       <header className={`${styles.panel} ${styles.hero}`}>
@@ -836,7 +839,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
       {similar && similar.matches.length > 0 && priceRow && <section className={`${styles.panel} ${styles.similar}`}>
         <h2>{similar.matches.length} similar {similar.matches.length === 1 ? `${unitWord} costs` : `${unitPlural} cost`} at least {Math.round((1 - similar.cheaper_by) * 100)}% less</h2>
-        <div className={styles.towns}>{similar.matches.map((m, i) => { const there = priceRow.values[i + 1], here = priceRow.values[0]; return <Link key={m.region_id} href={regionPath(m.region_id)}><strong>{m.name}</strong>{there !== null && <span>{dollars(there)}</span>}{there !== null && here !== null && <small>{dollars(here - there)} less</small>}</Link>; })}</div>
+        <div className={styles.towns}>{similar.matches.map((m, i) => { const there = priceRow.values[i + 1], here = priceRow.values[0]; return <Link key={m.region_id} href={mockupPath(m.region_id)} prefetch={false}><strong>{m.name}</strong>{there !== null && <span>{dollars(there)}</span>}{there !== null && here !== null && <small>{dollars(here - there)} less</small>}</Link>; })}</div>
         <p className={styles.actions}><Link href={`/compare${placesQuery([regionId, ...similar.matches.slice(0, 3).map((m) => m.region_id)])}`}>Compare side by side</Link></p>
       </section>}
 

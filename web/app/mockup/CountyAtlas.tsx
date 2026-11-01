@@ -49,7 +49,7 @@ export function CountyAtlas({ name, width, height, shapes, towns }: { name: stri
       <div className={styles.card} aria-live="polite">{town ? <>
         <strong>{town.name}</strong>
         <dl>{COLUMNS.filter((c) => town[c.id] !== null).map((c) => <div key={c.id}><dt>{c.label}</dt><dd>{cell(town, c.id)}</dd></div>)}</dl>
-        <Link href={town.href}>Open {town.name}</Link>
+        <Link href={town.href} prefetch={false}>Open {town.name}</Link>
       </> : <p>Point at a town to see it here, or select one to keep it.</p>}</div>
     </div>
     <div className={styles.table} tabIndex={0} role="region" aria-label={`Towns in ${name}`}>
@@ -59,7 +59,7 @@ export function CountyAtlas({ name, width, height, shapes, towns }: { name: stri
           {COLUMNS.map((c) => <th key={c.id} scope="col" aria-sort={sort.key === c.id ? (sort.down ? "descending" : "ascending") : "none"}><button type="button" onClick={() => choose(c.id)}>{c.label}{sort.key === c.id ? (sort.down ? " ↓" : " ↑") : ""}</button></th>)}
         </tr></thead>
         <tbody>{rows.map((t) => <tr key={t.id} data-active={active === t.id || undefined} onMouseEnter={() => setHovered(t.id)} onMouseLeave={() => setHovered(null)}>
-          <th scope="row"><Link href={t.href} onFocus={() => setPicked(t.id)}>{t.name}</Link></th>
+          <th scope="row"><Link href={t.href} prefetch={false} onFocus={() => setPicked(t.id)}>{t.name}</Link></th>
           {COLUMNS.map((c) => <td key={c.id}>{cell(t, c.id)}</td>)}
         </tr>)}</tbody>
       </table>
