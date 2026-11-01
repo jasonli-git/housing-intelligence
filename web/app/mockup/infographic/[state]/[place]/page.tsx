@@ -24,7 +24,8 @@ import { loadFloodStory } from "@/lib/placeFloodStory";
 import { TREND_METRICS } from "@/lib/trendMetrics";
 import { marketDistribution } from "@/lib/marketPortrait";
 import { marketPortraitData } from "@/lib/marketPortraitData";
-import { projector, ringsOf, shapes } from "@/lib/storyMap";
+import { arc, projector, ringsOf, shapes } from "@/lib/storyMap";
+import { leadingDestination } from "@/lib/stories";
 import { ordinal } from "@/lib/ranks";
 import { uncertaintiesFrom } from "@/lib/uncertainty";
 import { verdictHeadline } from "@/lib/verdict";
@@ -263,12 +264,28 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const counties = countyGeo && frame ? shapes(countyGeo.features, 180, frame).shapes : [];
   const town = townFeature && frame ? shapes([townFeature], 180, frame).shapes[0] : null;
 
+  // The workday: where residents' jobs are, as lines from the town on the state's map.
+  const WORK_W = 340;
+  const workFrame = countyGeo ? projector(countyGeo.features.flatMap((f) => ringsOf(f.geometry)), WORK_W, 8) : null;
+  const workCounties = countyGeo && workFrame ? shapes(countyGeo.features, WORK_W, workFrame).shapes : [];
+  const townCentre = townFeature && workFrame ? shapes([townFeature], WORK_W, workFrame).shapes[0].centre : null;
+  const outside = (destinations?.destinations ?? []).filter((d) => d.region_id !== regionId);
+  const leadPlace = destinations ? leadingDestination(destinations.destinations, regionId) : null;
+  const FIXED: Record<string, [number, number]> = { "New York City": [-73.98, 40.72], Philadelphia: [-75.16, 39.95] };
+  const workBars = outside.slice(0, 6);
+  const workPeak = Math.max(...workBars.map((d) => d.share), 0.01);
+  const workLines = workFrame && townCentre ? workBars.flatMap((d) => {
+    const feature = d.region_id ? townGeo?.features.find((f) => f.properties.region_id === d.region_id) : undefined;
+    const to = feature ? shapes([feature], WORK_W, workFrame).shapes[0].centre : FIXED[d.name] ? workFrame.point(FIXED[d.name]) : null;
+    return to ? [{ name: d.name, d: arc(townCentre, to), to, weight: 1 + (d.share / workPeak) * 3 }] : [];
+  }) : [];
+
   return <>
     <Masthead affordability={{ kind: "route" }} simple />
     <main id="main-content" tabIndex={-1} className={styles.poster}>
       <p className={styles.flag}>Infographic mockup · <Link href={regionPath(regionId)}>current page</Link> · <Link href={`/mockup/${state}/${slug}`}>first mockup</Link></p>
       <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
-      <nav className={styles.topics} aria-label="On this page"><a href="#price">Price</a><a href="#cost">Cost</a><a href="#tax">Tax</a><a href="#ranks">Compared</a><a href="#living">Living here</a><a href="#homes">Homes</a><a href="#people">People</a><a href="#county">County</a><a href="#stories">Stories</a></nav>
+      <nav className={styles.topics} aria-label="On this page"><a href="#price">Price</a><a href="#cost">Cost</a><a href="#tax">Tax</a><a href="#ranks">Compared</a><a href="#living">Living here</a><a href="#homes">Homes</a><a href="#workday">Work</a><a href="#people">People</a><a href="#county">County</a><a href="#stories">Stories</a></nav>
 
       <header className={`${styles.panel} ${styles.hero}`}>
         <div>
@@ -391,6 +408,20 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         {buildingStory && <div className={styles.building}><h3>{buildingStory.headline}</h3><StoryBars rows={buildingStory.rows} /><p className={styles.caption}>{buildingStory.source}, {buildingStory.period} · {storyLink("building")}</p></div>}
       </section>}
 
+      {workBars.length > 0 && <section id="workday" className={`${styles.panel} ${styles.workday}`}>
+        <h2>{elsewhere !== null ? `${elsewhere.toFixed(0)}% of residents work outside town` : "Where the workday goes"}{leadPlace ? `, most often in ${leadPlace.name}` : ""}</h2>
+        <div className={styles.workLayout}>
+          {workFrame && townCentre && <svg viewBox={`0 0 ${workFrame.width} ${workFrame.height}`} role="img" aria-label={`Lines from ${name} to where its residents work`}>
+            {workCounties.map((c) => <path key={c.id} d={c.d} fill="currentColor" fillOpacity="0.14" />)}
+            {workLines.map((line) => <g key={line.name}><path d={line.d} fill="none" stroke="var(--series-2)" strokeWidth={line.weight} strokeLinecap="round" /><circle cx={line.to[0]} cy={line.to[1]} r="3" fill="var(--series-2)" /></g>)}
+            <circle cx={townCentre[0]} cy={townCentre[1]} r="6" fill="var(--series-1)" stroke="currentColor" strokeWidth="1.5" />
+          </svg>}
+          <div>{workBars.map((d) => <div key={d.name} className={styles.townBar}><span>{d.name}</span><div><i style={{ width: `${(d.share / workPeak) * 100}%` }} /></div><strong>{(d.share * 100).toFixed(0)}%</strong></div>)}
+            <p className={styles.caption}>Share of {destinations!.total_jobs.toLocaleString("en-US")} jobs held by residents, {destinations!.year} · Census LODES · lines show the mapped places.</p>
+          </div>
+        </div>
+      </section>}
+
       {eras.length > 0 && <section className={`${styles.panel} ${styles.era}`}>
         <h2>{eraLead.value.toFixed(0)}% of homes date from {eraLead.label === "Before 1940" ? "before 1940" : eraLead.label === "2000 on" ? "2000 or later" : eraLead.label}</h2>
         <StoryBars rows={eras.map((e) => ({ label: e.label, value: e.value, formatted: `${e.value.toFixed(0)}%` }))} />
@@ -419,8 +450,6 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       {(work.length > 0 || owned !== null) && <section id="people" className={`${styles.panel} ${styles.people}`}>
         {owned !== null && <><h2>{(owned * 100).toFixed(0)}% of homes are owner-occupied</h2>
           <div className={styles.split}><i style={{ flexGrow: owned }}>{(owned * 100).toFixed(0)}% own</i><i style={{ flexGrow: 1 - owned }}>{((1 - owned) * 100).toFixed(0)}% rent</i></div></>}
-        {work.length > 0 && <><h2>{elsewhere !== null ? `${elsewhere.toFixed(0)}% of residents work outside town` : "Where residents work"}</h2>
-          {work.map((w) => <div key={w.label} className={styles.meter}><span>{w.label}</span><div><i style={{ width: `${w.value}%`, background: w.color }} /></div><strong>{w.value.toFixed(0)}%</strong></div>)}</>}
         {movers.length > 1 && <><h2>Moving in and out of {migration!.county_name} County</h2>
           <div className={styles.moves}>{movers.map((y) => <div key={y.year} title={`${y.year}: ${y.net_per_1000!.toFixed(1)} per 1,000 households`}><i data-gain={y.net_per_1000! > 0 || undefined} style={{ height: `${(Math.abs(y.net_per_1000!) / moverPeak) * 50}%` }} /><span>{String(y.year).slice(2)}</span></div>)}</div>
           <p className={styles.caption}>Net households per 1,000, by year · above the line, more arrived than left{migration!.arrivals[0] ? ` · most arrivals from ${migration!.arrivals[0].name}` : ""}</p></>}

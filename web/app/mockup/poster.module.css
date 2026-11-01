@@ -174,3 +174,7 @@
 .sameHouse .townBar { grid-template-columns: minmax(0, 13rem) minmax(0, 1fr) 5rem; margin-bottom: 8px; }
 .sameHouse .townBar i { height: 18px; }
 @media (min-width: 1000px) { .poster > .sameHouse { flex: 7 1 55%; } }
+.workday { background: light-dark(#ffe0ea, #4b1d38); color: var(--text-primary); }
+.workLayout { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 32px; align-items: center; }
+.workLayout svg { width: 100%; height: auto; }
+@media (max-width: 640px) { .workLayout { grid-template-columns: minmax(0, 1fr); } .workLayout svg { max-width: 240px; margin-inline: auto; } }
