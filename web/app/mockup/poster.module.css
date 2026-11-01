@@ -222,3 +222,10 @@
   .poster > :is(.boxes, .income, .tax, .homes, .county, .bills, .street, .lending) { flex: 5 1 calc(41.67% - 10px); }
   .poster > .tax { flex: 5 1 calc(41.67% - 10px); }
 }
+/* Breadcrumb: a quiet path of plain text, with the current place in the main ink. */
+.poster :global(.crumbs) { margin: 16px 0 6px; }
+.poster :global(.crumbs ol) { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; padding: 0; list-style: none; }
+.poster :global(.crumbs li) { gap: 8px; color: var(--text-primary) !important; font-size: var(--text-small) !important; font-weight: 600; }
+.poster :global(.crumbs li + li::before) { content: "/"; color: var(--text-muted); font-weight: 400; }
+.poster :global(.crumbs li a) { color: var(--text-secondary) !important; font-size: var(--text-small) !important; font-weight: 400; text-decoration: none !important; box-shadow: none !important; }
+.poster :global(.crumbs li a:hover) { color: var(--text-primary) !important; text-decoration: underline !important; text-underline-offset: 3px; }
