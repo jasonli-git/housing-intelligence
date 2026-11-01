@@ -180,3 +180,9 @@
 @media (max-width: 640px) { .workLayout { grid-template-columns: minmax(0, 1fr); } .workLayout svg { max-width: 240px; margin-inline: auto; } }
 .schools { background: light-dark(#d7e8ff, #16305c); color: var(--text-primary); }
 .schools .split { margin-bottom: 16px; }
+.seasonal { background: light-dark(#cdeefa, #0b3c54); color: var(--text-primary); }
+.waffle { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 4px; max-width: 34rem; margin-bottom: 12px; }
+.waffle i { aspect-ratio: 1; border-radius: 3px; }
+.waffle i[data-kind="lived"], .seasonal .key i[data-kind="lived"] { background: var(--series-1); }
+.waffle i[data-kind="seasonal"], .seasonal .key i[data-kind="seasonal"] { background: var(--series-2); }
+.waffle i[data-kind="empty"], .seasonal .key i[data-kind="empty"] { background: color-mix(in srgb, currentColor 25%, transparent); }

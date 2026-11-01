@@ -271,6 +271,13 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const results = community?.districts.length === 1 ? (community.districts[0].performance?.payload.indicators ?? []).filter((i) => i.value !== null) : [];
   const resultYear = community?.districts[0]?.performance?.payload.school_year;
 
+  // Winter-empty homes: shown only where seasonal homes are a real share of the town.
+  const seasonalHomes = vacant && seasonal ? vacant.value * seasonal.value : 0;
+  const homeDots = Array.from({ length: 100 }, (_, i) => {
+    const year = Math.round((1 - (vacant?.value ?? 0)) * 100), held = Math.round(seasonalHomes * 100);
+    return i < year ? "lived" : i < year + held ? "seasonal" : "empty";
+  });
+
   // The workday: where residents' jobs are, as lines from the town on the state's map.
   const WORK_W = 340;
   const workFrame = countyGeo ? projector(countyGeo.features.flatMap((f) => ringsOf(f.geometry)), WORK_W, 8) : null;
@@ -435,6 +442,13 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <StoryBars rows={stages.map((stage) => ({ label: `${stage.label}, private`, value: stage.value, formatted: `${stage.value.toFixed(0)}%` }))} />
         {results.length > 0 && <div className={styles.facts}>{results.map((result) => <div key={result.id}><strong>{result.value!.toFixed(0)}%</strong><span>{result.label.replace(": met or exceeded expectations", " met expectations")}</span></div>)}</div>}
         <p className={styles.caption}>{districts.length ? `${districts.map((d) => d.name).join(", ")}${resultYear ? `, ${resultYear}` : ""}. ` : ""}Where students live, not where schools are. Charter and vocational schools count as public. Census ACS, NJ Department of Education. · {storyLink("schools")}</p>
+      </section>}
+
+      {seasonalHomes >= 0.1 && <section id="seasonal" className={`${styles.panel} ${styles.seasonal}`}>
+        <h2>{(seasonalHomes * 100).toFixed(0)}% of homes here are kept for seasonal use</h2>
+        <div className={styles.waffle} role="img" aria-label={`Of every 100 homes, ${homeDots.filter((d) => d === "lived").length} are lived in year-round and ${homeDots.filter((d) => d === "seasonal").length} are seasonal.`}>{homeDots.map((dot, i) => <i key={i} data-kind={dot} />)}</div>
+        <ul className={styles.key}><li><i data-kind="lived" />Lived in</li><li><i data-kind="seasonal" />Seasonal</li><li><i data-kind="empty" />Empty for other reasons</li></ul>
+        <p className={styles.caption}>Every 100 homes. Census ACS, a five-year survey. “Lived in” means occupied when surveyed; seasonal homes can still be rented in summer.</p>
       </section>}
 
       {eras.length > 0 && <section className={`${styles.panel} ${styles.era}`}>
