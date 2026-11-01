@@ -191,6 +191,37 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const groups = similar ? similarGroups(similar) : [];
   const priceRow = similar ? groups.flatMap((g) => g.rows).find((r) => r.metric_id === similar.price) : undefined;
   const taxHref = `/tax?town=${region.geoid}`;
+  // Measures outside the packet, read directly and set among every town's value.
+  const latest = async (id: string) => (await api.observations(regionId, id))?.observations.at(-1) ?? null;
+  const placed = async (id: string, label: string, show: (v: number) => string) => {
+    const own = await latest(id);
+    if (!own) return null;
+    const all = [...(await townValues(id, own.period_start)).values()];
+    const position = all.length ? (all.filter((v) => v < own.value).length + all.filter((v) => v === own.value).length / 2) / all.length : 0.5;
+    return { id, label, value: show(own.value), position, raw: own.value };
+  };
+  const share = (v: number) => `${(v * 100).toFixed(0)}%`;
+  const ground = (await Promise.all([
+    placed("tree_canopy_homes_share", "Tree canopy over homes", share),
+    placed("nlcd_impervious_homes_share", "Paved ground around homes", share),
+    placed("noise_homes_share_55db", "Homes in 55 dB+ traffic noise", share),
+    placed("lights_homes_radiance", "Night-time brightness", (v) => v.toFixed(1)),
+    placed("elevation_homes_feet", "Height above sea level", (v) => `${Math.round(v)} ft`),
+    placed("msft_median_footprint_sqft", "Typical house footprint", (v) => `${Math.round(v).toLocaleString("en-US")} sq ft`),
+  ])).flatMap((item) => (item ? [item] : []));
+  const groundLead = [...ground].sort((a, b) => Math.abs(b.position - 0.5) - Math.abs(a.position - 0.5))[0];
+  const SHOPS = [["osm_starbucks_count", "Starbucks"], ["osm_dunkin_count", "Dunkin’"], ["osm_wawa_count", "Wawa"], ["osm_quickchek_count", "QuickChek"], ["osm_trader_joes_count", "Trader Joe’s"], ["osm_whole_foods_count", "Whole Foods"], ["osm_pizza_count", "Pizzerias"], ["osm_bagel_count", "Bagel shops"], ["osm_diner_count", "Diners"]];
+  const shops = (await Promise.all(SHOPS.map(async ([id, label]) => ({ label, value: (await latest(id))?.value ?? 0 })))).filter((shop) => shop.value > 0);
+  const eras = [["acs_share_built_pre_1940", "Before 1940"], ["acs_share_built_1940_1979", "1940–79"], ["acs_share_built_1980_1999", "1980–99"], ["acs_share_built_2000_later", "2000 on"]].flatMap(([id, label]) => { const v = level(id)?.value; return v !== undefined ? [{ label, value: v * 100 }] : []; });
+  const eraLead = [...eras].sort((a, b) => b.value - a.value)[0];
+  const kinds = [["acs_share_detached", "Detached houses"], ["acs_share_attached", "Attached"], ["acs_share_2_4_units", "2–4 units"], ["acs_share_5_19_units", "5–19 units"], ["acs_share_20plus_units", "20+ units"]].flatMap(([id, label]) => { const v = level(id)?.value; return v ? [{ label, value: v * 100 }] : []; });
+  const bills = [["acs_median_electricity", "Electricity", 1], ["acs_median_gas", "Gas", 1], ["acs_median_water_sewer", "Water and sewer", 12]].flatMap(([id, label, per]) => { const v = level(id as string)?.value; return v ? [{ label: label as string, value: v / (per as number) }] : []; });
+  const billTotal = bills.reduce((sum, b) => sum + b.value, 0);
+  const passed = (mark: number) => obs.find((o) => o.value >= mark)?.period_end.slice(0, 4);
+  const milestones = [500000, 1000000].flatMap((mark) => { const year = passed(mark); return year && year !== obs[0]?.period_end.slice(0, 4) ? [`passed ${dollars(mark)} in ${year}`] : []; });
+  const perAcre = homeRow && level("modiv_median_lot_acres")?.value ? homeRow.value / level("modiv_median_lot_acres")!.value : null;
+  const starter = level("zhvi_bottom_tier");
+  const vacant = level("acs_vacancy_rate"), seasonal = level("acs_vacant_seasonal_share");
   // Every panel's title states its finding, from the same figures the picture draws.
   const asOf = (row?: { period_end: string }) => row ? new Date(`${row.period_end.slice(0, 7)}-15`).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }) : "";
   const homeBox = boxes.find((b) => b.id === "zhvi_sfr"), rentBox = boxes.find((b) => b.id !== "zhvi_sfr");
@@ -242,11 +273,11 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <polygon points={`0,200 ${area} 600,200`} fill="currentColor" fillOpacity="0.16" />
           <polyline points={area} fill="none" stroke="currentColor" strokeWidth="3" vectorEffect="non-scaling-stroke" />
         </svg>}
-        <p className={styles.caption}>Last ten years, from $0 · {dollars(recent[0] ?? 0)} to {dollars(recent.at(-1) ?? 0)} · Zillow estimate, {asOf(homeRow)}</p>
+        <p className={styles.caption}>Last ten years, from $0 · {dollars(recent[0] ?? 0)} to {dollars(recent.at(-1) ?? 0)} · Zillow estimate, {asOf(homeRow)}{milestones.length ? ` · ${milestones.join(", ")}` : ""}</p>
         {medianSale && q1 && q3 && <div className={styles.sales}>
           <h3>What homes actually sold for</h3>
           <div className={styles.saleBar}><span><b>{dollars(q1.value)}</b>lower quarter</span><span><b>{dollars(medianSale.value)}</b>median</span><span><b>{dollars(q3.value)}</b>upper quarter</span></div>
-          <p className={styles.caption}>{salesCount ? `${formatMetric(salesCount.value, "count", "sr1a_sales_count")} sales` : "Recent sales"}{level("sr1a_median_price_per_sqft") ? ` · ${dollars(level("sr1a_median_price_per_sqft")!.value)} per square foot` : ""}</p>
+          <p className={styles.caption}>{salesCount ? `${formatMetric(salesCount.value, "count", "sr1a_sales_count")} sales` : "Recent sales"}{level("sr1a_median_price_per_sqft") ? ` · ${dollars(level("sr1a_median_price_per_sqft")!.value)} per square foot` : ""}{starter ? ` · starter home ${dollars(starter.value)}` : ""}{perAcre ? ` · ${dollars(perAcre)} per acre of lot` : ""}</p>
         </div>}
       </section>}
 
@@ -318,6 +349,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       {lendingStory && <section className={`${styles.panel} ${styles.lending}`}>
         <h2>{lendingStory.headline}</h2>
         <StoryBars rows={lendingStory.rows} />
+        <div className={styles.facts}>{[level("hmda_denial_rate") && { value: pct("hmda_denial_rate")!, label: "of applications denied" }, level("hmda_median_rate") && { value: `${level("hmda_median_rate")!.value.toFixed(2)}%`, label: "median mortgage rate" }, level("hmda_median_ltv") && { value: `${level("hmda_median_ltv")!.value.toFixed(0)}%`, label: "median loan-to-value" }].flatMap((fact) => (fact ? [fact] : [])).map((fact) => <div key={fact.label}><strong>{fact.value}</strong><span>{fact.label}</span></div>)}</div>
         <p className={styles.caption}>{lendingStory.source}, {lendingStory.period} · {storyLink("lending")}</p>
       </section>}
 
@@ -333,6 +365,31 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <ul className={styles.key}>{bedrooms.map((b) => <li key={b.label}><i style={{ background: b.color }} />{b.label} {b.value.toFixed(0)}%</li>)}</ul></>}
         <div className={styles.facts}>{stock.map((fact) => <div key={fact.label}><strong>{fact.value}</strong><span>{fact.label}</span></div>)}</div>
         {buildingStory && <div className={styles.building}><h3>{buildingStory.headline}</h3><StoryBars rows={buildingStory.rows} /><p className={styles.caption}>{buildingStory.source}, {buildingStory.period} · {storyLink("building")}</p></div>}
+      </section>}
+
+      {eras.length > 0 && <section className={`${styles.panel} ${styles.era}`}>
+        <h2>{eraLead.value.toFixed(0)}% of homes date from {eraLead.label === "Before 1940" ? "before 1940" : eraLead.label === "2000 on" ? "2000 or later" : eraLead.label}</h2>
+        <StoryBars rows={eras.map((e) => ({ label: e.label, value: e.value, formatted: `${e.value.toFixed(0)}%` }))} />
+        {kinds.length > 0 && <><h3>Kinds of home</h3><StoryBars rows={kinds.map((k) => ({ label: k.label, value: k.value, formatted: `${k.value.toFixed(0)}%` }))} /></>}
+        <p className={styles.caption}>Census ACS{vacant ? ` · ${pct("acs_vacancy_rate", 1)} of homes vacant${seasonal ? `, ${pct("acs_vacant_seasonal_share")} of those seasonal` : ""}` : ""}</p>
+      </section>}
+
+      {bills.length > 0 && <section className={`${styles.panel} ${styles.bills}`}>
+        <h2>Utilities run about {dollars(billTotal)} a month</h2>
+        <StoryBars rows={bills.map((b) => ({ label: b.label, value: b.value, formatted: dollars(b.value) }))} />
+        <p className={styles.caption}>Typical bills for homes billed for each, Census ACS. Already counted in the cost to own.</p>
+      </section>}
+
+      {ground.length > 0 && <section className={`${styles.panel} ${styles.ground}`}>
+        <h2>{groundLead.label}: {groundLead.position >= 0.5 ? "higher" : "lower"} than {Math.round(Math.max(groundLead.position, 1 - groundLead.position) * 100)}% of {peers}</h2>
+        <p className={styles.caption}>Around the homes, lowest towns on the left, highest on the right.</p>
+        {ground.map((g) => <div key={g.id} className={styles.strip}><span>{g.label}</span><div><i style={{ left: `${g.position * 100}%` }} /></div><strong>{g.value}</strong></div>)}
+      </section>}
+
+      {shops.length > 0 && <section className={`${styles.panel} ${styles.street}`}>
+        <h2>On the map in {name}</h2>
+        <div className={styles.facts}>{shops.map((shop) => <div key={shop.label}><strong>{shop.value}</strong><span>{shop.label}</span></div>)}</div>
+        <p className={styles.caption}>Mapped in OpenStreetMap, so some may be missing.</p>
       </section>}
 
       {(work.length > 0 || owned !== null) && <section id="people" className={`${styles.panel} ${styles.people}`}>
