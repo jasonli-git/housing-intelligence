@@ -320,7 +320,7 @@
 
 /* County chapters: a title and lead-in over a row of short panels. */
 .chapter { grid-column: 1 / -1; display: grid; gap: 6px; min-width: 0; scroll-margin-top: 120px; }
-.chapter > h2 { margin: 30px 0 6px; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.02em; }
+.chapter > h2 { margin: 34px 0 6px; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.02em; }
 .chapterGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); gap: 10px; min-width: 0; }
 .chapterGrid > .cost:has(details[open]) { grid-column: 1 / -1; }
 .townGrid { display: flex; flex-wrap: wrap; gap: 10px; min-width: 0; }
@@ -328,3 +328,10 @@
 .townGrid > :is(.price, .cost, .workday, .context, .similar) { flex-basis: 100%; }
 .poster .townGrid .panel { margin: 0; }
 @media (max-width: 999px) { .poster:not(.compact) > .chapter { margin-top: 10px; } }
+/* Each hero wears the colour the site assigns its level of place. */
+.hero[data-kind] { background: var(--hero-kind); color: light-dark(#fff, #10202f); }
+.hero[data-kind="county"] { --hero-kind: var(--kind-county); }
+.hero[data-kind="town"] { --hero-kind: var(--kind-town); }
+.hero[data-kind="zip"] { --hero-kind: var(--kind-zip); }
+.hero[data-kind] > svg { color: inherit; }
+.hero[data-kind] :global(.computed), .hero[data-kind] :global(.computed-line) { color: inherit; }

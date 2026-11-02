@@ -66,7 +66,7 @@ export function Masthead({
       <nav className={`bar print-hide ${styles.navigation}`} aria-label="Sites">
         <div className="bar-inner">
           <div className="bar-trail">
-            <Link className="wordmark" href="/">
+            <Link className="wordmark" href={simple ? "/mockup" : "/"}>
               <img className="housing-mark" src="/icon.svg" width="24" height="24" alt="" />
               <span className="wordmark-text">Housing</span>
             </Link>

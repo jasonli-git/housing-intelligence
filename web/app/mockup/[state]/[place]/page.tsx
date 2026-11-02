@@ -487,10 +487,10 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     return <>
       <Masthead affordability={{ kind: "route" }} simple />
       <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact}`}>
-        <Crumbs trail={[{ href: "/", label: "Home" }, ...mockupStateCrumbs(region.state_code)]} here={name} />
+        <Crumbs trail={[{ href: "/mockup", label: "Home" }, ...mockupStateCrumbs(region.state_code)]} here={name} />
         <PosterNav links={countyLinks} />
 
-        <header className={`${styles.panel} ${styles.hero}`}>
+        <header className={`${styles.panel} ${styles.hero}`} data-kind={isCounty ? "county" : isZip ? "zip" : "town"}>
           <div>
             <p className={styles.kicker}>{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""} · {townRows.length} towns</p>
             <h1>{name}</h1>
@@ -609,10 +609,10 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   return <>
     <Masthead affordability={{ kind: "route" }} simple />
     <main id="main-content" tabIndex={-1} className={styles.poster}>
-      <Crumbs trail={[{ href: "/", label: "Home" }, ...mockupStateCrumbs(region.state_code), ...(county && !isCounty ? [{ href: mockupPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
+      <Crumbs trail={[{ href: "/mockup", label: "Home" }, ...mockupStateCrumbs(region.state_code), ...(county && !isCounty ? [{ href: mockupPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
       <PosterNav links={townLinks} />
 
-      <header className={`${styles.panel} ${styles.hero}`}>
+      <header className={`${styles.panel} ${styles.hero}`} data-kind={isCounty ? "county" : isZip ? "zip" : "town"}>
         <div>
           <p className={styles.kicker}>{county && !isCounty ? `${displayName(county)}, ` : ""}{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""}</p>
           <h1>{name}</h1>
