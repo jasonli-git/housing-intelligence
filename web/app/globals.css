@@ -301,6 +301,7 @@ details[open] > summary .when-closed { display: none; }
   display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted);
 }
 .bar-icon:hover { color: var(--text-primary); }
+a.bar-icon { min-width: 24px; min-height: 24px; margin-inline-start: 6px; }
 .bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
 
 /* Where a page sits: mono labels, the links in small pills, "›" between them. */

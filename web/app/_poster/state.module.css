@@ -58,7 +58,7 @@
 @media (max-width: 999px) { .chapter, .rail { margin-top: 10px; } }
 /* Compact colour panels, as on county pages, for the state-level chapters. */
 .infographic > * { margin: 0 !important; padding: 18px 20px !important; }
-.infographic .note { color: inherit; opacity: .85; }
+.infographic .note { color: inherit; }
 /* The county table in the hero: each column ranks the counties and recolours the map. */
 .countyTable { overflow-x: auto; font-size: var(--text-small); }
 .countyTable table { width: 100%; border-collapse: collapse; }

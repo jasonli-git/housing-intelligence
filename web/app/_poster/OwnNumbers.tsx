@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ownershipInputs, type PublishedCosts } from "@/lib/budgetScenario";
 import { DOWN_PAYMENTS } from "@/lib/cost";
 import { eachMonth, upFront } from "@/lib/ownership";
+import { Glossed } from "@/components/Glossed";
 import styles from "./poster.module.css";
 
 const dollars = (value: number) => `$${Math.round(value).toLocaleString("en-US")}`;
@@ -52,7 +53,7 @@ export function OwnNumbers({ source, income, guideHref }: { source: PublishedCos
     <div className={styles.ownResult} aria-live="polite">
       <p><strong>{dollars(month.total)}</strong> a month to own</p>
       <div className={styles.stack}>{lines.map((line) => <i key={line.key} title={`${line.label}: ${dollars(line.value ?? 0)}`} style={{ flexGrow: line.value ?? 0, background: COLORS[line.key] ?? "var(--text-muted)" }} />)}</div>
-      <ul className={styles.key}>{lines.map((line) => <li key={line.key}><i style={{ background: COLORS[line.key] ?? "var(--text-muted)" }} />{line.label} {dollars(line.value ?? 0)}</li>)}</ul>
+      <ul className={styles.key}>{lines.map((line) => <li key={line.key}><i style={{ background: COLORS[line.key] ?? "var(--text-muted)" }} /><Glossed text={line.label} /> {dollars(line.value ?? 0)}</li>)}</ul>
       <dl>
         {rent !== null && <div><dt>{month.total >= rent ? "More than renting" : "Less than renting"}</dt><dd>{dollars(Math.abs(month.total - rent))}</dd></div>}
         {share !== null && <div><dt>Of income</dt><dd>{share.toFixed(0)}%</dd></div>}

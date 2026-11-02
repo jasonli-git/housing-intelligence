@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Children, type ReactNode } from "react";
 
+import { glossTree } from "../../_poster/glossTree";
 import { OwnNumbers } from "../../_poster/OwnNumbers";
 import { CountyAtlas, type AtlasTown as AtlasTownRow } from "../../_poster/CountyAtlas";
 import { PosterNav } from "../../_poster/PosterNav";
@@ -11,6 +12,7 @@ import styles from "../../_poster/poster.module.css";
 import rail from "../../_poster/state.module.css";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { Crumbs } from "@/components/Crumbs";
+import { Glossed } from "@/components/Glossed";
 import { ConsumerReading } from "@/components/ExplanationPanel";
 import { Masthead } from "@/components/Masthead";
 import { PlacePhoto } from "@/components/PlacePhoto";
@@ -525,7 +527,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
   if (isCounty) {
     const countyLinks = [["county", "Town map"], ["reading", "AI highlights"], ["costs", "Buying & taxes"], ["compares", "Compared to NJ"], ["market", "Market trends"], ["life", "County life"], ["stories", "Stories"]].filter(([id]) => id === "county" ? !!countyFrame : id === "reading" ? hasReading : id === "stories" ? deepStories.length > 0 : true).map(([id, label]) => ({ id, label }));
-    return <>
+    return glossTree(<>
       <Masthead affordability={{ kind: "route" }} simple />
       <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact}`}>
         <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code)]} here={name} />
@@ -588,7 +590,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         {taxBill && <section id="tax" className={`${styles.panel} ${styles.tax}`}>
           <h2>Property tax adds {dollars(taxBill.value / 12)} a month</h2>
           <p className={styles.giant}>{dollars(taxBill.value)}</p>
-          <p className={styles.caption}>Median yearly bill{taxRate ? ` · ${taxRate.value.toFixed(2)}% effective rate` : ""}{taxBillMeasure ? ` · ${ordinal(taxBillMeasure.row.rank!)} highest of ${taxBillMeasure.row.of}` : ""}</p>
+          <p className={styles.caption}><Glossed text="Median" /> yearly bill{taxRate ? ` · ${taxRate.value.toFixed(2)}% effective rate` : ""}{taxBillMeasure ? ` · ${ordinal(taxBillMeasure.row.rank!)} highest of ${taxBillMeasure.row.of}` : ""}</p>
         </section>}
           </div>
         </section>}
@@ -645,10 +647,10 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
         <footer className={styles.close}>Sources: Zillow, Census Bureau, NJ Division of Taxation, FEMA, NOAA, FHFA and Realtor.com. <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <Link href="/sources">About the data</Link> · <Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link> · <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a></footer>
       </main>
-    </>;
+    </>);
   }
 
-  return <>
+  return glossTree(<>
     <Masthead affordability={{ kind: "route" }} simple />
     <main id="main-content" tabIndex={-1} className={styles.poster}>
       <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county && !isCounty ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
@@ -725,7 +727,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         </div>
         <ul className={styles.key}>{parts.map((p) => <li key={p.label}><i style={{ background: p.color }} />{p.label} {dollars(p.value)}</li>)}</ul>
         <p className={styles.caption}>{month.principal > 0 ? `About ${dollars(month.principal)} of owning goes into the home. ` : ""}An estimate, not a quote: 20% down at {cost!.rate.value.toFixed(2)}%, {homeRow ? "typical home and typical rental" : "at a recent sale price"}.</p>
-        {rentSizes.length > 1 && <div className={styles.building}><h3>Rent by size</h3><StoryBars rows={rentSizes} /><p className={styles.caption}>Median gross rent, Census ACS. Lower than the typical market rent above, partly because it includes long-time tenants.</p></div>}
+        {rentSizes.length > 1 && <div className={styles.building}><h3>Rent by size</h3><StoryBars rows={rentSizes} /><p className={styles.caption}><Glossed text="Median" /> gross rent, Census ACS. Lower than the typical market rent above, partly because it includes long-time tenants.</p></div>}
         <details className={styles.tool}>
           <summary>Use your own numbers</summary>
           <OwnNumbers income={income} guideHref={`/guide?place=${regionId}`} source={{ state: region.state_code, price: cost!.home.value, ratePct: cost!.rate.value, taxYear: cost!.tax?.value ?? null, insuranceYear: cost!.insurance?.value ?? null, utilitiesMonth: cost!.utilities?.month ?? null, rentMonth: cost!.rent?.value ?? null }} />
@@ -767,7 +769,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       {taxBill && <section id="tax" className={`${styles.panel} ${styles.tax}`}>
         <h2>Property tax adds {dollars(taxBill.value / 12)} a month</h2>
         <p className={styles.giant}>{dollars(taxBill.value)}</p>
-        <p className={styles.caption}>Median yearly bill{taxRate ? ` · ${taxRate.value.toFixed(2)}% effective rate` : ""}{taxBillMeasure ? ` · ${ordinal(taxBillMeasure.row.rank!)} highest of ${taxBillMeasure.row.of} ${unitPlural}` : ""}</p>
+        <p className={styles.caption}><Glossed text="Median" /> yearly bill{taxRate ? ` · ${taxRate.value.toFixed(2)}% effective rate` : ""}{taxBillMeasure ? ` · ${ordinal(taxBillMeasure.row.rank!)} highest of ${taxBillMeasure.row.of} ${unitPlural}` : ""}</p>
         <p className={styles.actions}><Link href={taxHref}>Look up a property</Link></p>
       </section>}
 
@@ -945,5 +947,5 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
       <footer className={styles.close}>Sources: Zillow, Census Bureau, FEMA, NJ Division of Taxation. <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <Link href="/sources">About the data</Link> · <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a></footer>
     </main>
-  </>;
+  </>);
 }
