@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 
 import home from "./home.module.css";
-import snapshotStyles from "./state.module.css";
 import original from "../homepage.module.css";
 import "../housing-entry.css";
 import "../state-navigation.css";
@@ -59,7 +58,7 @@ function YearLine({ tile }: { tile: ScoreTile }) {
       {then !== null && <line x1="0" x2="240" y1={y(then)} y2={y(then)} stroke="currentColor" strokeOpacity=".5" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />}
       <polyline points={values.map((v, i) => `${(i / (values.length - 1)) * 240},${y(v)}`).join(" ")} fill="none" stroke="var(--edge)" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
     </svg>
-    <p>{then !== null && <span>{show(then)} a year ago</span>}<b>{show(last.value)}</b></p>
+    <p>{tile.id === "rate" ? <>{tile.then !== null && <span>From {show(tile.then)}</span>}<b>{tile.then === null ? show(tile.now) : `${tile.now >= tile.then ? "Up" : "Down"} ${Math.abs(tile.now - tile.then).toFixed(2)} points in a year`}</b></> : then !== null && <span>Against {show(then)} the year before</span>}</p>
   </div>;
 }
 
@@ -97,11 +96,14 @@ export default async function MockupHome() {
   const rest = tiles.filter((tile) => !told.some((t) => t.tiles.includes(tile)));
   const stories = rest.length ? [...told, { id: "rest", headline: "Other figures", detail: "", tiles: rest, tone: "mixed" as const }] : told;
   const tile = (id: string) => tiles.find((t) => t.id === id);
-  const newHomePrice = latestPrice(series.newHomePrice), newHomeMonth = (series.newHomePrice ?? []).map((r) => r.period_end).sort().at(-1);
-  const glance = [
-    newHomePrice !== null && newHomeMonth && { value: dollars(newHomePrice), label: "Typical price of a new home", fine: `${monthLabel(newHomeMonth)}. Census` },
-    ...([["rate", "Typical 30-year mortgage rate"], ["prices", "Change in home prices over a year"], ["rent", "Change in rents over a year"], ["starts", "New homes started, at a yearly pace"]] as const).map(([id, label]) => { const t = tile(id); return t && { value: t.value, label, fine: `${t.period}. ${t.source.name}` }; }),
-  ].flatMap((item) => (item ? [item] : []));
+  // Each takeaway leads with where things stand; its chart and change show which way they moved.
+  const lead = (id: string) => ({
+    rate: tile("rate") && { value: tile("rate")!.value, label: "Typical 30-year mortgage rate" },
+    choice: tile("listings") && { value: tile("listings")!.value, label: `Homes for sale${tile("days") ? `, ${tile("days")!.value} on the market` : ""}` },
+    prices: tile("prices") && { value: tile("prices")!.value, label: "Change in home prices over a year" },
+    rent: tile("rent") && { value: tile("rent")!.value, label: "Change in rents over a year" },
+    building: tile("starts") && { value: tile("starts")!.value, label: "New homes started, at a yearly pace" },
+  } as Record<string, { value: string; label: string } | undefined>)[id];
   const newest = tiles.map((t) => t.trend.at(-1)?.date ?? "").sort().at(-1);
 
   const previews = (await Promise.all(SAMPLES.map(async ([kind, slug, colour]) => {
@@ -128,8 +130,22 @@ export default async function MockupHome() {
           <div className={original.map}><NationalCoverageMap preview focusedEntry /></div>
           <p><span>A coverage map, not prices. Alaska and Hawaii not shown.</span><Link href="/mockup/states/new-jersey">Detailed coverage: New Jersey ↗</Link></p>
         </div>
-        {glance.length > 0 && <dl className={`${snapshotStyles.snapshot} ${snapshotStyles.heroBand} ${home.band}`} aria-label="The US at a glance">{glance.map((item) => <div key={item.label}><dd>{item.value}</dd><dt>{item.label}</dt><dd className={snapshotStyles.snapshotFine}>{item.fine}</dd></div>)}</dl>}
       </section>
+
+      {tiles.length > 0 && <section id="us-market" className={home.section}>
+        <div className={home.head}><h2>The US housing market</h2>{newest && <span>Latest through {monthLabel(newest)}, against a year earlier</span>}</div>
+        <div className={home.takeaways}>{stories.map((story) => <article key={story.id} className={home[story.tone]} title={story.detail}>
+          <span className={home.tag}>{TONE_WORDS[story.tone]}</span>
+          <h3>{story.headline}</h3>
+          {lead(story.id) && <p className={home.lead}><b>{lead(story.id)!.value}</b>{lead(story.id)!.label}</p>}
+          <p className="visually-hidden">{story.detail}</p>
+          {story.id === "choice" ? <Pairs tiles={story.tiles} /> : story.id === "building" ? <Building tiles={story.tiles} /> : story.tiles[0] && <YearLine tile={story.tiles[0]} />}
+          <ul>{story.tiles.map((t) => { const kind = kindOf(t.metricId); return <li key={t.id}>
+            <span className="visually-hidden">{t.summary}</span>
+            <span aria-hidden="true">{t.label} {t.value}</span>{kind && <> · <span title={`${KIND_LABELS[kind]}: ${KIND_MEANINGS[kind]}`}>{SHORT_KIND[kind]}</span></>} · <a href={t.source.href} target="_blank" rel="noreferrer noopener">{t.source.name}</a>
+          </li>; })}</ul>
+        </article>)}</div>
+      </section>}
 
       {previews.length > 0 && <section id="places" className={home.section}>
         <h2>Every place has its own page</h2>
@@ -139,20 +155,6 @@ export default async function MockupHome() {
         {previews.map((p) => <Link key={p.id} href={`/mockup${regionPath(p.id)}`} prefetch={false} className={`${home.place} ${p.colour}`}>
           <small>{p.kind}</small><strong>{p.name}</strong><b>{dollars(p.history.at(-1)!)}</b><small>Typical home, Zillow</small><Trend values={p.history.slice(-120)} />
         </Link>)}</div>
-      </section>}
-
-      {tiles.length > 0 && <section id="us-market" className={home.section}>
-        <div className={home.head}><h2>The US housing market</h2>{newest && <span>Latest through {monthLabel(newest)}, against a year earlier</span>}</div>
-        <div className={home.takeaways}>{stories.map((story) => <article key={story.id} className={home[story.tone]} title={story.detail}>
-          <span className={home.tag}>{TONE_WORDS[story.tone]}</span>
-          <h3>{story.headline}</h3>
-          <p className="visually-hidden">{story.detail}</p>
-          {story.id === "choice" ? <Pairs tiles={story.tiles} /> : story.id === "building" ? <Building tiles={story.tiles} /> : story.tiles[0] && <YearLine tile={story.tiles[0]} />}
-          <ul>{story.tiles.map((t) => { const kind = kindOf(t.metricId); return <li key={t.id}>
-            <span className="visually-hidden">{t.summary}</span>
-            <span aria-hidden="true">{t.label} {t.value}</span>{kind && <> · <span title={`${KIND_LABELS[kind]}: ${KIND_MEANINGS[kind]}`}>{SHORT_KIND[kind]}</span></>} · <a href={t.source.href} target="_blank" rel="noreferrer noopener">{t.source.name}</a>
-          </li>; })}</ul>
-        </article>)}</div>
       </section>}
 
       <div className={home.storiesCard}><HomeStories /></div>
