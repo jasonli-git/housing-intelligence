@@ -323,3 +323,7 @@
 .chapter > h2 { margin: 14px 0 6px; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.02em; }
 .chapterGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); gap: 10px; min-width: 0; }
 .chapterGrid > .cost:has(details[open]) { grid-column: 1 / -1; }
+.townGrid { display: flex; flex-wrap: wrap; gap: 10px; min-width: 0; }
+.townGrid > * { flex: 1 1 min(24rem, 100%); min-width: 0; }
+.townGrid > :is(.price, .cost, .workday, .context, .similar) { flex-basis: 100%; }
+.poster .townGrid .panel { margin: 0; }
