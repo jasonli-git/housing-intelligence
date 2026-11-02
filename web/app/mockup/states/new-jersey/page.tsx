@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { CountyAtlas, type AtlasTown } from "../../CountyAtlas";
+import type { AtlasTown } from "../../CountyAtlas";
 import { PosterNav } from "../../PosterNav";
+import { StateDashboard, StateMeasure, StateTable } from "../../StateDashboard";
 import { StoryBars } from "../../StoryBars";
+import state from "../../state.module.css";
 import styles from "../../poster.module.css";
 import "../../../place-photo.css";
 import "../../../stories/story-cards.css";
@@ -28,14 +30,22 @@ export const metadata: Metadata = { title: "New Jersey — Housing" };
 const dollars = (value: number) => `$${Math.round(value).toLocaleString("en-US")}`;
 const whole = (value: number) => Math.round(value).toLocaleString("en-US");
 const CONSTRUCTION = ["permits_total_units", "nj_units_certified", "nj_units_demolished", "nj_net_units_added"];
+const linePoints = (values: number[], width: number, height: number) => { const low = Math.min(...values), span = Math.max(...values) - low || 1; return values.map((v, i) => `${(i / Math.max(values.length - 1, 1)) * width},${height - 4 - ((v - low) / span) * (height - 8)}`).join(" "); };
+
+/** A small trend, drawn only where the measure has a history. */
+function Spark({ values }: { values: number[] }) {
+  return <svg viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true"><polyline points={linePoints(values.slice(-24), 100, 26)} fill="none" stroke="currentColor" strokeWidth="1.5" vectorEffect="non-scaling-stroke" /></svg>;
+}
+
 const COMMUTE = [["lodes_work_home_county_share", "Home county", "var(--series-1)"], ["lodes_work_other_nj_share", "Elsewhere in NJ", "var(--series-3)"], ["lodes_work_nyc_share", "New York City", "var(--series-2)"], ["lodes_work_pennsylvania_share", "Pennsylvania", "var(--text-secondary)"], ["lodes_work_other_state_share", "Other states", "var(--tick)"]] as const;
 
 /** The state as a compact infographic: its counties first, then the figures only a state has. */
 export default async function NewJerseyPoster() {
   const regionId = PRIMARY_STATE.regionId;
-  const [packet, destinations, community, pressure, hpi, countyRegions, countyGeo, construction] = await Promise.all([
+  const [packet, destinations, community, pressure, hpi, countyRegions, countyGeo, construction, histories] = await Promise.all([
     api.packet(regionId, "5y"), api.workDestinations(regionId), api.community(regionId), api.housingPressure(regionId), api.observations(regionId, "fhfa_hpi"),
     api.regions("level=county&state=NJ&limit=100"), api.geo("county", "NJ", 0.002), Promise.all(CONSTRUCTION.map(async (metric) => (await api.observations(regionId, metric))?.observations ?? [])),
+    Promise.all(["sr1a_median_sale_price", "nj_effective_tax_rate", "sr1a_sales_count"].map(async (metric) => ((await api.observations(regionId, metric))?.observations ?? []).map((o) => o.value))),
   ]);
   const levels = packet?.levels ?? [];
   const level = (id: string) => levels.find((row) => row.metric_id === id);
@@ -62,12 +72,10 @@ export default async function NewJerseyPoster() {
   const frame = countyGeo?.features.length ? projector(countyGeo.features.flatMap((f) => ringsOf(f.geometry)), 360, 6) : null;
   const mapShapes = frame ? shapes(countyGeo!.features, 360, frame).shapes : [];
 
-  const sale = level("sr1a_median_sale_price"), q1 = level("sr1a_price_lower_quartile"), q3 = level("sr1a_price_upper_quartile"), sold = level("sr1a_sales_count"), perFoot = level("sr1a_median_price_per_sqft"), tax = level("nj_effective_tax_rate"), population = level("pep_population");
+  const sale = level("sr1a_median_sale_price"), q1 = level("sr1a_price_lower_quartile"), q3 = level("sr1a_price_upper_quartile"), sold = level("sr1a_sales_count"), perFoot = level("sr1a_median_price_per_sqft"), tax = level("nj_effective_tax_rate"), population = level("pep_population"), added = level("nj_net_units_added");
   const hpiRows = hpi?.observations ?? [];
   const hpiFrom = hpiRows.length ? `${Number(hpiRows.at(-1)!.period_end.slice(0, 4)) - 10}${hpiRows.at(-1)!.period_end.slice(4)}` : "";
   const index = hpiRows.filter((o) => o.period_end >= hpiFrom).map((o) => o.value);
-  const low = Math.min(...index), high = Math.max(...index);
-  const line = index.map((v, i) => `${(i / Math.max(index.length - 1, 1)) * 600},${200 - ((v - low * 0.9) / (high - low * 0.9 || 1)) * 190}`).join(" ");
   const commute = COMMUTE.flatMap(([id, label, color]) => { const value = level(id)?.value; return value !== undefined ? [{ label, color, value: value * 100 }] : []; });
   const lead = [...commute].sort((a, b) => b.value - a.value)[0];
 
@@ -78,73 +86,100 @@ export default async function NewJerseyPoster() {
       community: topic === "broadband" || topic === "health" || topic === "schools" ? community : null }));
     return { topic, summary: summarizePlaceStory(record) };
   }).filter(({ topic, summary }) => topic !== "sales" && topic !== "market" && summary.available && summary.rows.length > 1) : [];
-  const TONES: Partial<Record<PlaceStoryTopic, string>> = { pressure: styles.pressure, lending: styles.lending, building: styles.homes, commute: styles.workday, schools: styles.schools, broadband: styles.street, health: styles.living, utilities: styles.bills };
-  const tones = [styles.pressure, styles.lending, styles.homes, styles.living, styles.schools, styles.street, styles.ground, styles.era];
+  const figure = (topic: PlaceStoryTopic, label: string) => stories.find((item) => item.topic === topic)?.summary.rows.find((row) => row.label.includes(label))?.formatted;
+  const ticker = [
+    sale && { label: "Median sale", value: dollars(sale.value), trend: histories[0] }, tax && { label: "Effective tax rate", value: `${tax.value.toFixed(2)}%`, trend: histories[1] },
+    sold && { label: "Homes sold", value: whole(sold.value), trend: histories[2] }, added && { label: "Net homes added", value: whole(added.value), trend: construction[3].map((o) => o.value) },
+    figure("pressure", "Up to 30%") && { label: "Lowest-income renters burdened", value: figure("pressure", "Up to 30%")!, trend: [] }, figure("broadband", "Fiber") && { label: "Locations with fiber", value: figure("broadband", "Fiber")!, trend: [] },
+  ].flatMap((item) => (item ? [item] : []));
   const jersey = COLLECTIONS.find((c) => c.id === "jersey")!.stories.flatMap((slug) => STORIES.filter((s) => s.href === `/stories/${slug}`));
-  const links = [{ id: "counties", label: "Its counties" }, ...(sale ? [{ id: "price", label: "Home prices" }] : []), ...(tax ? [{ id: "tax", label: "Property tax" }] : []), ...(commute.length ? [{ id: "workday", label: "Commuting" }] : []), ...(stories.length ? [{ id: "statewide", label: "Statewide data" }] : []), ...(jersey.length ? [{ id: "visual", label: "Visual stories" }] : [])];
+  // Each chapter asks for its stories by name; anything not named falls to daily life.
+  const tileFor = (topics: PlaceStoryTopic[]) => stories.filter(({ topic }) => topics.includes(topic)).map(({ topic, summary }) => <section key={topic} className={state.tile}>
+    <h2>{summary.headline}</h2>
+    <StoryBars rows={summary.rows} />
+    <p className={state.note}>{summary.source}, {summary.period} · <Link href={placeStoryHref(topic, regionId)} prefetch={false}>Full story</Link></p>
+  </section>);
+  const LIVING = stories.map(({ topic }) => topic).filter((topic) => !["lending", "pressure", "building", "migration"].includes(topic));
+  const links = [{ id: "counties", label: "County map" }, { id: "compare", label: "Compare counties" }, ...(sale || tax ? [{ id: "cost", label: "Buying & taxes" }] : []), { id: "afford", label: "Renters & mortgages" }, { id: "supply", label: "New homes" }, { id: "living", label: "Daily life" }, ...(jersey.length ? [{ id: "visual", label: "New Jersey stories" }] : [])];
 
   return <>
     <Masthead affordability={{ kind: "route" }} simple />
-    <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact}`}>
+    <main id="main-content" tabIndex={-1} className={`${styles.poster} ${state.page}`}>
       <Crumbs trail={[{ href: "/", label: "Home" }]} here="New Jersey" />
       <PosterNav links={links} />
 
-      <header className={`${styles.panel} ${styles.hero}`}>
-        <div>
-          <p className={styles.kicker}>{population ? `${whole(population.value)} residents · ` : ""}{counties.length} counties</p>
+      <StateMeasure>
+      <header id="counties" className={state.hero}>
+        <div className={state.photo}><PlacePhoto geoid="34" /></div>
+        {frame && <StateDashboard width={frame.width} height={frame.height} shapes={mapShapes.map(({ id, d }) => ({ id, d }))} rows={rows}>
+          <p className={state.kicker}>{population ? `${whole(population.value)} residents · ` : ""}{counties.length} counties</p>
           <h1>New Jersey</h1>
-          <p className={styles.nickname}>The Garden State</p>
-          {sale && <p className={styles.headline}>Homes sold for a median of {dollars(sale.value)}{tax ? `, in a state with a ${tax.value.toFixed(2)}% effective property tax rate` : ""}.</p>}
+          <p className={state.nickname}>The Garden State</p>
+          {sale && <p className={state.headline}>Homes sold for a median of {dollars(sale.value)}{tax ? `, in a state with a ${tax.value.toFixed(2)}% effective property tax rate` : ""}.</p>}
           <ComputedBadge />
-        </div>
-        <PlacePhoto geoid="34" />
+        </StateDashboard>}
       </header>
 
-      {frame && <section id="counties" className={`${styles.panel} ${styles.county}`}>
-        <h2>Its {counties.length} counties</h2>
-        {ranges.length > 0 && <div className={styles.ranges}>{ranges.map((range) => <div key={range.label}><span>{range.label}</span><strong>{range.low} – {range.high}</strong><small>{range.lowName} to {range.highName}</small></div>)}</div>}
-        <CountyAtlas name="New Jersey" unit="County" width={frame.width} height={frame.height} shapes={mapShapes.map(({ id, d }) => ({ id, d }))} towns={rows} />
+      <dl className={state.ticker}>{ticker.map((item) => <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd>{item.trend.length > 2 && <Spark values={item.trend} />}</div>)}</dl>
+
+      <section id="compare" className={state.chapter}>
+        <h2>Compare all {rows.length} counties</h2>
+        <p>Sorted by the measure chosen above. Select a heading to sort by it.</p>
+        <div className={state.fullTable}><StateTable rows={rows} /></div>
+      </section>
+      </StateMeasure>
+
+      {(sale || tax) && <section id="cost" className={state.chapter}>
+        <h2>What it costs to buy and own a home</h2>
+        <p>The price of buying first, then the tax that comes with it every year.</p>
+        <div className={state.cards}>
+        {sale && <section id="price" className={state.tile}>
+          <h2>What homes sold for</h2>
+          {index.length > 1 && <svg className={state.line} viewBox="0 0 600 100" preserveAspectRatio="none" role="img" aria-label="FHFA house price index for New Jersey, last ten years"><polyline points={linePoints(index, 600, 100)} fill="none" stroke="currentColor" strokeWidth="2.5" vectorEffect="non-scaling-stroke" /></svg>}
+          <p className={state.note}>FHFA house price index, last ten years.</p>
+          {q1 && q3 && <div className={state.quartiles}><div><b>{dollars(q1.value)}</b>lower quarter</div><div><b>{dollars(sale.value)}</b>median sale</div><div><b>{dollars(q3.value)}</b>upper quarter</div></div>}
+          <p className={state.note}>{sold ? `${whole(sold.value)} sales` : "Recent sales"}{perFoot ? ` · ${dollars(perFoot.value)} per square foot` : ""}. NJ SR-1A records.</p>
+        </section>}
+
+        {tax && <section id="tax" className={state.tile}>
+          <h2>Property tax takes {tax.value.toFixed(2)}% of a home’s value a year</h2>
+          <p className={state.figure}>{dollars(tax.value * 5000)}</p>
+          <p className={state.note}>The yearly bill that rate puts on a $500,000 home, not any home’s actual bill. NJ Division of Taxation.</p>
+        </section>}
+
+        </div>
       </section>}
 
-      {sale && <section id="price" className={`${styles.panel} ${styles.price}`}>
-        <h2>The median home sold for</h2>
-        <p className={styles.giant}>{dollars(sale.value)}</p>
-        {index.length > 1 && <svg className={styles.area} viewBox="0 0 600 200" preserveAspectRatio="none" role="img" aria-label="FHFA house price index for New Jersey, last ten years">
-          <polygon points={`0,200 ${line} 600,200`} fill="currentColor" fillOpacity="0.16" />
-          <polyline points={line} fill="none" stroke="currentColor" strokeWidth="3" vectorEffect="non-scaling-stroke" />
-        </svg>}
-        <p className={styles.caption}>Line: FHFA house price index, last ten years.</p>
-        {q1 && q3 && <div className={styles.sales}>
-          <div className={styles.saleBar}><span><b>{dollars(q1.value)}</b>lower quarter</span><span><b>{dollars(sale.value)}</b>median sale</span><span><b>{dollars(q3.value)}</b>upper quarter</span></div>
-          <p className={styles.caption}>{sold ? `${whole(sold.value)} sales` : "Recent sales"}{perFoot ? ` · ${dollars(perFoot.value)} per square foot` : ""}. NJ SR-1A records.</p>
-        </div>}
+      {tileFor(["lending", "pressure"]).length > 0 && <section id="afford" className={state.chapter}>
+        <h2>Housing cost burden and mortgages</h2>
+        <p>How hard housing costs press on renters, and what buyers borrow.</p>
+        <div className={state.cards}>{tileFor(["lending", "pressure"])}</div>
       </section>}
 
-      {tax && <section id="tax" className={`${styles.panel} ${styles.tax}`} data-wide>
-        <h2>Property tax takes {tax.value.toFixed(2)}% of a home’s value a year</h2>
-        <p className={styles.giant}>{dollars(tax.value * 5000)}</p>
-        <p className={styles.caption}>The yearly bill that rate puts on a $500,000 home, not any home’s actual bill. NJ Division of Taxation. Below, the three highest counties and the three lowest.</p>
-        {byTax.length > 5 && [...byTax.slice(-3).reverse(), ...byTax.slice(0, 3).reverse()].map((c) => <div key={c.id} className={styles.townBar}><span>{c.name}</span><div><i style={{ width: `${(c.tax! / byTax.at(-1)!.tax!) * 100}%` }} /></div><strong>{c.tax!.toFixed(2)}%</strong></div>)}
+      {tileFor(["building", "migration"]).length > 0 && <section id="supply" className={state.chapter}>
+        <h2>How many homes New Jersey is adding</h2>
+        <p>Whether the state is adding homes faster than it loses them.</p>
+        <div className={state.cards}>{tileFor(["building", "migration"])}</div>
       </section>}
 
-      {(stories.length > 0 || commute.length > 0) && <div id="statewide" className={styles.storyGrid}>
-      {commute.length > 0 && <section id="workday" className={`${styles.panel} ${styles.workday}`}>
-        <h2>{lead.value.toFixed(0)}% of workers commute to {lead.label === "Elsewhere in NJ" ? "another NJ county" : lead.label}</h2>
-        <div className={styles.stack}>{commute.map((part) => <i key={part.label} title={`${part.label}: ${part.value.toFixed(0)}%`} style={{ flexGrow: part.value, background: part.color }} />)}</div>
-        <ul className={styles.key}>{commute.map((part) => <li key={part.label}><i style={{ background: part.color }} />{part.label} {part.value.toFixed(0)}%</li>)}</ul>
-        <p className={styles.caption}>Where residents’ jobs are. Census LODES.</p>
-      </section>}
-        {stories.map(({ topic, summary }, i) => <section key={topic} className={`${styles.panel} ${TONES[topic] ?? tones[i % tones.length]}`}>
-        <h2>{summary.headline}</h2>
-        <StoryBars rows={summary.rows} />
-        <p className={styles.caption}>{summary.source}, {summary.period} · <Link href={placeStoryHref(topic, regionId)} prefetch={false}>Full story</Link></p>
-      </section>)}
-      </div>}
+      {(commute.length > 0 || tileFor(LIVING).length > 0) && <section id="living" className={state.chapter}>
+        <h2>Daily life around a home</h2>
+        <p>The commute, then the everyday conditions around a home.</p>
+        <div className={state.cards}>
+        {commute.length > 0 && <section id="workday" className={state.tile}>
+          <h2>{lead.value.toFixed(0)}% of workers commute to {lead.label === "Elsewhere in NJ" ? "another NJ county" : lead.label}</h2>
+          <div className={styles.stack}>{commute.map((part) => <i key={part.label} title={`${part.label}: ${part.value.toFixed(0)}%`} style={{ flexGrow: part.value, background: part.color }} />)}</div>
+          <ul className={styles.key}>{commute.map((part) => <li key={part.label}><i style={{ background: part.color }} />{part.label} {part.value.toFixed(0)}%</li>)}</ul>
+          <p className={state.note}>Where residents’ jobs are. Census LODES.</p>
+        </section>}
 
-      {jersey.length > 0 && <section id="visual" className={`${styles.panel} ${styles.visual}`}>
-        <div className={styles.deepHead}><h2>Only in New Jersey</h2><Link href="/stories">All stories</Link></div>
-        <ul className={styles.jersey}>{jersey.slice(0, 5).map((story) => <li key={story.href}><Link href={story.href} prefetch={false}><StoryCover story={story} /><span>{story.title}</span></Link></li>)}</ul>
-        {jersey.length > 5 && <p className={styles.actions}>{jersey.slice(5).map((story) => <Link key={story.href} href={story.href} prefetch={false}>{story.title}</Link>)}</p>}
+          {tileFor(LIVING)}
+        </div>
+      </section>}
+
+      {jersey.length > 0 && <section id="visual" className={state.rail}>
+        <div className={state.railHead}><h2>Stories about New Jersey</h2><Link href="/stories">All stories</Link></div>
+        <ul tabIndex={0}>{jersey.map((story) => <li key={story.href}><Link href={story.href} prefetch={false}><StoryCover story={story} /><span>{story.title}</span></Link></li>)}</ul>
       </section>}
 
       <footer className={styles.close}>Sources: NJ SR-1A sales records, NJ Division of Taxation, FHFA, Census Bureau, HMDA. <Link href="/sources">About the data</Link> · Mockup: <Link href={PRIMARY_STATE.path}>current page</Link></footer>
