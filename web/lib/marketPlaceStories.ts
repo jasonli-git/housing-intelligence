@@ -40,9 +40,10 @@ export function marketStorySummary(record: PlaceStoryRecord): PlaceStorySummary 
     // an older, fuller year or fill a missing demolition report with zero.
     const last = years[0];
     if (!last || last.completed === null || last.demolished === null || !Number.isFinite(last.completed) || !Number.isFinite(last.demolished) || last.completed < 0 || last.demolished < 0) return missing;
-    const net = last.completed - last.demolished;
+    // Published net counts only towns that reported both, so it can differ from the totals' gap.
+    const gap = last.completed - last.demolished, net = last.net ?? gap;
     return { available: true, headline: `${formatValue(Math.abs(net), "count")} net homes ${net < 0 ? "removed" : "added"}`, source: "Census BPS / NJ DCA", period: `${last.year}${last.preliminary ? " · Preliminary" : ""}`,
-      qualifier: `${last.preliminary ? "Preliminary reporting year. " : ""}Reported completions minus demolitions; missing reports are not zero. Permits are permission, not finished homes or a completion rate.`,
+      qualifier: `${last.preliminary ? "Preliminary reporting year. " : ""}Reported completions minus demolitions${net === gap ? "" : ", counting only towns that reported both, so it differs from the two totals below"}; missing reports are not zero. Permits are permission, not finished homes or a completion rate.`,
       rows: [{ label: "Completed", value: last.completed, formatted: formatValue(last.completed, "count") }, { label: "Demolished", value: last.demolished, formatted: formatValue(last.demolished, "count") }] };
   }
   if (record.topic === "pressure") {

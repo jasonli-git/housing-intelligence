@@ -32,10 +32,6 @@ const whole = (value: number) => Math.round(value).toLocaleString("en-US");
 const CONSTRUCTION = ["permits_total_units", "nj_units_certified", "nj_units_demolished", "nj_net_units_added"];
 const linePoints = (values: number[], width: number, height: number) => { const low = Math.min(...values), span = Math.max(...values) - low || 1; return values.map((v, i) => `${(i / Math.max(values.length - 1, 1)) * width},${height - 4 - ((v - low) / span) * (height - 8)}`).join(" "); };
 
-/** A small trend, drawn only where the measure has a history. */
-function Spark({ values }: { values: number[] }) {
-  return <svg viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true"><polyline points={linePoints(values.slice(-24), 100, 26)} fill="none" stroke="currentColor" strokeWidth="1.5" vectorEffect="non-scaling-stroke" /></svg>;
-}
 
 const TOPIC_PANEL: Partial<Record<PlaceStoryTopic, string>> = { pressure: "pressure", lending: "lending", building: "homes", migration: "street", sites: "ground", flood: "ground", water: "living", broadband: "street", schools: "schools", health: "bills", utilities: "bills" };
 const COMMUTE = [["lodes_work_home_county_share", "Home county", "var(--series-1)"], ["lodes_work_other_nj_share", "Elsewhere in NJ", "var(--series-3)"], ["lodes_work_nyc_share", "New York City", "var(--series-2)"], ["lodes_work_pennsylvania_share", "Pennsylvania", "var(--text-secondary)"], ["lodes_work_other_state_share", "Other states", "var(--tick)"]] as const;
@@ -43,10 +39,9 @@ const COMMUTE = [["lodes_work_home_county_share", "Home county", "var(--series-1
 /** The state as a compact infographic: its counties first, then the figures only a state has. */
 export default async function NewJerseyPoster() {
   const regionId = PRIMARY_STATE.regionId;
-  const [packet, destinations, community, pressure, hpi, countyRegions, countyGeo, construction, histories] = await Promise.all([
+  const [packet, destinations, community, pressure, hpi, countyRegions, countyGeo, construction] = await Promise.all([
     api.packet(regionId, "5y"), api.workDestinations(regionId), api.community(regionId), api.housingPressure(regionId), api.observations(regionId, "fhfa_hpi"),
     api.regions("level=county&state=NJ&limit=100"), api.geo("county", "NJ", 0.002), Promise.all(CONSTRUCTION.map(async (metric) => (await api.observations(regionId, metric))?.observations ?? [])),
-    Promise.all(["sr1a_median_sale_price", "nj_effective_tax_rate", "sr1a_sales_count"].map(async (metric) => ((await api.observations(regionId, metric))?.observations ?? []).map((o) => o.value))),
   ]);
   const levels = packet?.levels ?? [];
   const level = (id: string) => levels.find((row) => row.metric_id === id);
@@ -89,10 +84,15 @@ export default async function NewJerseyPoster() {
     return { topic, summary: summarizePlaceStory(record) };
   }).filter(({ topic, summary }) => topic !== "sales" && topic !== "market" && summary.available && summary.rows.length > 1) : [];
   const figure = (topic: PlaceStoryTopic, label: string) => stories.find((item) => item.topic === topic)?.summary.rows.find((row) => row.label.includes(label))?.formatted;
-  const ticker = [
-    sale && { label: "Median sale", value: dollars(sale.value), trend: histories[0] }, tax && { label: "Effective tax rate", value: `${tax.value.toFixed(2)}%`, trend: histories[1] },
-    sold && { label: "Homes sold", value: whole(sold.value), trend: histories[2] }, added && { label: "Net homes added", value: whole(added.value), trend: construction[3].map((o) => o.value) },
-    figure("pressure", "Up to 30%") && { label: "Lowest-income renters burdened", value: figure("pressure", "Up to 30%")!, trend: [] }, figure("broadband", "Fiber") && { label: "Locations with fiber", value: figure("broadband", "Fiber")!, trend: [] },
+  const burdened = figure("pressure", "Up to 30%"), fiber = figure("broadband", "Fiber");
+  const pressureStory = stories.find((item) => item.topic === "pressure")?.summary, fiberStory = stories.find((item) => item.topic === "broadband")?.summary;
+  const monthYear = (date: string) => new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
+  const snapshot = [
+    sale && { value: dollars(sale.value), label: "Typical home sale price", fine: `${sale.period_start ? `${monthYear(sale.period_start)} to ` : ""}${monthYear(sale.period_end)}. NJ SR-1A` },
+    tax && { value: dollars(tax.value * 5000), label: "Yearly property tax on a $500,000 home", fine: `At the ${tax.value.toFixed(2)}% statewide rate, ${tax.period_end.slice(0, 4)}. NJ Division of Taxation` },
+    added && { value: whole(added.value), label: `More homes in ${added.period_end.slice(0, 4)}, after demolitions`, fine: "Census BPS / NJ DCA" },
+    burdened && pressureStory && { value: burdened, label: "Of the lowest-income renters spend too much on housing", fine: `Cost-burdened. ${pressureStory.source}, ${pressureStory.period}` },
+    fiber && fiberStory && { value: fiber, label: "Of homes and businesses can get fiber internet", fine: `${fiberStory.source}, ${fiberStory.period.slice(0, 4)}` },
   ].flatMap((item) => (item ? [item] : []));
   const jersey = COLLECTIONS.find((c) => c.id === "jersey")!.stories.flatMap((slug) => STORIES.filter((s) => s.href === `/stories/${slug}`));
   // Each chapter asks for its stories by name; anything not named falls to daily life.
@@ -116,12 +116,11 @@ export default async function NewJerseyPoster() {
           <p className={state.kicker}>{population ? `${whole(population.value)} residents · ` : ""}{counties.length} counties</p>
           <h1>New Jersey</h1>
           <p className={state.nickname}>The Garden State</p>
-          {sale && <p className={state.headline}>Homes sold for a median of {dollars(sale.value)}{tax ? `, in a state with a ${tax.value.toFixed(2)}% effective property tax rate` : ""}.</p>}
           <ComputedBadge />
         </StateDashboard>}
+        {snapshot.length > 0 && <dl className={`${state.snapshot} ${state.heroBand}`} aria-label="New Jersey at a glance">{snapshot.map((item) => <div key={item.label}><dd>{item.value}</dd><dt>{item.label}</dt><dd className={state.snapshotFine}>{item.fine}</dd></div>)}</dl>}
       </header>
 
-      <dl className={state.ticker}>{ticker.map((item) => <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd>{item.trend.length > 2 && <Spark values={item.trend} />}</div>)}</dl>
 
 
       {(sale || tax) && <section id="cost" className={state.chapter}>
