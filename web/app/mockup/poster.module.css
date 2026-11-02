@@ -336,3 +336,4 @@
 .hero[data-kind] > svg { color: inherit; }
 .hero[data-kind] :global(.computed), .hero[data-kind] :global(.computed-line) { color: inherit; }
 .poster.compact > .hero .heroSnapshot { grid-column: 1 / -1; margin: 0 20px 0 0; }
+.poster:not(.compact) > .hero .heroSnapshot { grid-column: 1 / -1; margin: 8px 0 0; }
