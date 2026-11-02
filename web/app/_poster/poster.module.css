@@ -1,7 +1,7 @@
 .poster { --poster-hero: var(--poster-tone-11); --on-series: var(--poster-tone-8); --paper: var(--poster-tone-12); --paper-2: var(--poster-tone-13); max-width: var(--shell); margin-inline: auto; padding: 0 16px 48px; }
 .panel { padding: clamp(24px, 5vw, 40px); }
 .panel h2 { margin: 0 0 16px; font-size: var(--text-small); font-weight: 700; letter-spacing: var(--track-label); text-transform: uppercase; }
-.caption { margin: 10px 0 0; font-size: var(--text-note); opacity: .85; }
+.caption { margin: 10px 0 0; font-size: var(--text-note); }
 .hero { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 24px; align-items: center; background: var(--poster-hero); color: var(--poster-tone-27); }
 .hero svg { width: 100%; height: auto; color: var(--poster-tone-27); }
 .hero h1 { margin: 4px 0 16px; font-size: clamp(44px, 11vw, 84px); font-weight: 800; letter-spacing: -.03em; line-height: 1; }
@@ -42,6 +42,7 @@
 .townBar[data-own] i { background: var(--series-2); }
 .townBar strong { text-align: right; font-weight: inherit; }
 .close { padding-top: 16px; font-size: var(--text-note); color: var(--text-secondary); }
+.close a { color: inherit !important; text-decoration: underline; }
 @media (max-width: 560px) {
   .hero { grid-template-columns: minmax(0, 1fr); }
   .hero svg { width: 110px; }
@@ -82,7 +83,7 @@
 .moves > div::before { content: ""; position: absolute; inset: 50% 0 auto; border-top: 1px solid currentColor; }
 .moves i { position: absolute; inset-inline: 0; top: 50%; background: var(--series-2); }
 .moves i[data-gain] { top: auto; bottom: 50%; background: var(--series-1); }
-.moves span { position: absolute; bottom: 0; inset-inline: 0; text-align: center; font-size: 10px; }
+.moves span { position: absolute; bottom: 0; inset-inline: 0; text-align: center; font-size: 10px; color: var(--text-primary); background: var(--surface-1); }
 .towns { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 12px; }
 .towns a { display: grid; gap: 2px; padding: 12px; color: inherit; text-decoration: none; background: color-mix(in srgb, currentColor 8%, transparent); }
 .towns span { font-size: 22px; font-weight: 800; }

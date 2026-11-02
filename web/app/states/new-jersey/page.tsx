@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import type { AtlasTown } from "../../_poster/CountyAtlas";
 import { PosterNav } from "../../_poster/PosterNav";
+import { glossTree } from "../../_poster/glossTree";
 import { StateDashboard } from "../../_poster/StateDashboard";
 import { StoryBars } from "../../_poster/StoryBars";
 import state from "../../_poster/state.module.css";
@@ -115,7 +116,7 @@ export default async function NewJerseyPoster() {
   const LIVING = stories.map(({ topic }) => topic).filter((topic) => !["lending", "pressure", "building", "migration"].includes(topic));
   const links = [{ id: "counties", label: "Compare counties" }, ...(sale || tax ? [{ id: "cost", label: "Buying, taxes & rent" }] : []), { id: "afford", label: "Renters & mortgages" }, { id: "supply", label: "New homes" }, { id: "living", label: "Daily life" }, ...(jersey.length ? [{ id: "visual", label: "New Jersey stories" }] : [])];
 
-  return <>
+  return glossTree(<>
     <Masthead affordability={{ kind: "route" }} simple />
     <main id="main-content" tabIndex={-1} className={`${styles.poster} ${state.page}`}>
       <Crumbs trail={[{ href: "/", label: "Home" }]} here="New Jersey" />
@@ -192,5 +193,5 @@ export default async function NewJerseyPoster() {
       {statewideNotes.length > 0 && <StateFigureNotes notes={statewideNotes} />}
       <footer className={styles.close}>Sources: NJ SR-1A sales records, NJ Division of Taxation, FHFA, Census Bureau, HMDA. <Link href="/sources">About the data</Link></footer>
     </main>
-  </>;
+  </>);
 }
