@@ -3,7 +3,7 @@ import { STORIES } from "./stories";
 export type Story = (typeof STORIES)[number];
 /**
  * Stories that no longer lead the library: a place page tells most for each town (the
- * infographic mockup), and How data gets rewritten sits with the site's trust pages. Their
+ * infographic pages), and How data gets rewritten sits with the site's trust pages. Their
  * pages stay published; the library keeps the statewide patterns.
  */
 export const ON_PLACE_PAGES: ReadonlySet<string> = new Set(["who-feels-housing-costs", "the-mortgage-market", "is-new-jersey-building", "price-ladder", "the-true-monthly-cost", "what-the-housing-is", "who-moves-in", "your-towns-time-machine", "what-a-house-buys-in-land", "sites-and-cleanup", "where-internet-reaches", "water-you-can-check", "when-the-power-goes-out", "health-in-context", "same-house-different-tax-bill", "where-the-workday-goes", "where-students-go", "the-winter-empty-shore", "income-and-home-value", "how-long-homes-sit", "the-hottest-counties", "is-today-unusual", "priciest-and-cheapest", "how-data-gets-rewritten"]);

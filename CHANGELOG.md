@@ -13,6 +13,10 @@ are not yet recorded here.
 
 ### Changed
 
+- **The home, state, county, town and ZIP pages use the new poster design** (2026-11-02,
+  ARCHITECTURE #457): chapters, colour panels and a plain-language snapshot in each hero;
+  the state and county maps are tied to their sortable tables; net homes now use the
+  published figure, which counts only towns that reported both completions and demolitions.
 - **The site is served by a Cloudflare Worker with static assets instead of Pages**
   (Milestone 58, ARCHITECTURE #454). Pages stops this account at 20,000 files; the Worker
   allows 100,000 on Workers Paid, about seven New Jersey-sized states. Old numeric links

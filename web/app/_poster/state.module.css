@@ -1,6 +1,6 @@
 /* The state page: a dark front page with one accent, hairlines instead of colour blocks. */
-.page { --h-bg: light-dark(#eef3ef, #0b1411); --h-ink: light-dark(#14201b, #eef3f0); --h-soft: light-dark(#4d5b54, #a7b3ad); --h-mid: light-dark(#2e3a34, #d5ddd9); --h-track: light-dark(#dbe4de, #18231f); --h-line: light-dark(#c5d0c9, #2c3833); --accent: light-dark(#0b7a55, #45dca3); --line: light-dark(#dfe3e0, #2a2f2d); --series-1: var(--accent); --series-2: var(--text-primary); --series-3: var(--text-secondary); --county-line: var(--surface-1); font-variant-numeric: tabular-nums; }
-.hero { --h-bg: light-dark(#1f5f94, #174a75); --h-ink: #fff; --h-soft: #dcebf8; --h-mid: var(--h-ink); --h-track: color-mix(in srgb, var(--h-ink) 18%, transparent); --h-line: color-mix(in srgb, var(--h-ink) 35%, transparent); --accent: #bfe0fa; --series-1: var(--accent); --text-primary: var(--h-ink); --text-secondary: var(--h-soft); position: relative; overflow: hidden; padding: clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px) 44px; color: var(--h-ink); background: var(--h-bg); border-radius: 16px; }
+.page { --h-bg: var(--poster-tone-2); --h-ink: var(--poster-tone-3); --h-soft: var(--poster-tone-4); --h-mid: var(--poster-tone-5); --h-track: var(--poster-tone-6); --h-line: var(--poster-tone-7); --accent: var(--poster-tone-1); --line: var(--poster-tone-45); --series-1: var(--accent); --series-2: var(--text-primary); --series-3: var(--text-secondary); --county-line: var(--surface-1); font-variant-numeric: tabular-nums; }
+.hero { --h-bg: var(--poster-tone-46); --h-ink: var(--poster-tone-27); --h-soft: var(--poster-tone-47); --h-mid: var(--h-ink); --h-track: color-mix(in srgb, var(--h-ink) 18%, transparent); --h-line: color-mix(in srgb, var(--h-ink) 35%, transparent); --accent: var(--poster-tone-48); --series-1: var(--accent); --text-primary: var(--h-ink); --text-secondary: var(--h-soft); position: relative; overflow: hidden; padding: clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px) 44px; color: var(--h-ink); background: var(--h-bg); border-radius: 16px; }
 .dashboard { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: clamp(20px, 3vw, 40px); }
 .left { min-width: 0; }
 .kicker { margin: 0; font-size: var(--text-small); color: var(--h-soft); }
@@ -67,7 +67,7 @@
 .countyTable th:first-child { text-align: left; }
 .countyTable button { padding: 6px 0; font: inherit; font-weight: 700; color: var(--h-soft); background: none; border: 0; cursor: pointer; }
 .countyTable [data-sorted] button { color: var(--accent); }
-.countyTable a { color: inherit; }
+.countyTable a { color: var(--h-ink) !important; }
 .countyTable td { position: relative; }
 .countyTable td i { position: absolute; inset: 4px auto 4px 0; background: var(--accent); opacity: .28; border-radius: 3px; }
 .countyTable td span { position: relative; }
