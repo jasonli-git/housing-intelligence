@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 
 import home from "./home.module.css";
+import snapshotStyles from "./state.module.css";
 import original from "../homepage.module.css";
 import "../housing-entry.css";
 import "../state-navigation.css";
@@ -95,6 +96,12 @@ export default async function MockupHome() {
   // A figure whose takeaway did not run still shows, so nothing drops silently.
   const rest = tiles.filter((tile) => !told.some((t) => t.tiles.includes(tile)));
   const stories = rest.length ? [...told, { id: "rest", headline: "Other figures", detail: "", tiles: rest, tone: "mixed" as const }] : told;
+  const tile = (id: string) => tiles.find((t) => t.id === id);
+  const newHomePrice = latestPrice(series.newHomePrice), newHomeMonth = (series.newHomePrice ?? []).map((r) => r.period_end).sort().at(-1);
+  const glance = [
+    newHomePrice !== null && newHomeMonth && { value: dollars(newHomePrice), label: "Typical price of a new home", fine: `${monthLabel(newHomeMonth)}. Census` },
+    ...([["rate", "Typical 30-year mortgage rate"], ["prices", "Change in home prices over a year"], ["rent", "Change in rents over a year"], ["starts", "New homes started, at a yearly pace"]] as const).map(([id, label]) => { const t = tile(id); return t && { value: t.value, label, fine: `${t.period}. ${t.source.name}` }; }),
+  ].flatMap((item) => (item ? [item] : []));
   const newest = tiles.map((t) => t.trend.at(-1)?.date ?? "").sort().at(-1);
 
   const previews = (await Promise.all(SAMPLES.map(async ([kind, slug, colour]) => {
@@ -121,6 +128,7 @@ export default async function MockupHome() {
           <div className={original.map}><NationalCoverageMap preview focusedEntry /></div>
           <p><span>A coverage map, not prices. Alaska and Hawaii not shown.</span><Link href="/mockup/states/new-jersey">Detailed coverage: New Jersey ↗</Link></p>
         </div>
+        {glance.length > 0 && <dl className={`${snapshotStyles.snapshot} ${snapshotStyles.heroBand} ${home.band}`} aria-label="The US at a glance">{glance.map((item) => <div key={item.label}><dd>{item.value}</dd><dt>{item.label}</dt><dd className={snapshotStyles.snapshotFine}>{item.fine}</dd></div>)}</dl>}
       </section>
 
       {previews.length > 0 && <section id="places" className={home.section}>
