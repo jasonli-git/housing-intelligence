@@ -483,6 +483,16 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   // A county page compares its towns: the map and table first, then only the chapters that
   // are true of the county as a whole. One town in depth is the town poster's job.
   if (isCounty) {
+    const monthYear = (date: string) => new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
+    const money = (v: number) => `$${Math.round(v).toLocaleString("en-US")}`;
+    const rentRow = level("zori_all"), addedRow = level("nj_net_units_added"), burdened = pressureStory?.rows.find((row) => row.label.includes("Up to 30%"))?.formatted;
+    const snapshot = [
+      medianSale && { value: money(medianSale.value), label: "Typical home sale price", fine: `${monthYear(medianSale.period_start)} to ${monthYear(medianSale.period_end)}. NJ SR-1A` },
+      taxRate && { value: money(taxRate.value * 5000), label: "Yearly property tax on a $500,000 home", fine: `At the ${taxRate.value.toFixed(2)}% county rate, ${taxRate.period_end.slice(0, 4)}. NJ Division of Taxation` },
+      rentRow && { value: money(rentRow.value), label: "Typical monthly rent", fine: `${monthYear(rentRow.period_end)}. Zillow` },
+      addedRow && { value: Math.round(addedRow.value).toLocaleString("en-US"), label: `More homes in ${addedRow.period_end.slice(0, 4)}, after demolitions`, fine: "Census BPS / NJ DCA" },
+      burdened && pressureStory && { value: burdened, label: "Of the lowest-income renters spend too much on housing", fine: `Cost-burdened. ${pressureStory.source}, ${pressureStory.period}` },
+    ].flatMap((item) => (item ? [item] : []));
     const countyLinks = [["county", "Town map"], ["reading", "AI highlights"], ["costs", "Buying & taxes"], ["compares", "Compared to NJ"], ["market", "Market trends"], ["life", "County life"], ["stories", "Stories"]].filter(([id]) => id === "county" ? !!countyFrame : id === "reading" ? hasReading : id === "stories" ? deepStories.length > 0 : true).map(([id, label]) => ({ id, label }));
     return <>
       <Masthead affordability={{ kind: "route" }} simple />
@@ -501,6 +511,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
             {counties.map((c) => <path key={c.id} d={c.d} fill="currentColor" fillOpacity={c.id === regionId ? 1 : 0.2} />)}
           </svg>}
           <PlacePhoto geoid={region.geoid} />
+          {snapshot.length > 0 && <dl className={`${rail.snapshot} ${rail.heroBand} ${styles.heroSnapshot}`} aria-label={`${name} at a glance`}>{snapshot.map((item) => <div key={item.label}><dd>{item.value}</dd><dt>{item.label}</dt><dd className={rail.snapshotFine}>{item.fine}</dd></div>)}</dl>}
         </header>
 
         {countyFrame && <section id="county" className={`${styles.panel} ${styles.county}`}>

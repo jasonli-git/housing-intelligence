@@ -90,5 +90,5 @@
 .snapshot dd { margin: 0; font-size: clamp(26px, 2.8vw, 34px); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
 .snapshot dt { margin-top: 6px; font-size: 15px; line-height: 1.3; }
 .snapshot .snapshotFine { margin-top: 6px; font-size: var(--text-note); font-weight: 400; letter-spacing: 0; line-height: 1.3; color: var(--text-secondary); }
-.heroBand { --line: var(--h-line); position: relative; z-index: 1; margin: 28px 0 0; }
-.heroBand .snapshotFine { color: var(--h-soft); }
+.heroBand { --line: var(--h-line, color-mix(in srgb, currentColor 30%, transparent)); position: relative; z-index: 1; margin: 28px 0 0; }
+.heroBand .snapshotFine { color: var(--h-soft, inherit); }
