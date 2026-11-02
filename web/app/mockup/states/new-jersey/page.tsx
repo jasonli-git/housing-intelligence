@@ -124,14 +124,12 @@ export default async function NewJerseyPoster() {
 
       <section id="compare" className={state.chapter}>
         <h2>Compare all {rows.length} counties</h2>
-        <p>Sorted by the measure chosen above. Select a heading to sort by it.</p>
         <div className={state.fullTable}><StateTable rows={rows} /></div>
       </section>
       </StateMeasure>
 
       {(sale || tax) && <section id="cost" className={state.chapter}>
         <h2>What it costs to buy and own a home</h2>
-        <p>The price of buying first, then the tax that comes with it every year.</p>
         <div className={state.cards}>
         {sale && <section id="price" className={state.tile}>
           <h2>What homes sold for</h2>
@@ -152,19 +150,16 @@ export default async function NewJerseyPoster() {
 
       {tileFor(["lending", "pressure"]).length > 0 && <section id="afford" className={state.chapter}>
         <h2>Housing cost burden and mortgages</h2>
-        <p>How hard housing costs press on renters, and what buyers borrow.</p>
         <div className={state.cards}>{tileFor(["lending", "pressure"])}</div>
       </section>}
 
       {tileFor(["building", "migration"]).length > 0 && <section id="supply" className={state.chapter}>
         <h2>How many homes New Jersey is adding</h2>
-        <p>Whether the state is adding homes faster than it loses them.</p>
         <div className={state.cards}>{tileFor(["building", "migration"])}</div>
       </section>}
 
       {(commute.length > 0 || tileFor(LIVING).length > 0) && <section id="living" className={state.chapter}>
         <h2>Daily life around a home</h2>
-        <p>The commute, then the everyday conditions around a home.</p>
         <div className={state.cards}>
         {commute.length > 0 && <section id="workday" className={state.tile}>
           <h2>{lead.value.toFixed(0)}% of workers commute to {lead.label === "Elsewhere in NJ" ? "another NJ county" : lead.label}</h2>
