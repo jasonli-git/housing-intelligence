@@ -1,7 +1,7 @@
 /* The state page: a dark front page with one accent, hairlines instead of colour blocks. */
 .page { --h-bg: light-dark(#eef3ef, #0b1411); --h-ink: light-dark(#14201b, #eef3f0); --h-soft: light-dark(#4d5b54, #a7b3ad); --h-mid: light-dark(#2e3a34, #d5ddd9); --h-track: light-dark(#dbe4de, #18231f); --h-line: light-dark(#c5d0c9, #2c3833); --accent: light-dark(#0b7a55, #45dca3); --line: light-dark(#dfe3e0, #2a2f2d); --series-1: var(--accent); --series-2: var(--text-primary); --series-3: var(--text-secondary); --county-line: var(--surface-1); font-variant-numeric: tabular-nums; }
-.hero { --h-bg: var(--kind-state); --h-ink: light-dark(#fff, #10202f); --h-soft: light-dark(#e3eef7, #1d3347); --h-mid: var(--h-ink); --h-track: color-mix(in srgb, var(--h-ink) 18%, transparent); --h-line: color-mix(in srgb, var(--h-ink) 35%, transparent); --accent: var(--h-ink); --series-1: var(--accent); --text-primary: var(--h-ink); --text-secondary: var(--h-soft); position: relative; overflow: hidden; padding: clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px) 44px; color: var(--h-ink); background: var(--h-bg); border-radius: 16px; }
-.dashboard { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(20px, 4vw, 56px); }
+.hero { --h-bg: light-dark(#1f5f94, #174a75); --h-ink: #fff; --h-soft: #dcebf8; --h-mid: var(--h-ink); --h-track: color-mix(in srgb, var(--h-ink) 18%, transparent); --h-line: color-mix(in srgb, var(--h-ink) 35%, transparent); --accent: #bfe0fa; --series-1: var(--accent); --text-primary: var(--h-ink); --text-secondary: var(--h-soft); position: relative; overflow: hidden; padding: clamp(20px, 3vw, 36px) clamp(20px, 3vw, 36px) 44px; color: var(--h-ink); background: var(--h-bg); border-radius: 16px; }
+.dashboard { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: clamp(20px, 3vw, 40px); }
 .left { min-width: 0; }
 .kicker { margin: 0; font-size: var(--text-small); color: var(--h-soft); }
 .hero h1 { margin: 6px 0 2px; font-size: clamp(48px, 7vw, 92px); font-weight: 800; letter-spacing: -.04em; line-height: .98; }
@@ -10,16 +10,6 @@
 .left :global(.computed), .left :global(.computed-line) { color: var(--h-soft); }
 .left :global(.computed-line) { display: block; margin-bottom: 20px; font-size: var(--text-note); }
 .left :global(.computed) svg { width: 12px; height: 12px; fill: none; stroke: currentColor; }
-.modes { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 14px; }
-.modes button { min-height: 32px; padding: 0 12px; font: inherit; font-size: var(--text-small); color: var(--h-soft); background: none; border: 1px solid var(--h-line); border-radius: 16px; cursor: pointer; }
-.modes button[aria-pressed="true"] { color: var(--h-bg); background: var(--accent); border-color: var(--accent); }
-.bars { position: relative; }
-.bar { position: absolute; inset: 0 0 auto; display: grid; grid-template-columns: 6.5rem minmax(0, 1fr) 5rem; gap: 10px; align-items: center; height: 25px; color: var(--h-mid) !important; font-size: var(--text-small); text-decoration: none !important; border-radius: 4px; box-shadow: none !important; transition: transform .35s ease; }
-.bar i { display: block; height: 10px; background: var(--h-track); border-radius: 5px; overflow: hidden; }
-.bar b { display: block; height: 100%; background: var(--accent); opacity: .75; border-radius: 5px; transition: width .35s ease; }
-.bar strong { text-align: right; font-weight: 600; }
-.bar[data-active] { color: var(--h-ink) !important; background: var(--h-track); }
-.bar[data-active] b { opacity: 1; }
 .right { display: grid; align-content: start; gap: 8px; min-width: 0; }
 .right svg { display: block; width: 100%; max-height: 640px; }
 .right path { fill: var(--accent); stroke: var(--h-bg); stroke-width: .8; cursor: pointer; }
@@ -38,11 +28,6 @@
 .ticker dt { font-size: var(--text-note); color: var(--text-secondary); }
 .ticker dd { margin: 0; font-size: clamp(24px, 2.6vw, 34px); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
 .ticker svg { display: block; width: 100%; height: 26px; margin-top: 6px; color: var(--accent); }
-.fullTable > div { max-height: none; overflow: auto hidden; border-radius: 0; }
-.fullTable tbody th, .fullTable thead th:first-child { position: sticky; left: 0; z-index: 2; background: var(--surface-1); }
-.fullTable thead th { position: static; }
-.fullTable thead th:first-child { position: sticky; }
-.fullTable [data-sorted], .fullTable [data-sorted] button { color: var(--accent); font-weight: 700; }
 .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
 .chapter { display: grid; gap: 6px; scroll-margin-top: 120px; }
 .chapter > h2 { margin: 34px 0 8px; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.02em; }
@@ -73,9 +58,44 @@
   .dashboard { grid-template-columns: minmax(0, 1fr); }
   .right { order: -1; grid-row: 2; }
   .cards { grid-template-columns: minmax(0, 1fr); }
-  .fullTable [data-col="value"]:not([data-sorted]) { display: none; }
   .tile[data-wide] { grid-column: auto; }
   .rail ul { grid-auto-columns: 78%; }
 }
-@media (prefers-reduced-motion: reduce) { .bar, .bar b { transition: none; } }
 @media (max-width: 999px) { .chapter, .rail { margin-top: 10px; } }
+/* Compact colour panels, as on county pages, for the state-level chapters. */
+.infographic > * { margin: 0 !important; padding: 18px 20px !important; }
+.infographic .note { color: inherit; opacity: .85; }
+.ticker { gap: 10px; border-block: 0; }
+.ticker > div, .ticker > div:first-child { padding: 14px 16px; color: var(--text-primary); border: 0; border-radius: 16px; }
+.ticker dt { color: inherit; opacity: .85; }
+.ticker svg { color: inherit; }
+.ticker > div:nth-child(1) { background: light-dark(#f6c453, #d9a22f); color: #1d1d1f; }
+.ticker > div:nth-child(2) { background: light-dark(#fbd9b5, #4d2f0c); }
+.ticker > div:nth-child(3) { background: light-dark(#d6d3f5, #2a2458); }
+.ticker > div:nth-child(4) { background: light-dark(#ffd9c7, #4a2616); }
+.ticker > div:nth-child(5) { background: light-dark(#dfe7f7, #1c2a44); }
+.ticker > div:nth-child(6) { background: light-dark(#ece0f4, #33204a); }
+/* The county table in the hero: each column ranks the counties and recolours the map. */
+.countyTable { overflow-x: auto; font-size: var(--text-small); }
+.countyTable table { width: 100%; border-collapse: collapse; }
+.countyTable th, .countyTable td { height: 27px; padding: 0 8px; text-align: right; white-space: nowrap; font-weight: 500; border-top: 1px solid var(--h-line); }
+.countyTable thead th { border-top: 0; }
+.countyTable th:first-child { text-align: left; }
+.countyTable button { padding: 6px 0; font: inherit; font-weight: 700; color: var(--h-soft); background: none; border: 0; cursor: pointer; }
+.countyTable [data-sorted] button { color: var(--accent); }
+.countyTable a { color: inherit; }
+.countyTable td { position: relative; }
+.countyTable td i { position: absolute; inset: 4px auto 4px 0; background: var(--accent); opacity: .28; border-radius: 3px; }
+.countyTable td span { position: relative; }
+.countyTable td[data-sorted] { font-weight: 700; }
+.countyTable tbody tr[data-active] td, .countyTable tbody tr[data-active] th { background: var(--h-track); }
+@media (max-width: 900px) { .countyTable th:first-child { position: sticky; left: 0; z-index: 2; background: var(--h-bg); } }
+.infographic .quartiles div { color: inherit; border-color: color-mix(in srgb, currentColor 35%, transparent); }
+.infographic .quartiles b { color: inherit; }
+.infographic .line { color: inherit; }
+.rentBars { display: grid; gap: 7px; font-size: var(--text-small); }
+.rentBars > div { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr) 3.5rem; gap: 10px; align-items: center; }
+.rentBars > div:nth-child(4) { margin-top: 8px; }
+.rentBars i { display: block; height: 10px; background: color-mix(in srgb, currentColor 18%, transparent); border-radius: 5px; overflow: hidden; }
+.rentBars b { display: block; height: 100%; background: currentColor; border-radius: 5px; }
+.rentBars strong { text-align: right; }
