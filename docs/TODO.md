@@ -37,6 +37,10 @@ reports a problem, look there first. Next is clearing Open and the Director Note
 
 ## Open
 
+- Remove components only the old place, state and home layouts used (ARCHITECTURE #457).
+- Add a national rent figure to the home page's rent card; Zillow's Metro & U.S. file needs a hand download.
+- Remove the unreachable `isCounty` branches after the county return in `web/app/[state]/[place]/page.tsx`.
+
 Every open item, wherever the work originated. The tag in parentheses is where it was
 first raised, not where it must be done.
 

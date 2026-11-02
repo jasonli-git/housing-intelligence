@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { STORIES } from "@/lib/stories";
+import { LIBRARY_STORIES } from "@/lib/storyLibrary";
 import { ThemedShot } from "./ThemedShot";
 
 export function HomeStories() {
@@ -7,7 +7,7 @@ export function HomeStories() {
     <Link className="home-stories-gateway" href="/stories" prefetch={false}>
       <div className="home-stories-copy">
         <h2 id="home-stories-heading">Visual stories</h2>
-        <p className="home-stories-count"><strong>{STORIES.length} stories</strong><span aria-hidden="true"> · </span>New Jersey</p>
+        <p className="home-stories-count"><strong>{LIBRARY_STORIES.length} stories</strong><span aria-hidden="true"> · </span>New Jersey</p>
       </div>
       {/* Real chart fragments form one decorative composition, not new plotted data
           or separate destinations. The collection supplies full charts and sources. */}

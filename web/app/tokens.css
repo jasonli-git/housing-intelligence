@@ -318,3 +318,55 @@
   --jl-live: #54c57a;
   --jl-live: oklch(0.74 0.15 152);
 }
+
+/* The home and place posters' panel colours, one tone per light and dark pair. */
+:root {
+  --poster-tone-1: light-dark(#0b7a55, #45dca3);
+  --poster-tone-2: light-dark(#eef3ef, #0b1411);
+  --poster-tone-3: light-dark(#14201b, #eef3f0);
+  --poster-tone-4: light-dark(#4d5b54, #a7b3ad);
+  --poster-tone-5: light-dark(#2e3a34, #d5ddd9);
+  --poster-tone-6: light-dark(#dbe4de, #18231f);
+  --poster-tone-7: light-dark(#c5d0c9, #2c3833);
+  --poster-tone-8: light-dark(#fff, #10202f);
+  --poster-tone-9: light-dark(#b3325f, #f08aac);
+  --poster-tone-10: light-dark(#8a6d3b, #d2b98c);
+  --poster-tone-11: light-dark(#17324d, #0f2c4a);
+  --poster-tone-12: light-dark(#fff, #17191d);
+  --poster-tone-13: light-dark(#f1f2f4, #1f2227);
+  --poster-tone-14: light-dark(#f6c453, #d9a22f);
+  --poster-tone-15: light-dark(#fff, #1e1e1e);
+  --poster-tone-16: light-dark(#c6e8d2, #0e3a27);
+  --poster-tone-17: light-dark(#d6d3f5, #2a2458);
+  --poster-tone-18: light-dark(#f7cfdc, #4a1a2e);
+  --poster-tone-19: light-dark(#eadfce, #33291d);
+  --poster-tone-20: light-dark(#c9e0f7, #0f2c4a);
+  --poster-tone-21: light-dark(#e4e6ea, #1c1e23);
+  --poster-tone-22: light-dark(#fff, #33363d);
+  --poster-tone-23: light-dark(#fff, #1c1e23);
+  --poster-tone-24: light-dark(#f6e0bd, #3a2a12);
+  --poster-tone-25: light-dark(#c9f0ea, #0d3a3a);
+  --poster-tone-26: light-dark(#ffd9c7, #4a2616);
+  --poster-tone-27: #fff;
+  --poster-tone-28: #1d1d1f;
+  --poster-tone-29: light-dark(#dfe7f7, #1c2a44);
+  --poster-tone-30: light-dark(#f2e6c8, #3a3212);
+  --poster-tone-31: light-dark(#d5e4ee, #1d3a52);
+  --poster-tone-32: light-dark(#ffe27a, #6a5200);
+  --poster-tone-33: light-dark(#cfe9c8, #173619);
+  --poster-tone-34: light-dark(#ece0f4, #33204a);
+  --poster-tone-35: light-dark(#fbd9b5, #4d2f0c);
+  --poster-tone-36: light-dark(#ffe0ea, #4b1d38);
+  --poster-tone-37: light-dark(#d7e8ff, #16305c);
+  --poster-tone-38: light-dark(#cdeefa, #0b3c54);
+  --poster-tone-39: light-dark(#fff0d6, #2d2a3f);
+  --poster-tone-40: light-dark(#e7f0d0, #2b3a10);
+  --poster-tone-41: light-dark(#ffd6c9, #54200f);
+  --poster-tone-42: light-dark(#e8dcf9, #3a2460);
+  --poster-tone-43: light-dark(#e8eaf6, #232a4d);
+  --poster-tone-44: light-dark(#d9efe4, #123a30);
+  --poster-tone-45: light-dark(#dfe3e0, #2a2f2d);
+  --poster-tone-46: light-dark(#1f5f94, #174a75);
+  --poster-tone-47: #dcebf8;
+  --poster-tone-48: #bfe0fa;
+}

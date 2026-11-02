@@ -26,6 +26,7 @@ export function Masthead({
   atlasActive = false,
   compareActive = false,
   search = true,
+  simple = false,
 }: {
   affordability: AffordabilityControl;
   /** On the property-tax lookup itself, whose link the bar marks as the current page. */
@@ -38,6 +39,8 @@ export function Masthead({
   compareActive?: boolean;
   /** False on the home page, whose own search is the page's main action. */
   search?: boolean;
+  /** The reduced navigation of the home and place posters. */
+  simple?: boolean;
 }) {
   const primaryLinks = <>
     <Link className="bar-link" href="/atlas" aria-current={atlasActive ? "page" : undefined}>Explore</Link>
@@ -52,6 +55,11 @@ export function Masthead({
     <Link className="bar-link" href="/tax" aria-current={taxActive ? "page" : undefined}>Property tax</Link>
     <Link className="bar-link" href="/help" aria-current={helpActive ? "page" : undefined}>Housing help</Link>
     <Link className="bar-link" href="/data">Data explorer</Link>
+  </>;
+  const simpleLinks = <>
+    <Link className="bar-link" href="/atlas">Places</Link>
+    <Link className="bar-link" href="/compare">Compare</Link>
+    <Link className="bar-link" href="/stories">Stories</Link>
   </>;
   return (
     <>
@@ -78,15 +86,15 @@ export function Masthead({
           {/* Desktop follows the reader's journey; mobile keeps the same links in
               a native disclosure beside search, with theme on the brand row. */}
           <div className="bar-tools">
-            <div className="bar-controls bar-desktop-tools">{primaryLinks}</div>
+            <div className={simple ? "bar-controls" : "bar-controls bar-desktop-tools"}>{simple ? simpleLinks : primaryLinks}</div>
             {search && <PlaceSearch />}
-            <details className="bar-tool-menu">
+            {!simple && <details className="bar-tool-menu">
               <summary><span className={styles.desktopLabel}>Tools</span><span className={styles.mobileLabel}>Menu</span> <span aria-hidden="true">⌄</span></summary>
               <div className="bar-controls">
                 <div className={styles.mobilePrimary}>{primaryLinks}</div>
                 {secondaryLinks}
               </div>
-            </details>
+            </details>}
           </div>
           <ThemeToggle />
         </div>
