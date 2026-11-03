@@ -6,7 +6,7 @@ import { formatValue } from "@/lib/format";
 import { pageMetadata } from "@/lib/meta";
 import { regionPath } from "@/lib/placeRoutes";
 import { storyCounties, storyTowns, storyZips } from "@/lib/storyData";
-import { extremes, logTicks } from "@/lib/stories";
+import { extremes, priceTick, priceTicks } from "@/lib/stories";
 import "../../horizon-theme.css";
 import "../stories.css";
 
@@ -39,7 +39,7 @@ export default async function PriciestAndCheapestPage() {
           <ul className="ladder extremes-chart">
             <li className="ladder-axis" aria-hidden="true">
               <span>County</span>
-              <span className="ladder-track">{logTicks(Math.exp(lo), Math.exp(hi), 7).map((t) => <b key={t} style={{ left: at(t) }}>{usd(t)}</b>)}</span>
+              <span className="ladder-track">{priceTicks(Math.exp(lo), Math.exp(hi), 6).map((t) => <b key={t} style={{ left: at(t) }}>{priceTick(t)}</b>)}</span>
               <span className="num">Gap</span>
             </li>
             {rows.map((e) => (

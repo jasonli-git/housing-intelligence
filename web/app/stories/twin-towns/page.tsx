@@ -6,7 +6,7 @@ import { formatValue } from "@/lib/format";
 import { pageMetadata } from "@/lib/meta";
 import { regionPath } from "@/lib/placeRoutes";
 import { storyTowns } from "@/lib/storyData";
-import { logTicks, PRICE, twins } from "@/lib/stories";
+import { PRICE, priceTick, priceTicks, twins } from "@/lib/stories";
 import "../../horizon-theme.css";
 import "../stories.css";
 
@@ -26,9 +26,6 @@ const ALIKE = [
   { key: "acs_avg_household_size", label: "Household", show: (v: number) => v.toFixed(1) },
 ];
 const usd = (v: number) => formatValue(v, "usd");
-// Axis ticks in short form: on a log scale $500,000, $1,000,000 and $2,000,000 sit close
-// together, and written in full they ran into each other below desktop width.
-const tick = (v: number) => v >= 1e6 ? `$${v / 1e6}M` : `$${Math.round(v / 1e3)}K`;
 
 export default async function TwinTownsPage() {
   const towns = await storyTowns([PRICE, ...ALIKE.map((a) => a.key)]);
@@ -48,7 +45,7 @@ export default async function TwinTownsPage() {
         <ul className="ladder extremes-chart twins">
           <li className="ladder-axis" aria-hidden="true">
             <span>Pair</span>
-            <span className="ladder-track">{logTicks(Math.exp(lo), Math.exp(hi), 6).filter((t) => (Math.log(t) - lo) / (hi - lo) > 0.04 && (Math.log(t) - lo) / (hi - lo) < 0.96).map((t) => <b key={t} style={{ left: at(t) }}>{tick(t)}</b>)}</span>
+            <span className="ladder-track">{priceTicks(Math.exp(lo), Math.exp(hi), 6).map((t) => <b key={t} style={{ left: at(t) }}>{priceTick(t)}</b>)}</span>
             <span className="num">Gap</span>
           </li>
           {pairs.map((p) => (

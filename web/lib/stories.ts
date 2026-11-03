@@ -251,6 +251,17 @@ export function logTicks(lo: number, hi: number, most = 6): number[] {
   return out.length > most ? out.filter((_, i) => i % 2 === out.length % 2) : out;
 }
 
+/** A price axis tick in short form: on a ratio scale $500,000, $1,000,000 and $2,000,000 sit
+ *  close together, and written in full they ran into each other below desktop width. */
+export const priceTick = (v: number) => v >= 1e6 ? `$${v / 1e6}M` : `$${Math.round(v / 1e3)}K`;
+
+/** `logTicks` for a price axis between `lo` and `hi`, leaving out any within 4% of either
+ *  end, where its label would hang past the track or into the column beside it. */
+export function priceTicks(lo: number, hi: number, most = 6): number[] {
+  const at = (v: number) => (Math.log(v) - Math.log(lo)) / (Math.log(hi) - Math.log(lo));
+  return logTicks(lo, hi, most).filter((v) => at(v) > .04 && at(v) < .96);
+}
+
 /** A least-squares line through points, for a trend drawn on a scatter. */
 export function trend(points: [number, number][]): { slope: number; intercept: number } {
   const n = points.length || 1;

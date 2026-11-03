@@ -176,6 +176,13 @@
   .twins li > .ladder-track { grid-column: 1 / -1; grid-row: 2; }
   .twins li > .num { grid-column: 2; grid-row: 1; }
 }
+/* On a phone the price ladder and the counties' extremes take the twins' two lines too: the
+   three columns left their price tracks about 40px wide, too narrow for dots or prices. */
+@media (max-width: 600px) {
+  .ladder:not(.twins) li { grid-template-columns: 1fr auto; row-gap: .35rem; padding: .4rem 0; }
+  .ladder:not(.twins) li > .ladder-track { grid-column: 1 / -1; grid-row: 2; }
+  .ladder:not(.twins) li > .num { grid-column: 2; grid-row: 1; }
+}
 /* A chart wider than a phone scrolls sideways inside its figure, which the keyboard can
    reach (tabIndex on each figure); the page itself never scrolls sideways. */
 .story-figure:focus-visible { outline: 2px solid var(--story-up); outline-offset: 4px; }
