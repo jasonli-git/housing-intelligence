@@ -50,17 +50,20 @@ export async function readStory(page) {
 // card's box left its text unreadable. Only the story's first chart is taken.
 const CAPTURE = { width: 700, height: 1000, scale: 2 };
 const CHART_BOX = { width: 724, height: 486 };
+// Cards are plain white: the page's paper tint and header glow are left behind, so the
+// chart sits on the same white as the card around it.
+export const PLAIN = ':root{--plate-paper:#fff!important;--surface-1:#fff!important}html,body{background:#fff!important}body::before{display:none!important}';
 
 /** Writes share/<slug>.jpg: the story's card, with the top of its first chart. */
 export async function captureShareCard(browser, page, { slug, outDir }) {
   const story = await readStory(page);
   const context = await browser.newContext({ viewport: { width: CAPTURE.width, height: CAPTURE.height }, deviceScaleFactor: CAPTURE.scale, colorScheme: 'light', reducedMotion: 'reduce', locale: 'en-US' });
-  let chart;
+  let chart, cut = false;
   try {
     const narrow = await context.newPage();
     await narrow.goto(page.url(), { waitUntil: 'networkidle', timeout: 90_000 });
     await narrow.evaluate(() => document.fonts.ready);
-    await narrow.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important} nextjs-portal{display:none!important}' });
+    await narrow.addStyleTag({ content: `*,*::before,*::after{animation:none!important;transition:none!important} nextjs-portal{display:none!important} ${PLAIN}` });
     // The first block of the story tall enough to be a chart, in page order.
     const found = await narrow.evaluate(() => {
       const shot = document.querySelector('[data-story-shot]');
@@ -75,6 +78,7 @@ export async function captureShareCard(browser, page, { slug, outDir }) {
     // The chart's top, no taller than the card's chart box allows at this width.
     const width = box.width + pad * 2;
     const height = Math.min(box.height + pad * 2, Math.round(width * (CHART_BOX.height / CHART_BOX.width)));
+    cut = box.height + pad * 2 > height;
     chart = await narrow.screenshot({ type: 'jpeg', quality: 88, fullPage: true, clip: { x: box.x - pad, y: box.y - pad, width, height } });
   } finally {
     await context.close();
@@ -84,19 +88,20 @@ export async function captureShareCard(browser, page, { slug, outDir }) {
   const text = story.takeaway || escape(story.lede.split(/(?<=\.)\s/)[0] ?? '');
   const html = `<!doctype html><meta charset="utf-8"><style>
     * { box-sizing: border-box; margin: 0; }
-    body { width: ${SHARE.width}px; height: ${SHARE.height}px; background: #f7f4ee; color: #1d1b18; font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; display: grid; grid-template-columns: 1fr ${CHART_BOX.width}px; grid-template-rows: 1fr auto; gap: 0 36px; padding: 44px 44px 28px; }
+    body { width: ${SHARE.width}px; height: ${SHARE.height}px; background: #fff; color: #1d1b18; font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; display: grid; grid-template-columns: 1fr ${CHART_BOX.width}px; grid-template-rows: 1fr auto; gap: 0 36px; padding: 44px 44px 28px; }
     .copy { display: flex; flex-direction: column; gap: 16px; min-height: 0; }
     .kicker { font: 600 13px/1.4 ui-monospace, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; color: #6f6a62; }
     h1 { font: 400 40px/1.05 Georgia, "Times New Roman", serif; letter-spacing: -.03em; }
     p { font: 400 18px/1.45 Georgia, "Times New Roman", serif; color: #3a3631; border-left: 3px solid #b8522f; padding-left: 16px; }
     p b { color: #1d1b18; font-weight: 700; }
-    .chart { min-height: 0; overflow: hidden; }
+    .chart { position: relative; min-height: 0; overflow: hidden; }
+    .chart.cut::after { content: ""; position: absolute; inset: auto 0 0; height: 90px; background: linear-gradient(rgba(255,255,255,0), #fff); }
     .chart img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: top center; }
-    footer { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 24px; padding-top: 18px; margin-top: 22px; border-top: 1px solid #e2ddd3; font-size: 15px; color: #6f6a62; }
+    footer { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 24px; padding-top: 18px; margin-top: 22px; border-top: 1px solid #e6e6e6; font-size: 15px; color: #6f6a62; }
     footer b { color: #1d1b18; font-weight: 600; }
   </style>
   <div class="copy"><span class="kicker">Visual story · New Jersey</span><h1>${escape(story.title)}</h1>${text ? `<p>${text}</p>` : ''}</div>
-  <div class="chart"><img src="data:image/jpeg;base64,${chart.toString('base64')}" alt=""></div>
+  <div class="chart${cut ? ' cut' : ''}"><img src="data:image/jpeg;base64,${chart.toString('base64')}" alt=""></div>
   <footer><span>${credits.length ? `Data: ${escape(credits.join(' · '))}` : 'Sources on the page'}</span><b>${SITE}/stories/${slug}</b></footer>`;
   const card = await browser.newPage({ viewport: SHARE, deviceScaleFactor: 1 });
   try {
