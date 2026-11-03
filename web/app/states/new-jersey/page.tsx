@@ -115,7 +115,7 @@ export default async function NewJerseyPoster() {
     <p className={state.note}>{summary.source}, {summary.period} · <Link href={placeStoryHref(topic, regionId)} prefetch={false}>Full story</Link></p>
   </section>);
   const LIVING = stories.map(({ topic }) => topic).filter((topic) => !["lending", "pressure", "building", "migration"].includes(topic));
-  const links = [{ id: "counties", label: "Counties compared" }, ...(sale || tax ? [{ id: "cost", label: "Cost to buy, own & rent" }] : []), { id: "afford", label: "Cost burden & mortgages" }, { id: "supply", label: "New homes built" }, { id: "living", label: "Living here" }, ...(jersey.length ? [{ id: "visual", label: "Charts" }] : [])];
+  const links = [{ id: "counties", label: "Counties compared" }, ...(sale || tax ? [{ id: "cost", label: "Cost to buy, own & rent" }] : []), { id: "afford", label: "Cost burden & mortgages" }, { id: "supply", label: "New homes built" }, { id: "living", label: "Living here" }, ...(jersey.length ? [{ id: "visual", label: "Stories" }] : [])];
 
   return glossTree(<>
     <Masthead affordability={{ kind: "route" }} />

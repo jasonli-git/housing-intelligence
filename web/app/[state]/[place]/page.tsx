@@ -487,7 +487,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const townLinks = ([
     ["reading", "AI highlights", hasReading], ["values", "Home values", !!homeRow || boxes.length > 0 || growthSeries.length > 1], ["owning", "Cost to own & rent", !!month || ownShare !== null || bills.length > 0], ["taxes", "Property tax", !!taxBill],
     ["stretch", "Cost burden & mortgages", !!pressureStory || !!lendingStory], ["housing", "Homes & who lives here", bedrooms.length > 0 || stock.length > 0 || eras.length > 0 || owned !== null], ["commute", "Work & school", workBars.length > 0 || privateShare !== null],
-    ["area", "Living here", facts.length > 0 || ground.length > 0 || shops.length > 0], ["nearby", "How it compares", strips.length > 0 || ranked.length > 1], ["wider", "County market", contextFacts.length > 0], ["stories", "Charts", deepStories.length > 0],
+    ["area", "Living here", facts.length > 0 || ground.length > 0 || shops.length > 0], ["nearby", "How it compares", strips.length > 0 || ranked.length > 1], ["wider", "County market", contextFacts.length > 0], ["stories", "Stories", deepStories.length > 0],
   ] as const).filter(([, , shown]) => shown).map(([id, label]) => ({ id, label }));
 
   // The same rail as the state page, so stories close every level of place alike.
@@ -527,7 +527,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const snapshotBand = snapshot.length > 0 && <dl className={`${rail.snapshot} ${rail.heroBand} ${styles.heroSnapshot}`} aria-label={`${name} at a glance`}>{snapshot.map((item) => <div key={item.label}><dd>{item.value}</dd><dt>{item.label}</dt><dd className={rail.snapshotFine}>{item.fine}</dd></div>)}</dl>;
 
   if (isCounty) {
-    const countyLinks = [["county", "Towns compared"], ["reading", "AI highlights"], ["costs", "Cost to buy & own"], ["compares", "How it compares"], ["market", "Market direction"], ["life", "Living here"], ["stories", "Charts"]].filter(([id]) => id === "county" ? !!countyFrame : id === "reading" ? hasReading : id === "stories" ? deepStories.length > 0 : true).map(([id, label]) => ({ id, label }));
+    const countyLinks = [["county", "Towns compared"], ["reading", "AI highlights"], ["costs", "Cost to buy & own"], ["compares", "How it compares"], ["market", "Market direction"], ["life", "Living here"], ["stories", "Stories"]].filter(([id]) => id === "county" ? !!countyFrame : id === "reading" ? hasReading : id === "stories" ? deepStories.length > 0 : true).map(([id, label]) => ({ id, label }));
     return glossTree(<>
       <Masthead affordability={{ kind: "route" }} />
       <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact}`}>
