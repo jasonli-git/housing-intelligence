@@ -56,7 +56,8 @@ export const PLAIN = ':root{--plate-paper:#fff!important;--surface-1:#fff!import
 
 // The two images made from each story. `chart` is the box the chart fills. A figure, such as
 // a map, a little taller than its box (up to SHRINK times) is shrunk to fit whole; anything
-// taller, and any list or table, is cut at the bottom and fades into the white.
+// taller, and any list or table, is cut at the bottom and fades into the white, as is a
+// figure marked `data-share-cut`, whose text shrunk to fit would be too small to read.
 const SHRINK = 1.6;
 export const FORMATS = {
   // A pasted link's preview: text beside the chart.
@@ -94,7 +95,7 @@ async function captureChart(browser, url) {
         for (const sibling of el.parentElement.children) if (sibling !== el) sibling.style.visibility = 'hidden';
         el.parentElement.setAttribute('data-share-plain', '');
       }
-      return { figure: target.matches('figure') };
+      return { figure: target.matches('figure:not([data-share-cut])') };
     });
     if (!found) return null;
     const box = await narrow.locator('[data-share-target]').boundingBox();
