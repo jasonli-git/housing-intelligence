@@ -1,5 +1,5 @@
 /* The front door in the place pages' voice: chapter titles, solid colour, the coverage map. */
-.home { --accent: var(--poster-tone-1); --h-bg: var(--poster-tone-2); --h-ink: var(--poster-tone-3); --h-soft: var(--poster-tone-4); --h-mid: var(--poster-tone-5); --h-track: var(--poster-tone-6); --h-line: var(--poster-tone-7); display: grid; gap: 10px; padding-bottom: 40px; font-variant-numeric: tabular-nums; }
+.home { --accent: var(--poster-tone-1); --h-bg: var(--poster-tone-49); --h-ink: var(--poster-tone-50); --h-soft: var(--poster-tone-51); --h-mid: var(--poster-tone-52); --h-track: var(--poster-tone-53); --h-line: var(--poster-tone-54); display: grid; gap: 10px; padding-bottom: 40px; font-variant-numeric: tabular-nums; }
 .entry { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 56px); align-items: center; padding: clamp(24px, 4vw, 44px); color: var(--h-ink); background: var(--h-bg); border-radius: 16px; }
 .entry h1 { margin: 0 0 8px; font-family: Georgia, serif; font-size: clamp(40px, 5.6vw, 72px); font-weight: 400; letter-spacing: -.02em; line-height: 1.02; }
 .assurance { margin: 0 0 20px; font-size: var(--text-small); color: var(--h-soft); }

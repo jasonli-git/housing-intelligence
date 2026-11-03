@@ -369,4 +369,11 @@
   --poster-tone-46: light-dark(#1f5f94, #174a75);
   --poster-tone-47: #dcebf8;
   --poster-tone-48: #bfe0fa;
+  /* The home page's hero: neutral greys, so only the accent is green. */
+  --poster-tone-49: light-dark(#f0f0f2, #18181b);
+  --poster-tone-50: light-dark(#18181b, #f2f2f3);
+  --poster-tone-51: light-dark(#55555c, #a8a8b0);
+  --poster-tone-52: light-dark(#333338, #d6d6db);
+  --poster-tone-53: light-dark(#e0e0e4, #222226);
+  --poster-tone-54: light-dark(#cbcbd1, #34343a);
 }
