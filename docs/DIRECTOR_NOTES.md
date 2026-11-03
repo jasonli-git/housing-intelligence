@@ -1027,6 +1027,12 @@ Do not implement yet.
   table), probably with a per-story export view; light by default, dark as an option.
 - The export button itself is still not approved.
 
+**Update 2026-11-03 (decided):** the export is a 1080×1350 (4:5) portrait image: title and
+takeaway on top, the story's first chart filling the middle and fading out where it is cut,
+the credit line and the story's address at the foot, on plain white. 4:5 is the tallest
+shape feeds show uncropped, and most of the charts are tall. The 1200×630 card stays for
+link previews only. The owner approved building the export button the same day.
+
 ---
 
 ## Data Explorer
