@@ -1,5 +1,5 @@
 // Each visual story's link preview (Director Note "Social export", 2026-11-03): a 1200×630
-// card of the story's title, its takeaway, the top of its chart, a credit line and the
+// card of the story's title, its takeaway, the top of its first chart, a credit line and the
 // site's address, so a pasted link shows the story rather than the site's generic card.
 // Composed from the story page as captured, in light, since feeds mostly show on white.
 // lib/meta.ts points each story's og:image at screenshots/share/<slug>.jpg.
@@ -45,27 +45,53 @@ export async function readStory(page) {
 }
 
 /** Writes share/<slug>.jpg: the story's card, its chart cropped from the page's top. */
+// The chart is captured from the story laid out at tablet width, where two-column stories
+// stack and labels stay large next to the chart: a desktop-width chart shrunk into the
+// card's box left its text unreadable. Only the story's first chart is taken.
+const CAPTURE = { width: 700, height: 1000, scale: 2 };
+const CHART_BOX = { width: 724, height: 486 };
+
+/** Writes share/<slug>.jpg: the story's card, with the top of its first chart. */
 export async function captureShareCard(browser, page, { slug, outDir }) {
   const story = await readStory(page);
-  const box = await page.locator('[data-story-shot]').boundingBox();
-  if (!box) throw new Error(`${slug}: no [data-story-shot]`);
-  const pad = 16;
-  // The chart's top, as wide as it is and no taller than the card's chart area allows.
-  const height = Math.min(box.height + pad * 2, Math.round((box.width + pad * 2) * 0.82));
-  const chart = await page.screenshot({ type: 'jpeg', quality: 88, fullPage: true, clip: { x: box.x - pad, y: box.y - pad, width: box.width + pad * 2, height } });
+  const context = await browser.newContext({ viewport: { width: CAPTURE.width, height: CAPTURE.height }, deviceScaleFactor: CAPTURE.scale, colorScheme: 'light', reducedMotion: 'reduce', locale: 'en-US' });
+  let chart;
+  try {
+    const narrow = await context.newPage();
+    await narrow.goto(page.url(), { waitUntil: 'networkidle', timeout: 90_000 });
+    await narrow.evaluate(() => document.fonts.ready);
+    await narrow.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important} nextjs-portal{display:none!important}' });
+    // The first block of the story tall enough to be a chart, in page order.
+    const found = await narrow.evaluate(() => {
+      const shot = document.querySelector('[data-story-shot]');
+      const target = shot && [...shot.querySelectorAll(':scope figure.story-figure, :scope .story-two > *, :scope > ul, :scope > .stacked, :scope > table, :scope > div')]
+        .find((el) => el.getBoundingClientRect().height > 120);
+      target?.setAttribute('data-share-target', '');
+      return !!target;
+    });
+    if (!found) throw new Error(`${slug}: no chart to put on its share card`);
+    const box = await narrow.locator('[data-share-target]').boundingBox();
+    const pad = 12;
+    // The chart's top, no taller than the card's chart box allows at this width.
+    const width = box.width + pad * 2;
+    const height = Math.min(box.height + pad * 2, Math.round(width * (CHART_BOX.height / CHART_BOX.width)));
+    chart = await narrow.screenshot({ type: 'jpeg', quality: 88, fullPage: true, clip: { x: box.x - pad, y: box.y - pad, width, height } });
+  } finally {
+    await context.close();
+  }
   const credits = [...new Set(CREDITS.filter(([pattern]) => pattern.test(story.notes)).map(([, credit]) => credit))];
   // Without a takeaway, the intro's first sentence says what the chart is.
   const text = story.takeaway || escape(story.lede.split(/(?<=\.)\s/)[0] ?? '');
   const html = `<!doctype html><meta charset="utf-8"><style>
     * { box-sizing: border-box; margin: 0; }
-    body { width: ${SHARE.width}px; height: ${SHARE.height}px; background: #f7f4ee; color: #1d1b18; font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; display: grid; grid-template-columns: 430px 1fr; grid-template-rows: 1fr auto; gap: 0 40px; padding: 48px 48px 30px; }
-    .copy { display: flex; flex-direction: column; gap: 18px; min-height: 0; }
+    body { width: ${SHARE.width}px; height: ${SHARE.height}px; background: #f7f4ee; color: #1d1b18; font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; display: grid; grid-template-columns: 1fr ${CHART_BOX.width}px; grid-template-rows: 1fr auto; gap: 0 36px; padding: 44px 44px 28px; }
+    .copy { display: flex; flex-direction: column; gap: 16px; min-height: 0; }
     .kicker { font: 600 13px/1.4 ui-monospace, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; color: #6f6a62; }
-    h1 { font: 400 50px/1.04 Georgia, "Times New Roman", serif; letter-spacing: -.03em; }
-    p { font: 400 21px/1.42 Georgia, "Times New Roman", serif; color: #3a3631; border-left: 3px solid #b8522f; padding-left: 16px; }
+    h1 { font: 400 40px/1.05 Georgia, "Times New Roman", serif; letter-spacing: -.03em; }
+    p { font: 400 18px/1.45 Georgia, "Times New Roman", serif; color: #3a3631; border-left: 3px solid #b8522f; padding-left: 16px; }
     p b { color: #1d1b18; font-weight: 700; }
-    .chart { min-height: 0; border-radius: 14px; overflow: hidden; border: 1px solid #e2ddd3; background: #fff; }
-    .chart img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+    .chart { min-height: 0; overflow: hidden; }
+    .chart img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: top center; }
     footer { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 24px; padding-top: 18px; margin-top: 22px; border-top: 1px solid #e2ddd3; font-size: 15px; color: #6f6a62; }
     footer b { color: #1d1b18; font-weight: 600; }
   </style>
