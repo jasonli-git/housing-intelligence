@@ -4,7 +4,7 @@
 // README links to them there, so they are never committed and always show the deployed
 // site — refreshed by every deploy, the Friday one included.
 import { existsSync } from 'node:fs';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
 import { captureToolPreviews } from './tool-previews.mjs';
@@ -34,11 +34,16 @@ const VIEWPORTS = [
 ];
 
 // The home page's showcase of the visual stories: each story as a reader first sees it,
-// light and dark, as JPEGs into screenshots/stories/. The list is read from the
-// stories index, so a new story is pictured without touching this file.
+// light and dark, as JPEGs into screenshots/stories/. The list is read from lib/stories.ts,
+// not the /stories index: place pages show covers for stories the index leaves out, and
+// those went unpictured until 2026-11-02. A new story is pictured without touching this file.
 const SHOT = { width: 1440, height: 900, scale: 1 };
 const INDEX = { width: 1800, height: 1600, aspect: 0.5625, columns: 10 };
 const only = process.env.SCREENSHOT_ONLY;
+
+const storySource = await readFile(new URL('../lib/stories.ts', import.meta.url), 'utf8');
+const storyHrefs = [...new Set([...storySource.matchAll(/href: ?"(\/stories\/[a-z0-9-]+)"/g)].map((match) => match[1]))];
+if (!storyHrefs.length) throw new Error('lib/stories.ts: no stories found');
 
 await mkdir(resolve(outDir, 'stories'), { recursive: true });
 const browser = await chromium.launch();
@@ -49,12 +54,7 @@ try {
     for (const scheme of ['light', 'dark']) {
       const context = await browser.newContext({ viewport: { width: SHOT.width, height: SHOT.height }, deviceScaleFactor: SHOT.scale, colorScheme: scheme, reducedMotion: 'reduce', locale: 'en-US' });
       const page = await context.newPage();
-      const index = await page.goto(origin + '/stories', { waitUntil: 'networkidle', timeout: 90_000 });
-      if (!index?.ok()) throw new Error(`/stories: ${index?.status() ?? 'no response'}`);
-      // Editorial picks also appear in their topic rail: capture each story once.
-      const hrefs = await page.$$eval('.library-card[href^="/stories/"]', (links) => [...new Set(links.map((a) => a.getAttribute('href')))]);
-      if (!hrefs.length) throw new Error('/stories: no story cards found');
-      for (const href of hrefs) {
+      for (const href of storyHrefs) {
         const response = await page.goto(origin + href, { waitUntil: 'networkidle', timeout: 90_000 });
         if (!response?.ok()) throw new Error(`${href}: ${response?.status() ?? 'no response'}`);
         await page.evaluate(() => document.fonts.ready);
