@@ -18,6 +18,7 @@ import { Masthead } from "@/components/Masthead";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { PlacePhoto } from "@/components/PlacePhoto";
 import { ThemedShot } from "@/components/ThemedShot";
+import { StoryScroller } from "@/components/StoryScroller";
 import { similarGroups } from "@/lib/similar";
 import { reportPageProblemUrl } from "@/lib/reportProblem";
 import { stateCrumbs } from "@/lib/states";
@@ -493,7 +494,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   // The same rail as the state page, so stories close every level of place alike.
   const storyRail = deepStories.length > 0 ? <section id="stories" className={`${styles.chapter} ${rail.rail}`}>
     <div className={rail.railHead}><h2>Visual stories about {name}</h2><Link href="/stories">All visual stories</Link></div>
-    <ul tabIndex={0}>{deepStories.map((item) => <li key={item.topic}><Link href={item.href} prefetch={false}><ThemedShot name={`stories/${item.slug}`} width={1440} height={900} className={styles.deepCover} /><span>{item.title}</span></Link></li>)}</ul>
+    <StoryScroller label={`visual stories about ${name}`}>{deepStories.map((item) => <li key={item.topic}><Link href={item.href} prefetch={false}><ThemedShot name={`stories/${item.slug}`} width={1440} height={900} className={styles.deepCover} /><span>{item.title}</span></Link></li>)}</StoryScroller>
   </section> : null;
 
   const townsPanel = ranked.length > 1 && county ? <section id="county" className={`${styles.panel} ${styles.county}`}>

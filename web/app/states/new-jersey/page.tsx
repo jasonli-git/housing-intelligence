@@ -20,6 +20,7 @@ import { pageMetadata } from "@/lib/meta";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { PlacePhoto } from "@/components/PlacePhoto";
 import { StoryCover } from "@/components/StoryCard";
+import { StoryScroller } from "@/components/StoryScroller";
 import { api } from "@/lib/api";
 import { displayName } from "@/lib/names";
 import { regionPath } from "@/lib/placeRoutes";
@@ -189,7 +190,7 @@ export default async function NewJerseyPoster() {
 
       {jersey.length > 0 && <section id="visual" className={state.rail}>
         <div className={state.railHead}><h2>Visual stories about New Jersey</h2><Link href="/stories">All visual stories</Link></div>
-        <ul tabIndex={0}>{jersey.map((story) => <li key={story.href}><Link href={story.href} prefetch={false}><StoryCover story={story} /><span>{story.title}</span></Link></li>)}</ul>
+        <StoryScroller label="visual stories about New Jersey">{jersey.map((story) => <li key={story.href}><Link href={story.href} prefetch={false}><StoryCover story={story} /><span>{story.title}</span></Link></li>)}</StoryScroller>
       </section>}
 
       {statewideNotes.length > 0 && <StateFigureNotes notes={statewideNotes} />}
