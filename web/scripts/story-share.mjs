@@ -45,15 +45,17 @@ export async function readStory(page) {
 
 // The chart is captured from the story laid out at tablet width, where two-column stories
 // stack and labels stay large next to the chart: a desktop-width chart shrunk into the
-// card's box left its text unreadable. Only the story's first chart is taken. A chart wider
-// than that (a table that scrolls sideways) is taken again at `wide`, so none of it is cut.
-const CAPTURE = { width: 700, wide: 1100, height: 1000, scale: 2 };
+// card's box left its text unreadable. Only the story's first chart is taken: in a
+// two-column story, its first column.
+const CAPTURE = { width: 700, height: 1000, scale: 2 };
 // Cards are plain white: the page's paper tint and header glow are left behind, so the
 // chart sits on the same white as the card around it.
 export const PLAIN = ':root{--plate-paper:#fff!important;--surface-1:#fff!important}html,body{background:#fff!important}body::before{display:none!important}';
 
-// The two images made from each story. `chart` is the box the chart fills; a chart taller
-// than its box is cut at the bottom and fades into the white.
+// The two images made from each story. `chart` is the box the chart fills. A figure, such as
+// a map, a little taller than its box (up to SHRINK times) is shrunk to fit whole; anything
+// taller, and any list or table, is cut at the bottom and fades into the white.
+const SHRINK = 1.6;
 export const FORMATS = {
   // A pasted link's preview: text beside the chart.
   card: { file: (slug) => `${slug}.jpg`, width: 1200, height: 630, chart: { width: 724, height: 486 }, type: { kicker: 13, title: 40, text: 18, foot: 15, footGap: 22, fade: 90 },
@@ -68,8 +70,8 @@ export const FORMATS = {
 
 /** Captures the top of the story's first chart, no taller than the tallest box it fills, or
  *  returns null when the story shows no chart until a reader picks something. */
-async function captureChart(browser, url, width = CAPTURE.width) {
-  const context = await browser.newContext({ viewport: { width, height: CAPTURE.height }, deviceScaleFactor: CAPTURE.scale, colorScheme: 'light', reducedMotion: 'reduce', locale: 'en-US' });
+async function captureChart(browser, url) {
+  const context = await browser.newContext({ viewport: { width: CAPTURE.width, height: CAPTURE.height }, deviceScaleFactor: CAPTURE.scale, colorScheme: 'light', reducedMotion: 'reduce', locale: 'en-US' });
   try {
     const narrow = await context.newPage();
     await narrow.goto(url, { waitUntil: 'networkidle', timeout: 90_000 });
@@ -79,7 +81,7 @@ async function captureChart(browser, url, width = CAPTURE.width) {
     // the first block of the story tall enough to be a chart, in page order.
     const found = await narrow.evaluate(() => {
       const shot = document.querySelector('[data-story-shot]');
-      const target = shot && (shot.querySelector('[data-share-chart]') ?? [...shot.querySelectorAll(':scope figure.story-figure, :scope .story-two > *, :scope > ul, :scope > .stacked, :scope > table, :scope > div')]
+      const target = shot && (shot.querySelector('[data-share-chart]') ?? [...shot.querySelectorAll(':scope figure.story-figure, :scope .story-two > *, :scope > ul, :scope > .stacked, :scope > table, :scope > div:not(.story-two)')]
         .find((el) => el.getBoundingClientRect().height > 120));
       if (!target) return null;
       target.setAttribute('data-share-target', '');
@@ -87,19 +89,16 @@ async function captureChart(browser, url, width = CAPTURE.width) {
       // margin shows none of their edges.
       if (target.matches('[data-share-chart]')) for (let el = target; el !== shot; el = el.parentElement)
         for (const sibling of el.parentElement.children) if (sibling !== el) sibling.style.visibility = 'hidden';
-      // Whether anything inside runs past the chart's own width, as a wide table scrolls.
-      const right = target.getBoundingClientRect().right;
-      return { overflows: [target, ...target.querySelectorAll('*')].some((el) => el.scrollWidth > el.clientWidth + 2 || el.getBoundingClientRect().right > right + 2) };
+      return { figure: target.matches('figure') };
     });
     if (!found) return null;
-    if (found.overflows && width < CAPTURE.wide) return captureChart(browser, url, CAPTURE.wide);
     const box = await narrow.locator('[data-share-target]').boundingBox();
     const pad = 12, clipWidth = box.width + pad * 2;
     const tallest = Math.max(...Object.values(FORMATS).map((f) => f.chart.height / f.chart.width));
-    const height = Math.min(box.height + pad * 2, Math.round(clipWidth * tallest));
+    const height = Math.min(box.height + pad * 2, Math.round(clipWidth * tallest * (found.figure ? SHRINK : 1)));
     const image = await narrow.screenshot({ type: 'jpeg', quality: 88, fullPage: true, clip: { x: box.x - pad, y: box.y - pad, width: clipWidth, height } });
     // How tall the whole chart is for its width, to tell which boxes cut it.
-    return { image, ratio: (box.height + pad * 2) / clipWidth };
+    return { image, ratio: (box.height + pad * 2) / clipWidth, figure: found.figure };
   } finally {
     await context.close();
   }
@@ -117,7 +116,7 @@ export async function captureShareCard(browser, page, { slug, outDir }) {
   const text = story.takeaway || escape(story.lede.split(/(?<=\.)\s/)[0] ?? '');
   await mkdir(resolve(outDir, 'share'), { recursive: true });
   for (const format of Object.values(FORMATS)) {
-    const cut = chart.ratio > format.chart.height / format.chart.width;
+    const cut = chart.ratio > (chart.figure ? SHRINK : 1) * format.chart.height / format.chart.width;
     const short = format.short && chart.ratio < format.short.ratio * format.chart.height / format.chart.width;
     const t = short ? { ...format.type, ...format.short.type } : format.type;
     const html = `<!doctype html><meta charset="utf-8"><style>
