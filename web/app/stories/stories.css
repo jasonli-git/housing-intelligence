@@ -7,10 +7,13 @@
 .stories-grid a:hover { border-color: var(--plate-accent, var(--text-secondary)); }
 .stories-grid b { font: 400 24px/1.15 Georgia, serif; letter-spacing: -.02em; }
 .stories-grid span { color: var(--text-secondary); font-size: 14px; line-height: 1.5; }
-.story-lede { max-width: 62ch; color: var(--text-secondary); font-size: 16px; line-height: 1.6; }
+.story-lede { max-width: 60ch; color: var(--text-secondary); font-size: 16px; line-height: 1.55; }
 .story-note { color: var(--text-muted); font-size: 13px; line-height: 1.6; max-width: 70ch; }
+/* Sections sit 80px apart, as on place pages; a two-column block's own headings align at its top. */
+.stories-page .story-two > * > h2:first-child, .stories-page .story-two > h2:first-child { margin-top: 0; }
+.stories-page [data-story-shot] > * + .story-two { margin-top: 80px; }
 /* Every story ends on its sources as a footnote under a rule, as on the home page (2026-11-03). */
-.story-sources { margin: 2.5rem 0 0; padding-top: 8px; max-width: 80ch; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
+.story-sources { margin: 80px 0 0; padding-top: 8px; max-width: 80ch; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
 .story-sources b { color: var(--text-primary); font-weight: 600; margin-right: .35rem; }
 .story-figure { margin: 1.5rem 0; overflow-x: auto; }
 .story-figure svg { display: block; width: 100%; min-width: 640px; height: auto; }
@@ -90,7 +93,7 @@
 .story-figure .dot.hit { stroke: var(--plate-ink, var(--text-primary)); stroke-width: 2; }
 .story-figure .place { fill: var(--plate-ink, var(--text-primary)); font: 600 12px var(--font-text); paint-order: stroke; stroke: var(--surface-1); stroke-width: 3px; }
 .story-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; align-items: start; }
-.story-two h2, .stories-page h2.story-h { margin: 1.5rem 0 .25rem; font: 400 24px/1.2 Georgia, serif; letter-spacing: -.02em; }
+.story-two h2, .stories-page h2.story-h { margin: 80px 0 .25rem; font: 400 24px/1.2 Georgia, serif; letter-spacing: -.02em; }
 
 /* Small multiples: one panel per county on the same scale. */
 .multiples { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .75rem; margin: 1.5rem 0; padding: 0; list-style: none; }
