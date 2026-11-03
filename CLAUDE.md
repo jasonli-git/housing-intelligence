@@ -327,6 +327,28 @@ must not become:
 
 unless the user explicitly makes that decision.
 
+## Stories register
+
+`docs/STORIES.md` tracks the visual stories: every story, where it appears, whether it
+has a share image, and — for stories that have been reviewed — the sources it reads,
+how current and how complete they were, known issues and undecided ideas.
+
+It is a sanctioned addition alongside the canonical documents, approved by the user on
+2026-11-03. It answers only "what is the state of each story?" and does not replace them:
+
+- Decisions about how stories are built still go to `ARCHITECTURE.md`.
+- Open, actionable story work still goes to `TODO.md`.
+- What shipped still goes to `CHANGELOG.md`.
+
+The register is generated. Edit `web/lib/storyRegister.ts`, then run
+`cd web && npm run stories:register`; a test fails if the two disagree. Never edit
+`docs/STORIES.md` by hand.
+
+Update a story's entry when its sources are re-checked, when its data is refreshed or
+replaced, or when a review finds an issue. Record dates as absolute dates. An "idea" in
+the register is not approved work, the same rule as Director Notes: promoting one into
+TODO, ROADMAP or a milestone needs an explicit user decision.
+
 ## Verification
 
 Never claim that tests, builds, linting, type checking, or other verification
