@@ -15,6 +15,7 @@ import { Crumbs } from "@/components/Crumbs";
 import { Glossed } from "@/components/Glossed";
 import { ConsumerReading } from "@/components/ExplanationPanel";
 import { Masthead } from "@/components/Masthead";
+import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { PlacePhoto } from "@/components/PlacePhoto";
 import { ThemedShot } from "@/components/ThemedShot";
 import { similarGroups } from "@/lib/similar";
@@ -534,6 +535,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <PosterNav links={countyLinks} />
 
         <header className={`${styles.panel} ${styles.hero}`} data-kind={isCounty ? "county" : isZip ? "zip" : "town"}>
+          {region.state_code === "NJ" && <GardenStateArtwork header />}
           <div>
             <p className={styles.kicker}>{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""} · {townRows.length} towns</p>
             <h1>{name}</h1>
@@ -657,6 +659,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       <PosterNav links={townLinks} />
 
       <header className={`${styles.panel} ${styles.hero}`} data-kind={isCounty ? "county" : isZip ? "zip" : "town"}>
+        {region.state_code === "NJ" && <GardenStateArtwork header />}
         <div>
           <p className={styles.kicker}>{county && !isCounty ? `${displayName(county)}, ` : ""}{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""}</p>
           <h1>{name}</h1>

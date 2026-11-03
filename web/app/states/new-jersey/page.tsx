@@ -17,6 +17,7 @@ import { Crumbs } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
 import { StateFigureNotes } from "@/components/StateFigureNotes";
 import { pageMetadata } from "@/lib/meta";
+import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { PlacePhoto } from "@/components/PlacePhoto";
 import { StoryCover } from "@/components/StoryCard";
 import { api } from "@/lib/api";
@@ -124,6 +125,7 @@ export default async function NewJerseyPoster() {
 
       <header id="counties" className={state.hero}>
         <div className={state.photo}><PlacePhoto geoid="34" /></div>
+        <GardenStateArtwork header />
         {frame && <StateDashboard width={frame.width} height={frame.height} shapes={mapShapes.map(({ id, d }) => ({ id, d }))} rows={rows}>
           <p className={state.kicker}>{population ? `${whole(population.value)} residents · ` : ""}{counties.length} counties</p>
           <h1>New Jersey</h1>
