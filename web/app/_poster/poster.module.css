@@ -177,6 +177,10 @@
 .workLayout { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 32px; align-items: center; }
 .workLayout svg { width: 100%; height: auto; }
 @media (max-width: 640px) { .workLayout { grid-template-columns: minmax(0, 1fr); } .workLayout svg { max-width: 240px; margin-inline: auto; } }
+/* Town pages: a small locator beside the bars, which carry the figures. */
+.compact .workLayout { grid-template-columns: minmax(0, 180px) minmax(0, 1fr); gap: 28px; }
+.compact .workLayout svg { max-height: 300px; }
+@media (max-width: 640px) { .compact .workLayout { grid-template-columns: minmax(0, 1fr); } .compact .workLayout svg { max-width: 150px; max-height: 210px; } }
 .schools { background: var(--poster-tone-37); color: var(--text-primary); }
 .schools .split { margin-bottom: 16px; }
 .seasonal { background: var(--poster-tone-38); color: var(--text-primary); }
