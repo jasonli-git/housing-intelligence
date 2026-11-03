@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Crumbs, Kind } from "@/components/Crumbs";
-import { Masthead } from "@/components/Masthead";
+import { StoryShell } from "@/components/StoryShell";
 import { formatValue } from "@/lib/format";
 import { pageMetadata } from "@/lib/meta";
 import { regionPath } from "@/lib/placeRoutes";
 import { storyCounties, storyTowns, storyZips } from "@/lib/storyData";
-import { extremes, logTicks } from "@/lib/stories";
+import { extremes, priceTick, priceTicks } from "@/lib/stories";
 import "../../horizon-theme.css";
 import "../stories.css";
 
@@ -27,26 +26,20 @@ export default async function PriciestAndCheapestPage() {
   const lo = Math.log(Math.min(...values) / 2.6), hi = Math.log(Math.max(...values) * 2.6);
   const at = (v: number) => `${Math.round(((Math.log(v) - lo) / (hi - lo)) * 10000) / 100}%`;
   return (
-    <>
-      <Masthead affordability={{ kind: "route" }} />
-      <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories">
-        <header className="page-head">
-          <div>
-            <Crumbs trail={[{ href: "/", label: "Home" }, { href: "/stories", label: "Visual stories" }]} here="Priciest and cheapest in each county" />
-            <Kind kind="story" />
-            <h1 className="page-title">Priciest and cheapest in each county</h1>
-            <p className="story-lede">
-              Every county&rsquo;s most and least expensive town and ZIP code by typical home value, the counties with the
-              widest gap first.
-            </p>
-          </div>
-        </header>
-        <figure className="story-figure" data-story-shot tabIndex={0}>
+    <StoryShell
+      title="Priciest and cheapest in each county"
+      lede={<>Every county&rsquo;s most and least expensive town and ZIP code by typical home value, the counties with the
+        widest gap first.</>}
+      note={<>Typical home value: Zillow&rsquo;s estimate for the middle third of homes, houses and condos together, for the
+        towns and ZIP codes Zillow covers. A ZIP code is a mail route, not part of a county; one that crosses a county
+        line is placed in the county holding its centre.</>}
+    >
+        <figure className="story-figure" tabIndex={0}>
           <p className="ladder-key"><span><i className="starter" />Cheapest town</span><span><i style={{ background: "var(--story-up)" }} />Priciest town</span><span><i className="zip-mark" />Cheapest and priciest ZIP code</span></p>
           <ul className="ladder extremes-chart">
             <li className="ladder-axis" aria-hidden="true">
               <span>County</span>
-              <span className="ladder-track">{logTicks(Math.exp(lo), Math.exp(hi), 7).map((t) => <b key={t} style={{ left: at(t) }}>{usd(t)}</b>)}</span>
+              <span className="ladder-track">{priceTicks(Math.exp(lo), Math.exp(hi), 6).map((t) => <b key={t} style={{ left: at(t) }}>{priceTick(t)}</b>)}</span>
               <span className="num">Gap</span>
             </li>
             {rows.map((e) => (
@@ -89,12 +82,6 @@ export default async function PriciestAndCheapestPage() {
             </li>
           ))}
         </ul>
-        <p className="story-note">
-          Typical home value: Zillow&rsquo;s estimate for the middle third of homes, houses and condos together, for the
-          towns and ZIP codes Zillow covers. A ZIP code is a mail route, not part of a county; one that crosses a county
-          line is placed in the county holding its centre. <Link href="/stories">More visual stories →</Link>
-        </p>
-      </main>
-    </>
+    </StoryShell>
   );
 }

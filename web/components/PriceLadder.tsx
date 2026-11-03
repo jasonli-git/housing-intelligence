@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 
 import { formatValue } from "@/lib/format";
 import { regionPath } from "@/lib/placeRoutes";
-import { logTicks, type LadderRow } from "@/lib/stories";
+import { priceTick, priceTicks, type LadderRow } from "@/lib/stories";
 
 const usd = (v: number) => formatValue(v, "usd");
 
@@ -43,11 +43,11 @@ export function PriceLadder({ rows, counties }: { rows: LadderRow[]; counties: s
       <p className="story-note" role="status">
         {shown.length} towns · recent sales ran above the typical home value in {saleAbove} of them · scale {usd(Math.exp(lo))} to {usd(Math.exp(hi))}, spaced by ratio
       </p>
-      <ul className="ladder">
+      <ul className="ladder" data-share-chart>
         <li className="ladder-axis" aria-hidden="true">
           <span>Cheaper ←</span>
           <span className="ladder-track">
-            {logTicks(Math.exp(lo), Math.exp(hi)).map((t) => <b key={t} style={{ left: at(t) }}>{usd(t)}</b>)}
+            {priceTicks(Math.exp(lo), Math.exp(hi)).map((t) => <b key={t} style={{ left: at(t) }}>{priceTick(t)}</b>)}
           </span>
           <span className="num">Typical home</span>
         </li>

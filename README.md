@@ -12,13 +12,14 @@ and not a chatbot: pages, maps, tools, reports and an API are the product, and a
 optional AI layer only explains figures that were already computed.
 
 > **Status — <!-- fill:version -->v0.50.0 (2026-10-08)<!-- /fill -->, updated
-> 2026-10-30.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
+> 2026-11-03.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
 > published in full: the state, <!-- fill:counties -->21<!-- /fill --> counties,
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** A Data Explorer at `/data` (Milestone 59): a data dictionary, schema explorer,
-> interactive lineage, profiling and table diagrams, generated from the pipeline's own records.
+> **Latest.** Visual stories refined: one layout for every story, a share image of each for
+> link previews and social posts, and a Stories link in the menu bar. Before that, a Data
+> Explorer at `/data` (Milestone 59).
 >
 > **Next.** Clearing TODO and the open Director Notes; then the rest of the work for a
 > second state, on hold until they are cleared. See [ROADMAP.md](docs/ROADMAP.md) and

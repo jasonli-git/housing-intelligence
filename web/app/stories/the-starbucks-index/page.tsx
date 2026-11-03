@@ -40,10 +40,13 @@ export default async function StarbucksIndexPage() {
     const s = t.values.osm_starbucks_count ?? 0, d = t.values.osm_dunkin_count ?? 0;
     return s + d >= 2 && rel.has(t.id) ? [{ id: t.id, name: t.name, x: s / (s + d), y: rel.get(t.id)!, slot: s > d ? 1 : s < d ? 2 : 3, tip: `${t.name}: ${s} Starbucks, ${d} Dunkin'` }] : [];
   });
+  const shopName = (p: (typeof premiums)[number]) => (p.trait.label.startsWith("Has ") ? p.trait.label.slice(4) : p.trait.label[0].toLowerCase() + p.trait.label.slice(1)).replace(/'/g, "’");
+  const starbucks = premiums.find((p) => p.trait.key === "sb"), dunkin = premiums.find((p) => p.trait.key === "dd");
   const pct = (p: number) => `${p >= 0 ? "+" : "−"}${Math.abs(Math.round(p * 100))}%`;
   return (
     <StoryShell
       title="The Starbucks index"
+      takeaway={<><b>Towns with {shopName(premiums[0])} run {pct(premiums[0].premium)} against the rest of their county</b>, the widest gap of any shop here.{starbucks && dunkin ? <> With a Starbucks, {pct(starbucks.premium)}; with a Dunkin&rsquo;, {pct(dunkin.premium)}.</> : null}</>}
       lede="Economists have long joked that a Starbucks moving in is the surest sign a neighbourhood is gentrifying. In New Jersey the shops do sort the towns: each bubble below is a kind of shop, placed by how much dearer the towns that have one are than the other towns in their county."
       note={<>Shops: OpenStreetMap, © OpenStreetMap contributors, available under the Open Database License; the counts are offered under the same licence. Volunteer-mapped, so a shop nobody added is missing. Prices: Zillow&rsquo;s typical home value, each town against its own county. A chain opens where it expects customers; this shows which towns those are, not that the shop raises prices.</>}
     >

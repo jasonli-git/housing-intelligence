@@ -1011,6 +1011,36 @@ Consider:
 
 Do not implement yet.
 
+**Update 2026-11-03 (discussion):** what an export would capture.
+
+- **Leaning toward:** title + takeaway + chart + a one-line source credit + the site
+  address. The intro is left out: it is written for a reader already on the page and is too
+  long to read in a feed. Chart-only loses meaning and credit once a repost strips the
+  caption; a takeaway-only text card has no evidence behind it, so at most a second image.
+- **Formats:** 1080×1350 portrait as the likely main export; 1200×630 landscape for link
+  previews.
+- **Decided:** build the 1200×630 link-preview image for each story first, since it needs no
+  button and shows wherever a story's URL is pasted.
+- **Open:** whether Zillow's terms allow its figures to travel as images off the site
+  (OpenStreetMap's licence asks only for credit); how stories whose chart does not fit a
+  frame export (the Wawa line's two charts side by side, the true monthly cost's long
+  table), probably with a per-story export view; light by default, dark as an option.
+- The export button itself is still not approved.
+
+**Update 2026-11-03 (decided):** the export is a 1080×1350 (4:5) portrait image: title and
+takeaway on top, the story's first chart filling the middle and fading out where it is cut,
+the credit line and the story's address at the foot, on plain white. 4:5 is the tallest
+shape feeds show uncropped, and most of the charts are tall. The 1200×630 card stays for
+link previews only. The owner approved building the export button the same day.
+
+**Update 2026-11-03 (answered):** Zillow's terms allow its figures on shared images, as
+ARCHITECTURE #272 already read them: section 4C lets derived work travel if Zillow is cited
+"on every page where it appears", including "Data Provided by Zillow Group", and the site
+stays non-commercial (#323). Every image built from Zillow data now carries that wording in
+its credit line. The other open point is settled too: a chart taller than the frame fades
+out, a map shrinks to fit whole, and stories that show no chart until a town is picked get
+no image.
+
 ---
 
 ## Data Explorer

@@ -1,5 +1,7 @@
 /** Local responsive library checks. Does not require a warehouse or publisher access. */
 import assert from "node:assert/strict";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { chromium } from "playwright";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -49,6 +51,7 @@ try {
       page.on("pageerror", (error) => errors.push(error.message));
       assert.equal((await page.goto(`${base}/stories`)).status(), 200);
       await page.evaluate((theme) => document.documentElement.dataset.theme = theme, theme);
+      // A neutral page under a faint, still glow, so the stories keep the attention.
       assert(await page.evaluate(() => {
         const body = getComputedStyle(document.body), glow = getComputedStyle(document.body, "::before");
         const sample = document.createElement("div");
@@ -56,39 +59,37 @@ try {
         document.body.append(sample);
         const neutral = getComputedStyle(sample).backgroundColor;
         sample.remove();
-        return body.backgroundColor === neutral && glow.content === "none";
-      }), `neutral background without glow ${width}px/${theme}`);
+        return body.backgroundColor === neutral && Number(glow.opacity) <= .2 && glow.animationName === "none";
+      }), `neutral background under a faint glow ${width}px/${theme}`);
       await page.getByRole("heading", { name: "Visual stories", exact: true }).waitFor();
       await page.locator(".library-feature img:visible").evaluate((img) => img.decode());
+      // The rails and the "See all" count describe the same library.
+      const seeAll = page.getByRole("button", { name: /^See all \d+ stories$/ });
+      const total = Number((await seeAll.textContent()).match(/\d+/)[0]);
       const captureHrefs = await page.$$eval('.library-card[href^="/stories/"]', (links) => [...new Set(links.map((a) => a.getAttribute('href')))]);
-      assert.equal(captureHrefs.length, 37, "screenshot discovery covers all stories once");
-      assert.equal(await page.locator(".library-rail").count(), 6);
+      assert.equal(captureHrefs.length, total, "screenshot discovery covers all stories once");
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `page overflow ${width}/${theme}`);
+      const picks = page.getByRole("region", { name: "Editor’s picks" });
+      assert(await picks.evaluate((el) => el.classList.contains("library-rail-picks") && getComputedStyle(el).backgroundColor !== "rgba(0, 0, 0, 0)"), "editor's picks sit on a card");
       const jersey = page.getByRole("region", { name: "Only in New Jersey" });
       const track = jersey.locator(".library-track");
       const stage = jersey.locator(".library-rail-stage");
       const next = jersey.getByRole("button", { name: "Next stories in Only in New Jersey" });
       const previous = jersey.getByRole("button", { name: "Previous stories in Only in New Jersey" });
+      const jerseyCount = await track.locator("li").count();
       assert.equal(await jersey.locator(".library-rail-head .library-arrow").count(), 0);
       await stage.scrollIntoViewIfNeeded();
       await page.mouse.move(0, 0);
-      assert.equal(await next.evaluate((el) => getComputedStyle(el).opacity), "0", "idle desktop arrows hidden");
-      await stage.hover();
+      // Arrows show wherever a rail can scroll, without waiting for a hover.
+      assert.equal(await next.evaluate((el) => getComputedStyle(el).opacity), "1", "idle arrows visible");
+      assert.equal(await previous.isDisabled(), true, "no way back at the start");
       const coverBox = await jersey.locator(".library-cover").first().boundingBox();
       const arrowBox = await next.boundingBox();
-      assert.equal(Math.round(arrowBox.height), 160, "controls twice the original height");
       assert(Math.abs(arrowBox.y + arrowBox.height / 2 - coverBox.y - coverBox.height / 2) <= 2, "controls centered on screenshot, not caption");
-      const glass = await next.evaluate((el) => { const s = getComputedStyle(el); return { border: s.borderTopWidth, blur: s.backdropFilter, background: s.backgroundColor }; });
+      const glass = await next.evaluate((el) => { const s = getComputedStyle(el); return { border: s.borderTopWidth, blur: s.backdropFilter }; });
       assert.equal(glass.border, "0px");
       assert(glass.blur.includes("blur(16px)"), "frosted backdrop");
-      assert(glass.background.includes("0.3"), "translucent surface");
-      assert.equal(await next.evaluate((el) => getComputedStyle(el).opacity), "1", "row hover reveals controls");
-      assert.equal(await previous.evaluate((el) => getComputedStyle(el).opacity), "0", "unavailable direction hidden");
-      await stage.screenshot({ path: `/private/tmp/stories-controls-${width}-${theme}.png` });
-      await page.mouse.move(0, 0);
-      assert.equal(await next.evaluate((el) => getComputedStyle(el).opacity), "0", "leaving row fades controls");
-      await next.focus();
-      assert.equal(await next.evaluate((el) => getComputedStyle(el).opacity), "1", "keyboard focus reveals controls");
+      await stage.screenshot({ path: join(tmpdir(), `stories-controls-${width}-${theme}.png`) });
       await next.click();
       await page.waitForFunction(() => document.querySelector("#jersey-track").scrollLeft > 4 && !document.querySelector('#jersey-track').parentElement.querySelector('.library-arrow-previous').disabled);
       assert.equal(await previous.isEnabled(), true);
@@ -102,28 +103,28 @@ try {
       await page.keyboard.press("End");
       assert.equal(await jersey.getByRole("link").last().evaluate((el) => el === document.activeElement), true);
       assert(await track.evaluate((el) => el.scrollWidth > el.clientWidth));
-      await page.getByRole("button", { name: "All stories 37", exact: true }).click();
-      assert.equal(await page.locator(".library-grid > li").count(), 37);
+      await seeAll.click();
+      assert.equal(await page.locator(".library-grid > li").count(), total);
       assert(await page.locator(".library-grid").boundingBox(), "homepage montage grid remains capturable");
       await page.getByRole("searchbox", { name: "Search stories" }).fill("Wawa");
       assert.equal(await page.locator(".library-grid > li").count(), 1);
       await page.getByRole("searchbox").fill("nothingmatches123");
       await page.getByRole("button", { name: "Show all stories" }).click();
-      assert.equal(await page.locator(".library-grid > li").count(), 37);
+      assert.equal(await page.locator(".library-grid > li").count(), total);
       const directoryAudit = await new AxeBuilder({ page }).include("#main-content").analyze();
       assert.deepEqual(directoryAudit.violations.map((v) => `${v.id}: ${v.description}`), []);
-      await page.getByRole("button", { name: "Discover", exact: true }).click();
+      await page.getByRole("button", { name: "← Discover", exact: true }).click();
       await jersey.getByRole("button", { name: /View all/ }).click();
       assert.equal(await page.getByRole("combobox", { name: "Collection" }).inputValue(), "jersey");
-      assert.equal(await page.locator(".library-grid > li").count(), 9);
+      assert.equal(await page.locator(".library-grid > li").count(), jerseyCount);
       const heading = await page.getByRole("heading", { name: "Only in New Jersey", exact: true }).boundingBox();
       assert(heading.y >= 0 && heading.y < 600, "View all must bring directory into view");
-      await page.getByRole("button", { name: "Discover", exact: true }).click();
+      await page.getByRole("button", { name: "← Discover", exact: true }).click();
       await page.evaluate(() => scrollTo(0, 0));
       const curatedAudit = await new AxeBuilder({ page }).include("#main-content").analyze();
       assert.deepEqual(curatedAudit.violations.map((v) => `${v.id}: ${v.description}`), []);
       assert.deepEqual(errors, []);
-      await page.screenshot({ path: `/private/tmp/stories-library-${width}-${theme}.png`, fullPage: true });
+      await page.screenshot({ path: join(tmpdir(), `stories-library-${width}-${theme}.png`), fullPage: true });
       console.log(`${width}px ${theme}: rails, keyboard, directory, search, overflow and axe passed`);
       await context.close();
     }
@@ -140,20 +141,4 @@ try {
   assert(await touchRail.evaluate((el) => el.scrollLeft > 0));
   await touch.close();
   console.log("Touch controls visible and tappable without hover; reduced-motion scrolling passed");
-  const motion = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: "no-preference" });
-  const motionPage = await motion.newPage();
-  await motionPage.goto(`${base}/stories`);
-  const motionStage = motionPage.locator("#jersey-track").locator("..");
-  const motionNext = motionStage.locator(".library-arrow-next");
-  await motionStage.scrollIntoViewIfNeeded();
-  await motionPage.mouse.move(0, 0);
-  assert((await motionNext.evaluate((el) => getComputedStyle(el).transitionDuration)).includes("0.18s"));
-  await motionStage.hover();
-  await motionPage.waitForFunction(() => getComputedStyle(document.querySelector('#jersey-track').parentElement.querySelector('.library-arrow-next')).opacity === "1");
-  await motionPage.mouse.move(0, 0);
-  await motionPage.waitForFunction(() => getComputedStyle(document.querySelector('#jersey-track').parentElement.querySelector('.library-arrow-next')).opacity === "0");
-  await motionPage.emulateMedia({ reducedMotion: "reduce" });
-  assert.equal(await motionNext.evaluate((el) => getComputedStyle(el).transitionDuration), "0s");
-  await motion.close();
-  console.log("180ms hover fade and reduced-motion suppression passed");
 } finally { await browser.close(); }

@@ -1,0 +1,11 @@
+/* The stories page's rail buttons (library.css), for the place and state pages' story rows:
+   frosted, over the row's ends, hidden at an end the row cannot go past. */
+.stage { position: relative; min-width: 0; }
+.arrow { position: absolute; top: 72px; transform: translateY(-50%); z-index: 3; width: 44px; height: 96px; padding: 0; color: var(--text-primary); background: color-mix(in srgb, var(--surface-1) 30%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.3); backdrop-filter: blur(16px) saturate(1.3); border: 0; border-radius: 14px; font: 36px/1 var(--font-text); display: grid; place-items: center; cursor: pointer; transition: opacity 180ms ease, background 180ms ease; }
+.previous { left: 6px; }
+.next { right: 6px; }
+.arrow:disabled { opacity: 0; pointer-events: none; }
+.arrow:not(:disabled):hover { background: color-mix(in srgb, var(--surface-1) 45%, transparent); }
+.arrow:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .arrow { transition: none; } }
+@media print { .arrow { display: none; } }

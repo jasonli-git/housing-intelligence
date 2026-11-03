@@ -205,6 +205,9 @@ Not open work: each comes round on a date. The steps live where the row says.
       "Compare counties" panel. None runs on deploy (the accessibility gate does, and
       passes); update or delete each when it is next needed.
 
+- [ ] **The hottest counties' share image is hard to read.** (found 2026-11-03, #465) Its
+      slope chart draws county labels at about 6px even on the page at 700px, so neither
+      cutting nor shrinking helps; it needs larger labels in the chart itself.
 - [ ] **Re-download the stories' two hand-fed rasters when they are republished.**
       (2026-10-22, ARCHITECTURE #436) BTS's noise map (next after 2022/2023) and EOG's
       night lights (2025's annual file) into `data/manual/bts_noise/` and

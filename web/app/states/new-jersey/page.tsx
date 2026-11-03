@@ -20,6 +20,7 @@ import { pageMetadata } from "@/lib/meta";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { PlacePhoto } from "@/components/PlacePhoto";
 import { StoryCover } from "@/components/StoryCard";
+import { StoryScroller } from "@/components/StoryScroller";
 import { api } from "@/lib/api";
 import { displayName } from "@/lib/names";
 import { regionPath } from "@/lib/placeRoutes";
@@ -115,7 +116,7 @@ export default async function NewJerseyPoster() {
     <p className={state.note}>{summary.source}, {summary.period} · <Link href={placeStoryHref(topic, regionId)} prefetch={false}>Full story</Link></p>
   </section>);
   const LIVING = stories.map(({ topic }) => topic).filter((topic) => !["lending", "pressure", "building", "migration"].includes(topic));
-  const links = [{ id: "counties", label: "Counties compared" }, ...(sale || tax ? [{ id: "cost", label: "Cost to buy, own & rent" }] : []), { id: "afford", label: "Cost burden & mortgages" }, { id: "supply", label: "New homes built" }, { id: "living", label: "Living here" }, ...(jersey.length ? [{ id: "visual", label: "Charts" }] : [])];
+  const links = [{ id: "counties", label: "Counties compared" }, ...(sale || tax ? [{ id: "cost", label: "Cost to buy, own & rent" }] : []), { id: "afford", label: "Cost burden & mortgages" }, { id: "supply", label: "New homes built" }, { id: "living", label: "Living here" }, ...(jersey.length ? [{ id: "visual", label: "Stories" }] : [])];
 
   return glossTree(<>
     <Masthead affordability={{ kind: "route" }} />
@@ -188,8 +189,8 @@ export default async function NewJerseyPoster() {
       </section>}
 
       {jersey.length > 0 && <section id="visual" className={state.rail}>
-        <div className={state.railHead}><h2>Stories about New Jersey</h2><Link href="/stories">All stories</Link></div>
-        <ul tabIndex={0}>{jersey.map((story) => <li key={story.href}><Link href={story.href} prefetch={false}><StoryCover story={story} /><span>{story.title}</span></Link></li>)}</ul>
+        <div className={state.railHead}><h2>Visual stories about New Jersey</h2><Link href="/stories">All visual stories</Link></div>
+        <StoryScroller label="visual stories about New Jersey">{jersey.map((story) => <li key={story.href}><Link href={story.href} prefetch={false}><StoryCover story={story} /><span>{story.title}</span></Link></li>)}</StoryScroller>
       </section>}
 
       {statewideNotes.length > 0 && <StateFigureNotes notes={statewideNotes} />}

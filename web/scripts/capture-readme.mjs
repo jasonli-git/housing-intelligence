@@ -8,6 +8,7 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
 import { captureToolPreviews } from './tool-previews.mjs';
+import { captureShareCard } from './story-share.mjs';
 
 const origin = process.env.SCREENSHOT_ORIGIN ?? 'http://localhost:3006';
 const outDir = resolve(process.env.SCREENSHOT_DIR ?? '../dist/artifacts/screenshots');
@@ -42,8 +43,16 @@ const INDEX = { width: 1800, height: 1600, aspect: 0.5625, columns: 10 };
 const only = process.env.SCREENSHOT_ONLY;
 
 const storySource = await readFile(new URL('../lib/stories.ts', import.meta.url), 'utf8');
-const storyHrefs = [...new Set([...storySource.matchAll(/href: ?"(\/stories\/[a-z0-9-]+)"/g)].map((match) => match[1]))];
+// SCREENSHOT_STORIES=slug,slug narrows a local run to a few stories.
+const storyFilter = process.env.SCREENSHOT_STORIES?.split(',');
+const storyHrefs = [...new Set([...storySource.matchAll(/href: ?"(\/stories\/[a-z0-9-]+)"/g)].map((match) => match[1]))]
+  .filter((href) => !storyFilter || storyFilter.includes(href.split('/').pop()));
 if (!storyHrefs.length) throw new Error('lib/stories.ts: no stories found');
+// The /stories index's featured cover is a second shot of that story: its chart area alone,
+// with a margin, so the cover shows the figure rather than the page's title and lede.
+const librarySource = await readFile(new URL('../lib/storyLibrary.ts', import.meta.url), 'utf8');
+const featured = librarySource.match(/FEATURED_STORY = "([a-z0-9-]+)"/)?.[1];
+if (!featured) throw new Error('lib/storyLibrary.ts: no FEATURED_STORY');
 
 await mkdir(resolve(outDir, 'stories'), { recursive: true });
 const browser = await chromium.launch();
@@ -60,8 +69,33 @@ try {
         await page.evaluate(() => document.fonts.ready);
         await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
         const slug = href.split('/').pop();
-        await page.screenshot({ path: resolve(outDir, 'stories', `${slug}-${scheme}.jpg`), type: 'jpeg', quality: 78 });
+        // A card's thumbnail starts at the story's title, not the bar above it, and spans the
+        // page's full content width, so the card shows it whole at its own 16:10 shape.
+        const frame = await page.evaluate(() => {
+          const main = document.querySelector('#main-content');
+          const title = document.querySelector('h1.page-title');
+          if (!main || !title) return null;
+          const box = main.getBoundingClientRect(), style = getComputedStyle(main), margin = 20;
+          const x = box.left + parseFloat(style.paddingLeft) - margin;
+          const width = box.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) + margin * 2;
+          return { x, y: title.getBoundingClientRect().top + scrollY - margin * 1.5, width, height: width * 10 / 16 };
+        });
+        if (!frame) throw new Error(`${href}: no title to start its thumbnail at`);
+        await page.screenshot({ path: resolve(outDir, 'stories', `${slug}-${scheme}.jpg`), type: 'jpeg', quality: 80, fullPage: true, clip: frame });
         console.log(`screenshot: stories/${slug}-${scheme}`);
+        if (slug === featured) {
+          const box = await page.locator('[data-story-shot]').boundingBox();
+          if (!box) throw new Error(`${href}: no [data-story-shot]`);
+          const pad = 24;
+          await page.screenshot({ path: resolve(outDir, 'stories', `${slug}-chart-${scheme}.jpg`), type: 'jpeg', quality: 80, fullPage: true, clip: { x: box.x - pad, y: box.y - pad, width: box.width + pad * 2, height: box.height + pad * 2 } });
+          console.log(`screenshot: stories/${slug}-chart-${scheme}`);
+        }
+        if (scheme === 'light') {
+          if (await captureShareCard(browser, page, { slug, outDir })) console.log(`screenshot: share/${slug} and share/${slug}-4x5`);
+          // A story newly without a chart needs adding to NO_SHARE_CARD in lib/meta.ts, or
+          // its link preview points at an image that was never drawn.
+          else console.warn(`no share card: ${slug} shows no chart until a reader picks something (list it in NO_SHARE_CARD)`);
+        }
       }
       // Then the stories page itself, for the home page. Its cards show the pictures just
       // taken, which are not uploaded yet, so those requests are answered from disk.
@@ -73,7 +107,7 @@ try {
       });
       await page.setViewportSize({ width: INDEX.width, height: INDEX.height });
       await page.goto(origin + '/stories', { waitUntil: 'networkidle', timeout: 90_000 });
-      await page.getByRole('button', { name: /^All stories/ }).click();
+      await page.getByRole('button', { name: /^See all \d+ stories/ }).click();
       await page.evaluate(async () => {
         await document.fonts.ready;
         // Lazy pictures below the fold would otherwise be blank in the shot.

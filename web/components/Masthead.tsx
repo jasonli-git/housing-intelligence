@@ -40,7 +40,7 @@ export function Masthead({
   const primaryLinks = <>
     <Link className="bar-link" href="/atlas" aria-current={atlasActive ? "page" : undefined}>Map</Link>
     <Link className="bar-link" href="/compare" aria-label="Compare places" aria-current={compareActive ? "page" : undefined}>Compare</Link>
-    <Link className="bar-link" href="/stories">Charts</Link>
+    <Link className="bar-link" href="/stories">Stories</Link>
   </>;
   const toolLinks = <>
     {affordability.kind === "hidden" ? null : affordability.kind === "disabled" ?

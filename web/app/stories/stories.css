@@ -1,14 +1,20 @@
 /* Visual stories (Director Note "Visualizing the data", 2026-10-22). Colours are tokens:
    above a baseline --story-up, below it --story-down. */
-.stories-page { max-width: 1080px; margin: 0 auto; padding: 0 16px 80px; }
+.stories-page { max-width: 1320px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 56px) 80px; }
 .stories-page .page-title { margin: .2rem 0 .4rem; }
 .stories-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin: 1.5rem 0 0; padding: 0; list-style: none; }
 .stories-grid a { display: grid; gap: .4rem; height: 100%; box-sizing: border-box; padding: 1.1rem 1.2rem; border: 1px solid var(--plate-strong-rule, var(--border)); border-radius: 18px; color: var(--plate-ink, var(--text-primary)); text-decoration: none; }
 .stories-grid a:hover { border-color: var(--plate-accent, var(--text-secondary)); }
 .stories-grid b { font: 400 24px/1.15 Georgia, serif; letter-spacing: -.02em; }
 .stories-grid span { color: var(--text-secondary); font-size: 14px; line-height: 1.5; }
-.story-lede { max-width: 62ch; color: var(--text-secondary); font-size: 16px; line-height: 1.6; }
+.story-lede { max-width: 60ch; color: var(--text-secondary); font-size: 16px; line-height: 1.55; }
 .story-note { color: var(--text-muted); font-size: 13px; line-height: 1.6; max-width: 70ch; }
+/* Sections sit 80px apart, as on place pages; a two-column block's own headings align at its top. */
+.stories-page .story-two > * > h2:first-child, .stories-page .story-two > h2:first-child { margin-top: 0; }
+.stories-page [data-story-shot] > * + .story-two { margin-top: 80px; }
+/* Every story ends on its sources as a footnote under a rule, as on the home page (2026-11-03). */
+.story-sources { margin: 80px 0 0; padding-top: 8px; max-width: 80ch; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
+.story-sources b { color: var(--text-primary); font-weight: 600; margin-right: .35rem; }
 .story-figure { margin: 1.5rem 0; overflow-x: auto; }
 .story-figure svg { display: block; width: 100%; min-width: 640px; height: auto; }
 .story-figure .grid line { stroke: var(--plate-rule, var(--border)); }
@@ -87,7 +93,7 @@
 .story-figure .dot.hit { stroke: var(--plate-ink, var(--text-primary)); stroke-width: 2; }
 .story-figure .place { fill: var(--plate-ink, var(--text-primary)); font: 600 12px var(--font-text); paint-order: stroke; stroke: var(--surface-1); stroke-width: 3px; }
 .story-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; align-items: start; }
-.story-two h2, .stories-page h2.story-h { margin: 1.5rem 0 .25rem; font: 400 24px/1.2 Georgia, serif; letter-spacing: -.02em; }
+.story-two h2, .stories-page h2.story-h { margin: 80px 0 .25rem; font: 400 24px/1.2 Georgia, serif; letter-spacing: -.02em; }
 
 /* Small multiples: one panel per county on the same scale. */
 .multiples { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .75rem; margin: 1.5rem 0; padding: 0; list-style: none; }
@@ -163,6 +169,20 @@
 .twin-traits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 .6rem; }
 .twin-traits small { color: var(--text-muted); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .twins li { grid-template-columns: minmax(220px, 300px) 1fr minmax(48px, auto) !important; }
+/* Below 900px a pair takes two lines, its measures and gap above and its prices across the
+   full width below, so the twins' names have room beside their dots. */
+@media (max-width: 900px) {
+  .twins li { grid-template-columns: 1fr auto !important; row-gap: .35rem; padding: .4rem 0; }
+  .twins li > .ladder-track { grid-column: 1 / -1; grid-row: 2; }
+  .twins li > .num { grid-column: 2; grid-row: 1; }
+}
+/* On a phone the price ladder and the counties' extremes take the twins' two lines too: the
+   three columns left their price tracks about 40px wide, too narrow for dots or prices. */
+@media (max-width: 600px) {
+  .ladder:not(.twins) li { grid-template-columns: 1fr auto; row-gap: .35rem; padding: .4rem 0; }
+  .ladder:not(.twins) li > .ladder-track { grid-column: 1 / -1; grid-row: 2; }
+  .ladder:not(.twins) li > .num { grid-column: 2; grid-row: 1; }
+}
 /* A chart wider than a phone scrolls sideways inside its figure, which the keyboard can
    reach (tabIndex on each figure); the page itself never scrolls sideways. */
 .story-figure:focus-visible { outline: 2px solid var(--story-up); outline-offset: 4px; }
@@ -176,3 +196,64 @@
 .count-bars.famous li { grid-template-columns: minmax(150px, 220px) 1fr minmax(120px, 200px); }
 .count-bars.famous small { grid-column: auto; font-size: 12px; color: var(--text-secondary); }
 .famous-grid li > div { display: grid; gap: .4rem; height: 100%; box-sizing: border-box; padding: 1rem 1.1rem; border: 1px solid var(--plate-strong-rule, var(--border)); border-radius: 18px; }
+
+/* The story's end (2026-11-03): sharing it and the next story, two cards of one height side
+   by side, stacking on narrow screens; a story without a share image gives the next story
+   the row. The way back to the index sits under the next story. */
+.story-end { display: flex; flex-wrap: wrap; align-items: stretch; gap: 20px; margin-top: 56px; }
+/* The links keep their landmark but lay out as the row's own items. */
+.story-next { display: contents; }
+.story-share, .story-next-card { flex: 1 1 380px; min-width: 0; }
+/* Alone, the next story keeps a half row's width rather than stretching its cover. */
+@media (min-width: 821px) { .story-end:not(:has(.story-share:not([hidden]))) .story-next-card { flex-grow: 0; flex-basis: calc(50% - 10px); } }
+.story-end a { color: var(--text-primary); text-decoration: none; }
+.story-next-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.1rem; align-items: center; padding: 1.1rem; border: 1px solid var(--border); border-radius: 16px; transition: border-color .2s; }
+.story-next-card:hover { border-color: var(--text-secondary); }
+.story-next-cover { display: block; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 8px; border: 1px solid var(--border); }
+.story-next-cover img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.story-next-copy { display: grid; gap: .3rem; }
+.story-next-copy span { font: 11px/1.5 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+.story-next-copy b { font: 400 24px/1.15 Georgia, serif; letter-spacing: -.02em; }
+.story-next-copy b::after { content: " →"; }
+.story-next-all { flex: 1 0 100%; justify-content: flex-end; margin-top: -8px; font-size: 14px; text-decoration: underline !important; text-underline-offset: .2em; min-height: 44px; display: inline-flex; align-items: center; }
+.story-end a:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+@media (max-width: 480px) { .story-next-card { grid-template-columns: 1fr; } }
+
+/* "Only in New Jersey" stories: the place pages' NJ linework beside the title, decorative. */
+.stories-page > .page-head:has(> .state-place-artwork-header) { position: relative; }
+.stories-page > .page-head > .state-place-artwork-header { position: absolute; top: 12px; right: 0; z-index: -1; width: clamp(180px, 22vw, 260px); height: auto; stroke-width: 1.5; opacity: .75; pointer-events: none; }
+.stories-page > .page-head > .state-place-artwork-header :is(.state-artwork-wash, .state-artwork-points) { fill: var(--plate-accent); }
+@media (max-width: 760px) { .stories-page > .page-head > .state-place-artwork-header { top: 0; right: -8px; width: 130px; opacity: .45; } }
+
+/* A story's takeaway (2026-11-03): its answer in one sentence, under the title and before
+   the intro, in a light tint of the page accent with a bar down its left edge. */
+.story-open { display: grid; grid-template-columns: minmax(0, 60ch) minmax(0, 1fr); gap: clamp(20px, 3vw, 40px); align-items: start; margin-top: .6rem; }
+.story-open > .story-lede { margin: 0; }
+.story-takeaway { max-width: 60ch; margin: 0; padding: .85rem 1.1rem .95rem; border-left: 3px solid var(--plate-accent); border-radius: 0 12px 12px 0; background: color-mix(in srgb, var(--plate-accent) 10%, transparent); color: var(--text-primary); font: 400 19px/1.45 Georgia, serif; letter-spacing: -.01em; }
+.story-takeaway > span { display: block; margin-bottom: .3rem; font: 600 11px/1.5 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+.story-takeaway b { font-weight: 600; }
+@media (max-width: 860px) { .story-open { grid-template-columns: 1fr; gap: 1rem; } }
+@media (max-width: 600px) { .story-takeaway { font-size: 17px; } }
+
+/* Story pages (2026-11-03): the glow is faint, still and behind the header only, as on the
+   index, so the charts sit on plain paper and come away cleanly in a picture of them. */
+@media screen {
+  /* Scrolling with the page, the theme's overhang past both sides would widen it, so the
+     glow keeps to the page's width. */
+  body:has(main.stories-page)::before { position: absolute; left: 0; right: 0; top: -20vh; height: 80vh; opacity: .18; animation: none;
+    -webkit-mask-image: linear-gradient(currentColor 40%, transparent 80%); mask-image: linear-gradient(currentColor 40%, transparent 80%); }
+}
+
+/* Share this story (Director Note "Social export", 2026-11-03): the 4:5 image beside what it
+   is and three ways to send it on. */
+.story-share { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 1.25rem; align-items: center; padding: 1.1rem; border: 1px solid var(--border); border-radius: 16px; }
+.story-share[hidden] { display: none; }
+.story-share img { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); }
+.story-share h2 { margin: 0 0 .3rem; font: 400 22px/1.2 Georgia, serif; letter-spacing: -.02em; }
+.story-share-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .6rem; }
+.story-share-actions button { min-height: 44px; padding: 0 1rem; border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--text-primary); font: 500 14px var(--font-text); cursor: pointer; }
+.story-share-actions button:first-child { background: var(--text-primary); color: var(--surface-1); border-color: var(--text-primary); }
+.story-share-actions button:hover { border-color: var(--text-secondary); }
+.story-share-actions button:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+.story-share .story-share-status { margin: .5rem 0 0; min-height: 1.2em; font-size: 13px; color: var(--text-muted); }
+@media (max-width: 480px) { .story-share { grid-template-columns: 96px minmax(0, 1fr); gap: .9rem; } }

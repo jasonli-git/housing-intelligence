@@ -46,7 +46,7 @@ export default async function HottestCountiesPage() {
       lede={<>Each line is a county: on the left, how many days a summer its average high passed 90°F from {THEN[0]} to {THEN[1]}; on the right, from {NOW[0]} to {NOW[1]}. Every line climbs, by {rise.toFixed(1)} days on average. {hottest?.name} is now the hottest, {hottest?.now.toFixed(0)} days a summer; {coolest?.name} the coolest. Green lines are counties whose homes stand under more tree canopy than the typical county&rsquo;s.</>}
       note={<>NOAA&rsquo;s nClimGrid-Daily maximum temperature, gridded from weather stations and averaged over each county&rsquo;s area, May to September; a day counts when the county average reached 90°F (32.2°C). A county average runs cooler than its hottest paved blocks, so these are a floor on how often a town felt it. Shade: tree canopy at the county&rsquo;s homes, from the Forest Service&rsquo;s canopy map; a county&rsquo;s canopy is today&rsquo;s, set beside its heat, not shown to cause it.</>}
     >
-      <figure className="story-figure" tabIndex={0}>
+      <figure className="story-figure" tabIndex={0} data-share-cut>
         <p className="ladder-key"><span><i style={{ background: "var(--story-3)" }} />More shade than the typical county</span><span><i style={{ background: "var(--story-2)" }} />Less</span></p>
         <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Slope chart: days over 90°F a summer for each New Jersey county, ${THEN[0]}–${THEN[1]} against ${NOW[0]}–${NOW[1]}; every county rises.`}>
           <g className="grid" aria-hidden="true">

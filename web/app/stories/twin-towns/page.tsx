@@ -6,7 +6,7 @@ import { formatValue } from "@/lib/format";
 import { pageMetadata } from "@/lib/meta";
 import { regionPath } from "@/lib/placeRoutes";
 import { storyTowns } from "@/lib/storyData";
-import { logTicks, PRICE, twins } from "@/lib/stories";
+import { PRICE, priceTick, priceTicks, twins } from "@/lib/stories";
 import "../../horizon-theme.css";
 import "../stories.css";
 
@@ -31,7 +31,8 @@ export default async function TwinTownsPage() {
   const towns = await storyTowns([PRICE, ...ALIKE.map((a) => a.key)]);
   const pairs = twins(towns, ALIKE.map((a) => a.key), 0.25).slice(0, 12);
   const values = pairs.flatMap((p) => [p.a.values[PRICE]!, p.b.values[PRICE]!]);
-  const lo = Math.log(Math.min(...values) / 1.6), hi = Math.log(Math.max(...values) * 1.6);
+  // Room past the cheapest and priciest homes for the names written beside their dots.
+  const lo = Math.log(Math.min(...values) / 2.2), hi = Math.log(Math.max(...values) * 2.2);
   const at = (v: number) => `${Math.round(((Math.log(v) - lo) / (hi - lo)) * 10000) / 100}%`;
   return (
     <StoryShell
@@ -44,7 +45,7 @@ export default async function TwinTownsPage() {
         <ul className="ladder extremes-chart twins">
           <li className="ladder-axis" aria-hidden="true">
             <span>Pair</span>
-            <span className="ladder-track">{logTicks(Math.exp(lo), Math.exp(hi), 6).map((t) => <b key={t} style={{ left: at(t) }}>{usd(t)}</b>)}</span>
+            <span className="ladder-track">{priceTicks(Math.exp(lo), Math.exp(hi), 6).map((t) => <b key={t} style={{ left: at(t) }}>{priceTick(t)}</b>)}</span>
             <span className="num">Gap</span>
           </li>
           {pairs.map((p) => (

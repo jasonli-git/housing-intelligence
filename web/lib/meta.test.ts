@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Region } from "@/lib/api";
-import { pageMetadata, regionTitle } from "@/lib/meta";
+import { pageMetadata, regionTitle, SHARE_DEFAULTS } from "@/lib/meta";
 
 const region = (fields: Partial<Region>): Region =>
   ({ region_id: 1, geoid: "", level: "county", name: "Atlantic", name_lsad: "", state_code: "NJ", ...fields }) as Region;
@@ -30,4 +30,13 @@ describe("pageMetadata (#358)", () => {
     expect(meta.twitter).toMatchObject({ images: [{ url: "/housing-preview.png" }] });
     expect(meta.alternates).toEqual({ canonical: "/regions/5" });
   });
+});
+
+it("gives a visual story its own share card and leaves other pages the site's", () => {
+  const story = pageMetadata({ title: "The Wawa line — Housing", description: "d", path: "/stories/the-wawa-line" });
+  expect((story.openGraph?.images as { url: string; alt: string }[])[0]).toMatchObject({ url: expect.stringMatching(/\/screenshots\/share\/the-wawa-line\.jpg$/), alt: "The Wawa line" });
+  expect((story.twitter?.images as { url: string }[])[0].url).toMatch(/share\/the-wawa-line\.jpg$/);
+  expect(pageMetadata({ title: "Visual stories — Housing", description: "d", path: "/stories" }).openGraph?.images).toEqual(SHARE_DEFAULTS.openGraph.images);
+  // A story with no chart until a town is picked has no card drawn, so it keeps the site's.
+  expect(pageMetadata({ title: "Where students go — Housing", description: "d", path: "/stories/where-students-go" }).openGraph?.images).toEqual(SHARE_DEFAULTS.openGraph.images);
 });

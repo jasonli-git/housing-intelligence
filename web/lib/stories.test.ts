@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { baseName, centre, crossingYear, extremes, inside, ladder, leadingDestination, logTicks, monthlyCost, PRICE, ratioBand, traitPremiums, trend, twins, wordPremiums, type StoryTown, type Trait } from "./stories";
+import { baseName, centre, crossingYear, extremes, inside, ladder, leadingDestination, logTicks, monthlyCost, PRICE, priceTick, priceTicks, ratioBand, traitPremiums, trend, twins, wordPremiums, type StoryTown, type Trait } from "./stories";
 
 const town = (id: number, county: number, price: number, extra: Record<string, number> = {}): StoryTown => ({
   id, name: `Town ${id}`, county, countyName: `County ${county}`, values: { [PRICE]: price, ...extra },
@@ -86,6 +86,9 @@ describe("the newer stories' arithmetic", () => {
 describe("chart helpers", () => {
   it("picks round ratio-scale ticks", () => {
     expect(logTicks(150_000, 3_000_000)).toEqual([200_000, 500_000, 1_000_000, 2_000_000]);
+    // A price axis drops ticks hugging its ends and labels the rest briefly.
+    expect(priceTicks(95_000, 5_100_000, 7)).toEqual([200_000, 500_000, 1_000_000, 2_000_000]);
+    expect([500_000, 1_000_000, 2_500_000].map(priceTick)).toEqual(["$500K", "$1M", "$2.5M"]);
   });
   it("fits a straight line", () => {
     const t = trend([[0, 1], [1, 3], [2, 5]]);

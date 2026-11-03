@@ -48,7 +48,8 @@ export default async function BoroughitisPage() {
   return (
     <StoryShell
       title="Boroughitis"
-      lede={<>New Jersey has 564 municipalities, more for its size than almost any state, and most of the split happened in one burst. In the 1890s a law let any neighbourhood that wanted its own school district become a borough, and hundreds did: {decade(1890)} boroughs in that decade alone, {busiestCount} towns in {busiestYear}. Each dot is a town, at the year it was incorporated, coloured by what it became.</>}
+      takeaway={<><b>One decade made {Math.round((decade(1890) / Math.max(1, boroughs)) * 100)}% of New Jersey&rsquo;s boroughs.</b> {decade(1890)} of the {boroughs} with a date were incorporated in the 1890s, and {busiestCount} towns in {busiestYear} alone.</>}
+      lede={<>New Jersey has 564 municipalities, more for its size than almost any state, and many of them came in one burst. In the 1890s a law let any neighbourhood that wanted its own school district become a borough, and dozens did. Each dot is a town, at the year it was incorporated, coloured by what it became.</>}
       note={<>Incorporation dates: Wikidata&rsquo;s inception for each municipality (CC0), the date it was incorporated or set off from another, which for a colonial township can be the date it was first named. {564 - towns.length} towns have no date recorded and are not drawn; {boroughs} of the {towns.length} drawn are boroughs. Types are today&rsquo;s, from the Census Bureau&rsquo;s names, so a town that became a city later is drawn as a city. Years before {FROM} are gathered at the left edge.</>}
     >
       <figure className="story-figure" tabIndex={0}>

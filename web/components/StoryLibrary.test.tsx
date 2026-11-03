@@ -25,8 +25,10 @@ it("shows the feature and four labelled rails with real story links", () => {
 });
 it("provides every story in a searchable normal grid", () => {
   render(<StoryLibrary />);
-  fireEvent.click(screen.getByRole("button", { name: /All stories/ }));
+  fireEvent.click(screen.getByRole("button", { name: /^See all \d+ stories/ }));
   expect(screen.getAllByRole("link")).toHaveLength(LIBRARY_STORIES.length);
+  fireEvent.click(screen.getByRole("button", { name: "← Discover" }));
+  expect(screen.getAllByRole("region")).toHaveLength(4);
   fireEvent.change(screen.getByRole("searchbox", { name: "Search stories" }), { target: { value: "Wawa" } });
   expect(screen.getAllByRole("link")).toHaveLength(1);
   expect(screen.getByRole("status").textContent).toContain("1 story");
@@ -55,4 +57,13 @@ it("moves focus between story links with the keyboard", () => {
   expect(document.activeElement).toBe(links.at(-1));
   fireEvent.keyDown(links.at(-1)!, { key: "Home" });
   expect(document.activeElement).toBe(links[0]);
+});
+
+it("searching from the discover page swaps the rails for matches", () => {
+  render(<StoryLibrary />);
+  fireEvent.change(screen.getByRole("searchbox", { name: "Search stories" }), { target: { value: "Wawa" } });
+  expect(screen.queryByRole("region", { name: "Only in New Jersey" })).toBeNull();
+  expect(screen.getAllByRole("link")).toHaveLength(1);
+  fireEvent.change(screen.getByRole("searchbox"), { target: { value: "" } });
+  expect(screen.getByRole("region", { name: "Only in New Jersey" })).toBeTruthy();
 });
