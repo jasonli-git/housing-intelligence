@@ -205,6 +205,13 @@ Not open work: each comes round on a date. The steps live where the row says.
       "Compare counties" panel. None runs on deploy (the accessibility gate does, and
       passes); update or delete each when it is next needed.
 
+- [ ] **Two story charts' price axes overlap at tablet width.** (found 2026-11-03,
+      ARCHITECTURE #465) The price ladder's and Priciest and cheapest's top tick labels
+      ($100,000 … $5,000,000) run together near 700px, on the page and in their share
+      images. Fewer ticks or the short $500K form `twin-towns` uses.
+- [ ] **Three share images shrink their text small.** (found 2026-11-03, #465) Hometown
+      famous, How data gets rewritten and The hottest counties are figures shrunk to fit
+      the 4:5 frame; a `data-share-chart` on a shorter part of each would read larger.
 - [ ] **Re-download the stories' two hand-fed rasters when they are republished.**
       (2026-10-22, ARCHITECTURE #436) BTS's noise map (next after 2022/2023) and EOG's
       night lights (2025's annual file) into `data/manual/bts_noise/` and

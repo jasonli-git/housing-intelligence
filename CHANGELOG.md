@@ -11,8 +11,20 @@ gate (ARCHITECTURE #404), all 2026-10-20, and fixture-based data guards (2026-10
 This section holds those changes only; other changes merged since 0.50.0
 are not yet recorded here.
 
+### Added
+
+- **A share image for every visual story** (2026-11-03, ARCHITECTURE #465, #466): each
+  story's link preview shows its title, takeaway and chart, and the page offers a 4:5 image
+  to save or share, with its sources credited in the publishers' own words. Five stories
+  that show nothing until a town is picked have none.
+
 ### Changed
 
+- **Visual stories refined** (2026-11-03, ARCHITECTURE #464, #467): the stories page has
+  its search on the main view, Editor's picks on a full-width coloured band and a quieter glow; story
+  cards show each story from its title, uncropped. Every story page shares one layout,
+  1320px wide: a shortcut bar, a Sources footnote and a link to the next story, with a
+  one-line takeaway beside the intro on the "Only in New Jersey" stories.
 - **The home, state, county, town and ZIP pages use the new poster design** (2026-11-02,
   ARCHITECTURE #457): chapters, colour panels and a plain-language snapshot in each hero;
   the state and county maps are tied to their sortable tables; net homes now use the
