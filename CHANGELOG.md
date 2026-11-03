@@ -17,6 +17,10 @@ are not yet recorded here.
   ARCHITECTURE #457): chapters, colour panels and a plain-language snapshot in each hero;
   the state and county maps are tied to their sortable tables; net homes now use the
   published figure, which counts only towns that reported both completions and demolitions.
+- **Quieter accents and clearer shortcuts** (2026-11-03): the home page's place cards are
+  plain cards with a thin colour edge; the county panel is neutral instead of brown; and the
+  "On this page" shortcuts use one name per kind of section on every page (Cost to…,
+  How it compares, Living here, Charts), with the report's jump menu to match.
 - **One menu bar and one footer on every page** (2026-11-02, ARCHITECTURE #459–#463): the bar
   reads Map · Compare · Charts · Tools, with the non-commercial terms as a pill inside it;
   on pages with an "On this page" bar, that bar sticks to the top and the site bar scrolls
