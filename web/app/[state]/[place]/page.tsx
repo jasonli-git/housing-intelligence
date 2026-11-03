@@ -654,7 +654,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
   return glossTree(<>
     <Masthead affordability={{ kind: "route" }} simple />
-    <main id="main-content" tabIndex={-1} className={styles.poster}>
+    <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact}`}>
       <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county && !isCounty ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
       <PosterNav links={townLinks} />
 
