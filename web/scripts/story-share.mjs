@@ -9,10 +9,12 @@ import { resolve } from 'node:path';
 const SITE = 'housing.jasonli.app';
 
 // Publishers a story's notes may name, and the credit each takes on a card. OpenStreetMap's
-// licence asks for its credit wherever its data appears; the rest are named as sources.
+// licence asks for its credit wherever its data appears, and Zillow's Terms of Use (4C) for
+// "Data Provided by Zillow Group" wherever its figures are shown (ARCHITECTURE #272), which a
+// card shared off the site is; the rest are named as sources.
 const CREDITS = [
   [/OpenStreetMap/, '© OpenStreetMap contributors'],
-  [/Zillow/, 'Zillow'],
+  [/Zillow/, 'Data Provided by Zillow Group'],
   [/Census Bureau|American Community Survey|TIGER/, 'US Census Bureau'],
   [/Wikidata/, 'Wikidata'],
   [/FEMA/, 'FEMA'],
@@ -115,6 +117,10 @@ export async function captureShareCard(browser, page, { slug, outDir }) {
   const chart = await captureChart(browser, page.url());
   if (!chart) return false;
   const credits = [...new Set(CREDITS.filter(([pattern]) => pattern.test(story.notes)).map(([, credit]) => credit))];
+  // Zillow's notice is a sentence of its own, so it follows the list rather than joining it.
+  const notice = credits.find((c) => c.startsWith('Data Provided'));
+  const names = credits.filter((c) => c !== notice);
+  const creditLine = [names.length && `Data: ${names.join(' · ')}`, notice].filter(Boolean).join('. ');
   // Without a takeaway, the intro's first sentence says what the chart is.
   const text = story.takeaway || escape(story.lede.split(/(?<=\.)\s/)[0] ?? '');
   await mkdir(resolve(outDir, 'share'), { recursive: true });
@@ -141,7 +147,7 @@ export async function captureShareCard(browser, page, { slug, outDir }) {
     </style>
     <div class="copy"><span class="kicker">Visual story · New Jersey</span><h1>${escape(story.title)}</h1>${text ? `<p>${text}</p>` : ''}</div>
     <div class="chart${cut ? ' cut' : ''}"><img src="data:image/jpeg;base64,${chart.image.toString('base64')}" alt=""></div>
-    <footer><span>${credits.length ? `Data: ${escape(credits.join(' · '))}` : 'Sources on the page'}</span><b>${SITE}/stories/${slug}</b></footer>`;
+    <footer><span>${creditLine ? escape(creditLine) : 'Sources on the page'}</span><b>${SITE}/stories/${slug}</b></footer>`;
     const card = await browser.newPage({ viewport: { width: format.width, height: format.height }, deviceScaleFactor: 1 });
     try {
       await card.setContent(html, { waitUntil: 'load' });

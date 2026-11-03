@@ -1033,6 +1033,14 @@ the credit line and the story's address at the foot, on plain white. 4:5 is the 
 shape feeds show uncropped, and most of the charts are tall. The 1200×630 card stays for
 link previews only. The owner approved building the export button the same day.
 
+**Update 2026-11-03 (answered):** Zillow's terms allow its figures on shared images, as
+ARCHITECTURE #272 already read them: section 4C lets derived work travel if Zillow is cited
+"on every page where it appears", including "Data Provided by Zillow Group", and the site
+stays non-commercial (#323). Every image built from Zillow data now carries that wording in
+its credit line. The other open point is settled too: a chart taller than the frame fades
+out, a map shrinks to fit whole, and stories that show no chart until a town is picked get
+no image.
+
 ---
 
 ## Data Explorer
