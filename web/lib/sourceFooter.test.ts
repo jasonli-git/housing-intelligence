@@ -20,8 +20,8 @@ describe("SourceFooter", () => {
     const positions = cards.map((card) => html.indexOf(card));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
-    expect(html.indexOf("Publisher statement")).toBeLessThan(html.indexOf("<details"));
-    expect(html).toContain('href="https://www.census.gov/"');
+    expect(html.indexOf("Publisher statement")).toBeLessThan(html.indexOf("foot-sources"));
+    expect(html).toContain("Census Bureau");
     expect(html).toContain('href="/sources"');
   });
 
@@ -45,7 +45,6 @@ describe("SourceFooter", () => {
     for (const shown of ["Census API notice", "FRED® API notice", "Data Provided by Zillow Group.", "HUD User Data API notice"]) expect(notices).toContain(shown);
     expect(notices.split("HUD User Data API notice")).toHaveLength(2);
     for (const moved of ["Freddie Mac series citation", "FHFA notice", "NJDEP notice"]) expect(notices).not.toContain(moved);
-    expect(notices).toContain('href="/sources"');
   });
 
   it("omits the publisher card when sources have no required statements", async () => {
@@ -56,7 +55,7 @@ describe("SourceFooter", () => {
     }]);
     const html = renderToStaticMarkup((await SourceFooter())!);
     expect(html).not.toContain("foot-notices");
-    expect(html).toContain("Data provenance");
+    expect(html).toContain('id="sources-heading"');
     expect(html).toContain('class="foot-notice-head"');
     expect(html).toContain('class="notice-external-icon"');
     expect(html).toContain('aria-label="Site policies"');

@@ -23,12 +23,11 @@ const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
  * a source was added — and drift here is a licence problem, not a stale-copy problem.
  *
  * Grouped by institution since Milestone 18 (ARCHITECTURE #128): an institution is named
- * once and a licence its datasets share is stated once. Closed to one line since #137:
- * every institution stays named, Zillow with its Non-commercial tag, and the datasets —
- * each linked to its publisher, with how often it updates and its terms — open beneath
- * it. What satisfies attribution is the naming, and the naming never closes. Printing
- * opens the list (globals.css). The non-commercial terms themselves are the licence line
- * at the top of the page; the tag points to it.
+ * once. One line since #137: every institution stays named, Zillow with its
+ * Non-commercial tag, and what satisfies attribution is the naming, which never closes.
+ * Since #459 each dataset, with its link, cadence and terms, is listed on /sources
+ * rather than in a disclosure here. The non-commercial terms themselves are the licence
+ * line at the top of the page; the tag points to it.
  *
  * Absent rather than wrong when the API cannot be reached: an attribution block listing
  * sources that may not be the ones actually behind the page would be worse than none,
@@ -82,111 +81,43 @@ export async function SourceFooter() {
                 <p>{linked(notice)}</p>
               </div>
             ))}
-            <p className="publisher-notice-more">
-              <Link href="/sources">Every source&rsquo;s terms and notices <span aria-hidden="true">→</span></Link>{" "}
-              <Link href="/data">Explore how the data is built <span aria-hidden="true">→</span></Link>
-            </p>
           </div>
         )}
 
-        <details className="foot-sources footer-provenance">
-          <summary className="foot-head disclose">
-            <span className="foot-title-block">
-              <span className="foot-kicker">Data provenance</span>
-              <span className="foot-title-separator" aria-hidden="true">·</span>
-              <h2 className="foot-label" id="sources-heading">
-                Sources
-              </h2>
-            </span>
-            <span className="foot-brief when-closed">
-              {institutions.map((institution) => {
-                const short = shortPublisher(institution.publisher);
-                return (
-                  <span className="brief-item" key={institution.publisher}>
-                    {short === institution.publisher ? (
-                      short
-                    ) : (
-                      <abbr title={institution.publisher}>{short}</abbr>
-                    )}
-                    {institution.sources.some(isRestricted) && (
-                      <span className="nc-tag" title="See the licence line at the top of the page">
-                        Non-commercial
-                      </span>
-                    )}
-                  </span>
-                );
-              })}
-            </span>
-            <span className="foot-intro when-open">
-              Every figure on this site comes from one of these, and carries its release and
-              match method in the underlying packet.
-            </span>
-            <span className="disclose-hint">
-              <span className="when-open">Hide</span>
-            </span>
-          </summary>
+        {/* The naming is the attribution (#137): every institution, Zillow with its
+            Non-commercial tag, on every page. Each dataset, its link and terms are on /sources. */}
+        <section className="foot-sources" aria-labelledby="sources-heading">
+          <h2 className="foot-kicker" id="sources-heading">Sources</h2>
+          <p className="foot-brief">
+            {institutions.map((institution) => {
+              const short = shortPublisher(institution.publisher);
+              return (
+                <span className="brief-item" key={institution.publisher}>
+                  {short === institution.publisher ? (
+                    short
+                  ) : (
+                    <abbr title={institution.publisher}>{short}</abbr>
+                  )}
+                  {institution.sources.some(isRestricted) && (
+                    <span className="nc-tag" title="See the licence line at the top of the page">
+                      Non-commercial
+                    </span>
+                  )}
+                </span>
+              );
+            })}
+          </p>
+        </section>
 
-          <ul className="inst-grid" aria-label="Sources by institution">
-            {institutions.map((institution) => (
-              <li className="inst" key={institution.publisher}>
-                <span className="inst-name">{institution.publisher}</span>
-                {institution.license && <span className="inst-terms">{institution.license}</span>}
-                <ul>
-                  {institution.sources.map((source) => (
-                    <li key={source.source_id}>
-                      {/* `homepage`, not `url`: for API-fetched sources the canonical root is
-                          the API itself, which returns JSON or a 404 to a reader who clicks it. */}
-                      <a
-                        href={source.homepage}
-                        rel="noreferrer noopener"
-                        target="_blank"
-                        aria-label={`${source.name} (opens ${new URL(source.homepage).host} in a new tab)`}
-                      >
-                        {source.name}
-                        <span className="out" aria-hidden="true">
-                          ↗
-                        </span>
-                      </a>
-                      {source.originators?.length ? (
-                        <span className="ds-meta">
-                          series owned by {source.originators.join(" and ")}
-                        </span>
-                      ) : null}
-                      {source.cadence && <span className="ds-meta">{source.cadence}</span>}
-                      {isRestricted(source) && (
-                        <span className="nc-tag" title="See the licence line at the top of the page">
-                          Non-commercial
-                        </span>
-                      )}
-                      {!institution.license && <span className="ds-terms">{source.license}</span>}
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        </details>
-
-        {/* Outside the disclosure, so the pages about the data are reachable without
-            opening the source list first (Milestone 27). */}
-        <nav className="foot-links" aria-label="Source history">
-          <div className="foot-history-head">
-            <span className="foot-kicker">Source history</span>
-            <span className="foot-built">
-              Built <time dateTime={builtAt}>{dayLabel(builtAt)}</time>
-              <BuiltAgo at={builtAt} />
-            </span>
-          </div>
-          <div className="foot-link-list">
-            <Link href="/freshness">
-              <span className="foot-link-title">How current is each source? <span aria-hidden="true">→</span></span>
-              <span className="foot-link-detail">Latest data period, last check, and next release.</span>
-            </Link>
-            <Link href="/changes">
-              <span className="foot-link-title">Which figures changed? <span aria-hidden="true">→</span></span>
-              <span className="foot-link-detail">Earlier values and revisions after publication.</span>
-            </Link>
-          </div>
+        <nav className="foot-links" aria-label="About the data">
+          <Link href="/sources">Every source and its terms</Link>
+          <Link href="/data">How the data is built</Link>
+          <Link href="/freshness">How current each source is</Link>
+          <Link href="/changes">Figures revised after publication</Link>
+          <span className="foot-built">
+            Built <time dateTime={builtAt}>{dayLabel(builtAt)}</time>
+            <BuiltAgo at={builtAt} />
+          </span>
         </nav>
 
         <section className="foot-notice footer-colophon" aria-label="Code and data terms">

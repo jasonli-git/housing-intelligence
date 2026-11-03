@@ -13,11 +13,11 @@ beforeEach(() => sources.mockResolvedValue([{
 }]));
 afterEach(cleanup);
 
-it("keeps source history focused on freshness and revisions", async () => {
+it("links the pages about the data as one row of plain links", async () => {
   render(await SourceFooter());
-  const history = screen.getByRole("navigation", { name: "Source history" });
-  expect(within(history).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/freshness", "/changes"]);
-  expect(within(history).queryByText(/Visual stories/)).toBeNull();
+  const about = screen.getByRole("navigation", { name: "About the data" });
+  expect(within(about).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/sources", "/data", "/freshness", "/changes"]);
+  expect(within(about).queryByText(/Visual stories/)).toBeNull();
 });
 
 it("preserves the complete code/data notice and every policy destination", async () => {
@@ -33,11 +33,11 @@ it("preserves the complete code/data notice and every policy destination", async
   expect(notice.children[1].className).toBe("foot-intro");
 });
 
-it("leaves the visible publisher notice and source disclosure intact", async () => {
+it("keeps the publisher notice and names every institution, with no disclosure", async () => {
   render(await SourceFooter());
   expect(within(screen.getByRole("group", { name: "Notices the sources require" })).getByText("Synthetic attribution retained verbatim.")).toBeTruthy();
-  expect(screen.getByText("Synthetic source").getAttribute("href")).toBe("https://example.com/source");
-  expect(document.querySelector("details.footer-provenance > summary .foot-title-block")?.textContent).toContain("Data provenance");
+  expect(within(screen.getByRole("region", { name: "Sources" })).getByText("Synthetic publisher")).toBeTruthy();
+  expect(document.querySelector(".foot details")).toBeNull();
 });
 
 it("does not invent attribution when source data is unavailable", async () => {
