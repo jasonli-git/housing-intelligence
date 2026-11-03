@@ -26,7 +26,7 @@ export function StoryShell({ title, lede, takeaway, note, children, focus }: { t
   return (
     <>
       <Masthead affordability={{ kind: "route" }} />
-      <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories">
+      <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories" data-story={story ? storySlug(story) : undefined}>
         <header className="page-head">
           {story && JERSEY.has(storySlug(story)) && <GardenStateArtwork header />}
           <div>

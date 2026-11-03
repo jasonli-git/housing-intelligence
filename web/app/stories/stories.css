@@ -209,3 +209,10 @@
 .story-takeaway b { font-weight: 600; }
 @media (max-width: 860px) { .story-open { grid-template-columns: 1fr; gap: 1rem; } }
 @media (max-width: 600px) { .story-takeaway { font-size: 17px; } }
+
+/* Story pages (2026-11-03): the glow is faint, still and behind the header only, as on the
+   index, so the charts sit on plain paper and come away cleanly in a picture of them. */
+@media screen {
+  body:has(main.stories-page)::before { position: absolute; top: -20vh; height: 80vh; opacity: .18; animation: none;
+    -webkit-mask-image: linear-gradient(currentColor 40%, transparent 80%); mask-image: linear-gradient(currentColor 40%, transparent 80%); }
+}
