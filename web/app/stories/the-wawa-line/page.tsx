@@ -57,7 +57,10 @@ export default async function WawaLinePage() {
   return (
     <StoryShell
       title="The Wawa line"
-      lede={<>Ask where North Jersey ends and South Jersey begins and you get an argument. The convenience stores answer it: {total.wawa} Wawas fill the south, {total.quickchek} QuickCheks the north, and the line where one gives way to the other runs across the middle of the state. And the price of a home? In the {mixed.size} counties the line cuts through, {Math.abs(gap) < 0.05 ? <>QuickChek towns and Wawa towns cost about the same ({pct(gap)}): the line divides habits, not wealth.</> : <>QuickChek towns&rsquo; homes run {pct(gap)} against Wawa towns&rsquo; in the same county.</>}</>}
+      takeaway={Math.abs(gap) < 0.05
+        ? <><b>The line divides habits, not wealth.</b> In the {mixed.size} counties it crosses, QuickChek towns and Wawa towns cost about the same ({pct(gap)}).</>
+        : <><b>QuickChek towns&rsquo; homes run {pct(gap)} against Wawa towns&rsquo;</b> in the same county, across the {mixed.size} counties the line crosses.</>}
+      lede={<>Ask where North Jersey ends and South Jersey begins and you get an argument. The convenience stores answer it: {total.wawa} Wawas fill the south, {total.quickchek} QuickCheks the north, and the line where one gives way to the other runs across the middle of the state.</>}
       note={<>Stores: OpenStreetMap, © OpenStreetMap contributors, available under the Open Database License; the counts here are offered under the same licence. A store mapped twice, its shop and its pumps, is counted once. Volunteer-mapped, so a store nobody added is missing. Prices: Zillow&rsquo;s typical home value, each town against its own county&rsquo;s average, compared only in counties holding both kinds of town.</>}
     >
       <div className="story-two">

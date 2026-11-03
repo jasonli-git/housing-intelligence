@@ -199,3 +199,10 @@
 .stories-page > .page-head > .state-place-artwork-header { position: absolute; top: 12px; right: 0; z-index: -1; width: clamp(180px, 22vw, 260px); height: auto; stroke-width: 1.5; opacity: .75; pointer-events: none; }
 .stories-page > .page-head > .state-place-artwork-header :is(.state-artwork-wash, .state-artwork-points) { fill: var(--plate-accent); }
 @media (max-width: 760px) { .stories-page > .page-head > .state-place-artwork-header { top: 0; right: -8px; width: 130px; opacity: .45; } }
+
+/* A story's takeaway (2026-11-03): its answer in one sentence, under the title and before
+   the intro, in a light tint of the page accent with a bar down its left edge. */
+.story-takeaway { max-width: 60ch; margin: .6rem 0 1rem; padding: .85rem 1.1rem .95rem; border-left: 3px solid var(--plate-accent); border-radius: 0 12px 12px 0; background: color-mix(in srgb, var(--plate-accent) 10%, transparent); color: var(--text-primary); font: 400 19px/1.45 Georgia, serif; letter-spacing: -.01em; }
+.story-takeaway > span { display: block; margin-bottom: .3rem; font: 600 11px/1.5 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+.story-takeaway b { font-weight: 600; }
+@media (max-width: 600px) { .story-takeaway { font-size: 17px; } }

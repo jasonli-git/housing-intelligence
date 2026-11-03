@@ -19,7 +19,9 @@ export function storyAndNext(title: string) {
 /** A visual story's page: the bar, the trail back to the index, the title and lede, the
  *  shortcuts, the figure, its sources as a footnote, then the next story. The "Only in New
  *  Jersey" stories carry the place pages' NJ artwork beside their title. */
-export function StoryShell({ title, lede, note, children, focus }: { title: string; lede: ReactNode; note: ReactNode; children: ReactNode; focus?: ReactNode }) {
+export function StoryShell({ title, lede, takeaway, note, children, focus }: { title: string; lede: ReactNode;
+  /** The story's answer in one sentence, built from the same figures as the chart. */
+  takeaway?: ReactNode; note: ReactNode; children: ReactNode; focus?: ReactNode }) {
   const { story, next } = storyAndNext(title);
   return (
     <>
@@ -31,6 +33,7 @@ export function StoryShell({ title, lede, note, children, focus }: { title: stri
             <Crumbs trail={[{ href: "/", label: "Home" }, { href: "/stories", label: "Visual stories" }]} here={title} />
             <Kind kind="story" />
             <h1 className="page-title">{title}</h1>
+            {takeaway && <p className="story-takeaway"><span>The takeaway</span>{takeaway}</p>}
             {!focus && <p className="story-lede">{lede}</p>}
           </div>
         </header>
