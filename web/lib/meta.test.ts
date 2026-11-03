@@ -37,4 +37,6 @@ it("gives a visual story its own share card and leaves other pages the site's", 
   expect((story.openGraph?.images as { url: string; alt: string }[])[0]).toMatchObject({ url: expect.stringMatching(/\/screenshots\/share\/the-wawa-line\.jpg$/), alt: "The Wawa line" });
   expect((story.twitter?.images as { url: string }[])[0].url).toMatch(/share\/the-wawa-line\.jpg$/);
   expect(pageMetadata({ title: "Visual stories — Housing", description: "d", path: "/stories" }).openGraph?.images).toEqual(SHARE_DEFAULTS.openGraph.images);
+  // A story with no chart until a town is picked has no card drawn, so it keeps the site's.
+  expect(pageMetadata({ title: "Where students go — Housing", description: "d", path: "/stories/where-students-go" }).openGraph?.images).toEqual(SHARE_DEFAULTS.openGraph.images);
 });

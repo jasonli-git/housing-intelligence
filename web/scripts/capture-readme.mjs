@@ -79,8 +79,10 @@ try {
           console.log(`screenshot: stories/${slug}-chart-${scheme}`);
         }
         if (scheme === 'light') {
-          await captureShareCard(browser, page, { slug, outDir });
-          console.log(`screenshot: share/${slug}`);
+          if (await captureShareCard(browser, page, { slug, outDir })) console.log(`screenshot: share/${slug} and share/${slug}-4x5`);
+          // A story newly without a chart needs adding to NO_SHARE_CARD in lib/meta.ts, or
+          // its link preview points at an image that was never drawn.
+          else console.warn(`no share card: ${slug} shows no chart until a reader picks something (list it in NO_SHARE_CARD)`);
         }
       }
       // Then the stories page itself, for the home page. Its cards show the pictures just

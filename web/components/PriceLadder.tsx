@@ -43,7 +43,7 @@ export function PriceLadder({ rows, counties }: { rows: LadderRow[]; counties: s
       <p className="story-note" role="status">
         {shown.length} towns · recent sales ran above the typical home value in {saleAbove} of them · scale {usd(Math.exp(lo))} to {usd(Math.exp(hi))}, spaced by ratio
       </p>
-      <ul className="ladder">
+      <ul className="ladder" data-share-chart>
         <li className="ladder-axis" aria-hidden="true">
           <span>Cheaper ←</span>
           <span className="ladder-track">

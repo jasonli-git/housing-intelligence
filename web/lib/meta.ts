@@ -37,13 +37,17 @@ export function pageMetadata({ title, description, path }: { title: string; desc
   };
 }
 
+/** Stories that show no chart until a reader picks a town, so the deploy draws no card for
+ *  them (story-share.mjs skips them and says so) and their previews keep the site's image. */
+export const NO_SHARE_CARD = new Set(["health-in-context", "sites-and-cleanup", "where-internet-reaches", "when-the-power-goes-out", "where-students-go"]);
+
 /**
  * A visual story's own share card (Director Note "Social export", 2026-11-03): its title,
  * takeaway and chart, drawn at deploy by `scripts/story-share.mjs` beside the artifacts.
  */
 function storyShareImage(path: string, title: string) {
   const slug = path.match(/^\/stories\/([a-z0-9-]+)$/)?.[1];
-  return slug ? [{ url: `${artifactUrl}/screenshots/share/${slug}.jpg`, width: 1200, height: 630, alt: title.replace(/ — Housing$/, "") }] : null;
+  return slug && !NO_SHARE_CARD.has(slug) ? [{ url: `${artifactUrl}/screenshots/share/${slug}.jpg`, width: 1200, height: 630, alt: title.replace(/ — Housing$/, "") }] : null;
 }
 
 /**
