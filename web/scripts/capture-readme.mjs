@@ -85,7 +85,7 @@ try {
       });
       await page.setViewportSize({ width: INDEX.width, height: INDEX.height });
       await page.goto(origin + '/stories', { waitUntil: 'networkidle', timeout: 90_000 });
-      await page.getByRole('button', { name: /^All \d+ stories/ }).click();
+      await page.getByRole('button', { name: /^See all \d+ stories/ }).click();
       await page.evaluate(async () => {
         await document.fonts.ready;
         // Lazy pictures below the fold would otherwise be blank in the shot.

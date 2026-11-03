@@ -88,9 +88,9 @@ export function StoryLibrary() {
       </Link>
       <StoryRail id="editors" title="Editor’s picks" stories={EDITOR_PICKS.map(storyBySlug)} />
       {COLLECTIONS.map((c) => <StoryRail key={c.id} id={c.id} title={c.title} stories={c.stories.map(storyBySlug)} viewAll={() => showCollection(c.id)} />)}
-      <div className="library-end"><button onClick={() => showCollection("all")}>All {LIBRARY_STORIES.length} stories ↑</button></div>
+      <div className="library-end"><button onClick={() => showCollection("all")}>See all {LIBRARY_STORIES.length} stories</button></div>
     </> : <section className="library-directory" aria-labelledby="library-directory-heading">
-      <h2 id="library-directory-heading">{topic === "all" ? "All stories" : COLLECTIONS.find((c) => c.id === topic)?.title}</h2>
+      <h2 id="library-directory-heading">{query.trim() ? `Results for “${query.trim()}”` : topic === "all" ? "All stories" : COLLECTIONS.find((c) => c.id === topic)?.title}</h2>
       <p className="library-result-count" role="status">{results.length} {results.length === 1 ? "story" : "stories"}{query ? ` matching “${query}”` : ""}</p>
       {results.length ? <ul className="library-grid">{results.map((story) => <li key={story.href}><StoryCard story={story} /></li>)}</ul> : <div className="library-empty"><p>No matches. Try another search or collection.</p><button onClick={() => { setQuery(""); setTopic("all"); setMode("all"); }}>Show all stories</button></div>}
     </section>}

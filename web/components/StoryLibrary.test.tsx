@@ -25,7 +25,7 @@ it("shows the feature and four labelled rails with real story links", () => {
 });
 it("provides every story in a searchable normal grid", () => {
   render(<StoryLibrary />);
-  fireEvent.click(screen.getByRole("button", { name: /^All \d+ stories/ }));
+  fireEvent.click(screen.getByRole("button", { name: /^See all \d+ stories/ }));
   expect(screen.getAllByRole("link")).toHaveLength(LIBRARY_STORIES.length);
   fireEvent.click(screen.getByRole("button", { name: "← Discover" }));
   expect(screen.getAllByRole("region")).toHaveLength(4);
