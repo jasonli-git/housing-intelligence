@@ -58,6 +58,9 @@ export function StoryLibrary() {
   const featured = storyBySlug(FEATURED_STORY);
   const results = findStories(query, topic);
   const directory = useRef<HTMLDivElement>(null);
+  // Searching or picking a collection swaps the rails for a grid of matches; clearing
+  // both, or "Discover", brings the rails back.
+  const browsing = mode === "all" || query.trim() !== "" || topic !== "all";
   function showCollection(id: string) {
     setTopic(id); setQuery(""); setMode("all");
     requestAnimationFrame(() => {
@@ -65,15 +68,16 @@ export function StoryLibrary() {
       directory.current?.scrollIntoView({ block: "start", behavior: "instant" });
     });
   }
+  function discover() { setTopic("all"); setQuery(""); setMode("curated"); }
   return <div className="story-library">
     <div className="library-toolbar" ref={directory} tabIndex={-1}>
-      <div role="group" aria-label="Story browsing view" className="library-modes">
-        <button aria-pressed={mode === "curated"} onClick={() => setMode("curated")}>Discover</button>
-        <button aria-pressed={mode === "all"} onClick={() => setMode("all")}>All stories <span>{LIBRARY_STORIES.length}</span></button>
+      <div className="library-filters" role="search">
+        <label>Search stories<input type="search" value={query} placeholder="Wawa, flood, commute…" onChange={(event) => setQuery(event.target.value)} /></label>
+        <label>Collection<select value={topic} onChange={(event) => setTopic(event.target.value)}><option value="all">All topics</option>{COLLECTIONS.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
       </div>
-      <span className="library-scope">New Jersey</span>
+      {browsing && <button className="library-discover" onClick={discover}>← Discover</button>}
     </div>
-    {mode === "curated" ? <>
+    {!browsing ? <>
       <Link className="library-feature" href={featured.href} prefetch={false}>
         <div className="library-feature-copy">
           <span className="library-eyebrow">Featured</span>
@@ -87,12 +91,8 @@ export function StoryLibrary() {
       <div className="library-end"><button onClick={() => showCollection("all")}>All {LIBRARY_STORIES.length} stories ↑</button></div>
     </> : <section className="library-directory" aria-labelledby="library-directory-heading">
       <h2 id="library-directory-heading">{topic === "all" ? "All stories" : COLLECTIONS.find((c) => c.id === topic)?.title}</h2>
-      <div className="library-filters">
-        <label>Search stories<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
-        <label>Collection<select value={topic} onChange={(event) => setTopic(event.target.value)}><option value="all">All topics</option>{COLLECTIONS.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select></label>
-      </div>
       <p className="library-result-count" role="status">{results.length} {results.length === 1 ? "story" : "stories"}{query ? ` matching “${query}”` : ""}</p>
-      {results.length ? <ul className="library-grid">{results.map((story) => <li key={story.href}><StoryCard story={story} /></li>)}</ul> : <div className="library-empty"><p>No matches. Try another search or collection.</p><button onClick={() => { setQuery(""); setTopic("all"); }}>Show all stories</button></div>}
+      {results.length ? <ul className="library-grid">{results.map((story) => <li key={story.href}><StoryCard story={story} /></li>)}</ul> : <div className="library-empty"><p>No matches. Try another search or collection.</p><button onClick={() => { setQuery(""); setTopic("all"); setMode("all"); }}>Show all stories</button></div>}
     </section>}
   </div>;
 }
