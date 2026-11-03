@@ -6,6 +6,7 @@ import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { Masthead } from "@/components/Masthead";
 import { StoryShare } from "@/components/StoryShare";
 import { StoryShortcuts } from "@/components/StoryShortcuts";
+import { ThemedShot } from "@/components/ThemedShot";
 import { COLLECTIONS, storySlug } from "@/lib/storyLibrary";
 import { STORIES } from "@/lib/stories";
 
@@ -46,11 +47,18 @@ export function StoryShell({ title, lede, takeaway, note, children, focus }: { t
         {focus && <><h2 className="story-h" id="story-statewide">Across New Jersey</h2><p className="story-lede">{lede}</p></>}
         <div data-story-shot>{children}</div>
         <p className="story-sources" id="story-sources"><b>Sources</b> {note}</p>
-        {story && <StoryShare slug={storySlug(story)} title={title} />}
-        <nav className="story-next" aria-label="More visual stories">
-          {next && <Link href={next.href} prefetch={false}><span>Next story</span><b>{next.title}</b></Link>}
-          <Link href="/stories" prefetch={false}>All visual stories →</Link>
-        </nav>
+        {/* The story's end: share it, or go on to the next one, side by side; then the way
+            back to every story. */}
+        <div className="story-end">
+          {story && <StoryShare slug={storySlug(story)} title={title} />}
+          <nav className="story-next" aria-label="More visual stories">
+            {next && <Link className="story-next-card" href={next.href} prefetch={false}>
+              <ThemedShot name={`stories/${storySlug(next)}`} width={1440} height={900} className="story-next-cover" />
+              <span className="story-next-copy"><span>Up next</span><b>{next.title}</b></span>
+            </Link>}
+            <Link className="story-next-all" href="/stories" prefetch={false}>All visual stories →</Link>
+          </nav>
+        </div>
       </main>
     </>
   );
