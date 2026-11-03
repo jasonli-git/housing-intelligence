@@ -43,7 +43,8 @@ export default async function DinerCapitalPage() {
   return (
     <StoryShell
       title="Diner capital"
-      lede={<>New Jersey calls itself the diner capital of the world. {total} diners are mapped across its 21 counties, and in {moreDiners} of them there are still more diners than Starbucks. For every 100,000 residents, {rows[0]?.name}, {rows[1]?.name} and {rows[2]?.name} have the most.</>}
+      takeaway={<><b>{rows[0]?.name} has the most diners for its size</b>, {rows[0]?.per.toFixed(1)} for every 100,000 residents, and in {moreDiners} of the 21 counties diners still outnumber Starbucks.</>}
+      lede={<>New Jersey calls itself the diner capital of the world. {total} diners are mapped across its 21 counties.</>}
       note={<>Diners: restaurants in OpenStreetMap tagged cuisine=diner or named one, © OpenStreetMap contributors, available under the Open Database License; the counts are offered under the same licence. Volunteer-mapped: a diner nobody tagged as one is missing, so every figure here is a floor. Residents: the Census Bureau&rsquo;s five-year American Community Survey. Towns under {MIN_PEOPLE.toLocaleString("en-US")} people are left off the town list.</>}
     >
       <div className="story-two">

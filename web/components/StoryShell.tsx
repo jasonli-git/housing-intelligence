@@ -33,8 +33,11 @@ export function StoryShell({ title, lede, takeaway, note, children, focus }: { t
             <Crumbs trail={[{ href: "/", label: "Home" }, { href: "/stories", label: "Visual stories" }]} here={title} />
             <Kind kind="story" />
             <h1 className="page-title">{title}</h1>
-            {takeaway && <p className="story-takeaway"><span>The takeaway</span>{takeaway}</p>}
-            {!focus && <p className="story-lede">{lede}</p>}
+            {/* With a takeaway, the intro and the takeaway share a row; without one, the intro stands alone. */}
+            {takeaway ? <div className="story-open">
+              {!focus && <p className="story-lede">{lede}</p>}
+              <p className="story-takeaway"><span>The takeaway</span>{takeaway}</p>
+            </div> : !focus && <p className="story-lede">{lede}</p>}
           </div>
         </header>
         <StoryShortcuts />

@@ -38,7 +38,8 @@ export default async function CourtCircleLanePage() {
   return (
     <StoryShell
       title="Court, Circle, Lane"
-      lede={<>Street names are a clock. The old grid called its streets Street and Avenue; the post-war subdivision, built for cars and dead ends, chose Court, Circle, Lane, Way, Place and Terrace. Sort New Jersey&rsquo;s towns by how many of their streets have the newer names and the year their homes were built moves from {fifths[0].year} to {fifths[4].year}.</>}
+      takeaway={<><b>The newer the street names, the newer the town.</b> In the fifth of towns with the most Courts, Circles and Lanes, the typical home was built in {fifths[4].year}; in the fifth with the fewest, {fifths[0].year}.</>}
+      lede={<>Street names are a clock. The old grid called its streets Street and Avenue; the post-war subdivision, built for cars and dead ends, chose Court, Circle, Lane, Way, Place and Terrace.</>}
       note={<>Street names: the Census Bureau&rsquo;s TIGER road files, the distinct names of each town&rsquo;s local roads; towns with fewer than ten are left out. Year built: the Census Bureau&rsquo;s median year built, five-year American Community Survey. Prices: Zillow&rsquo;s typical home value, each town against its own county.</>}
     >
       <figure className="story-figure" tabIndex={0}>

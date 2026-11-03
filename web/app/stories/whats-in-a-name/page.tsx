@@ -22,11 +22,13 @@ const pct = (p: number) => `${p >= 0 ? "+" : "−"}${Math.abs(Math.round(p * 100
 export default async function WhatsInANamePage() {
   const towns = await storyTowns([PRICE]);
   const words = wordPremiums(towns, WORDS);
+  const pct = (p: number) => `${p >= 0 ? "+" : "−"}${Math.abs(Math.round(p * 100))}%`;
   const reach = Math.max(0.3, ...words.map((w) => Math.abs(w.premium)));
   const w = (p: number) => `${Math.round((Math.abs(p) / reach) * 5000) / 100}%`;
   return (
     <StoryShell
       title="What’s in a name?"
+      takeaway={<><b>A &ldquo;{words[0].word}&rdquo; in the name goes with the priciest homes</b>, {pct(words[0].premium)} against the rest of the county; a &ldquo;{words.at(-1)!.word}&rdquo;, with the cheapest, {pct(words.at(-1)!.premium)}.</>}
       lede="Every word that five or more New Jersey town names share, and whether towns carrying it are dearer or cheaper than their own county's other towns. Right of the line, pricier; left, cheaper."
       note={<>Price: Zillow&rsquo;s typical home value, each town against the average of its own county, so &ldquo;Beach&rdquo; is not simply standing in for &ldquo;Monmouth&rdquo;. A word matches anywhere in the name, so &ldquo;Wood&rdquo; takes in Ridgewood and Wood-Ridge alike. Groups this small swing on one or two towns: for fun, not for a decision.</>}
     >

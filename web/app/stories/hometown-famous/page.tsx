@@ -32,6 +32,7 @@ export default async function HometownFamousPage() {
   return (
     <StoryShell
       title="Hometown famous"
+      takeaway={top[0] ? <><b>{top[0].t.name.replace(/ (town|township|borough|city|village)$/, "")} has the most recorded notable births for its size</b>: {top[0].per.toFixed(1)} for every 10,000 of today&rsquo;s residents{top[0].who ? <>, the best known being {top[0].who.label}</> : null}.</> : undefined}
       lede={<>{total.toLocaleString("en-US")} people notable enough for Wikidata were born in a New Jersey town. For its size, which town has produced the most? Each bar is a town&rsquo;s notable births per 10,000 of today&rsquo;s residents, beside the best-known person born there, by how many of Wikipedia&rsquo;s languages carry an article on them.</>}
       note={<>Births: Wikidata (CC0), every person recorded as born in the municipality; towns of {MIN_POP.toLocaleString("en-US")} people or more. Notable means notable to Wikidata&rsquo;s editors, who record athletes, politicians and performers more fully than others and the twentieth century more fully than the eighteenth; a hospital town gathers births from its whole area. Today&rsquo;s population, from the Census Bureau&rsquo;s American Community Survey, divides people born over two centuries, so an old town with few residents now scores high.</>}
     >

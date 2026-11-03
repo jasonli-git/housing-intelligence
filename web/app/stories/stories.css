@@ -202,7 +202,10 @@
 
 /* A story's takeaway (2026-11-03): its answer in one sentence, under the title and before
    the intro, in a light tint of the page accent with a bar down its left edge. */
-.story-takeaway { max-width: 60ch; margin: .6rem 0 1rem; padding: .85rem 1.1rem .95rem; border-left: 3px solid var(--plate-accent); border-radius: 0 12px 12px 0; background: color-mix(in srgb, var(--plate-accent) 10%, transparent); color: var(--text-primary); font: 400 19px/1.45 Georgia, serif; letter-spacing: -.01em; }
+.story-open { display: grid; grid-template-columns: minmax(0, 60ch) minmax(0, 1fr); gap: clamp(20px, 3vw, 40px); align-items: start; margin-top: .6rem; }
+.story-open > .story-lede { margin: 0; }
+.story-takeaway { max-width: 60ch; margin: 0; padding: .85rem 1.1rem .95rem; border-left: 3px solid var(--plate-accent); border-radius: 0 12px 12px 0; background: color-mix(in srgb, var(--plate-accent) 10%, transparent); color: var(--text-primary); font: 400 19px/1.45 Georgia, serif; letter-spacing: -.01em; }
 .story-takeaway > span { display: block; margin-bottom: .3rem; font: 600 11px/1.5 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
 .story-takeaway b { font-weight: 600; }
+@media (max-width: 860px) { .story-open { grid-template-columns: 1fr; gap: 1rem; } }
 @media (max-width: 600px) { .story-takeaway { font-size: 17px; } }

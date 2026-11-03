@@ -41,7 +41,10 @@ export default async function PizzaBagelPage() {
   return (
     <StoryShell
       title="The pizza–bagel line"
-      lede={<>Pizza is everywhere in New Jersey: {total.pizza.toLocaleString("en-US")} pizzerias against {total.bagel.toLocaleString("en-US")} bagel shops. But the bagel shop is a New York habit, and it thins out with distance from the city. In the northern bands of the map there is a bagel shop for every {ratio(north).toFixed(1)} pizzerias; in the south, one for every {ratio(south).toFixed(1)}. Darker towns lean bagel.</>}
+      takeaway={ratio(south) > ratio(north)
+        ? <><b>The bagel thins out with distance from New York.</b> The north has a bagel shop for every {ratio(north).toFixed(1)} pizzerias; the south, one for every {ratio(south).toFixed(1)}.</>
+        : <><b>Bagels hold up across the state.</b> The north has a bagel shop for every {ratio(north).toFixed(1)} pizzerias; the south, one for every {ratio(south).toFixed(1)}.</>}
+      lede={<>Pizza is everywhere in New Jersey: {total.pizza.toLocaleString("en-US")} pizzerias against {total.bagel.toLocaleString("en-US")} bagel shops. But the bagel shop is a New York habit, and it thins out with distance from the city. Darker towns lean bagel.</>}
       note={<>OpenStreetMap, © OpenStreetMap contributors, available under the Open Database License; the counts here are offered under the same licence. A bagel shop is a place tagged with the cuisine or named for bagels; a pizzeria the same for pizza, and a shop that is both counts as a bagel shop. Towns with fewer than two of either are drawn grey. Volunteer-mapped, so a place nobody added is missing, more often in rural towns.</>}
     >
       <div className="story-two">
