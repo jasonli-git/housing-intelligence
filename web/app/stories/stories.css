@@ -9,6 +9,9 @@
 .stories-grid span { color: var(--text-secondary); font-size: 14px; line-height: 1.5; }
 .story-lede { max-width: 62ch; color: var(--text-secondary); font-size: 16px; line-height: 1.6; }
 .story-note { color: var(--text-muted); font-size: 13px; line-height: 1.6; max-width: 70ch; }
+/* Every story ends on its sources as a footnote under a rule, as on the home page (2026-11-03). */
+.story-sources { margin: 2.5rem 0 0; padding-top: 8px; max-width: 80ch; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
+.story-sources b { color: var(--text-primary); font-weight: 600; margin-right: .35rem; }
 .story-figure { margin: 1.5rem 0; overflow-x: auto; }
 .story-figure svg { display: block; width: 100%; min-width: 640px; height: auto; }
 .story-figure .grid line { stroke: var(--plate-rule, var(--border)); }
