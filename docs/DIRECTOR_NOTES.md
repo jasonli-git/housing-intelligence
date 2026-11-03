@@ -1011,6 +1011,22 @@ Consider:
 
 Do not implement yet.
 
+**Update 2026-11-03 (discussion):** what an export would capture.
+
+- **Leaning toward:** title + takeaway + chart + a one-line source credit + the site
+  address. The intro is left out: it is written for a reader already on the page and is too
+  long to read in a feed. Chart-only loses meaning and credit once a repost strips the
+  caption; a takeaway-only text card has no evidence behind it, so at most a second image.
+- **Formats:** 1080×1350 portrait as the likely main export; 1200×630 landscape for link
+  previews.
+- **Decided:** build the 1200×630 link-preview image for each story first, since it needs no
+  button and shows wherever a story's URL is pasted.
+- **Open:** whether Zillow's terms allow its figures to travel as images off the site
+  (OpenStreetMap's licence asks only for credit); how stories whose chart does not fit a
+  frame export (the Wawa line's two charts side by side, the true monthly cost's long
+  table), probably with a per-story export view; light by default, dark as an option.
+- The export button itself is still not approved.
+
 ---
 
 ## Data Explorer
