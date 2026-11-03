@@ -76,7 +76,7 @@ async function captureChart(browser, url) {
     const narrow = await context.newPage();
     await narrow.goto(url, { waitUntil: 'networkidle', timeout: 90_000 });
     await narrow.evaluate(() => document.fonts.ready);
-    await narrow.addStyleTag({ content: `*,*::before,*::after{animation:none!important;transition:none!important} nextjs-portal{display:none!important} ${PLAIN}` });
+    await narrow.addStyleTag({ content: `*,*::before,*::after{animation:none!important;transition:none!important} nextjs-portal{display:none!important} ${PLAIN} [data-share-plain]:not(#_){background:none!important;box-shadow:none!important;border-color:transparent!important;backdrop-filter:none!important} [data-share-plain]:not(#_)::before,[data-share-plain]:not(#_)::after{display:none!important}` });
     // A chart the story marks with `data-share-chart`, leaving its controls behind; otherwise
     // the first block of the story tall enough to be a chart, in page order.
     const found = await narrow.evaluate(() => {
@@ -86,9 +86,12 @@ async function captureChart(browser, url) {
       if (!target) return null;
       target.setAttribute('data-share-target', '');
       // A marked chart's neighbours (its controls and notes) are hidden, so the capture's
-      // margin shows none of their edges.
-      if (target.matches('[data-share-chart]')) for (let el = target; el !== shot; el = el.parentElement)
+      // margin shows none of their edges, and the panels around it lose their tint and
+      // shadow, so it sits on the card's white.
+      if (target.matches('[data-share-chart]')) for (let el = target; el !== shot; el = el.parentElement) {
         for (const sibling of el.parentElement.children) if (sibling !== el) sibling.style.visibility = 'hidden';
+        el.parentElement.setAttribute('data-share-plain', '');
+      }
       return { figure: target.matches('figure') };
     });
     if (!found) return null;
