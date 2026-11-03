@@ -29,11 +29,19 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — between milestones (2026-10-30)
+## Now — Milestone 60, Overture places for the shop stories (2026-11-03)
 
-Milestone 58 shipped: housing.jasonli.app is served by the Worker `housing-site`
-(ARCHITECTURE #454). The first weekly refresh on the Worker is due 2026-10-30 08:00; if it
-reports a problem, look there first. Next is clearing Open and the Director Notes.
+On `milestone/m60-overture-places`. Decisions approved by the owner 2026-11-03: the whole
+Starbucks index moves to Overture (one source per story); a confidence floor is tuned to
+outside counts and recorded; places whose only source is All the Places are dropped; share
+images credit "Overture Maps Foundation", with each publisher's notice on `/sources`.
+
+- [ ] Source adapter `overture_places` and its `config/sources.yml` entry, terms read.
+- [ ] Landing: New Jersey's places from the public release into Parquet.
+- [ ] `stg_story_overture`: counts per town, county and state; duplicates merged.
+- [ ] Confidence floor tuned against outside counts; the value and reasoning recorded.
+- [ ] `overture_*_count` measures; the two stories read them; notes and credits rewritten.
+- [ ] Findings re-checked; the stories register, ARCHITECTURE, CHANGELOG updated.
 
 ## Open
 

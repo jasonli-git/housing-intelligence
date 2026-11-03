@@ -186,3 +186,14 @@ def test_a_downloaded_raster_is_cut_to_new_jersey(tmp_path: Path) -> None:
     assert (header["width"], header["height"]) == (WIDTH, HEIGHT)
     assert values[0, 0] == 50.0  # the north
     assert values[-1, -1] == 0.0  # empty is kept as quiet, not unknown
+
+
+def test_overture_reads_one_release_of_places() -> None:
+    # The query itself reads Overture's public bucket and is checked in staging, where the
+    # counts are compared with the chains' own store counts (Milestone 60).
+    from hip.sources.overture import OvertureAdapter
+
+    refs = OvertureAdapter().refs()
+    assert [(r.layer, r.vintage) for r in refs] == [("places", "current")]
+    assert OvertureAdapter.filename(refs[0]) == "places.parquet"
+    assert OvertureAdapter.landing_format == "parquet"

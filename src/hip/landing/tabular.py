@@ -150,6 +150,33 @@ def land_csv(
     )
 
 
+def land_parquet(
+    release: Release, *, parquet_dir: Path, overwrite: bool = False
+) -> LandedTable:
+    """A source that is Parquet already (Overture, Milestone 60): copied as it is, so
+    staging reads every source from the same place."""
+    out = parquet_path(release, parquet_dir)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with duckdb_session() as con:
+        if needs_landing(release, out, overwrite):
+            con.execute(
+                f"COPY (SELECT * FROM read_parquet('{release.path}')) "
+                f"TO '{out}' (FORMAT PARQUET, COMPRESSION ZSTD)"
+            )
+            record_landed(release, out)
+        result = con.execute(
+            "SELECT count(*) FROM read_parquet(?)", [str(out)]
+        ).fetchone()
+    return LandedTable(
+        source_id=release.ref.source_id,
+        layer=release.ref.layer,
+        vintage=release.ref.vintage,
+        scope=release.ref.scope,
+        path=out,
+        row_count=int(result[0]) if result else 0,
+    )
+
+
 def land_ndjson(
     release: Release,
     *,

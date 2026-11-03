@@ -171,6 +171,7 @@ READ_DATED = (
     "epa_sdwis",
     # The visual stories' extracts republished in place (2026-10-22).
     "osm_nj",
+    "overture_places",
     "usgs_3dep",
     "wikidata",
     "msft_buildings",

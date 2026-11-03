@@ -67,6 +67,7 @@ from hip.sources.nj_tax_rates import NjTaxRatesAdapter
 from hip.sources.njdep import CafeAdapter, KcslAdapter, WaterAreasAdapter
 from hip.sources.nlcd import ImperviousAdapter
 from hip.sources.osm import OsmAdapter
+from hip.sources.overture import OvertureAdapter
 from hip.sources.tiger import TigerAdapter, TigerRoadsAdapter
 from hip.sources.wikidata import WikidataAdapter
 from hip.sources.zillow import ZhviAdapter, ZhviBottomAdapter, ZoriAdapter
@@ -161,6 +162,8 @@ IMPLEMENTED: tuple[str, ...] = (
     HudFhaLimitsAdapter.source_id,
     # The visual stories (2026-10-22).
     OsmAdapter.source_id,
+    # Milestone 60: the Starbucks index and the pizza–bagel line.
+    OvertureAdapter.source_id,
     TigerRoadsAdapter.source_id,
     TreeCanopyAdapter.source_id,
     ElevationAdapter.source_id,
@@ -235,6 +238,8 @@ METRIC_SOURCES: tuple[str, ...] = (
     HudFhaLimitsAdapter.source_id,
     # The visual stories (2026-10-22).
     OsmAdapter.source_id,
+    # Milestone 60: the Starbucks index and the pizza–bagel line.
+    OvertureAdapter.source_id,
     TigerRoadsAdapter.source_id,
     TreeCanopyAdapter.source_id,
     ElevationAdapter.source_id,
@@ -449,6 +454,8 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return HudFhaLimitsAdapter()
     if source_id == OsmAdapter.source_id:
         return OsmAdapter()
+    if source_id == OvertureAdapter.source_id:
+        return OvertureAdapter()
     if source_id == TigerRoadsAdapter.source_id:
         return TigerRoadsAdapter()
     if source_id == TreeCanopyAdapter.source_id:
