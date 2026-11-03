@@ -5,6 +5,16 @@ import { useEffect, useRef, useState } from "react";
 import { StoryCard, StoryCover } from "./StoryCard";
 import { COLLECTIONS, EDITOR_PICKS, LIBRARY_STORIES, FEATURED_HEADLINE, FEATURED_STORY, findStories, storyBySlug, storyPreview, type Story } from "@/lib/storyLibrary";
 
+// New Jersey's outline from the site's own states layer, simplified, for "Only in New Jersey".
+const NJ_SHAPE = "M7.8 19.2L6.7 20.7L5.9 22.3L3.9 24L1.7 19.7L0 17.8L.3 16.7L0 16.1L.8 14.8L1.6 14.1L3 13.8L3.1 13.1L6 11.3L4.2 9L3.6 8.8L3.5 7.6L2.6 7.3L2.6 5.7L3.2 5.3L3.6 4.6L3.1 3.4L4.2 2.5L5.5 .3L6.2 0L11.9 3.4L10.8 6.6L9.8 6.7L9.3 7.9L9.5 8.2L11.3 7.8L11.9 8.2L11.9 9.8L10.9 15L9.1 18.3L8.5 19Z";
+
+/** A rail's title; the Jersey collection's names the state in the state's blue, with its shape. */
+function RailTitle({ title }: { title: string }) {
+  const [before, state] = title.split(/(New Jersey)$/);
+  if (!state) return <>{title}</>;
+  return <>{before}<span className="library-state">{state}</span><svg className="library-state-shape" viewBox="0 0 11.9 24" aria-hidden="true"><path d={NJ_SHAPE} /></svg></>;
+}
+
 function StoryRail({ id, title, stories, viewAll }: {
   id: string; title: string; stories: Story[]; viewAll?: () => void;
 }) {
@@ -26,9 +36,9 @@ function StoryRail({ id, title, stories, viewAll }: {
     if (!el) return;
     el.scrollBy({ left: direction * el.clientWidth * .85, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   }
-  return <section className="library-rail" aria-labelledby={`${id}-heading`}>
+  return <section className={id === "editors" ? "library-rail library-rail-picks" : "library-rail"} aria-labelledby={`${id}-heading`}>
     <header className="library-rail-head">
-      <div><h2 id={`${id}-heading`}>{title}</h2></div>
+      <div><h2 id={`${id}-heading`}><RailTitle title={title} /></h2></div>
       {viewAll && <div className="library-rail-actions">
         <button className="library-view-all" onClick={viewAll}>View all <span aria-hidden="true">↗</span></button>
       </div>}

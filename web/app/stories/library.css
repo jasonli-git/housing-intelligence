@@ -24,6 +24,9 @@
 .library-rail { margin-top: 3.97rem; min-width: 0; }
 .library-rail-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
 .library-rail-head h2, .library-directory h2 { font: 400 clamp(23px, 2.3vw, 29px)/1.15 Georgia, serif; margin: 0; letter-spacing: -.025em; color: var(--text-primary); }
+/* The state's own blue: this theme points --state-blue at its accent, so the kind colour. */
+.library-state { color: var(--kind-state); }
+.library-state-shape { display: inline-block; height: .9em; width: auto; margin-left: .3em; vertical-align: -.08em; fill: var(--kind-state); }
 .library-rail-head p { margin: .35rem 0 0; font-size: 13px; line-height: 1.4; color: var(--text-muted); }
 .library-rail-actions { display: flex; align-items: center; gap: .4rem; flex-shrink: 0; }
 .library-rail-actions button, .library-end button, .library-empty button { color: var(--text-primary); background: transparent; font: inherit; cursor: pointer; }
@@ -40,8 +43,11 @@
 /* Arrows show wherever a rail can scroll, and its cut-off edge fades, so a half-shown card
    reads as more to come rather than as the end. */
 .library-rail-stage::before, .library-rail-stage::after { content: ""; position: absolute; top: 0; bottom: 14px; width: 56px; z-index: 2; pointer-events: none; transition: opacity 180ms ease; }
-.library-rail-stage::before { left: -1px; background: linear-gradient(270deg, transparent, var(--surface-1)); }
-.library-rail-stage::after { right: -1px; background: linear-gradient(90deg, transparent, var(--surface-1)); }
+.library-rail-stage::before { left: -1px; background: linear-gradient(270deg, transparent, var(--rail-ground, var(--surface-1))); }
+.library-rail-stage::after { right: -1px; background: linear-gradient(90deg, transparent, var(--rail-ground, var(--surface-1))); }
+/* Editor's picks sit on a card of the page's accent, so the hand-picked rail stands apart;
+   its edge fades fade into the card rather than the page. */
+.library-rail-picks { --rail-ground: color-mix(in srgb, var(--plate-accent) 20%, var(--surface-1)); background: var(--rail-ground); border: 1px solid color-mix(in srgb, var(--plate-accent) 35%, transparent); border-radius: 24px; padding: 28px 28px 14px; }
 .library-rail-stage:has(.library-arrow-previous:disabled)::before, .library-rail-stage:has(.library-arrow-next:disabled)::after { opacity: 0; }
 .library-end { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 3.97rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 13px; }
 .library-end button, .library-empty button { border: 0; padding: .75rem 0; text-decoration: underline; min-height: 44px; }
