@@ -256,7 +256,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
         </div>
       </header>
 
-      <PlaceSectionNav label="Report sections" sections={[{id:"report-measures",label:"Change over time"},{id:"report-current",label:"Current values"},{id:"report-history",label:"History"},...(community?[{id:"report-community",label:"Schools & reporting"}]:[]),{id:"report-sources",label:"Sources"}]} />
+      <PlaceSectionNav label="Report sections" sections={[{id:"report-measures",label:"Measures over time"},{id:"report-current",label:"Current values"},{id:"report-history",label:"Past values"},...(community?[{id:"report-community",label:"Schools & safety"}]:[]),{id:"report-sources",label:"Sources"}]} />
       {cost && <CostToOwn {...cost} control={false} />}
 
       <StandOuts
@@ -265,7 +265,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
         items={standOuts(packet, uncertainties)}
       />
 
-      <section className="section" id="report-measures" data-jump-label="Measures">
+      <section className="section" id="report-measures" data-jump-label="Measures over time">
         <h2>Measures</h2>
         <div className="scroll-x" tabIndex={0} role="region" aria-label="Ranked measures table, scroll horizontally">
           <table className="doc">
@@ -430,7 +430,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
       )}
 
       {history.length > 0 && (
-        <section className="section" id="report-history" data-jump-label="Historical values">
+        <section className="section" id="report-history" data-jump-label="Past values">
           <h2>Historical values</h2>
           <p className="meta">The latest 24 readings of each, newest first.</p>
           {history.map(({ metricId, meta, observations }) => (
@@ -454,7 +454,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
         </section>
       )}
 
-      {community && <section className="section" id="report-community" data-jump-label="Schools & reporting"><h2>Schools & public-safety reporting</h2><CommunityContext data={community} level={region.level} topics={["schools","crime"]} supporting expanded /></section>}
+      {community && <section className="section" id="report-community" data-jump-label="Schools & safety"><h2>Schools & public-safety reporting</h2><CommunityContext data={community} level={region.level} topics={["schools","crime"]} supporting expanded /></section>}
 
       <section className="section" id="report-sources" data-jump-label="Sources">
         <h2>Sources</h2>

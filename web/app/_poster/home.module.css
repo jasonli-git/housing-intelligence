@@ -15,8 +15,8 @@
 .place { display: grid; align-content: start; gap: 0; min-width: 0; padding: 10px 16px; color: inherit; text-decoration: none; border-radius: 16px; }
 .place:hover strong { text-decoration: underline; }
 .place small { font-size: var(--text-note); }
-.place strong { font-size: 17px; }
-.place b { font-size: clamp(30px, 3.2vw, 42px); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; }
+.place strong { font-size: 16px; font-weight: 600; }
+.place b { font-size: clamp(24px, 2.4vw, 32px); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; }
 .place svg { display: block; width: 100%; height: 30px; margin-top: 4px; }
 .tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
 .head > span { font-size: var(--text-small); color: var(--text-secondary); }
@@ -27,11 +27,16 @@
 @media (max-width: 520px) { .tools { grid-template-columns: minmax(0, 1fr); } }
 .scale * { color: var(--h-soft) !important; }
 .storiesCard { min-width: 0; margin-top: 88px; }
-/* Each level of place in the colour the rest of the site assigns it. */
-.place { color: var(--poster-tone-8) !important; }
-.county { background: var(--kind-county); }
-.town { background: var(--kind-town); }
-.zip { background: var(--kind-zip); }
+/* Each level of place in the colour the rest of the site assigns it, as an accent on a
+   quiet card like the market cards beside it: a tinted edge, the tag and the line. */
+.place { --kind: var(--text-secondary); color: var(--text-primary) !important; background: var(--surface-1); border: 1px solid var(--border); border-top: 2px solid color-mix(in srgb, var(--kind) 70%, var(--border)); }
+.place:is(:hover, :focus-visible) { border-color: var(--kind); }
+.place > small:first-child { font-weight: 600; color: color-mix(in srgb, var(--kind) 75%, var(--text-primary)); }
+.place > small:not(:first-child) { color: var(--text-secondary); }
+.place svg { color: var(--kind); opacity: .7; }
+.county { --kind: var(--kind-county); }
+.town { --kind: var(--kind-town); }
+.zip { --kind: var(--kind-zip); }
 /* Tools stay quiet beside the place cards: a neutral card, colour only in the small tag. */
 .tools a { display: grid; align-content: start; gap: 10px; min-height: 112px; padding: 18px 20px; color: var(--text-primary) !important; text-decoration: none; background: color-mix(in srgb, var(--tool) 5%, var(--surface-1)); border: 1px solid var(--border); border-radius: 12px; box-shadow: none !important; transition: border-color .15s; }
 .tools a:is(:hover, :focus-visible) { border-color: var(--tool); }
@@ -67,7 +72,7 @@
 .takeaways a { color: inherit; }
 @media (max-width: 1100px) { .takeaways { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .takeaways { grid-template-columns: minmax(0, 1fr); } }
-.state { background: var(--kind-state); }
+.state { --kind: var(--kind-state); }
 @media (max-width: 1000px) and (min-width: 861px) { .places { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .takeaways .chart p { flex-direction: column-reverse; align-items: flex-start; gap: 2px; }
 .takeaways .chart p b { font-size: 18px; line-height: 1.15; }
