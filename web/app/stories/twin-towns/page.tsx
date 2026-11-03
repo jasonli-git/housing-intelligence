@@ -26,12 +26,16 @@ const ALIKE = [
   { key: "acs_avg_household_size", label: "Household", show: (v: number) => v.toFixed(1) },
 ];
 const usd = (v: number) => formatValue(v, "usd");
+// Axis ticks in short form: on a log scale $500,000, $1,000,000 and $2,000,000 sit close
+// together, and written in full they ran into each other below desktop width.
+const tick = (v: number) => v >= 1e6 ? `$${v / 1e6}M` : `$${Math.round(v / 1e3)}K`;
 
 export default async function TwinTownsPage() {
   const towns = await storyTowns([PRICE, ...ALIKE.map((a) => a.key)]);
   const pairs = twins(towns, ALIKE.map((a) => a.key), 0.25).slice(0, 12);
   const values = pairs.flatMap((p) => [p.a.values[PRICE]!, p.b.values[PRICE]!]);
-  const lo = Math.log(Math.min(...values) / 1.6), hi = Math.log(Math.max(...values) * 1.6);
+  // Room past the cheapest and priciest homes for the names written beside their dots.
+  const lo = Math.log(Math.min(...values) / 2.2), hi = Math.log(Math.max(...values) * 2.2);
   const at = (v: number) => `${Math.round(((Math.log(v) - lo) / (hi - lo)) * 10000) / 100}%`;
   return (
     <StoryShell
@@ -44,7 +48,7 @@ export default async function TwinTownsPage() {
         <ul className="ladder extremes-chart twins">
           <li className="ladder-axis" aria-hidden="true">
             <span>Pair</span>
-            <span className="ladder-track">{logTicks(Math.exp(lo), Math.exp(hi), 6).map((t) => <b key={t} style={{ left: at(t) }}>{usd(t)}</b>)}</span>
+            <span className="ladder-track">{logTicks(Math.exp(lo), Math.exp(hi), 6).filter((t) => (Math.log(t) - lo) / (hi - lo) > 0.04 && (Math.log(t) - lo) / (hi - lo) < 0.96).map((t) => <b key={t} style={{ left: at(t) }}>{tick(t)}</b>)}</span>
             <span className="num">Gap</span>
           </li>
           {pairs.map((p) => (

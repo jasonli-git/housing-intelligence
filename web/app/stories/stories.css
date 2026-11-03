@@ -169,6 +169,13 @@
 .twin-traits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 .6rem; }
 .twin-traits small { color: var(--text-muted); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .twins li { grid-template-columns: minmax(220px, 300px) 1fr minmax(48px, auto) !important; }
+/* Below 900px a pair takes two lines, its measures and gap above and its prices across the
+   full width below, so the twins' names have room beside their dots. */
+@media (max-width: 900px) {
+  .twins li { grid-template-columns: 1fr auto !important; row-gap: .35rem; padding: .4rem 0; }
+  .twins li > .ladder-track { grid-column: 1 / -1; grid-row: 2; }
+  .twins li > .num { grid-column: 2; grid-row: 1; }
+}
 /* A chart wider than a phone scrolls sideways inside its figure, which the keyboard can
    reach (tabIndex on each figure); the page itself never scrolls sideways. */
 .story-figure:focus-visible { outline: 2px solid var(--story-up); outline-offset: 4px; }
