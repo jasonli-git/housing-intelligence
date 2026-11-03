@@ -2,7 +2,9 @@
    and labelled alike, with no cards, icons or tabs. Every footer rule lives here. */
 .site-foot { margin-top: clamp(3.5rem, 7vw, 6rem); color: var(--text-secondary); font-size: 12.5px; }
 .site-foot-inner { max-width: var(--shell); margin: 0 auto; padding: 0 var(--gutter) 2rem; }
-.site-foot-band { display: grid; gap: 0.45rem; padding-block: 1rem; border-top: 1px solid var(--border); }
+/* minmax(0, 1fr), not the implicit auto track, which grows to a row's unwrapped width
+   and carries the footer past a phone's edge. */
+.site-foot-band { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.45rem; padding-block: 1rem; border-top: 1px solid var(--border); }
 /* From 760px, each band's label is a narrow left column and its content runs beside it
    to the right edge, so the footer uses the page's width rather than a ragged left half. */
 @media (min-width: 760px) {
@@ -26,6 +28,9 @@
 /* A wrapping row rather than inline text: the names are adjacent elements with no space
    between them, so inline they offer no place to break. */
 .site-foot-sources { display: flex; flex-wrap: wrap; row-gap: 0.1rem; }
+/* A name longer than a phone is wide ("Earth Observation Group, Payne Institute, …")
+   wraps inside itself rather than pushing the page sideways. */
+.site-foot .brief-item { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 
 .site-foot-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.1rem 1.25rem; }
 .site-foot-links > a { display: inline-flex; align-items: center; min-height: 24px; }

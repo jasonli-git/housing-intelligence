@@ -16,7 +16,7 @@ describe("SourceFooter", () => {
       notices: ["Publisher statement https://www.census.gov/"],
     }]);
     const html = renderToStaticMarkup((await SourceFooter())!);
-    const cards = ['aria-label="Notices the sources require"', 'id="sources-heading"', 'aria-label="About the data"', 'aria-label="Code and data terms"'];
+    const cards = ['aria-labelledby="tools-heading"', 'aria-label="Notices the sources require"', 'id="sources-heading"', 'aria-label="About the data"', 'aria-label="Code and data terms"'];
     const positions = cards.map((card) => html.indexOf(card));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((a, b) => a - b));

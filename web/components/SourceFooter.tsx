@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { BuiltAgo } from "@/components/BuiltAgo";
+import { HOME_TOOLS } from "@/components/HomeTools";
 import { SiteStatus } from "@/components/SiteStatus";
 import { api } from "@/lib/api";
 import { dayLabel } from "@/lib/freshness";
@@ -72,8 +73,18 @@ export async function SourceFooter() {
   // Three bands in one style (#460): the notices, the sources with the pages about the
   // data, and the code and data terms. No cards, so no band outranks the page above it.
   return (
-    <footer className="site-foot" aria-labelledby="sources-heading">
+    <footer className="site-foot" aria-label="Site footer">
       <div className="site-foot-inner">
+        {/* Every tool from every page: the poster pages carry the short menu (#460). The
+            same list as the home page's Tools section, so a new tool reaches both. */}
+        <nav className="site-foot-band" aria-labelledby="tools-heading">
+          <h2 className="site-foot-label" id="tools-heading">Tools</h2>
+          <p className="site-foot-links">
+            {HOME_TOOLS.map((tool) => <Link key={tool.href} href={tool.href} prefetch={false}>{tool.title}</Link>)}
+            <Link href="/stories" prefetch={false}>Visual stories</Link>
+          </p>
+        </nav>
+
         {/* Required publisher statements stay visible and verbatim, before the sources. */}
         {notices.length > 0 && (
           <div className="site-foot-band" role="group" aria-label="Notices the sources require">

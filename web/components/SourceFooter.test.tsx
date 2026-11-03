@@ -33,6 +33,12 @@ it("preserves the complete code/data notice and every policy destination", async
   expect(notice.children[1].className).toBe("site-foot-intro");
 });
 
+it("links every tool, the home page's list and the stories", async () => {
+  render(await SourceFooter());
+  const tools = screen.getByRole("navigation", { name: "Tools" });
+  expect(within(tools).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/afford", "/guide", "/tax", "/compare", "/help", "/atlas", "/stories"]);
+});
+
 it("keeps the publisher notice and names every institution, with no disclosure", async () => {
   render(await SourceFooter());
   expect(within(screen.getByRole("group", { name: "Notices the sources require" })).getByText("Synthetic attribution retained verbatim.")).toBeTruthy();
