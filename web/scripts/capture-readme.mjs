@@ -8,6 +8,7 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
 import { captureToolPreviews } from './tool-previews.mjs';
+import { captureShareCard } from './story-share.mjs';
 
 const origin = process.env.SCREENSHOT_ORIGIN ?? 'http://localhost:3006';
 const outDir = resolve(process.env.SCREENSHOT_DIR ?? '../dist/artifacts/screenshots');
@@ -42,7 +43,10 @@ const INDEX = { width: 1800, height: 1600, aspect: 0.5625, columns: 10 };
 const only = process.env.SCREENSHOT_ONLY;
 
 const storySource = await readFile(new URL('../lib/stories.ts', import.meta.url), 'utf8');
-const storyHrefs = [...new Set([...storySource.matchAll(/href: ?"(\/stories\/[a-z0-9-]+)"/g)].map((match) => match[1]))];
+// SCREENSHOT_STORIES=slug,slug narrows a local run to a few stories.
+const storyFilter = process.env.SCREENSHOT_STORIES?.split(',');
+const storyHrefs = [...new Set([...storySource.matchAll(/href: ?"(\/stories\/[a-z0-9-]+)"/g)].map((match) => match[1]))]
+  .filter((href) => !storyFilter || storyFilter.includes(href.split('/').pop()));
 if (!storyHrefs.length) throw new Error('lib/stories.ts: no stories found');
 // The /stories index's featured cover is a second shot of that story: its chart area alone,
 // with a margin, so the cover shows the figure rather than the page's title and lede.
@@ -73,6 +77,10 @@ try {
           const pad = 24;
           await page.screenshot({ path: resolve(outDir, 'stories', `${slug}-chart-${scheme}.jpg`), type: 'jpeg', quality: 80, fullPage: true, clip: { x: box.x - pad, y: box.y - pad, width: box.width + pad * 2, height: box.height + pad * 2 } });
           console.log(`screenshot: stories/${slug}-chart-${scheme}`);
+        }
+        if (scheme === 'light') {
+          await captureShareCard(browser, page, { slug, outDir });
+          console.log(`screenshot: share/${slug}`);
         }
       }
       // Then the stories page itself, for the home page. Its cards show the pictures just
