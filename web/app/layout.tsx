@@ -30,6 +30,7 @@ import "./county-cabinet.css";
 import "./site-chrome.css";
 import "./labels.css";
 import "./site-footer.css";
+import "./site-bar.css";
 
 // Self-hosted at build time: next/font downloads each face once and serves it from this
 // site, so a reader's browser never asks Google for anything (ARCHITECTURE #121).

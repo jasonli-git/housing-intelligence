@@ -72,10 +72,5 @@ small.report-source-code { display: block; color: var(--text-muted); }
   .report > footer { margin-top: 10pt; padding-top: 5pt; font-size: 8.5pt; }
   /* Preserve required notices and the entire source directory; flatten web-only framing. */
   
-  body:has(.report) .site-meta-row .site-status { display: none; }
-  body:has(.report) .site-meta-row { display: block; padding: 0; margin: 0 0 8pt; max-width: none; }
-  body:has(.report) .site-meta-row .licence { display: block; width: 100%; }
-  body:has(.report) .licence-box { display: block; overflow: visible; }
-  body:has(.report) .licence-box > summary { min-height: 0; padding: 0; }
-  body:has(.report) .licence-text { font-size: 9pt; line-height: 1.35; padding: 3pt 0 0; }
+  
 }

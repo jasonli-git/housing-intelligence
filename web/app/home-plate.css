@@ -12,7 +12,6 @@
     /* Survey dots, not ruled grid lines: the page has rules enough. */
     background: radial-gradient(circle, var(--plate-grid) 1.1px, transparent 1.4px) 0 0 / 28px 28px, var(--plate-paper);
   }
-  .search-first-home .bar { background: color-mix(in srgb, var(--plate-paper) 88%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 
   /* Masthead: a double rule, the plate's caption, the title with an italic turn. */
   .search-first-home .nation-page .landing-canvas .nation-head { position: relative; padding-top: 1.1rem; margin-top: .6rem; }
@@ -93,29 +92,9 @@
 /* Top menu (home only): a masthead strip on the paper, ruled in ink, small-caps links
    with a rust underline that draws in. Same links, same order, same menu on phones. */
 @media screen {
-  .search-first-home .bar { border-bottom: 0; box-shadow: none; }
-  .search-first-home .bar .wordmark { font: 400 21px/1 Georgia, serif; letter-spacing: -.03em; color: var(--plate-ink); }
-  .search-first-home .bar .bar-home { font: 600 12px/1 var(--font-mono); letter-spacing: .1em; }
-  .search-first-home .bar :is(.bar-link, .bar-budget) {
-    position: relative; border: 0; border-radius: 0; background: none; box-shadow: none;
-    font: 600 11px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--plate-ink);
-  }
-  .search-first-home .bar-desktop-tools :is(.bar-link, .bar-budget)::after {
-    content: ""; position: absolute; left: .55rem; right: .55rem; bottom: .3rem; height: 2px; background: var(--plate-accent);
-    transform: scaleX(0); transform-origin: left; transition: transform 220ms cubic-bezier(.22, 1, .36, 1);
-  }
-  .search-first-home .bar-desktop-tools :is(.bar-link, .bar-budget):is(:hover, :focus-visible)::after { transform: scaleX(1); }
-  .search-first-home .bar-desktop-tools :is(.bar-link, .bar-budget) + :is(.bar-link, .bar-budget) { border-left: 1px solid var(--plate-rule); }
-  .search-first-home .bar-tool-menu > summary { border: 1.5px solid var(--plate-ink); border-radius: 3px; font: 600 11px/1.4 var(--font-mono); letter-spacing: .12em; box-shadow: 3px 3px 0 var(--plate-rule); }
-  .search-first-home .bar-tool-menu .bar-controls { border: 1.5px solid var(--plate-ink); border-radius: 3px; background: var(--plate-paper); box-shadow: 5px 5px 0 var(--plate-ink); }
-  .search-first-home .bar-tool-menu .bar-controls :is(a, button) + :is(a, button) { border-top: 1px solid var(--plate-rule); }
-  .search-first-home .site-meta-row { border: 0; }
-  .search-first-home .site-meta-row :is(.licence-label, .site-status, .site-status-kicker) { font: 600 10px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
 
   /* Footer: the three boxes become ruled ledger sections; the code-and-data terms a
      stamped notice with a dashed border. */
   
-  @media (prefers-reduced-motion: reduce) {
-    .search-first-home .bar-desktop-tools :is(.bar-link, .bar-budget)::after { transition: none; }
-  }
+
 }

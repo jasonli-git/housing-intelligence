@@ -9,7 +9,6 @@
   background:var(--plate-paper);
 }
 :root body:has(.search-first-home)::before { content:none; background:none; animation:none; }
-:root .search-first-home :is(.bar,.site-meta-row) { background:color-mix(in srgb,var(--plate-paper) 60%,transparent) !important; -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
 :root .search-first-home .nation-head h1 { font-size:clamp(54px,8.5vw,120px) !important; }
 :root .search-first-home .nation-head h1 em { background:linear-gradient(90deg,var(--plate-accent),light-dark(#d98a2b,#ffc27a) 55%,var(--plate-accent)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
 :root .search-first-home :is(.entry-introduction,.home-tool-text,.artwork-caption .scale-signature) { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Helvetica Neue",Arial,sans-serif !important; font-style:normal !important; }
@@ -46,8 +45,7 @@
 
 @media screen and (max-width: 600px) {
   /* The licence and source-check lines stack rather than collide in small capitals. */
-  .search-first-home .site-meta-row { display:grid !important; grid-template-columns:1fr; row-gap:.15rem; }
-  .search-first-home .site-meta-row :is(.licence-label,.site-status,.site-status-kicker) { font-size:9px !important; letter-spacing:.06em !important; }
+  
   :root .search-first-home .home-tools a > svg { align-self:flex-start; grid-column:auto !important; grid-row:auto !important; }
 }
 /* The map's loading line sits under the search box on phones; the search works without it. */

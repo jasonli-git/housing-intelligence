@@ -1,0 +1,117 @@
+/* The site bar (ARCHITECTURE #461): one menu on every page, in one style. Every bar rule
+   lives here except the theme button's eclipse, which globals.css draws. */
+.bar {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--surface-card) 88%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(1.45);
+  backdrop-filter: blur(22px) saturate(1.45);
+}
+.bar-inner {
+  display: flex; align-items: center; gap: 0.5rem 0.75rem;
+  max-width: var(--shell); min-height: 54px; margin: 0 auto; padding: 0.4rem var(--gutter);
+}
+.bar-trail { display: flex; align-items: center; gap: 0.5rem; margin-inline-end: auto; }
+.wordmark {
+  display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.4rem 0;
+  font: var(--weight-display) 16px/1 var(--font-display); letter-spacing: var(--track-display);
+  color: var(--text-primary); text-decoration: none;
+}
+.wordmark:hover { color: var(--text-primary); }
+.housing-mark { display: block; }
+.bar-icon { display: inline-flex; align-items: center; justify-content: center; color: var(--text-secondary); }
+.bar-icon:hover { color: var(--text-primary); }
+a.bar-icon { width: 32px; height: 32px; }
+a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
+
+/* The four destinations, and the Tools button in the same type. */
+.bar-desktop-tools { display: flex; align-items: center; gap: 0.1rem; }
+.bar :is(.bar-link, .bar-budget), .bar-tool-menu > summary {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 0.65rem;
+  font: 500 14px/1 var(--font-text); color: var(--text-secondary); text-decoration: none;
+  background: none; border: 0; border-radius: 8px; cursor: pointer;
+}
+.bar :is(.bar-link, .bar-budget):hover, .bar-tool-menu > summary:hover { color: var(--text-primary); background: color-mix(in srgb, var(--text-primary) 6%, transparent); }
+.bar :is(.bar-link, .bar-budget)[aria-current="page"] { color: var(--text-primary); text-decoration: underline; text-underline-offset: 6px; }
+.bar .bar-budget:disabled { opacity: 0.5; cursor: not-allowed; }
+.bar :is(a, button, summary):focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+
+.bar-tool-menu { position: relative; }
+.bar-tool-menu > summary { list-style: none; gap: 0.3rem; }
+.bar-tool-menu > summary::-webkit-details-marker { display: none; }
+.bar-tool-menu[open] > summary { color: var(--text-primary); }
+.bar-tool-menu > .bar-controls {
+  position: absolute; top: calc(100% + 0.4rem); right: 0; z-index: 100;
+  display: none; flex-direction: column; min-width: 220px; max-height: 75dvh; overflow: auto; padding: 0.35rem;
+  background: var(--surface-card); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+}
+.bar-tool-menu[open] > .bar-controls { display: flex; }
+.bar-tool-menu .bar-controls :is(.bar-link, .bar-budget) { min-height: 44px; padding: 0 0.75rem; }
+.bar-menu-primary { display: none; flex-direction: column; margin-bottom: 0.35rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--border); }
+.bar-menu-narrow { display: none; }
+
+.bar .place-search { flex: 0 1 15rem; width: auto; min-width: 0; }
+/* The home page's bar search waits off screen until its own large search scrolls away. */
+.bar-search-reveal { display: none; }
+.bar-search-reveal[data-shown] { display: contents; }
+@media (prefers-reduced-motion: no-preference) {
+  .bar-search-reveal[data-shown] .place-search { animation: bar-search-in 200ms ease-out; }
+}
+@keyframes bar-search-in { from { opacity: 0; transform: translateY(-4px); } }
+.bar .place-search input { min-height: 36px; padding: 0.35rem 0.7rem; font-size: 14px; border-radius: 8px; }
+
+/* The non-commercial terms as a pill; opened, the terms drop below it. */
+.bar .licence { position: relative; flex: none; }
+.bar .licence-box > summary {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 0 0.7rem;
+  font-size: 12px; color: var(--notice-text); list-style: none; cursor: pointer;
+  background: color-mix(in srgb, var(--notice) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--notice) 40%, var(--border)); border-radius: 999px;
+}
+.bar .licence-box > summary::-webkit-details-marker { display: none; }
+.bar .licence-label { font-weight: 600; }
+.bar .licence .disclose-hint { display: none; }
+.bar .licence-text {
+  position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 100;
+  width: min(26rem, calc(100vw - 2 * var(--gutter))); margin: 0; padding: 0.8rem 0.9rem;
+  font-size: 13px; line-height: 1.5; color: var(--text-secondary);
+  background: var(--surface-card); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+}
+.bar .theme-toggle { flex: none; }
+
+/* Narrower: the four destinations join the tools under Menu. */
+@media (max-width: 1100px) {
+  .bar-desktop-tools, .bar-menu-wide { display: none; }
+  .bar-menu-narrow { display: inline; }
+  .bar-menu-primary { display: flex; }
+}
+/* Phones: brand, terms and theme on the first row; search and Menu on the second. */
+@media (max-width: 760px) {
+  .bar-inner {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "trail licence theme" "search search menu"; gap: 0.45rem 0.5rem;
+  }
+  .bar-inner:not(:has(.place-search)) { grid-template-areas: "trail licence theme" "menu menu menu"; }
+  .bar-trail { grid-area: trail; min-width: 0; }
+  .bar .licence { grid-area: licence; }
+  .bar .theme-toggle { grid-area: theme; }
+  .bar .place-search { grid-area: search; }
+  .bar-tool-menu { grid-area: menu; justify-self: end; }
+  .bar .licence-box > summary { padding: 0 0.55rem; font-size: 11px; }
+  /* The terms open under the whole bar, gutter to gutter, rather than off the left edge. */
+  .bar .licence { position: static; }
+  .bar .licence-text { top: calc(100% + 0.25rem); left: var(--gutter); right: var(--gutter); width: auto; }
+}
+/* Too narrow for the code link beside the terms; the footer links the source too. */
+@media (max-width: 480px) { .bar-trail .bar-icon { display: none; } }
+
+/* Paper keeps the terms: the bar is print-hidden, so they print as a line of their own. */
+@media print {
+  .bar { display: block !important; position: static; border: 0; background: none; backdrop-filter: none; }
+  .bar-inner > :not(.licence) { display: none !important; }
+  .bar .licence-box > summary { display: none; }
+  .bar .licence-box::details-content { content-visibility: visible; display: block; }
+  .bar .licence-text { position: static; width: auto; padding: 0; border: 0; box-shadow: none; color: black; }
+}

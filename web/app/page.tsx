@@ -134,7 +134,7 @@ export default async function HousingLandingPage() {
   const stateSales = ((await api.observations(PRIMARY_STATE.regionId, "sr1a_median_sale_price"))?.observations ?? []).map((o) => o.value);
 
   return <div className={`search-first-home ${original.home}`}>
-    <Masthead affordability={{ kind: "route", active: false }} search={false} simple />
+    <Masthead affordability={{ kind: "route", active: false }} search={{ after: ".home-search" }} />
     <main id="main-content" tabIndex={-1} className={`shell ${home.home}`}>
       <section className={home.entry} aria-labelledby="home-find-heading">
         <div>

@@ -1,5 +1,5 @@
 /* One shared budget destination, with quiet header context on place profiles. */
-.bar .bar-budget:disabled { opacity: .5; cursor: not-allowed; background: transparent; border-color: var(--border); box-shadow: none; }
+
 .page-head .page-head-eyebrow { align-items: center; gap: .65rem; }
 .page-head .population-badge, .quiet-county .page-head .population-badge {
   display: inline-flex; flex-wrap: wrap; margin: 0; padding: 0; min-width: 0;

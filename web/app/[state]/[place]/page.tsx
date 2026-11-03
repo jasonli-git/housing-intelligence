@@ -123,7 +123,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   if (regionId === null) notFound();
   const [region, packet, summary] = await Promise.all([api.region(regionId), api.packet(regionId, "5y"), api.summary(regionId, "5y")]);
   if (!region || !packet) return <>
-    <Masthead affordability={{ kind: "route" }} simple />
+    <Masthead affordability={{ kind: "route" }} />
     <main id="main-content" tabIndex={-1} className="shell">
       <h1 className="page-title">Region not found</h1>
       <p className="meta">No region {regionId}, or the API is unreachable. <Link href="/states/new-jersey">Back to New Jersey</Link>.</p>
@@ -529,7 +529,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   if (isCounty) {
     const countyLinks = [["county", "Town map"], ["reading", "AI highlights"], ["costs", "Buying & taxes"], ["compares", "Compared to NJ"], ["market", "Market trends"], ["life", "County life"], ["stories", "Stories"]].filter(([id]) => id === "county" ? !!countyFrame : id === "reading" ? hasReading : id === "stories" ? deepStories.length > 0 : true).map(([id, label]) => ({ id, label }));
     return glossTree(<>
-      <Masthead affordability={{ kind: "route" }} simple />
+      <Masthead affordability={{ kind: "route" }} />
       <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact}`}>
         <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code)]} here={name} />
         <PosterNav links={countyLinks} />
@@ -653,7 +653,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   }
 
   return glossTree(<>
-    <Masthead affordability={{ kind: "route" }} simple />
+    <Masthead affordability={{ kind: "route" }} />
     <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact}`}>
       <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county && !isCounty ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
       <PosterNav links={townLinks} />

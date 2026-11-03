@@ -1,15 +1,5 @@
 /* The licence stays below the menu. Source checks now live in the universal footer;
    opening the licence still wraps its explanatory text onto its own line. */
-@media screen and (max-width: 600px) {
-  :root body .site-meta-row.shared-meta, :root body .search-first-home .site-meta-row { display: flex !important; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .2rem .6rem !important; }
-  :root body .site-meta-row .licence { flex: 0 1 auto !important; min-width: 0; margin: 0; }
-  :root body .site-meta-row .licence-box > summary { justify-content: flex-start !important; gap: .35rem; width: auto; }
-  :root body .site-meta-row .licence-box[open] { flex-basis: 100%; }
-  :root body .site-meta-row .licence-label { font-size: 9px !important; letter-spacing: .06em !important; }
-}
-@media screen and (max-width: 600px) {
-  .site-meta-row:has(.licence-box[open]) .licence { flex-basis: 100% !important; }
-}
 
 /* The skip link is for keyboards. Hidden on phones on 2026-10-15 because it showed
    behind the search box; hiding it removed it for keyboard and switch users on phones
@@ -21,28 +11,6 @@
 /* The Tools menu (2026-10-15), set apart from the search box beside it: a solid ink pill
    with a small grid mark instead of a second outlined box, and its menu a rounded, frosted
    card with each tool on its own row. Same links. */
-@media screen {
-  :root body .bar-tool-menu > summary {
-    gap: .45rem; border: 0 !important; border-radius: 999px !important; box-shadow: none !important;
-    background: var(--plate-ink, var(--text-primary)) !important; color: var(--plate-paper, var(--surface-1)) !important;
-    font: 600 11px/1.4 var(--font-mono) !important; letter-spacing: .1em !important; text-transform: uppercase;
-  }
-  :root body .bar-tool-menu > summary::before {
-    content: ""; width: 12px; height: 12px; flex: 0 0 auto; background: currentColor;
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Crect width='5' height='5' rx='1.2'/%3E%3Crect x='7' width='5' height='5' rx='1.2'/%3E%3Crect y='7' width='5' height='5' rx='1.2'/%3E%3Crect x='7' y='7' width='5' height='5' rx='1.2'/%3E%3C/svg%3E") center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Crect width='5' height='5' rx='1.2'/%3E%3Crect x='7' width='5' height='5' rx='1.2'/%3E%3Crect y='7' width='5' height='5' rx='1.2'/%3E%3Crect x='7' y='7' width='5' height='5' rx='1.2'/%3E%3C/svg%3E") center / contain no-repeat;
-  }
-  :root body .bar-tool-menu > summary > span[aria-hidden] { display: none; }
-  :root body .bar-tool-menu[open] > summary { background: color-mix(in srgb, var(--plate-ink, var(--text-primary)) 85%, var(--plate-accent, var(--text-secondary))) !important; }
-  :root body .bar-tool-menu .bar-controls {
-    border: 1px solid light-dark(#ffffff, #ffffff24) !important; border-radius: 18px !important; padding: .35rem !important;
-    background: light-dark(#fffffff2, #16181cf5) !important; -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%);
-    box-shadow: 0 24px 50px -24px #000a !important;
-  }
-  :root body .bar-tool-menu .bar-controls :is(a, button) { border-radius: 12px !important; border: 0 !important; }
-  :root body .bar-tool-menu .bar-controls :is(a, button) + :is(a, button) { border-top: 0 !important; }
-  :root body .bar-tool-menu .bar-controls :is(a, button):is(:hover, :focus-visible) { background: color-mix(in srgb, var(--plate-ink, var(--text-primary)) 8%, transparent) !important; }
-}
 
 /* A late weekly check (#411) reads in the page's ink, not the muted grey of a routine one. */
 .site-status[data-overdue] .site-status-kicker { color: var(--text-primary) !important; font-weight: 600; }
@@ -55,5 +23,4 @@
 
 /* The desktop search can be narrower than an input's intrinsic ~200px width.
    Let its grid track and input shrink together instead of covering the theme button. */
-.bar .place-search { grid-template-columns: minmax(0, 1fr); }
-.bar .place-search input { box-sizing: border-box; min-width: 0; width: 100%; max-width: 100%; }
+

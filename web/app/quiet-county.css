@@ -10,7 +10,6 @@
     --border: light-dark(#d9e2da, #3e4e43);
     background: var(--surface-1);
   }
-  body:has(.quiet-county) .bar { background: var(--surface-1); box-shadow: none; }
   .quiet-county { max-width: 1160px; --atlas-accent: light-dark(#377762, #a6d9c0); --atlas-ink: var(--text-primary); }
   .quiet-county > .page-head { display: block; padding-block: 1.3rem 1.7rem; margin-top: 0; border-top: 1px solid var(--border); }
   .quiet-county .page-title { font: 500 clamp(45px, 5.7vw, 72px)/1.06 Georgia, "Times New Roman", serif; letter-spacing: -0.045em; color: var(--text-primary); }
@@ -305,7 +304,6 @@
 /* The public atlas is warm-neutral; source history uses an understated ink-blue ledger. */
 @media screen {
   body:has(.quiet-nation) { --surface-1: light-dark(#f8f6f1, #201f1c); --surface-2: light-dark(#fffefa, #292823); --border: light-dark(#ded9cf, #49463f); background: var(--surface-1); }
-  body:has(.quiet-nation) .bar { background: var(--surface-1); box-shadow: none; }
   .nation-page.quiet-nation { max-width: 1160px; --text-primary: light-dark(#34322e, #ebe7df); --text-secondary: light-dark(#625e55, #c5bfb3); }
   .quiet-nation > .nation-head { position: relative; isolation: isolate; padding-block: 2.2rem 2rem; border-top: 1px solid var(--border); border-bottom: 0; }
   .quiet-nation .nation-head h1 { font: 500 clamp(58px, 6.5vw, 84px)/1.04 Georgia, serif; letter-spacing: -0.055em; max-width: 72%; }
