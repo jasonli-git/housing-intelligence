@@ -92,7 +92,7 @@
 .panel h2 { margin-top: 0; }
 .people h2 + .meter { margin-top: 0; }
 .split + h2, .meter + h2 { margin-top: 32px; }
-.panel { scroll-margin-top: 24px; }
+.panel { scroll-margin-top: 64px; }
 /* Desktop: the poster becomes a two-column spread, wide panel beside narrow, in reading order. */
 @media (min-width: 1000px) {
   .poster { display: flex; flex-wrap: wrap; }
@@ -204,7 +204,7 @@
 .contextItem { margin-top: 28px; padding-top: 24px; border-top: 1px solid color-mix(in srgb, currentColor 25%, transparent); }
 .context > summary::after { content: "+"; font-size: 24px; line-height: 1; }
 .context[open] > summary::after { content: "−"; }
-.topics { position: sticky; top: var(--poster-bar, 62px); z-index: 20; display: flex; gap: 4px; margin-inline: -16px; padding: 8px 16px; overflow-x: auto; font-size: var(--text-small); white-space: nowrap; background: var(--surface-1); scrollbar-width: none; }
+.topics { position: sticky; top: 0; z-index: 20; display: flex; gap: 4px; margin-inline: -16px; padding: 8px 16px; overflow-x: auto; font-size: var(--text-small); white-space: nowrap; background: var(--surface-1); scrollbar-width: none; }
 .topics a { padding: 6px 12px; color: var(--text-secondary); text-decoration: none; border-radius: 16px; }
 .topics a:hover { color: var(--text-primary); }
 .topics a[aria-current] { color: var(--surface-1); background: var(--text-primary); }
@@ -314,7 +314,7 @@
 @media (min-width: 1000px) { .storyGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* County chapters: a title and lead-in over a row of short panels. */
-.chapter { grid-column: 1 / -1; display: grid; gap: 6px; min-width: 0; scroll-margin-top: 120px; }
+.chapter { grid-column: 1 / -1; display: grid; gap: 6px; min-width: 0; scroll-margin-top: -6px; }
 .chapter > h2 { margin: 70px 0 6px; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.02em; }
 .poster.compact > .panel:not(.hero) { margin-top: 70px; }
 .chapterGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); gap: 10px; min-width: 0; }
