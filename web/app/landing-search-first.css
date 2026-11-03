@@ -1,10 +1,7 @@
 /* Local experiment: the visitor's task leads, project depth follows. */
-.search-first-home .site-meta-row { display:flex; align-items:center; flex-wrap:wrap; gap:.2rem 1rem; padding-block:.2rem; }
-.search-first-home .site-meta-row .licence { flex:1; margin:0; }
-.search-first-home .licence-label { font:500 11px/1.4 var(--font-text); letter-spacing:0; text-transform:none; }
+
 .search-first-home .site-status { border:0; background:none; font:11px/1.4 var(--font-text); padding:.25rem 0; }
 .search-first-home .site-status-kicker { font:inherit; letter-spacing:0; text-transform:none; }
-.search-first-home .licence .disclose-hint .when-closed { display:none; }
 .search-first-home .nation-page .landing-canvas .nation-head { padding:1.5rem 0 .4rem; display:block; }
 .search-first-home .nation-head h1 { font:400 clamp(38px,5vw,64px)/1.08 Georgia,serif; letter-spacing:-.045em; }
 .search-first-home .nation-head .entry-introduction { font:400 17px/1.55 var(--font-text); max-width:44ch; margin:.65rem 0 0; color:var(--text-secondary); }
@@ -34,7 +31,6 @@
  .search-first-home .nation-head h1 { font-size:38px; }
  .search-first-home .nation-portrait { display:none; }
  .search-first-home .nation-head .entry-introduction { font-size:15px; }
- .search-first-home .site-meta-row { gap:.2rem .6rem; }
  .search-first-home .site-status { font-size:10px; }
  .search-first-home .site-status-arrow { display:none; }
  .search-first-home .coverage-search-panel .place-search-hero input { font-size:16px; }

@@ -54,7 +54,6 @@
   .bill-reading dd { margin:0; font-variant-numeric:tabular-nums; }
   @media(max-width:600px) { .bill-layout { grid-template-columns:minmax(0,1fr); gap:1rem; } .monthly-bill { padding:.9rem; } }
   @media(prefers-reduced-motion:reduce) { .bill-stack button::before { transition:none; } }
-  .bar-tool-menu .bar-help-route { border-top:1px solid var(--border); margin-top:.25rem; }
   .planning-preview-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; margin-top:1rem; align-items:start; }
   .quiet-county .planning-preview-grid > .planning-preview { min-width:0; width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:14px; background:color-mix(in srgb,var(--atlas-accent) 4%,var(--surface-1)); overflow:visible; }
   .quiet-county .planning-preview-grid > .planning-preview > summary { padding:1rem; align-items:flex-start; gap:.65rem; }

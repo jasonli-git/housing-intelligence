@@ -67,12 +67,24 @@ function YearLine({ tile }: { tile: ScoreTile }) {
   </div>;
 }
 
+/** A card's sources, each once, with the distinct kinds of figure it supplied. */
+function bySource(tiles: ScoreTile[]) {
+  const found = new Map<string, { source: ScoreTile["source"]; kinds: NonNullable<ReturnType<typeof kindOf>>[] }>();
+  for (const t of tiles) {
+    const entry = found.get(t.source.name) ?? { source: t.source, kinds: [] };
+    const kind = kindOf(t.metricId);
+    if (kind && !entry.kinds.includes(kind)) entry.kinds.push(kind);
+    found.set(t.source.name, entry);
+  }
+  return [...found.values()];
+}
+
 /** Each figure now against a year ago, scaled within its own pair. */
 function Pairs({ tiles }: { tiles: ScoreTile[] }) {
   return <div className={home.pairs}>{tiles.map((t) => { const then = yearAgo(t), now = points(t).at(-1)?.value ?? 0, peak = Math.max(then ?? 0, now) || 1; return <div key={t.id}>
     <span>{t.label}</span>
-    {then !== null && <i style={{ width: `${(then / peak) * 100}%` }} />}
-    <i data-now style={{ width: `${(now / peak) * 100}%` }} />
+    <div>{then !== null && <i style={{ width: `${(then / peak) * 100}%` }} />}<i data-now style={{ width: `${(now / peak) * 100}%` }} /></div>
+    <b>{t.value}</b>
   </div>; })}<small>Pale bar: a year ago</small></div>;
 }
 
@@ -82,7 +94,7 @@ function Building({ tiles }: { tiles: ScoreTile[] }) {
   const rows = starts ? points(starts) : [], peak = Math.max(...rows.map((p) => p.value), 1), months = supply ? points(supply).at(-1)?.value ?? null : null, top = Math.max(12, months ?? 0);
   return <div className={home.chart}>
     {rows.length > 1 && <div className={home.bars} aria-hidden="true">{rows.map((p) => <i key={p.date} style={{ height: `${(p.value / peak) * 100}%` }} />)}</div>}
-    {months !== null && <div className={home.gauge} aria-hidden="true"><div><u style={{ left: `${(6 / top) * 100}%` }} /><i style={{ left: `${(months / top) * 100}%` }} /></div><small>Months of supply; the mark is six, roughly balanced</small></div>}
+    {months !== null && <div className={home.gauge} aria-hidden="true"><div><u style={{ left: `${(6 / top) * 100}%` }} /><i style={{ left: `${(months / top) * 100}%` }} /></div><small>{months.toFixed(1)} months of supply; the mark is six, roughly balanced</small></div>}
   </div>;
 }
 
@@ -122,7 +134,7 @@ export default async function HousingLandingPage() {
   const stateSales = ((await api.observations(PRIMARY_STATE.regionId, "sr1a_median_sale_price"))?.observations ?? []).map((o) => o.value);
 
   return <div className={`search-first-home ${original.home}`}>
-    <Masthead affordability={{ kind: "route", active: false }} search={false} simple />
+    <Masthead affordability={{ kind: "route", active: false }} search={{ after: ".home-search" }} />
     <main id="main-content" tabIndex={-1} className={`shell ${home.home}`}>
       <section className={home.entry} aria-labelledby="home-find-heading">
         <div>
@@ -145,10 +157,9 @@ export default async function HousingLandingPage() {
           {lead(story.id) && <p className={home.lead}><b>{lead(story.id)!.value}</b>{lead(story.id)!.label}</p>}
           <p className="visually-hidden">{story.detail}</p>
           {story.id === "choice" ? <Pairs tiles={story.tiles} /> : story.id === "building" ? <Building tiles={story.tiles} /> : story.tiles[0] && <YearLine tile={story.tiles[0]} />}
-          <ul>{story.tiles.map((t) => { const kind = kindOf(t.metricId); return <li key={t.id}>
-            <span className="visually-hidden">{t.summary}</span>
-            <span aria-hidden="true">{t.label} {t.value}</span>{kind && <> · <span title={`${KIND_LABELS[kind]}: ${KIND_MEANINGS[kind]}`}>{SHORT_KIND[kind]}</span></>} · <a href={t.source.href} target="_blank" rel="noreferrer noopener">{t.source.name}</a>
-          </li>; })}</ul>
+          <ul className="visually-hidden">{story.tiles.map((t) => <li key={t.id}>{t.summary}</li>)}</ul>
+          {/* One footnote per card: each source once, with the kinds of figure it gave. */}
+          <p className={home.cite}>{bySource(story.tiles).map(({ source, kinds }, i) => <span key={source.name}>{i > 0 && " · "}{kinds.map((kind, k) => <span key={kind} title={`${KIND_LABELS[kind]}: ${KIND_MEANINGS[kind]}`}>{k > 0 ? ", " : ""}{k > 0 ? SHORT_KIND[kind].toLowerCase() : SHORT_KIND[kind]}</span>)}{kinds.length > 0 && " · "}<a href={source.href} target="_blank" rel="noreferrer noopener">{source.name}</a></span>)}</p>
         </article>)}</div>
       </section>}
 

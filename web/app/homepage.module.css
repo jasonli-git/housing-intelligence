@@ -14,8 +14,6 @@
   color: var(--plate-ink);
 }
 
-.home :global(.bar), .home :global(.site-meta-row) { background: var(--plate-paper); }
-
 /* Background light (owner, 2026-10-25). The page itself is ink on paper; pointing at a
    tool lights the page behind it in that tool's own colour, and pointing at Visual stories
    in the stories' colours. One fixed layer behind everything, faded in and out. */

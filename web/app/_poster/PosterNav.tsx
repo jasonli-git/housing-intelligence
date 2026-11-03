@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 import styles from "./poster.module.css";
 
-/** Every part of the page by what it answers, staying under the masthead and marking the one being read. */
+/** Every part of the page by what it answers, held at the top of the screen once the site
+ *  bar scrolls away (#462), and marking the one being read. */
 export function PosterNav({ links }: { links: { id: string; label: string }[] }) {
   const [active, setActive] = useState(links[0]?.id);
   const bar = useRef<HTMLElement>(null);
@@ -12,7 +13,7 @@ export function PosterNav({ links }: { links: { id: string; label: string }[] })
   useEffect(() => {
     const read = () => {
       if (Date.now() < heldUntil.current) return;
-      const line = 140;
+      const line = 80;
       // Panels sharing a row share a top, and the earlier one is the row's lead.
       const tops = links.map(({ id }) => ({ id, top: document.getElementById(id)?.getBoundingClientRect().top ?? Infinity })).filter(({ top }) => top <= line);
       const nearest = Math.max(...tops.map(({ top }) => top));
@@ -27,7 +28,7 @@ export function PosterNav({ links }: { links: { id: string; label: string }[] })
     const el = bar.current, link = el?.querySelector<HTMLElement>("[aria-current]");
     if (el && link) el.scrollTo({ left: link.offsetLeft - (el.clientWidth - link.offsetWidth) / 2, behavior: "smooth" });
   }, [active]);
-  return <nav ref={bar} className={styles.topics} aria-label="On this page">
+  return <nav ref={bar} className={`${styles.topics} shortcut-bar`} aria-label="On this page">
     {links.map(({ id, label }) => <a key={id} href={`#${id}`} aria-current={active === id ? "location" : undefined} onClick={() => { heldUntil.current = Date.now() + 900; setActive(id); }}>{label}</a>)}
   </nav>;
 }

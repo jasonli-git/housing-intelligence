@@ -23,7 +23,9 @@
 .photo :global(.place-photo figcaption) { position: absolute; right: 16px; bottom: 10px; margin: 0; color: var(--h-soft); pointer-events: auto; }
 .photo :global(.place-photo-caption) { color: inherit; }
 .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
-.chapter { display: grid; gap: 6px; scroll-margin-top: 120px; }
+/* Negative: a chapter's top is its heading's 70px margin, and the heading should land just
+   under the shortcut bar. */
+.chapter { display: grid; gap: 6px; scroll-margin-top: -6px; }
 .chapter > h2 { margin: 70px 0 8px; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.02em; }
 .tile { min-width: 0; padding: 20px 22px; margin: -1px 0 0 -1px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); scroll-margin-top: 120px; }
 .tile h2 { margin: 0 0 12px; font-size: 17px; line-height: 1.25; letter-spacing: -.01em; }
@@ -35,7 +37,7 @@
 .quartiles div { padding-top: 8px; border-top: 2px solid var(--line); font-size: var(--text-note); color: var(--text-secondary); }
 .quartiles div:nth-child(2) { border-color: var(--accent); }
 .quartiles b { display: block; font-size: 19px; color: var(--text-primary); }
-.rail { padding-block: 70px 4px; scroll-margin-top: 120px; }
+.rail { padding-block: 70px 4px; scroll-margin-top: -6px; }
 .railHead { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
 .railHead h2 { margin: 0 0 12px; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.02em; }
 .railHead a { color: inherit; font-size: var(--text-small); }

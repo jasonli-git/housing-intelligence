@@ -3,10 +3,6 @@
   .housing-help-page { --atlas-accent: light-dark(#66513b, #dfcfb6); }
   .housing-help-page .page-title { color: var(--atlas-accent); }
   .housing-help-page .housing-assistance { margin-top: 1.5rem; }
-  .housing-mark { flex: 0 0 auto; border-radius: 6px; }
-  .bar-inner { padding-block: .55rem; }
-  .bar .bar-link { font-size: 11px; letter-spacing: .055em; }
-  .site-meta-row { padding-block: .15rem; }
   main.shell { --section-space: clamp(1.4rem, 2.8vw, 2.1rem); }
   main.shell > .page-head { padding-block: 1.1rem 1.2rem; }
   .quiet-county > .page-head .region-orientation { margin-block: .7rem .25rem; font-size: 15px; line-height: 1.6; max-width: 74ch; }
@@ -247,9 +243,6 @@
   .nj-page.quiet-state #state-detailed-data > summary { padding: 1rem; }
   .nj-page.quiet-state #state-detailed-data > summary .more-title { font-size: 25px; }
   .nj-page.quiet-state #state-detailed-data > summary > .more-kicker { color: light-dark(#505e6a, #c1cfdb); }
-  body:has(.nj-page) .foot-notices { column-gap: 1.5rem; row-gap: .7rem; }
-  body:has(.nj-page) .publisher-notice { margin: 0; }
-  body:has(.nj-page) .foot .publisher-notice p { margin-top: .25rem; line-height: 1.5; }
   @media (max-width: 760px) {
     .nj-page.quiet-state .place-discovery-search { display: grid; grid-template-columns: minmax(0, 1fr); gap: .6rem; }
     .nj-page.quiet-state .place-budget-link { flex-direction: row; justify-content: space-between; align-items: center; }
@@ -379,30 +372,13 @@
   .income-limit-explainer p { margin:.4rem 0 .7rem; }
   body:has(.guide-page) { --surface-1: light-dark(#f5edee, #2a2022); --surface-2: light-dark(#fff9f9, #37292c); --surface-card: var(--surface-2); --text-primary: light-dark(#3b2b2e, #f3e6e8); --text-secondary: light-dark(#685257, #d8c0c5); --text-muted: light-dark(#70585e, #cfb7be); --border: light-dark(#dfc9ce, #62474e); background: var(--surface-1); }
   body:has(.budget-page) { --surface-1: light-dark(#edf1f6, #202936); --surface-2: light-dark(#f8faff, #2a3544); --surface-card: var(--surface-2); --text-primary: light-dark(#283445, #edf2f8); --text-secondary: light-dark(#536278, #c4cfdd); --text-muted: light-dark(#55667b, #bcc9da); --border: light-dark(#cad4e1, #4f6076); background: var(--surface-1); }
-  .bar-inner { grid-template-columns: auto minmax(0, 1fr) 38px; }
-  .bar-tools { min-width: 0; padding-inline-end: 0; }
-  .bar-tool-menu { display: none; position: relative; flex-shrink: 0; }
-  .bar-desktop-tools { display: flex; align-items: center; flex-shrink: 0; gap: .3rem; }
-  .bar-tool-menu > summary { display: none; }
-  .bar-tool-menu .bar-controls { display: flex; align-items: center; gap: .3rem; }
-  .bar-tool-menu .bar-budget { border: 0; font: 500 11px/1.4 var(--font-mono); letter-spacing: .055em; text-transform: uppercase; }
   /* Reserve a readable search field. A wider field moves the desktop tools left;
      use their existing menu before the full row would squeeze the prompt. */
-  @media (min-width: 1421px) { .bar .place-search { flex: 0 0 14rem; } }
+
   @media (max-width: 1420px) {
     /* One row at every width (owner, 2026-10-10): brand, then search and Tools, then theme. */
-    .bar-inner { grid-template-columns: auto minmax(0, 1fr) 38px; column-gap: .5rem; }
-    .bar-tools { grid-column: 2; grid-row: 1; display: flex; align-items: center; justify-content: flex-end; gap: .4rem; }
+    
     .bar-inner > .theme-toggle { grid-column: 3; grid-row: 1; }
-    .bar-desktop-tools { display: none; }
-    .bar-tool-menu { display: block; }
-    .bar-tool-menu > summary { display: flex; align-items: center; gap: .6rem; min-height: 44px; padding-inline: .8rem; border: 1px solid var(--border); border-radius: 8px; font: 500 11px/1.4 var(--font-mono); text-transform: uppercase; cursor: pointer; list-style: none; }
-    .bar-tool-menu > summary::-webkit-details-marker { display: none; }
-    .bar-tool-menu .bar-controls { display: none; position: absolute; top: calc(100% + .4rem); right: 0; z-index: 100; min-width: 190px; padding: .4rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 12px 32px #0002; }
-    .bar-tool-menu[open] .bar-controls { display: flex; flex-direction: column; align-items: stretch; }
-    .bar-tool-menu .bar-controls :is(a, button) { min-height: 44px; justify-content: flex-start; padding: .7rem; }
-    .bar-tool-menu .bar-budget-short { display: none; }
-    .bar-tool-menu .bar-budget-long { display: inline; }
   }
   .guide-page { --atlas-accent: var(--kind-guide); --atlas-ink: light-dark(#7c414e, #e6bcc5); }
   .guide-page > .page-head[data-kind="tool"] { --kind: var(--atlas-accent); }
@@ -436,19 +412,6 @@
   .report > .page-head .actions { flex-wrap: wrap; gap: .65rem; }
   .report > .section { margin-top: 1.5rem; }
   .report .section h2 { margin-bottom: .7rem; }
-  .foot { margin-top: 1.8rem; }
-  .foot-inner { gap: .8rem; }
-  .foot .foot-notices { padding: 0; gap: .75rem 1.5rem; background: none; border: 0; }
-  .foot .publisher-notice p { font: 12px/1.6 var(--font-text); }
-  .foot .publisher-notice-name { font: 550 12px/1.5 var(--font-text); }
-  .foot .foot-links { padding-block: .8rem; }
-  .foot .foot-tab { display: inline-flex; min-height: 44px; align-items: center; gap: .3rem; }
-  .foot .foot-label { font: 500 23px/1.2 Georgia, serif; text-transform: none; letter-spacing: -.02em; }
-  .foot .foot-link-title { font: 500 20px/1.3 Georgia, serif; letter-spacing: -.02em; }
-  .foot .foot-notice { padding: .6rem 1rem .85rem; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .3rem 1rem; }
-  .foot-notice-head { display: flex; align-items: center; gap: .6rem; }
-  .foot .foot-notice-head > svg { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--notice-text); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-  .foot .foot-notice-title { font: 500 20px/1.3 Georgia, serif; letter-spacing: -.02em; text-transform: none; color: var(--notice-text); }
   .coverage-state-preview .coverage-state-title { display: inline-flex; align-items: center; min-height: 44px; gap: .5rem; color: inherit; text-decoration: none; }
   .coverage-state-title > span { font: 400 16px/1 var(--font-text); }
   .coverage-state-title:hover { text-decoration: underline; text-underline-offset: 4px; }
@@ -500,10 +463,6 @@
     .coverage-atlas-traces { display: none !important; }
     .coverage-atlas-traces path { animation: none; }
   }
-  .foot .notice-external-icon { flex: none; width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-  .foot-policy-links { display: flex; flex-wrap: wrap; gap: .1rem 1rem; }
-  .foot .foot-policy-links .foot-tab { font: 500 11px/1.4 var(--font-text); color: var(--text-secondary); text-transform: none; letter-spacing: 0; }
-  .foot .foot-notice > .foot-intro { grid-column: 1 / -1; margin: 0; font-size: 12px; line-height: 1.65; color: var(--text-secondary); max-width: 100ch; }
   .recovery-page { position: relative; isolation: isolate; max-width: 960px; padding-top: clamp(2rem, 7vh, 5rem); padding-bottom: 2rem; min-height: 50vh; }
   .recovery-page > .page-head { border: 0; max-width: 38rem; }
   .recovery-page .page-title { font: 500 clamp(38px, 5vw, 64px)/1.1 Georgia, serif; letter-spacing: -.035em; }
@@ -531,20 +490,10 @@
     .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] .coverage-map { height: 240px; }
     .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] .coverage-map-placeholder { min-height: 240px; }
     .nation-page .landing-canvas .coverage-search-overlay { top: 48px; }
-    .bar-inner { padding-block: .45rem; }
-    .bar-inner { column-gap: .4rem; }
-    .bar-trail { gap: .25rem; }
-    .bar-trail .bar-icon { width: 24px; }
-    .bar-tool-menu > summary { padding-inline: .45rem; gap: .3rem; }
     /* With a bar search, the brand shrinks to the house mark so the search keeps room.
        The portfolio and GitHub links are left out there (owner, 2026-10-10); the home
        page's bar, which has no search, and wider screens still carry them. */
-    .bar-inner:has(.bar-tools .place-search) :is(.bar-home, .bar-sep, .bar-trail > .bar-icon) { display: none; }
-    .bar-inner:has(.bar-tools .place-search) .wordmark-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-    .bar-tools .place-search { flex: 1 1 auto; min-width: 0; }
-    .bar-controls { gap: .25rem; }
-    .bar .bar-link { font-size: 10px; padding-inline: .55rem; }
-    .site-meta-row { padding-block: .1rem; }
+    
     .quiet-county > .page-head { padding-block: .85rem 1rem; }
     .quiet-county .page-head .page-title { font-size: clamp(38px, 9.7vw, 52px); line-height: 1.08; }
     .quiet-county .region-orientation { font-size: 14px; line-height: 1.6; }
@@ -561,21 +510,11 @@
     .quiet-history .history-tabs { gap: .6rem; }
     .quiet-history .history-tabs .page-section-nav { flex-basis: 100%; margin: 0; }
     .quiet-history .history-portrait { padding: .65rem .8rem; }
-    .foot .foot-notice { grid-template-columns: minmax(0, 1fr); gap: 0; padding-inline: .85rem; }
-    .foot-policy-links { gap: .1rem 1.15rem; }
-    .foot .foot-notice > .foot-intro { margin-top: .25rem; }
     .legal-page > .section { font-size: 15px; }
     .recovery-page { padding-top: 1.5rem; }
     .recovery-art { top: .5rem; opacity: .08; }
     .recovery-art img { display: none; }
     .recovery-routes { display: grid; grid-template-columns: minmax(0, 1fr); }
-  }
-  @media (max-width: 380px) {
-    .bar-trail { gap: .3rem; }
-    .bar-trail .wordmark { font-size: 14px; gap: .25rem; }
-    .bar-trail .housing-mark { width: 20px; height: 20px; }
-    .bar-trail .bar-icon { flex-shrink: 0; width: 28px; min-width: 28px; }
-    .bar .bar-link { padding-inline: .4rem; }
   }
 }
 /* "Your next step" icons (2026-10-10): a line icon left of each link, in the link's colour. */

@@ -14,7 +14,6 @@
 
 /* Read, not labelled: sentence case in the text face. */
 :root body :is(
-  .bar-tool-menu > summary,
   .licence-label, .site-status-schedule, .site-status-kicker, .site-status-word,
   .disclose-hint .when-closed, .disclose-hint .when-open,
   .quiet-profile > .quiet-label,
@@ -23,7 +22,6 @@
   .standout-deck-label, .region-standout-rank,
   .answer .k,
   .chart-kicker,
-  .foot-kicker, .foot-tab,
   .more-open-label span,
   .housing-assistance a > small,
   main.report .crumbs :is(a, li, span, li[aria-current]), main.report .cost-card .gl > .term, .cost-estimate-note,
@@ -33,10 +31,10 @@
   text-transform: none !important;
   letter-spacing: normal !important;
 }
-:root body :is(.quiet-profile > .quiet-label, .cost-evidence-label, .household-title, fieldset > legend, .standout-deck-label, .standout-group-label, .chart-kicker, .foot-kicker) {
+:root body :is(.quiet-profile > .quiet-label, .cost-evidence-label, .household-title, fieldset > legend, .standout-deck-label, .standout-group-label, .chart-kicker) {
   font-size: 13.5px !important; font-weight: 600 !important;
 }
-:root body :is(.licence-label, .site-status-schedule, .site-status-kicker, .site-status-word, .disclose-hint span, .household-kind, .region-standout-rank, .standout-rank, .answer .k, .foot-tab, .bar-tool-menu > summary, .more-open-label span, .housing-assistance a > small, main.report .crumbs :is(a, li, span, li[aria-current]), .cost-estimate-note) {
+:root body :is(.licence-label, .site-status-schedule, .site-status-kicker, .site-status-word, .disclose-hint span, .household-kind, .region-standout-rank, .standout-rank, .answer .k, .more-open-label span, .housing-assistance a > small, main.report .crumbs :is(a, li, span, li[aria-current]), .cost-estimate-note) {
   font-size: 13px !important;
 }
 

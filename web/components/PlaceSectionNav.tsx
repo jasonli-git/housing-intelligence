@@ -6,6 +6,12 @@ import styles from "./PlaceSectionNav.module.css";
 export type PlaceSection = { id: string; label: string };
 
 /** One row of section links at every width: it scrolls sideways on phones, keeping the current one in view. */
+/** The site bar's height while it stays on screen; 0 where it scrolls away (#462). */
+function stickyBarHeight() {
+  const bar = document.querySelector(".bar");
+  return bar && getComputedStyle(bar).position === "sticky" ? bar.getBoundingClientRect().height : 0;
+}
+
 export function PlaceSectionNav({ sections, label = "Place sections" }: { sections: PlaceSection[]; label?: string }) {
   const nav = useRef<HTMLElement>(null);
   const row = useRef<HTMLDivElement>(null);
@@ -15,7 +21,7 @@ export function PlaceSectionNav({ sections, label = "Place sections" }: { sectio
   useEffect(() => {
     let frame = 0;
     const update = () => {
-      const bar = document.querySelector(".bar")?.getBoundingClientRect().height ?? 0;
+      const bar = stickyBarHeight();
       nav.current?.style.setProperty("--place-nav-top", `${bar}px`);
       // Glass only once it sticks under the masthead; in the header it sits on the page.
       if (nav.current) nav.current.toggleAttribute("data-stuck", nav.current.getBoundingClientRect().top <= bar + 1 && window.scrollY > 0);
@@ -79,8 +85,7 @@ export function PlaceSectionNav({ sections, label = "Place sections" }: { sectio
     const focus = target instanceof HTMLDetailsElement ? target.querySelector<HTMLElement>(":scope > summary") ?? target : target.matches("h1,h2,h3,summary") ? target : target.querySelector<HTMLElement>("h1,h2,h3,summary") ?? target;
     if (!focus.hasAttribute("tabindex")) focus.tabIndex = -1;
     focus.focus({ preventScroll: true });
-    const offset = (document.querySelector(".bar")?.getBoundingClientRect().height ?? 0)
-      + (nav.current?.getBoundingClientRect().height ?? 0) + 16;
+    const offset = stickyBarHeight() + (nav.current?.getBoundingClientRect().height ?? 0) + 16;
     if (recordHistory && location.hash !== `#${id}`) history.pushState(null, "", `#${id}`);
     window.scrollTo({ top: Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset),
       behavior: !recordHistory || window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
@@ -93,7 +98,7 @@ export function PlaceSectionNav({ sections, label = "Place sections" }: { sectio
     go(id);
   }
 
-  return <nav ref={nav} className={styles.navigation} aria-label={label}>
+  return <nav ref={nav} className={`${styles.navigation} shortcut-bar`} aria-label={label}>
     <div ref={row} className={styles.links}>{available.map(section => <a key={section.id} href={`#${section.id}`}
       aria-current={current === section.id ? "location" : undefined} onClick={event => follow(event, section.id)}>{section.label}</a>)}</div>
   </nav>;

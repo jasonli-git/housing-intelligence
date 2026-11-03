@@ -118,7 +118,7 @@ export default async function NewJerseyPoster() {
   const links = [{ id: "counties", label: "Compare counties" }, ...(sale || tax ? [{ id: "cost", label: "Buying, taxes & rent" }] : []), { id: "afford", label: "Renters & mortgages" }, { id: "supply", label: "New homes" }, { id: "living", label: "Daily life" }, ...(jersey.length ? [{ id: "visual", label: "New Jersey stories" }] : [])];
 
   return glossTree(<>
-    <Masthead affordability={{ kind: "route" }} simple />
+    <Masthead affordability={{ kind: "route" }} />
     <main id="main-content" tabIndex={-1} className={`${styles.poster} ${state.page}`}>
       <Crumbs trail={[{ href: "/", label: "Home" }]} here="New Jersey" />
       <PosterNav links={links} />
@@ -193,7 +193,7 @@ export default async function NewJerseyPoster() {
       </section>}
 
       {statewideNotes.length > 0 && <StateFigureNotes notes={statewideNotes} />}
-      <footer className={styles.close}>Sources: NJ SR-1A sales records, NJ Division of Taxation, FHFA, Census Bureau, HMDA. <Link href="/sources">About the data</Link></footer>
+      <footer className={styles.close}>Sources: NJ SR-1A sales records, NJ Division of Taxation, FHFA, Census Bureau, HMDA.</footer>
     </main>
   </>);
 }
