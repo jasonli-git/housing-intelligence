@@ -69,7 +69,19 @@ try {
         await page.evaluate(() => document.fonts.ready);
         await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
         const slug = href.split('/').pop();
-        await page.screenshot({ path: resolve(outDir, 'stories', `${slug}-${scheme}.jpg`), type: 'jpeg', quality: 78 });
+        // A card's thumbnail starts at the story's title, not the bar above it, and spans the
+        // page's full content width, so the card shows it whole at its own 16:10 shape.
+        const frame = await page.evaluate(() => {
+          const main = document.querySelector('#main-content');
+          const title = document.querySelector('h1.page-title');
+          if (!main || !title) return null;
+          const box = main.getBoundingClientRect(), style = getComputedStyle(main), margin = 20;
+          const x = box.left + parseFloat(style.paddingLeft) - margin;
+          const width = box.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) + margin * 2;
+          return { x, y: title.getBoundingClientRect().top + scrollY - margin * 1.5, width, height: width * 10 / 16 };
+        });
+        if (!frame) throw new Error(`${href}: no title to start its thumbnail at`);
+        await page.screenshot({ path: resolve(outDir, 'stories', `${slug}-${scheme}.jpg`), type: 'jpeg', quality: 80, fullPage: true, clip: frame });
         console.log(`screenshot: stories/${slug}-${scheme}`);
         if (slug === featured) {
           const box = await page.locator('[data-story-shot]').boundingBox();
