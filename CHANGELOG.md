@@ -20,11 +20,12 @@ are not yet recorded here.
 
 ### Changed
 
-- **Visual stories refined** (2026-11-03, ARCHITECTURE #464, #467): the stories page has
-  its search on the main view, Editor's picks on a full-width coloured band and a quieter glow; story
-  cards show each story from its title, uncropped. Every story page shares one layout,
-  1320px wide: a shortcut bar, a Sources footnote and a link to the next story, with a
-  one-line takeaway beside the intro on the "Only in New Jersey" stories.
+- **Visual stories refined** (2026-11-03, ARCHITECTURE #464, #467): the menu bar's link
+  and the place pages' shortcut now read Stories. The stories page has its search on the
+  main view, Editor's picks on a full-width coloured band and a quieter glow; story cards
+  show each story from its title, uncropped. Every story page shares one layout, 1320px
+  wide: a shortcut bar, a Sources footnote, and the share box beside the next story's
+  card, with a one-line takeaway beside the intro on the "Only in New Jersey" stories.
 - **The home, state, county, town and ZIP pages use the new poster design** (2026-11-02,
   ARCHITECTURE #457): chapters, colour panels and a plain-language snapshot in each hero;
   the state and county maps are tied to their sortable tables; net homes now use the
