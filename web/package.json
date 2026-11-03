@@ -20,6 +20,7 @@
     "check:ui-refinement": "node scripts/check-ui-refinement.mjs",
     "check:a11y:serve": "node scripts/serve-accessibility.mjs",
     "colours:baseline": "UPDATE_COLOUR_BASELINE=1 vitest run lib/colours.test.ts",
+    "stories:register": "UPDATE_STORY_REGISTER=1 vitest run lib/storyRegister.test.ts",
     "check:terms": "node scripts/check-terms.mjs"
   },
   "dependencies": {
