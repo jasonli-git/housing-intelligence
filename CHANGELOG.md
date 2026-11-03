@@ -17,6 +17,12 @@ are not yet recorded here.
   ARCHITECTURE #457): chapters, colour panels and a plain-language snapshot in each hero;
   the state and county maps are tied to their sortable tables; net homes now use the
   published figure, which counts only towns that reported both completions and demolitions.
+- **One menu bar and one footer on every page** (2026-11-02, ARCHITECTURE #459–#463): the bar
+  reads Map · Compare · Charts · Tools, with the non-commercial terms as a pill inside it;
+  on pages with an "On this page" bar, that bar sticks to the top and the site bar scrolls
+  away. The footer is four labelled bands (Tools, Publisher notices, Sources, Terms) and a
+  status pill with the build date and source checks. The home page hero is neutral grey,
+  its market cards are shorter, and town and ZIP pages lay more panels side by side.
 - **Place page refinements** (2026-11-02, ARCHITECTURE #458): every story's cover picture
   is captured again (most on place pages were blank); state, county, town and ZIP sections
   sit 80px apart; the NJ linework returns to each hero; county photos run as a banner above
