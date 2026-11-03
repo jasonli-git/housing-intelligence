@@ -1,7 +1,10 @@
 /* Library only: full stories retain their own analytical layouts and colours. */
 @media screen {
   body:has(.story-library) { --plate-paper: var(--surface-1); background: var(--surface-1); }
-  body:has(.story-library)::before { content: none; animation: none; background: none; }
+  /* A faint, still glow behind the header only (2026-11-03): it scrolls away with the
+     title and fades out before the featured story, so the stories keep the attention. */
+  body:has(.story-library)::before { position: absolute; top: -20vh; height: 80vh; opacity: .18; animation: none;
+    -webkit-mask-image: linear-gradient(#000 40%, transparent 80%); mask-image: linear-gradient(#000 40%, transparent 80%); }
 }
 .stories-page:has(.story-library) { max-width: 1320px; padding-inline: clamp(18px, 4vw, 56px); }
 .stories-page:has(.story-library) .page-title { font-size: clamp(52px, 6.5vw, 92px); text-align: center; }
