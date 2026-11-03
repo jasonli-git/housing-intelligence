@@ -60,7 +60,10 @@ export const FORMATS = {
     layout: 'grid-template-columns: 1fr 724px; grid-template-rows: 1fr auto; gap: 0 36px; padding: 44px 44px 28px;', copy: 'gap: 16px;' },
   // The export (Director Note, 2026-11-03): text above the chart, 4:5 for phone feeds.
   portrait: { file: (slug) => `${slug}-4x5.jpg`, width: 1080, height: 1350, chart: { width: 984, height: 930 }, type: { kicker: 15, title: 64, text: 27, foot: 19, footGap: 0, fade: 120 },
-    layout: 'grid-template-rows: auto 1fr auto; gap: 28px; padding: 56px 48px 36px;', copy: 'gap: 0;' },
+    layout: 'grid-template-rows: auto 1fr auto; gap: 28px; padding: 56px 48px 36px;', copy: 'gap: 0;',
+    // A wide, short chart leaves much of its box empty: its title and takeaway grow into
+    // the room, and the chart sits centred in what is left.
+    short: { ratio: .85, type: { title: 84, text: 34 }, css: '.chart { display: flex; align-items: center; } .chart img { height: auto; }' } },
 };
 
 /** Captures the top of the story's first chart, no taller than the tallest box it fills, or
@@ -115,7 +118,8 @@ export async function captureShareCard(browser, page, { slug, outDir }) {
   await mkdir(resolve(outDir, 'share'), { recursive: true });
   for (const format of Object.values(FORMATS)) {
     const cut = chart.ratio > format.chart.height / format.chart.width;
-    const t = format.type;
+    const short = format.short && chart.ratio < format.short.ratio * format.chart.height / format.chart.width;
+    const t = short ? { ...format.type, ...format.short.type } : format.type;
     const html = `<!doctype html><meta charset="utf-8"><style>
       * { box-sizing: border-box; margin: 0; }
       body { width: ${format.width}px; height: ${format.height}px; background: #fff; color: #1d1b18; font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; display: grid; ${format.layout} }
@@ -131,6 +135,7 @@ export async function captureShareCard(browser, page, { slug, outDir }) {
       .chart img { display: block; width: 100%; ${cut ? 'height: auto;' : 'height: 100%; object-fit: contain; object-position: top center;'} }
       footer { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 24px; padding-top: ${t.foot}px; margin-top: ${t.footGap}px; border-top: 1px solid #e6e6e6; font-size: ${t.foot}px; color: #6f6a62; }
       footer b { color: #1d1b18; font-weight: 600; }
+      ${short ? format.short.css : ''}
     </style>
     <div class="copy"><span class="kicker">Visual story · New Jersey</span><h1>${escape(story.title)}</h1>${text ? `<p>${text}</p>` : ''}</div>
     <div class="chart${cut ? ' cut' : ''}"><img src="data:image/jpeg;base64,${chart.image.toString('base64')}" alt=""></div>
