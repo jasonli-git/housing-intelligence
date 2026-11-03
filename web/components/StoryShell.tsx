@@ -3,8 +3,9 @@ import type { ReactNode } from "react";
 
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
+import { StoryShortcuts } from "@/components/StoryShortcuts";
 
-/** A visual story's page: the bar, the trail back to the index, the title and lede, the figure, the notes. */
+/** A visual story's page: the bar, the trail back to the index, the title and lede, the shortcuts, the figure, the notes. */
 export function StoryShell({ title, lede, note, children, focus }: { title: string; lede: ReactNode; note: ReactNode; children: ReactNode; focus?: ReactNode }) {
   return (
     <>
@@ -18,10 +19,11 @@ export function StoryShell({ title, lede, note, children, focus }: { title: stri
             {!focus && <p className="story-lede">{lede}</p>}
           </div>
         </header>
+        <StoryShortcuts />
         {focus}
         {focus && <><h2 className="story-h" id="story-statewide">Across New Jersey</h2><p className="story-lede">{lede}</p></>}
         <div data-story-shot>{children}</div>
-        <p className="story-note">{note} <Link href="/stories">More visual stories →</Link></p>
+        <p className="story-note" id="story-sources">{note} <Link href="/stories">More visual stories →</Link></p>
       </main>
     </>
   );
