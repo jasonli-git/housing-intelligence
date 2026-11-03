@@ -1,6 +1,6 @@
 /* Visual stories (Director Note "Visualizing the data", 2026-10-22). Colours are tokens:
    above a baseline --story-up, below it --story-down. */
-.stories-page { max-width: 1080px; margin: 0 auto; padding: 0 16px 80px; }
+.stories-page { max-width: 1320px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 56px) 80px; }
 .stories-page .page-title { margin: .2rem 0 .4rem; }
 .stories-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin: 1.5rem 0 0; padding: 0; list-style: none; }
 .stories-grid a { display: grid; gap: .4rem; height: 100%; box-sizing: border-box; padding: 1.1rem 1.2rem; border: 1px solid var(--plate-strong-rule, var(--border)); border-radius: 18px; color: var(--plate-ink, var(--text-primary)); text-decoration: none; }
