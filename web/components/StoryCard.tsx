@@ -2,10 +2,10 @@ import Link from "next/link";
 import { ThemedShot } from "./ThemedShot";
 import { collectionFor, storyPreview, storySlug, type Story } from "@/lib/storyLibrary";
 
-export function StoryCover({ story }: { story: Story }) {
+export function StoryCover({ story, shot }: { story: Story; shot?: string }) {
   return <div className="library-cover" data-topic={collectionFor(story)} data-story={storySlug(story)}>
     {/* Cropped detail of the actual chart, not fabricated quantitative artwork. */}
-    <ThemedShot name={`stories/${storySlug(story)}`} width={1440} height={900} className="library-chart-detail" />
+    <ThemedShot name={shot ?? `stories/${storySlug(story)}`} width={1440} height={900} className="library-chart-detail" />
     <span className="library-cover-open" aria-hidden="true">↗</span>
   </div>;
 }

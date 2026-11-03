@@ -44,6 +44,11 @@ const only = process.env.SCREENSHOT_ONLY;
 const storySource = await readFile(new URL('../lib/stories.ts', import.meta.url), 'utf8');
 const storyHrefs = [...new Set([...storySource.matchAll(/href: ?"(\/stories\/[a-z0-9-]+)"/g)].map((match) => match[1]))];
 if (!storyHrefs.length) throw new Error('lib/stories.ts: no stories found');
+// The /stories index's featured cover is a second shot of that story: its chart area alone,
+// with a margin, so the cover shows the figure rather than the page's title and lede.
+const librarySource = await readFile(new URL('../lib/storyLibrary.ts', import.meta.url), 'utf8');
+const featured = librarySource.match(/FEATURED_STORY = "([a-z0-9-]+)"/)?.[1];
+if (!featured) throw new Error('lib/storyLibrary.ts: no FEATURED_STORY');
 
 await mkdir(resolve(outDir, 'stories'), { recursive: true });
 const browser = await chromium.launch();
@@ -62,6 +67,13 @@ try {
         const slug = href.split('/').pop();
         await page.screenshot({ path: resolve(outDir, 'stories', `${slug}-${scheme}.jpg`), type: 'jpeg', quality: 78 });
         console.log(`screenshot: stories/${slug}-${scheme}`);
+        if (slug === featured) {
+          const box = await page.locator('[data-story-shot]').boundingBox();
+          if (!box) throw new Error(`${href}: no [data-story-shot]`);
+          const pad = 24;
+          await page.screenshot({ path: resolve(outDir, 'stories', `${slug}-chart-${scheme}.jpg`), type: 'jpeg', quality: 80, fullPage: true, clip: { x: box.x - pad, y: box.y - pad, width: box.width + pad * 2, height: box.height + pad * 2 } });
+          console.log(`screenshot: stories/${slug}-chart-${scheme}`);
+        }
       }
       // Then the stories page itself, for the home page. Its cards show the pictures just
       // taken, which are not uploaded yet, so those requests are answered from disk.

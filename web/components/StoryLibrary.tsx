@@ -79,9 +79,8 @@ export function StoryLibrary() {
           <span className="library-eyebrow">Featured</span>
           <h2>{FEATURED_HEADLINE[0]}<br />{FEATURED_HEADLINE[1]}</h2>
           <p>{storyPreview(featured)}</p>
-          <span className="library-feature-cta">Explore <span aria-hidden="true">↗</span></span>
         </div>
-        <StoryCover story={featured} />
+        <StoryCover story={featured} shot={`stories/${FEATURED_STORY}-chart`} />
       </Link>
       <StoryRail id="editors" title="Editor’s picks" stories={EDITOR_PICKS.map(storyBySlug)} />
       {COLLECTIONS.map((c) => <StoryRail key={c.id} id={c.id} title={c.title} stories={c.stories.map(storyBySlug)} viewAll={() => showCollection(c.id)} />)}

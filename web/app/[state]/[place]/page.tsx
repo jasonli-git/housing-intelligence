@@ -492,7 +492,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
   // The same rail as the state page, so stories close every level of place alike.
   const storyRail = deepStories.length > 0 ? <section id="stories" className={`${styles.chapter} ${rail.rail}`}>
-    <div className={rail.railHead}><h2>Stories about {name}</h2><Link href="/stories">All stories</Link></div>
+    <div className={rail.railHead}><h2>Visual stories about {name}</h2><Link href="/stories">All visual stories</Link></div>
     <ul tabIndex={0}>{deepStories.map((item) => <li key={item.topic}><Link href={item.href} prefetch={false}><ThemedShot name={`stories/${item.slug}`} width={1440} height={900} className={styles.deepCover} /><span>{item.title}</span></Link></li>)}</ul>
   </section> : null;
 

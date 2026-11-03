@@ -188,7 +188,7 @@ export default async function NewJerseyPoster() {
       </section>}
 
       {jersey.length > 0 && <section id="visual" className={state.rail}>
-        <div className={state.railHead}><h2>Stories about New Jersey</h2><Link href="/stories">All stories</Link></div>
+        <div className={state.railHead}><h2>Visual stories about New Jersey</h2><Link href="/stories">All visual stories</Link></div>
         <ul tabIndex={0}>{jersey.map((story) => <li key={story.href}><Link href={story.href} prefetch={false}><StoryCover story={story} /><span>{story.title}</span></Link></li>)}</ul>
       </section>}
 
