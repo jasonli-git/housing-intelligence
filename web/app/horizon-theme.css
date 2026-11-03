@@ -74,18 +74,7 @@ body:has(.horizon-page) main.horizon-page .more > summary, body:has(.horizon-pag
 
   /* Footer: the three boxes become ruled ledger sections; the code-and-data terms a
      stamped notice with a dashed border. */
-  body:has(.horizon-page) .foot :is(.foot-sources, .foot-links) { border: 0; border-radius: 0; background: none; box-shadow: none; padding-inline: 0; }
-  body:has(.horizon-page) .foot .foot-sources { border-top: 1px solid var(--plate-strong-rule); }
-  body:has(.horizon-page) .foot .foot-kicker { font: 600 10px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--plate-accent); }
-  body:has(.horizon-page) .foot .foot-brief { font: 13px/1.8 var(--font-text); color: var(--text-secondary); }
-  body:has(.horizon-page) .foot .nc-tag { border-radius: 0; border: 1px solid var(--plate-accent); color: var(--plate-accent); font: 600 9px/1.4 var(--font-mono); letter-spacing: .1em; }
-  body:has(.horizon-page) .foot .foot-notice {
-    border: 1.5px dashed var(--plate-ink); border-radius: 0; background: color-mix(in srgb, var(--plate-accent) 4%, transparent);
-    box-shadow: none; outline: 1px solid var(--plate-rule); outline-offset: 4px;
-  }
-  body:has(.horizon-page) .foot .foot-notice-title { font: 400 22px/1.2 Georgia, serif; color: var(--plate-ink); }
-  body:has(.horizon-page) .foot .foot-notice-head > svg { stroke: var(--plate-accent); }
-  body:has(.horizon-page) .foot .foot-policy-links .foot-tab { font: 600 10px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+  
   @media (prefers-reduced-motion: reduce) {
     body:has(.horizon-page) .bar-desktop-tools :is(.bar-link, .bar-budget)::after { transition: none; }
   }

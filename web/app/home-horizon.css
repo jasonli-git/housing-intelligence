@@ -43,8 +43,6 @@
 :root .search-first-home .home-tool-scope { margin-top:auto !important; align-self:flex-start; padding:.15rem .6rem !important; border-radius:999px; border:1px solid color-mix(in srgb,var(--tool-ink) 40%,transparent); background:color-mix(in srgb,var(--tool-ink) 12%,transparent) !important; color:var(--tool-ink) !important; font:600 11px/1.4 -apple-system,BlinkMacSystemFont,"Inter",sans-serif !important; letter-spacing:0 !important; text-transform:none !important; }
 @media (prefers-reduced-motion: reduce) { :root .search-first-home.search-first-home .home-tools a[data-tool] { transition:none; } }
 }
-@media screen {
-}
 
 @media screen and (max-width: 600px) {
   /* The licence and source-check lines stack rather than collide in small capitals. */

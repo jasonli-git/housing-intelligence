@@ -155,8 +155,6 @@
   .quiet-county .more-open-icon { width: 35px; height: 35px; }
   .quiet-county .more-body { padding: 1.5rem; }
   .quiet-county { padding-bottom: 1rem; }
-  body:has(.quiet-county) .foot { margin-top: 2.5rem; background: none; }
-  body:has(.quiet-county) .foot-inner { max-width: 1160px; padding-top: 0.5rem; }
   .quiet-county :focus-visible { outline: 2px solid var(--atlas-accent); outline-offset: 5px; }
   .nj-page.quiet-state { --atlas-accent: light-dark(#386888, #abcfe9); --atlas-ink: var(--text-primary); --entry-ink: var(--text-primary); }
   body:has(.quiet-state) { --surface-1: light-dark(#f5f7f8, #181d22); --surface-2: light-dark(#ffffff, #232a30); --border: light-dark(#d9e1e7, #3f4d59); }
@@ -333,8 +331,6 @@
   .quiet-nation .national-rate { justify-self: end; border-left: 1px solid var(--border); padding-left: 2rem; }
   .quiet-nation .national-rate > strong { font: 500 42px/1 Georgia, serif; }
   .quiet-nation :focus-visible { outline: 2px solid var(--entry-accent); outline-offset: 4px; }
-  body:has(.quiet-nation) .foot { margin-top: 2rem; background: none; }
-  body:has(.quiet-nation) .foot-inner { max-width: 1160px; padding-top: 0.5rem; }
   main.quiet-nation { padding-bottom: 1rem; }
 
   .quiet-history { --atlas-accent: light-dark(#4e6575, #b7cbd9); }

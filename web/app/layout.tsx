@@ -5,7 +5,6 @@ import { InlineScript } from "@/components/InlineScript";
 import { FrameMeter } from "@/components/FrameMeter";
 import { PrintFooter } from "@/components/PrintFooter";
 import { SourceFooter } from "@/components/SourceFooter";
-import { SourceCheckFooter } from "@/components/SourceCheckFooter";
 import { HOUSING_MODE_SCRIPT } from "@/lib/housingMode";
 import { SHARE_DEFAULTS } from "@/lib/meta";
 import { SITE_URL } from "@/lib/site";
@@ -30,6 +29,7 @@ import "./state-exhibits.css";
 import "./county-cabinet.css";
 import "./site-chrome.css";
 import "./labels.css";
+import "./site-footer.css";
 
 // Self-hosted at build time: next/font downloads each face once and serves it from this
 // site, so a reader's browser never asks Google for anything (ARCHITECTURE #121).
@@ -83,7 +83,6 @@ export default function RootLayout({
             condition of Zillow's licence, and the pages most likely to be linked
             directly are the ones least likely to have remembered it. */}
         <SourceFooter />
-        <SourceCheckFooter />
         <PrintFooter />
       </body>
     </html>

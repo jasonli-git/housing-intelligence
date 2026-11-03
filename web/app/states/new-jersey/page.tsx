@@ -193,7 +193,7 @@ export default async function NewJerseyPoster() {
       </section>}
 
       {statewideNotes.length > 0 && <StateFigureNotes notes={statewideNotes} />}
-      <footer className={styles.close}>Sources: NJ SR-1A sales records, NJ Division of Taxation, FHFA, Census Bureau, HMDA. <Link href="/sources">About the data</Link></footer>
+      <footer className={styles.close}>Sources: NJ SR-1A sales records, NJ Division of Taxation, FHFA, Census Bureau, HMDA.</footer>
     </main>
   </>);
 }

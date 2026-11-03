@@ -71,20 +71,11 @@ small.report-source-code { display: block; color: var(--text-muted); }
   .report .cost-strip :is(p, .cost-strip-big, .cost-strip-small) { font-size: 9pt; line-height: 1.4; }
   .report > footer { margin-top: 10pt; padding-top: 5pt; font-size: 8.5pt; }
   /* Preserve required notices and the entire source directory; flatten web-only framing. */
-  body:has(.report) .foot { margin-top: 12pt; background: none; }
-  body:has(.report) .foot-inner { display: block; padding: 0; }
-  body:has(.report) .foot :is(.foot-notices, .foot-sources, .foot-links, .foot-notice) { display: block; padding: 6pt 0; margin: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
-  body:has(.report) .foot .foot-notice-head { display: block; padding: 0; }
-  body:has(.report) .foot :is(.foot-notice-title, .foot-kicker) { font: 600 10pt/1.3 var(--font-text); margin: 3pt 0; letter-spacing: 0; }
-  body:has(.report) .foot :is(p, .foot-intro, .inst, .inst-name, .inst-terms, .ds-meta, .ds-terms, .publisher-notice-name) { font-size: 8.5pt; line-height: 1.35; }
-  body:has(.report) .foot :is(.foot-policy-links, .foot-links .foot-tab, .foot-notice svg) { display: none; }
-  body:has(.report) .foot .foot-tab { min-height: 0; padding: 0; }
+  
   body:has(.report) .site-meta-row .site-status { display: none; }
   body:has(.report) .site-meta-row { display: block; padding: 0; margin: 0 0 8pt; max-width: none; }
   body:has(.report) .site-meta-row .licence { display: block; width: 100%; }
   body:has(.report) .licence-box { display: block; overflow: visible; }
   body:has(.report) .licence-box > summary { min-height: 0; padding: 0; }
   body:has(.report) .licence-text { font-size: 9pt; line-height: 1.35; padding: 3pt 0 0; }
-  body:has(.report) .foot .foot-built { display: block; font-size: 8.5pt; }
-  body:has(.report) .foot .foot-notice { break-inside: avoid; }
 }

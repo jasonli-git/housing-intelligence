@@ -48,39 +48,10 @@
 .site-status[data-overdue] .site-status-kicker { color: var(--text-primary) !important; font-weight: 600; }
 
 /* One quiet, full-wording status line after all publisher notices and policies. */
-.site-check-footer { width: 100%; max-width: var(--shell); margin: 0 auto; padding: 0 var(--gutter) 1.5rem; box-sizing: border-box; }
-.site-check-footer .site-status { margin: 0; padding: .5rem 0; min-height: 44px; border: 0; border-radius: 0; background: none; box-shadow: none; font: 400 12px/1.5 var(--font-text); color: var(--text-secondary); }
-.site-check-footer .site-status-schedule { color: inherit; }
-.site-check-footer .site-status-kicker { font: inherit; letter-spacing: 0; text-transform: none; color: inherit; margin: 0; }
-.site-check-footer .site-status-word { display: inline; }
-.site-check-footer .site-status:hover { color: var(--text-primary); text-decoration: underline; text-underline-offset: 3px; }
-.site-check-footer .site-status:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
-@media (prefers-reduced-motion: reduce) { .site-check-footer .site-status-arrow { transition: none; transform: none; } }
-@media print { .site-check-footer { display: none; } }
 
 /* Shared provenance: heading above publishers, not a label beside a dense text row. */
-@media screen {
-  :root body .foot .foot-inner { gap: 1rem; }
-  :root body .foot .foot-notices { margin: 0; }
-  :root body .foot .foot-links { padding-block: 1rem; }
-}
 
 /* A quiet colophon rather than another enclosed card. Keep all terms visible. */
-@media screen {
-  :root body .foot section.footer-colophon { display: grid; grid-template-columns: minmax(180px, .24fr) minmax(0, 1fr); grid-template-areas: "heading copy" "heading policies"; align-items: start; gap: .5rem 1.5rem; margin-top: 1rem; padding: 1.1rem 0 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; outline: none; background: none; box-shadow: none; }
-  :root body .foot .footer-colophon .foot-notice-head { grid-area: heading; display: flex; align-items: center; gap: .55rem; }
-  :root body .foot .footer-colophon .foot-notice-head > svg { width: 28px; height: 28px; stroke: var(--notice-text); }
-  :root body .foot .footer-colophon .foot-notice-head .foot-notice-title { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; font: 400 32px/1.15 Georgia, serif; font-family: Georgia, serif !important; font-size: 32px !important; letter-spacing: -.02em; text-transform: none; color: var(--notice-text); }
-  :root body .foot .footer-colophon .notice-external-icon { width: 16px; height: 16px; }
-  :root body .foot .footer-colophon > .foot-intro { grid-area: copy; margin: 0; max-width: 85ch; font: 12px/1.65 var(--font-text); color: var(--text-secondary); }
-  :root body .foot .footer-colophon .foot-policy-links { grid-area: policies; display: flex; flex-wrap: wrap; align-items: center; gap: .1rem 1.25rem; }
-  :root body .foot .footer-colophon .foot-policy-links .foot-tab { display: inline-flex; align-items: center; min-height: 32px; font: 500 13px/1.4 var(--font-text); letter-spacing: 0; text-transform: none; color: var(--text-secondary); }
-  :root body .foot .footer-colophon a:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
-  @media (max-width: 600px) {
-    :root body .foot section.footer-colophon { grid-template-columns: minmax(0, 1fr); grid-template-areas: "heading" "copy" "policies"; gap: .65rem; }
-    :root body .foot .footer-colophon .foot-policy-links .foot-tab { min-height: 44px; }
-  }
-}
 
 /* The desktop search can be narrower than an input's intrinsic ~200px width.
    Let its grid track and input shrink together instead of covering the theme button. */

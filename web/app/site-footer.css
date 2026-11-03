@@ -1,0 +1,66 @@
+/* The site footer (ARCHITECTURE #460): three bands in one style, separated by a thin rule
+   and labelled alike, with no cards, icons or tabs. Every footer rule lives here. */
+.site-foot { margin-top: clamp(3.5rem, 7vw, 6rem); color: var(--text-secondary); font-size: 12.5px; }
+.site-foot-inner { max-width: var(--shell); margin: 0 auto; padding: 0 var(--gutter) 2rem; }
+.site-foot-band { display: grid; gap: 0.45rem; padding-block: 1rem; border-top: 1px solid var(--border); }
+/* From 760px, each band's label is a narrow left column and its content runs beside it
+   to the right edge, so the footer uses the page's width rather than a ragged left half. */
+@media (min-width: 760px) {
+  /* No row gap: the label spans spare rows, and a gap between empty rows is still space. */
+  .site-foot-band { grid-template-columns: 10rem minmax(0, 1fr); gap: 0 1.5rem; align-items: baseline; }
+  .site-foot-band > * { grid-column: 2; }
+  .site-foot-band > :not(.site-foot-label) + * { margin-top: 0.45rem; }
+  .site-foot-band > .site-foot-label { grid-column: 1; grid-row: 1 / span 9; }
+}
+.site-foot-label { margin: 0; font: 600 11px/1.4 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+.site-foot p { margin: 0; line-height: 1.6; }
+.site-foot a { color: inherit; text-underline-offset: 3px; }
+.site-foot a:hover { color: var(--text-primary); }
+.site-foot a:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+
+/* Each required statement verbatim, led by its publisher, run together as one paragraph. */
+.site-foot-notice { overflow-wrap: anywhere; }
+.site-foot-notice:not(:last-child) { margin-inline-end: 1.25rem; }
+.site-foot-notice b { color: var(--text-primary); font-weight: 600; }
+
+/* A wrapping row rather than inline text: the names are adjacent elements with no space
+   between them, so inline they offer no place to break. */
+.site-foot-sources { display: flex; flex-wrap: wrap; row-gap: 0.1rem; }
+
+.site-foot-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.1rem 1.25rem; }
+.site-foot-links > a { display: inline-flex; align-items: center; min-height: 24px; }
+/* The last line reads as a status light: a pill in the mono face, led by a dot that
+   breathes while the checks are current and turns to the notice colour when overdue. */
+.site-foot .site-foot-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.5rem; justify-content: center; width: fit-content; max-width: 100%; margin: 0.75rem auto 0; padding: 0.35rem 0.9rem 0.35rem 0.75rem; font: 500 11px/1.4 var(--font-mono); letter-spacing: 0.04em; color: var(--text-muted); background: color-mix(in srgb, var(--good) 6%, var(--surface-card)); border: 1px solid color-mix(in srgb, var(--good) 30%, var(--border)); border-radius: 999px; }
+.site-foot-meta time { color: var(--text-primary); }
+.site-foot-meta .site-status { color: var(--text-primary); }
+.site-foot-pulse { position: relative; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
+.site-foot-pulse::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--good); opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .site-foot-pulse::after { animation: site-foot-pulse 2.4s ease-out infinite; }
+}
+@keyframes site-foot-pulse { from { transform: scale(.6); opacity: .8; } to { transform: scale(1.6); opacity: 0; } }
+.site-foot-meta:has([data-overdue]) { background: color-mix(in srgb, var(--notice) 8%, var(--surface-card)); border-color: color-mix(in srgb, var(--notice) 40%, var(--border)); }
+.site-foot-meta:has([data-overdue]) .site-foot-pulse { background: var(--notice); }
+.site-foot-meta:has([data-overdue]) .site-foot-pulse::after { border-color: var(--notice); }
+.site-foot .site-status { display: inline-flex; align-items: center; min-height: 24px; margin: 0; padding: 0; font: inherit; color: inherit; background: none; border: 0; border-radius: 0; box-shadow: none; }
+.site-foot .site-status-kicker { font: inherit; letter-spacing: 0; text-transform: none; color: inherit; }
+.site-foot .site-status-arrow { display: none; }
+.site-foot .site-status[data-overdue] .site-status-kicker { color: var(--text-primary); font-weight: 600; }
+
+@media (max-width: 600px) {
+  /* A wrapped pill cannot shrink to its lines, so on a phone it spans the width instead. */
+  .site-foot .site-foot-meta { width: 100%; border-radius: 14px; }
+  .site-foot-links > a { min-height: 32px; }
+}
+
+/* Paper keeps the notices, the sources and the terms; the links are for the screen. */
+@media print {
+  .site-foot { margin-top: 12pt; color: black; font-size: 8.5pt; }
+  .site-foot-inner { max-width: none; padding: 0; }
+  .site-foot-band { padding-block: 6pt; break-inside: avoid; }
+  .site-foot * { color: black !important; }
+  .site-foot nav { display: none; }
+  .site-foot-meta { background: none; border: 0; padding: 0; }
+  .site-foot-pulse { display: none; }
+}
