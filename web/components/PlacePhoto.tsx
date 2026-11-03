@@ -2,8 +2,8 @@ import { photoFor, photoSources } from "@/lib/photos";
 import { PHOTO_ASPECT } from "@/lib/photoCrop";
 
 /**
- * A state or county page's photograph (ARCHITECTURE #368), in the header beside the
- * title on a wide screen and behind it on a phone. The caption names the exact spot,
+ * A state or county page's photograph (ARCHITECTURE #368): a banner above a county's
+ * title, and a faint backdrop behind the state's. The caption names the exact spot,
  * so the photo never claims to show the whole county; the credit names the photographer
  * and links the licence, as CC BY and BY-SA require, and says the copy was cropped.
  * Nothing renders for a place without one.

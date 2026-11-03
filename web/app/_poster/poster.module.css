@@ -177,6 +177,10 @@
 .workLayout { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 32px; align-items: center; }
 .workLayout svg { width: 100%; height: auto; }
 @media (max-width: 640px) { .workLayout { grid-template-columns: minmax(0, 1fr); } .workLayout svg { max-width: 240px; margin-inline: auto; } }
+/* Town pages: a small locator beside the bars, which carry the figures. */
+.compact .workLayout { grid-template-columns: minmax(0, 180px) minmax(0, 1fr); gap: 28px; }
+.compact .workLayout svg { max-height: 300px; }
+@media (max-width: 640px) { .compact .workLayout { grid-template-columns: minmax(0, 1fr); } .compact .workLayout svg { max-width: 150px; max-height: 210px; } }
 .schools { background: var(--poster-tone-37); color: var(--text-primary); }
 .schools .split { margin-bottom: 16px; }
 .seasonal { background: var(--poster-tone-38); color: var(--text-primary); }
@@ -291,21 +295,13 @@
 .compact .reading :global(.consumer-feature-answer) { font-size: 17px; line-height: 1.5; }
 @media (min-width: 1000px) { .poster.compact > .reading { grid-column: 1 / -1; } }
 .poster.compact .reading { padding: 8px 4px; }
-/* A county's photograph fills the right of its header; the text stays on solid navy. */
-.poster.compact > .hero:has(:global(.place-photo)) { grid-template-columns: minmax(0, 1fr) 70px minmax(0, 340px); align-items: stretch; padding: 0 0 0 20px; overflow: hidden; }
-.compact .hero:has(:global(.place-photo)) > div { align-self: center; padding-block: 18px; }
-.compact .hero:has(:global(.place-photo)) > svg { align-self: center; }
-.compact .hero :global(.place-photo) { display: flex; flex-direction: column; min-width: 0; }
-.compact .hero :global(.place-photo picture) { flex: 1; min-height: 0; }
-.compact .hero :global(.place-photo) img { width: 100%; height: 100%; min-height: 170px; aspect-ratio: auto; border-radius: 0; }
-.compact .hero :global(.place-photo figcaption) { margin: 0; padding: 5px 10px 6px; color: inherit; }
+/* A county's photograph runs as a banner across the top of its header, title beneath. */
+.poster.compact > .hero:has(:global(.place-photo)) { --banner: clamp(180px, 22vw, 280px); padding: 0 20px 16px; }
+.compact .hero :global(.place-photo) { grid-column: 1 / -1; grid-row: 1; min-width: 0; margin: 0 -20px 8px; }
+.compact .hero :global(.place-photo) img { display: block; width: 100%; height: var(--banner); aspect-ratio: auto; object-fit: cover; border-radius: 0; }
+.compact .hero :global(.place-photo figcaption) { position: absolute; right: 0; bottom: 0; max-width: 100%; margin: 0; padding: 4px 10px; text-align: right; color: white; background: rgb(0 0 0 / .6); }
 .compact .hero :global(.place-photo-caption) { color: inherit; }
-@media (max-width: 760px) {
-  .poster.compact > .hero:has(:global(.place-photo)) { grid-template-columns: minmax(0, 1fr) 56px; gap: 12px; padding: 0 16px 16px; }
-  .compact .hero :global(.place-photo) { grid-column: 1 / -1; grid-row: 1; margin-inline: -16px; }
-  .compact .hero :global(.place-photo) img { height: 170px; }
-  .compact .hero:has(:global(.place-photo)) > div { padding-block: 0; }
-}
+.compact .hero :global(.place-photo figcaption) a { color: inherit; }
 /* The state page: a county grid, with its figures in two-column story cards. */
 .compact .nickname { margin: 0 0 6px; font-size: 18px; font-style: italic; }
 .storyGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); gap: 10px; grid-column: 1 / -1; min-width: 0; }
@@ -314,21 +310,20 @@
 .jersey a:hover span { text-decoration: underline; }
 .poster.compact > .visual { grid-column: 1 / -1; background: var(--poster-tone-20); color: var(--text-primary); }
 .visual .deepHead { margin-bottom: 10px; }
-.poster.compact > .hero:has(:global(.place-photo)):not(:has(> svg)) { grid-template-columns: minmax(0, 1fr) minmax(0, 340px); }
 @media (min-width: 1000px) { .poster.compact > .tax[data-wide] { grid-column: span 2; } }
-@media (max-width: 760px) { .poster.compact > .hero:has(:global(.place-photo)):not(:has(> svg)) { grid-template-columns: minmax(0, 1fr); } }
 @media (min-width: 1000px) { .storyGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* County chapters: a title and lead-in over a row of short panels. */
 .chapter { grid-column: 1 / -1; display: grid; gap: 6px; min-width: 0; scroll-margin-top: 120px; }
-.chapter > h2 { margin: 34px 0 6px; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.02em; }
+.chapter > h2 { margin: 70px 0 6px; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.02em; }
+.poster.compact > .panel:not(.hero) { margin-top: 70px; }
 .chapterGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(19rem, 100%), 1fr)); gap: 10px; min-width: 0; }
 .chapterGrid > .cost:has(details[open]) { grid-column: 1 / -1; }
 .townGrid { display: flex; flex-wrap: wrap; gap: 10px; min-width: 0; }
 .townGrid > * { flex: 1 1 min(24rem, 100%); min-width: 0; }
 .townGrid > :is(.price, .cost, .workday, .context, .similar) { flex-basis: 100%; }
 .poster .townGrid .panel { margin: 0; }
-@media (max-width: 999px) { .poster:not(.compact) > .chapter { margin-top: 10px; } }
+@media (max-width: 999px) { .poster:not(.compact) > .chapter { margin-top: 10px; } .poster.compact > .chapter { margin-top: 0; } }
 /* Each hero wears the colour the site assigns its level of place. */
 .hero[data-kind] { background: var(--hero-kind); color: var(--poster-tone-8); }
 .hero[data-kind="county"] { --hero-kind: var(--kind-county); }
@@ -338,3 +333,12 @@
 .hero[data-kind] :global(.computed), .hero[data-kind] :global(.computed-line) { color: inherit; }
 .poster.compact > .hero .heroSnapshot { grid-column: 1 / -1; margin: 0 20px 0 0; }
 .poster:not(.compact) > .hero .heroSnapshot { grid-column: 1 / -1; margin: 8px 0 0; }
+/* NJ's garden and coast linework, behind the title of every poster. Decorative only. */
+.poster > .hero { position: relative; overflow: hidden; }
+.poster > .hero > :not(svg) { position: relative; z-index: 1; }
+.poster > .hero > svg:global(.state-place-artwork-header) { position: absolute; top: 12px; right: 250px; z-index: 0; width: clamp(180px, 20vw, 250px); height: auto; max-height: none; color: inherit; stroke: currentColor; stroke-width: 1.3; opacity: .5; pointer-events: none; }
+.poster.compact > .hero > svg:global(.state-place-artwork-header) { right: 33.5%; width: clamp(130px, 12vw, 165px); }
+.poster.compact > .hero .headline { max-width: 38rem; }
+.poster.compact > .hero:has(:global(.place-photo)) > svg:global(.state-place-artwork-header) { top: calc(var(--banner) + 14px); right: 116px; }
+.poster > .hero > svg:global(.state-place-artwork-header) :is(:global(.state-artwork-wash), :global(.state-artwork-points)) { fill: currentColor; }
+@media (max-width: 999px) { .poster > .hero > svg:global(.state-place-artwork-header), .poster.compact > .hero > svg:global(.state-place-artwork-header) { top: 8px; right: -8px; width: 130px; opacity: .3; } .poster.compact > .hero:has(:global(.place-photo)) > svg:global(.state-place-artwork-header) { top: calc(var(--banner) + 14px); right: 64px; } }
