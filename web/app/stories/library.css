@@ -45,9 +45,12 @@
 .library-rail-stage::before, .library-rail-stage::after { content: ""; position: absolute; top: 0; bottom: 14px; width: 56px; z-index: 2; pointer-events: none; transition: opacity 180ms ease; }
 .library-rail-stage::before { left: -1px; background: linear-gradient(270deg, transparent, var(--rail-ground, var(--surface-1))); }
 .library-rail-stage::after { right: -1px; background: linear-gradient(90deg, transparent, var(--rail-ground, var(--surface-1))); }
-/* Editor's picks sit on a card of the page's accent, so the hand-picked rail stands apart;
-   its edge fades fade into the card rather than the page. */
-.library-rail-picks { --rail-ground: color-mix(in srgb, var(--plate-accent) 20%, var(--surface-1)); background: var(--rail-ground); border: 1px solid color-mix(in srgb, var(--plate-accent) 35%, transparent); border-radius: 24px; padding: 28px 28px 14px; }
+/* Editor's picks sit on a band of the page's accent across the window's full width, a
+   section rather than a box, so it is not taken for the featured card. The band is a shadow
+   clipped to the section's height, so it widens nothing; the rail keeps the grid, and
+   its edge fades fade into the band rather than the page. */
+.library-rail-picks { --rail-ground: color-mix(in srgb, var(--plate-accent) 16%, var(--surface-1)); background: var(--rail-ground); box-shadow: 0 0 0 100vmax var(--rail-ground); clip-path: inset(0 -100vmax); padding: 40px 0 26px; }
+.library-rail-picks + .library-rail { margin-top: 3.4rem; }
 .library-rail-stage:has(.library-arrow-previous:disabled)::before, .library-rail-stage:has(.library-arrow-next:disabled)::after { opacity: 0; }
 .library-end { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 3.97rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 13px; }
 .library-end button, .library-empty button { border: 0; padding: .75rem 0; text-decoration: underline; min-height: 44px; }
