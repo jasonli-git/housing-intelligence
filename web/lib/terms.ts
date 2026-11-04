@@ -838,6 +838,46 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     what: "How many pizzerias Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
     why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
   },
+  overture_kings_count: {
+    what: "How many Kings Food Markets locations Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_wegmans_count: {
+    what: "How many Wegmans locations Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_playa_bowls_count: {
+    what: "How many Playa Bowls locations Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_mcdonalds_count: {
+    what: "How many McDonald’s locations Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_dollar_store_count: {
+    what: "How many Dollar General, Dollar Tree and Family Dollar stores Overture Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_tennis_count: {
+    what: "How many tennis courts and clubs, public or private, Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_yoga_count: {
+    what: "How many yoga studios Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_golf_count: {
+    what: "How many golf courses Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_laundromat_count: {
+    what: "How many laundromats Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_pawn_count: {
+    what: "How many pawn and gold-buying shops Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
   realtor_median_days_on_market: {
     what: "The median number of days a listing spent on the market in the month, as Realtor.com counts them.",
     why: "A short wait means homes sell fast. Shown for the country on the home page and for New Jersey in the visual stories.",

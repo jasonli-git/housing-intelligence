@@ -2625,6 +2625,166 @@ metrics:
     changed: false
     shown: false
 
+  overture_kings_count:
+    label: Kings Food Markets stores, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places lists under the Kings Food Markets brand, within the region
+      (Milestone 60, widened 2026-11-03): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_wegmans_count:
+    label: Wegmans stores, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places lists under the Wegmans brand or name, within the region
+      (Milestone 60, widened 2026-11-03): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_playa_bowls_count:
+    label: Playa Bowls shops, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places lists under the Playa Bowls brand, within the region
+      (Milestone 60, widened 2026-11-03): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_mcdonalds_count:
+    label: McDonald's restaurants, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places lists under the McDonald's brand, within the region
+      (Milestone 60, widened 2026-11-03): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_dollar_store_count:
+    label: Dollar stores, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places lists under the Dollar General, Dollar Tree and Family Dollar brand, within the region
+      (Milestone 60, widened 2026-11-03): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_tennis_count:
+    label: Tennis courts and clubs, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places files as tennis courts, within the region
+      (Milestone 60, widened 2026-11-03): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_yoga_count:
+    label: Yoga studios, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places files as yoga studios, within the region
+      (Milestone 60, widened 2026-11-03): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_golf_count:
+    label: Golf courses, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places files as golf courses, within the region
+      (Milestone 60, widened 2026-11-03): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_laundromat_count:
+    label: Laundromats, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places files as laundromats, within the region
+      (Milestone 60, widened 2026-11-03): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_pawn_count:
+    label: Pawn and gold-buying shops, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places files as pawn shops, within the region
+      (Milestone 60, widened 2026-11-03): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
   tree_canopy_homes_share:
     label: Tree canopy where homes are
     unit: ratio
