@@ -40,6 +40,7 @@ the owner's review of that PR.
 
 - Look into promoting the Census County Business Patterns cross-check from a one-off review to a pipeline step that re-runs on refresh (owner, 2026-11-03). It compared Overture's county counts with NAICS 812310, 713910 and 713940 for 2023, using the `CENSUS_API_KEY` the ACS already uses; results are in docs/STORIES.md.
 - Look into giving every visual story the same kind of outside cross-check, not only the Starbucks index (owner, 2026-11-03).
+- Note: before planning a second state, revisit how artifacts are laid out in R2 (owner, 2026-11-04). R2 charges per file written: past 1M Class A operations a month, each started million costs $4.50, rounded up. The Oct 5 – Nov 4 cycle reached 1.03M and was billed $4.50. Each changed file costs about 2 operations: the upload, plus the `--backup-dir` copy (#359). A refresh across many states could reach millions. Options: bundle a state's artifacts into fewer files, back up less, batch refreshes into one deploy.
 - Point the shop counts on place pages at Overture: `web/app/[state]/[place]/page.tsx` still lists the `osm_*` counts the stories have left (#472).
 - Remove components only the old place, state and home layouts used (ARCHITECTURE #457).
 - Add a national rent figure to the home page's rent card; Zillow's Metro & U.S. file needs a hand download.
