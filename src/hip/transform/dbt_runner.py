@@ -66,6 +66,8 @@ KEYED_MODELS = (
     # The visual stories (2026-10-22): measures kept `shown: false`.
     "stg_story_raster",
     "stg_story_osm",
+    # Milestone 60: the Starbucks index and the pizza–bagel line.
+    "stg_story_overture",
     "stg_story_streets",
     # Each built only once its hand-downloaded raster has landed.
     "stg_story_noise",

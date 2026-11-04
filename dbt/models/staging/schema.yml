@@ -475,6 +475,15 @@ models:
         tests:
           - not_null
           - accepted_range: {name: stg_story_osm_is_a_count, min_value: 0, max_value: 2000}
+  - name: stg_story_overture
+    description: >-
+      Chains, diners, bagel shops and pizzerias in Overture Maps Places, per municipality,
+      county and the state (Milestone 60).
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_story_overture_is_a_count, min_value: 0, max_value: 3000}
   - name: stg_story_streets
     description: >-
       Shares of a town's local street names by their ending, from TIGER's road files.
