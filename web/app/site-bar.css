@@ -13,7 +13,7 @@ body:has(.shortcut-bar) .bar { position: relative; }
 /* Jumps then clear only the shortcut bar; each section sets its own margin for that. */
 html:has(.shortcut-bar) { scroll-padding-top: 0; }
 .bar-inner {
-  display: flex; align-items: center; gap: 0.5rem 0.75rem;
+  position: relative; display: flex; align-items: center; gap: 0.5rem 0.75rem;
   max-width: var(--shell); min-height: 54px; margin: 0 auto; padding: 0.4rem var(--gutter);
 }
 .bar-trail { display: flex; align-items: center; gap: 0.5rem; margin-inline-end: auto; }
@@ -41,7 +41,8 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
 .bar .bar-budget:disabled { opacity: 0.5; cursor: not-allowed; }
 .bar :is(a, button, summary):focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
 
-.bar-tool-menu { position: relative; }
+/* The Menu button exists only for the narrow bar, where the destinations fold into it. */
+.bar-tool-menu { position: relative; display: none; }
 .bar-tool-menu > summary { list-style: none; gap: 0.3rem; }
 .bar-tool-menu > summary::-webkit-details-marker { display: none; }
 .bar-tool-menu[open] > summary { color: var(--text-primary); }
@@ -53,8 +54,6 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
 }
 .bar-tool-menu[open] > .bar-controls { display: flex; }
 .bar-tool-menu .bar-controls :is(.bar-link, .bar-budget) { min-height: 44px; padding: 0 0.75rem; }
-.bar-menu-primary { display: none; flex-direction: column; margin-bottom: 0.35rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--border); }
-.bar-menu-narrow { display: none; }
 
 .bar .place-search { flex: 0 1 15rem; width: auto; min-width: 0; }
 /* The home page's bar search waits off screen until its own large search scrolls away. */
@@ -67,7 +66,8 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
 .bar .place-search input { min-height: 36px; padding: 0.35rem 0.7rem; font-size: 14px; border-radius: 8px; }
 
 /* The non-commercial terms as a pill; opened, the terms drop below it. */
-.bar .licence { position: relative; flex: none; }
+/* The terms sit in the middle of the bar (2026-11-03), clear of the links either side. */
+.bar .licence { position: absolute; left: 50%; transform: translateX(-50%); flex: none; }
 .bar .licence-box > summary {
   display: inline-flex; align-items: center; min-height: 32px; padding: 0 0.7rem;
   font-size: 12px; color: var(--notice-text); list-style: none; cursor: pointer;
@@ -78,7 +78,7 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
 .bar .licence-label { font-weight: 600; }
 .bar .licence .disclose-hint { display: none; }
 .bar .licence-text {
-  position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 100;
+  position: absolute; top: calc(100% + 0.5rem); left: 50%; transform: translateX(-50%); z-index: 100;
   width: min(26rem, calc(100vw - 2 * var(--gutter))); margin: 0; padding: 0.8rem 0.9rem;
   font-size: 13px; line-height: 1.5; color: var(--text-secondary);
   background: var(--surface-card); border: 1px solid var(--border); border-radius: 12px;
@@ -86,11 +86,10 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
 }
 .bar .theme-toggle { flex: none; }
 
-/* Narrower: the four destinations join the tools under Menu. */
+/* Narrower: the three destinations fold under Menu. */
 @media (max-width: 1100px) {
-  .bar-desktop-tools, .bar-menu-wide { display: none; }
-  .bar-menu-narrow { display: inline; }
-  .bar-menu-primary { display: flex; }
+  .bar-desktop-tools { display: none; }
+  .bar-tool-menu { display: block; }
 }
 /* Phones: brand, terms and theme on the first row; search and Menu on the second. */
 @media (max-width: 760px) {
@@ -100,14 +99,15 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
   }
   .bar-inner:not(:has(.place-search)) { grid-template-areas: "trail licence theme" "menu menu menu"; }
   .bar-trail { grid-area: trail; min-width: 0; }
-  .bar .licence { grid-area: licence; }
+  /* A phone has no room to centre it beside the wordmark; it sits by the theme button. */
+  .bar .licence { grid-area: licence; left: auto; transform: none; }
   .bar .theme-toggle { grid-area: theme; }
   .bar .place-search { grid-area: search; }
   .bar-tool-menu { grid-area: menu; justify-self: end; }
   .bar .licence-box > summary { padding: 0 0.55rem; font-size: 11px; }
   /* The terms open under the whole bar, gutter to gutter, rather than off the left edge. */
   .bar .licence { position: static; }
-  .bar .licence-text { top: calc(100% + 0.25rem); left: var(--gutter); right: var(--gutter); width: auto; }
+  .bar .licence-text { top: calc(100% + 0.25rem); left: var(--gutter); right: var(--gutter); width: auto; transform: none; }
 }
 /* Too narrow for the code link beside the terms; the footer links the source too. */
 @media (max-width: 480px) { .bar-trail .bar-icon { display: none; } }

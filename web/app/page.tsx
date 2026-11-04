@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { CSSProperties } from "react";
 
 import home from "./_poster/home.module.css";
 import original from "./homepage.module.css";
@@ -12,16 +11,12 @@ import { Masthead } from "@/components/Masthead";
 import { NationalCoverageMap } from "@/components/NationalCoverageMap";
 import { PlaceSearch } from "@/components/PlaceSearch";
 import { HomeStories } from "@/components/HomeStories";
-import { HOME_TOOLS } from "@/components/HomeTools";
 import { api, nationalMortgageRate, nationalScoreSeries, regionsWithData } from "@/lib/api";
 import { dataScale } from "@/lib/dataScale";
 import { KIND_LABELS, KIND_MEANINGS, kindOf, type RecordType } from "@/lib/kinds";
-import { displayName } from "@/lib/names";
 import { latestPrice, marketTakeaways, monthLabel, scoreboard, type ScoreTile } from "@/lib/nationalScoreboard";
-import { regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { propertyScale } from "@/lib/propertyScale";
 import { pageMetadata } from "@/lib/meta";
-import { PRIMARY_STATE } from "@/lib/states";
 
 export const metadata: Metadata = pageMetadata({
   title: "Housing Intelligence — Find your place",
@@ -29,18 +24,10 @@ export const metadata: Metadata = pageMetadata({
   path: "/",
 });
 
-const dollars = (value: number) => `$${Math.round(value).toLocaleString("en-US")}`;
-const SAMPLES = [["County", "mercer-county", home.county], ["Town", "princeton", home.town], ["ZIP code", "zip-07828", home.zip]] as const;
 const TONE_WORDS = { harder: "Harder", easier: "Easier", mixed: "Mixed", flat: "Little changed" };
 const SHORT_KIND: Record<RecordType, string> = { survey: "Survey", administrative: "Records", determination: "Determination", benchmark: "Benchmark", calculated: "Calculated", modelled: "Modelled" };
 // Which figures back each takeaway; the takeaway leads, the figures are its evidence.
 const EVIDENCE: Record<string, string[]> = { rate: ["rate"], choice: ["listings", "days", "cuts"], prices: ["prices"], rent: ["rent"], building: ["starts", "supply"] };
-const TOOL_COLOURS = ["--kind-budget", "--kind-guide", "--kind-tax", "--kind-zip", "--kind-help", "--kind-state"];
-
-function Trend({ values }: { values: number[] }) {
-  const low = Math.min(...values), span = Math.max(...values) - low || 1;
-  return <svg viewBox="0 0 300 64" preserveAspectRatio="none" aria-hidden="true"><polyline points={values.map((v, i) => `${(i / (values.length - 1)) * 300},${60 - ((v - low) / span) * 56}`).join(" ")} fill="none" stroke="currentColor" strokeWidth="2.5" vectorEffect="non-scaling-stroke" /></svg>;
-}
 
 const points = (tile: ScoreTile) => tile.trend.flatMap((p) => (p.value === null ? [] : [{ date: p.date, value: p.value }]));
 /** The reading a year before the latest one, or null when the series is shorter than that. */
@@ -123,16 +110,6 @@ export default async function HousingLandingPage() {
   } as Record<string, { value: string; label: string } | undefined>)[id];
   const newest = tiles.map((t) => t.trend.at(-1)?.date ?? "").sort().at(-1);
 
-  const previews = (await Promise.all(SAMPLES.map(async ([kind, slug, colour]) => {
-    const id = resolvePlace("nj", slug);
-    if (id === null) return [];
-    const [region, values] = await Promise.all([api.region(id), api.observations(id, "zhvi_sfr")]);
-    const history = (values?.observations ?? []).map((o) => o.value);
-    return region && history.length > 1 ? [{ kind, id, colour, name: displayName(region), history }] : [];
-  }))).flat();
-  // The state has no Zillow level here, so its card reads recorded sales instead.
-  const stateSales = ((await api.observations(PRIMARY_STATE.regionId, "sr1a_median_sale_price"))?.observations ?? []).map((o) => o.value);
-
   return <div className={`search-first-home ${original.home}`}>
     <Masthead affordability={{ kind: "route", active: false }} search={{ after: ".home-search" }} />
     <main id="main-content" tabIndex={-1} className={`shell ${home.home}`}>
@@ -163,22 +140,7 @@ export default async function HousingLandingPage() {
         </article>)}</div>
       </section>}
 
-      {previews.length > 0 && <section id="places" className={home.section}>
-        <h2>Every place has its own page</h2>
-        <div className={home.places}>{stateSales.length > 1 && <Link href="/states/new-jersey" prefetch={false} className={`${home.place} ${home.state}`}>
-          <small>State</small><strong>New Jersey</strong><b>{dollars(stateSales.at(-1)!)}</b><small>Median sale, NJ SR-1A</small><Trend values={stateSales.slice(-120)} />
-        </Link>}
-        {previews.map((p) => <Link key={p.id} href={regionPath(p.id)} prefetch={false} className={`${home.place} ${p.colour}`}>
-          <small>{p.kind}</small><strong>{p.name}</strong><b>{dollars(p.history.at(-1)!)}</b><small>Typical home, Zillow</small><Trend values={p.history.slice(-120)} />
-        </Link>)}</div>
-      </section>}
-
       <div className={home.storiesCard}><HomeStories /></div>
-
-      <section id="tools" className={home.section}>
-        <h2>Tools</h2>
-        <ul className={`${home.tools} home-tools-grid`}>{HOME_TOOLS.map((tool, i) => <li key={tool.href}><Link href={tool.href} data-tool={tool.href.slice(1)} prefetch={false} style={{ "--tool": `var(${TOOL_COLOURS[i]})` } as CSSProperties}><strong>{tool.title}</strong><span>{tool.text} →</span></Link></li>)}</ul>
-      </section>
     </main>
   </div>;
 }
