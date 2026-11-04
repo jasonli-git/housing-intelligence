@@ -54,10 +54,13 @@ export default async function StarbucksIndexPage() {
   const shopName = (p: (typeof premiums)[number]) => (p.trait.label.startsWith("Has ") ? p.trait.label.slice(4) : p.trait.label[0].toLowerCase() + p.trait.label.slice(1)).replace(/'/g, "’");
   const starbucks = premiums.find((p) => p.trait.key === "sb"), dunkin = premiums.find((p) => p.trait.key === "dd");
   const pct = (p: number) => `${p >= 0 ? "+" : "−"}${Math.abs(Math.round(p * 100))}%`;
+  const highest = premiums[0], lowest = premiums[premiums.length - 1];
+  const diff = (p: number) => `${Math.abs(Math.round(p * 100))}% ${p >= 0 ? "more" : "less"}`;
+  const sits = (p: number) => (Math.round(p * 100) === 0 ? "sit right at the average" : `run ${diff(p)}`);
   return (
     <StoryShell
       title="The Starbucks index"
-      takeaway={<><b>Towns with {shopName(premiums[0])} run {pct(premiums[0].premium)} against the rest of their county; towns with {shopName(premiums[premiums.length - 1])}, {pct(premiums[premiums.length - 1].premium)}.</b>{starbucks && dunkin ? <> With a Starbucks, {pct(starbucks.premium)}; with a Dunkin&rsquo;, {pct(dunkin.premium)}.</> : null}</>}
+      takeaway={<><b>Homes cost {diff(highest.premium)} in towns with {shopName(highest)}, and {diff(lowest.premium)} in towns with {shopName(lowest)},</b> than elsewhere in their county.{starbucks && dunkin ? <> Starbucks towns {sits(starbucks.premium)}; Dunkin&rsquo; towns {sits(dunkin.premium)}.</> : null}</>}
       lede="Economists have long joked that a Starbucks moving in is the surest sign a neighbourhood is gentrifying. In New Jersey the shops do sort the towns: each bubble below is a chain or a kind of place, placed by how much dearer the towns that have one are than the other towns in their county."
       note={<>Shops: Overture Maps Foundation, overturemaps.org, from Meta, Microsoft, Foursquare and other providers; closed places left out, a shop listed twice counted once, and a store only All the Places lists left out, so the counts are a floor (QuickChek’s furthest from complete). A chain is matched on its brand, other places on the kind Overture files them under, so a public park’s tennis courts count. A bubble needs at least 25 towns with it and no more than two in three: fewer swing too far by chance, and a place nearly every town has mostly says the town is big. Prices: Zillow&rsquo;s typical home value, each town against its own county. A chain opens where it expects customers; this shows which towns those are, not that the shop raises prices.</>}
     >

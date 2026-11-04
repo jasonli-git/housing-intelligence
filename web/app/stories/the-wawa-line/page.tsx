@@ -16,8 +16,6 @@ export const metadata: Metadata = pageMetadata({
 });
 
 const MAP_W = 560;
-const pct = (p: number) => `${p >= 0 ? "+" : "−"}${Math.abs(Math.round(p * 100))}%`;
-
 export default async function WawaLinePage() {
   const [towns, map] = await Promise.all([storyTowns([PRICE, "overture_wawa_count", "overture_quickchek_count"]), storyShapes("municipality", MAP_W)]);
   const byId = new Map(towns.map((t) => [t.id, t]));
@@ -58,8 +56,8 @@ export default async function WawaLinePage() {
     <StoryShell
       title="The Wawa line"
       takeaway={!clear
-        ? <><b>The line divides habits, not wealth.</b> In the {mixed.size} counties it crosses, QuickChek towns and Wawa towns cost about the same: a {pct(gap)} gap, within what chance alone would give.</>
-        : <><b>QuickChek towns&rsquo; homes run {pct(gap)} against Wawa towns&rsquo;</b> in the same county, across the {mixed.size} counties the line crosses.</>}
+        ? <><b>Wawa or QuickChek, homes cost about the same.</b> Across the {mixed.size} counties the line runs through, the {Math.abs(Math.round(gap * 100))}% gap between the two sides is too small to call.</>
+        : <><b>Homes in QuickChek towns cost {Math.abs(Math.round(gap * 100))}% {gap > 0 ? "more" : "less"} than in Wawa towns</b> of the same county, across the {mixed.size} counties the line runs through.</>}
       lede={<>Ask where North Jersey ends and South Jersey begins and you get an argument. The convenience stores answer it: {total.wawa} Wawas fill the south, {total.quickchek} QuickCheks the north, and the line where one gives way to the other runs across the middle of the state.</>}
       note={<>Stores: Overture Maps Foundation, overturemaps.org, from Meta, Microsoft, Foursquare and other providers; closed places left out, a store listed twice counted once, and a store only All the Places lists left out, so the counts are a floor (QuickChek’s furthest from complete, at 112 of about 145). Prices: Zillow&rsquo;s typical home value, each town against its own county&rsquo;s average, compared only in counties holding both kinds of town.</>}
     >
