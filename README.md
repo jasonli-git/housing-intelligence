@@ -5,7 +5,7 @@ household can afford, what the tax bill is, how homes sell, and what comes with 
 flood risk, water, schools, commutes. Live at
 **[housing.jasonli.app](https://housing.jasonli.app)**.
 
-It is built on <!-- fill:sources -->63<!-- /fill --> public sources pulled through one staged pipeline into a warehouse,
+It is built on <!-- fill:sources -->64<!-- /fill --> public sources pulled through one staged pipeline into a warehouse,
 resolved to a shared geography, and computed before anything is shown. Every figure
 carries its source file, date, licence and margin of error. It is not a listings site
 and not a chatbot: pages, maps, tools, reports and an API are the product, and an
@@ -17,9 +17,9 @@ optional AI layer only explains figures that were already computed.
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** Visual stories refined: one layout for every story, a share image of each for
-> link previews and social posts, and a Stories link in the menu bar. Before that, a Data
-> Explorer at `/data` (Milestone 59).
+> **Latest.** Milestone 60: the Starbucks index and the pizza–bagel line count shops from
+> Overture Maps Places, far more complete than OpenStreetMap. Before that, the visual
+> stories' refinement and a share image for each story.
 >
 > **Next.** Clearing TODO and the open Director Notes; then the rest of the work for a
 > second state, on hold until they are cleared. See [ROADMAP.md](docs/ROADMAP.md) and

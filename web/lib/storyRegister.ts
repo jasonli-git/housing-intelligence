@@ -43,17 +43,17 @@ export const REVIEWS: Record<string, StoryReview> = {
         coverage: "Wawa 261 of about 298 (~88%); QuickChek 118 of about 145 (~81%)" },
       { id: "zillow_zhvi", use: "typical home value, each town against its county", asOf: "through September 2026" },
     ],
-    ideas: ["Overture Places counts more Wawas (326) and QuickCheks (158) than exist, likely a store's shop and pumps listed twice or closed stores; OpenStreetMap stays the better source here unless duplicates can be merged reliably."],
+    ideas: ["Stays on OpenStreetMap (Milestone 60). Overture, with its duplicates merged and stores only All the Places lists left out, has 292 Wawas but 112 QuickCheks, fewer than OpenStreetMap's 118."],
   },
   "the-pizza-bagel-line": {
     status: "live",
     reviewed: "2026-11-03",
     sources: [
-      { id: "osm_nj", use: "pizzerias and bagel shops by town", asOf: "extract fetched 2026-10-30",
-        coverage: "1,086 pizzerias of about 2,700–2,900 (~40%); 278 bagel shops, no outside count" },
+      { id: "overture_places", use: "pizzerias and bagel shops by town (Milestone 60)", asOf: "release 2026-10-21.0, fetched 2026-11-03",
+        coverage: "2,696 pizzerias of about 2,700–2,900 (~95%); 737 bagel shops, in 319 towns" },
     ],
-    issues: ["Coverage is uneven: OpenStreetMap maps fewer places in rural towns, so the south's ratio rests on fewer shops."],
-    ideas: ["Overture Places finds 3,597 pizzerias and 810 bagel shops, bagel shops in 319 towns against 177; the finding holds on it (north 3.8, south 8.1 pizzerias per bagel shop, against 3.1 and 7.2). It overshoots on pizzerias, so it needs a confidence or duplicate filter."],
+    issues: ["The southernmost band (Cape May) rests on 8 bagel shops, so its own ratio is noisy; the headline compares the three northern and three southern bands."],
+    ideas: ["Before Milestone 60 it read OpenStreetMap: 1,086 pizzerias (~40%) and 278 bagel shops in 177 towns, north 3.1 against south 7.5 pizzerias per bagel shop; on Overture, 3.1 against 6.0."],
   },
   "hometown-famous": {
     status: "live",
@@ -69,11 +69,12 @@ export const REVIEWS: Record<string, StoryReview> = {
     status: "live",
     reviewed: "2026-11-03",
     sources: [
-      { id: "osm_nj", use: "Starbucks, Dunkin' and other chains by town", asOf: "extract fetched 2026-10-30",
-        coverage: "Starbucks 237 of about 345 (~69%); Dunkin' 642 of about 860 (~74%)" },
+      { id: "overture_places", use: "Starbucks, Dunkin', Trader Joe's, Whole Foods, Wawa, QuickChek and diners by town (Milestone 60)", asOf: "release 2026-10-21.0, fetched 2026-11-03",
+        coverage: "Starbucks 294 of about 345 (~85%); Dunkin' 810 of about 860 (~94%); Wawa 292 of about 298; QuickChek 112 of about 145 (~77%, stores only All the Places lists left out)" },
       { id: "zillow_zhvi", use: "typical home value, each town against its county", asOf: "through September 2026" },
     ],
-    ideas: ["Overture Places is clearly more complete here: Starbucks 296, Dunkin' 853, a Starbucks in 40 more towns and a Dunkin' in 52. Adopting it needs a source adapter, a terms check of its licences and a duplicate rule."],
+    issues: ["Some groups are small: more Starbucks than Dunkin' in 16 towns, Trader Joe's in 13, Whole Foods in 18; the takeaway headlines the 16-town group (+34%)."],
+    ideas: ["Revisit which shops the chart compares, and whether a group needs a minimum number of towns (owner, 2026-11-03, after Milestone 60).", "Before Milestone 60 it read OpenStreetMap (Starbucks ~69%, Dunkin' ~74%): more Starbucks than Dunkin' +25%, a Starbucks +5%, a Dunkin' −15%; on Overture +34%, +0% and −17%."],
   },
 };
 

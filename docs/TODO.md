@@ -29,19 +29,11 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — Milestone 60, Overture places for the shop stories (2026-11-03)
+## Now — between milestones (2026-11-03)
 
-On `milestone/m60-overture-places`. Decisions approved by the owner 2026-11-03: the whole
-Starbucks index moves to Overture (one source per story); a confidence floor is tuned to
-outside counts and recorded; places whose only source is All the Places are dropped; share
-images credit "Overture Maps Foundation", with each publisher's notice on `/sources`.
-
-- [ ] Source adapter `overture_places` and its `config/sources.yml` entry, terms read.
-- [ ] Landing: New Jersey's places from the public release into Parquet.
-- [ ] `stg_story_overture`: counts per town, county and state; duplicates merged.
-- [ ] Confidence floor tuned against outside counts; the value and reasoning recorded.
-- [ ] `overture_*_count` measures; the two stories read them; notes and credits rewritten.
-- [ ] Findings re-checked; the stories register, ARCHITECTURE, CHANGELOG updated.
+Milestone 60 is built: the Starbucks index and the pizza–bagel line read Overture Places
+(ARCHITECTURE #468–#470). Next, by the owner's choice: revisit which shops the Starbucks
+index compares, and whether a group needs a minimum number of towns (docs/STORIES.md).
 
 ## Open
 

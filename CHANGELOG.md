@@ -13,6 +13,12 @@ are not yet recorded here.
 
 ### Added
 
+- **Two stories count shops from Overture Maps Places** (2026-11-03, Milestone 60,
+  ARCHITECTURE #468–#470): The pizza–bagel line now counts 2,696 pizzerias and 737 bagel
+  shops where OpenStreetMap had 1,086 and 278, and the Starbucks index about 85–94% of
+  each chain's New Jersey stores where it had 69–74%. Both findings hold; the Starbucks
+  index's sharpens (more Starbucks than Dunkin' +34%, a Starbucks alone no difference).
+  The Wawa line and Diner capital stay on OpenStreetMap.
 - **A share image for every visual story** (2026-11-03, ARCHITECTURE #465, #466): each
   story's link preview shows its title, takeaway and chart, and the page offers a 4:5 image
   to save or share, with its sources credited in the publishers' own words. Five stories
