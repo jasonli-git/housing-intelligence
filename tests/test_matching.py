@@ -24,6 +24,7 @@ import pytest
 from hip.geography.matching import (
     OBSERVATION_TABLE,
     REJECT_TABLE,
+    _round_values,
     build_observations,
 )
 
@@ -225,3 +226,22 @@ def test_keyed_observations_carry_the_release_layer_not_the_region_level() -> No
 
     assert "s.release_layer AS layer" in source
     assert "s.level AS layer" not in source
+
+
+def test_values_are_cut_to_twelve_significant_digits() -> None:
+    """Rebuilds differing only past the twelfth digit store one value (#473)."""
+    c = duckdb.connect()
+    c.execute(f"CREATE TABLE {OBSERVATION_TABLE} (value DOUBLE)")
+    c.execute(
+        f"INSERT INTO {OBSERVATION_TABLE} VALUES (0.9341356040137812), "
+        "(0.9341356040137807), (1234567.891234567), (-0.000123456789012345), "
+        "(0), (NULL), (12.5)"
+    )
+    _round_values(c)
+    got = [
+        row[0] for row in c.execute(f"SELECT value FROM {OBSERVATION_TABLE}").fetchall()
+    ]
+    assert got[0] == got[1] == 0.934135604014
+    assert got[2] == 1234567.89123
+    assert got[3] == -0.000123456789012
+    assert got[4:] == [0, None, 12.5]

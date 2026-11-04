@@ -194,8 +194,27 @@ def build_observations(
     if keyed_models:
         _append_keyed(con, keyed_models, staging_schema)
 
+    _round_values(con)
     _build_rejects(con)
     return _count(con)
+
+
+# Significant digits every observation keeps (ARCHITECTURE #473). DuckDB sums a model's
+# doubles in whatever order its threads finish, so a rebuild of unchanged data moved
+# values in their last one or two digits (0.9341356040137812 to ...807, 2026-11-03), and
+# every published file holding one changed: about 4,600 re-sent to R2 per deploy.
+VALUE_DIGITS = 12
+
+
+def _round_values(con: duckdb.DuckDBPyConnection) -> None:
+    """Cut every observation to VALUE_DIGITS significant digits, as #88 did for ratios."""
+    con.execute(
+        f"""
+        UPDATE {OBSERVATION_TABLE}
+        SET value = round(value, {VALUE_DIGITS - 1} - floor(log10(abs(value)))::INTEGER)
+        WHERE value IS NOT NULL AND value <> 0 AND isfinite(value)
+        """
+    )
 
 
 def _append_keyed(
