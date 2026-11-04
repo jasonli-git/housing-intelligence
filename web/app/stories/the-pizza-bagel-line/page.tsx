@@ -13,7 +13,7 @@ export const metadata: Metadata = pageMetadata({
 });
 
 const MAP_W = 560, BANDS = 8;
-const BAGEL = "osm_bagel_count", PIZZA = "osm_pizza_count";
+const BAGEL = "overture_bagel_count", PIZZA = "overture_pizza_count";
 
 export default async function PizzaBagelPage() {
   const [towns, map] = await Promise.all([storyTowns([BAGEL, PIZZA]), storyShapes("municipality", MAP_W)]);
@@ -45,7 +45,7 @@ export default async function PizzaBagelPage() {
         ? <><b>The bagel thins out with distance from New York.</b> The north has a bagel shop for every {ratio(north).toFixed(1)} pizzerias; the south, one for every {ratio(south).toFixed(1)}.</>
         : <><b>Bagels hold up across the state.</b> The north has a bagel shop for every {ratio(north).toFixed(1)} pizzerias; the south, one for every {ratio(south).toFixed(1)}.</>}
       lede={<>Pizza is everywhere in New Jersey: {total.pizza.toLocaleString("en-US")} pizzerias against {total.bagel.toLocaleString("en-US")} bagel shops. But the bagel shop is a New York habit, and it thins out with distance from the city. Darker towns lean bagel.</>}
-      note={<>OpenStreetMap, © OpenStreetMap contributors, available under the Open Database License; the counts here are offered under the same licence. A bagel shop is a place tagged with the cuisine or named for bagels; a pizzeria the same for pizza, and a shop that is both counts as a bagel shop. Towns with fewer than two of either are drawn grey. Volunteer-mapped, so a place nobody added is missing, more often in rural towns.</>}
+      note={<>Overture Maps Foundation, overturemaps.org, from Meta, Microsoft, Foursquare and other providers: a bagel shop or a pizzeria is a place filed under that kind of restaurant. Closed places are left out and a shop listed twice is counted once. Towns with fewer than two of either are drawn grey.</>}
     >
       <div className="story-two">
         <figure className="story-figure" tabIndex={0}>

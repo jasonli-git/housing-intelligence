@@ -60,6 +60,7 @@ from hip.landing.tabular import (
     land_fixed_width,
     land_json,
     land_ndjson,
+    land_parquet,
     land_pdf,
     land_xls,
     land_xlsx,
@@ -1092,6 +1093,10 @@ def land(
                 )
             elif adapter.landing_format == "osm":
                 table = land_osm(
+                    release, parquet_dir=settings.parquet_dir, overwrite=overwrite
+                )
+            elif adapter.landing_format == "parquet":
+                table = land_parquet(
                     release, parquet_dir=settings.parquet_dir, overwrite=overwrite
                 )
             elif adapter.landing_format == "json":

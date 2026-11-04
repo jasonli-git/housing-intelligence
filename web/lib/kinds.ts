@@ -215,6 +215,16 @@ export const KINDS: Record<string, RecordType> = {
   lights_homes_radiance: "calculated",
   osm_bagel_count: "administrative",
   osm_pizza_count: "administrative",
+  // Milestone 60: the Starbucks index and the pizza–bagel line.
+  overture_wawa_count: "administrative",
+  overture_quickchek_count: "administrative",
+  overture_starbucks_count: "administrative",
+  overture_dunkin_count: "administrative",
+  overture_trader_joes_count: "administrative",
+  overture_whole_foods_count: "administrative",
+  overture_diner_count: "administrative",
+  overture_bagel_count: "administrative",
+  overture_pizza_count: "administrative",
   realtor_median_days_on_market: "administrative",
   // Milestone 57: the home page's national scoreboard.
   realtor_active_listings: "administrative",

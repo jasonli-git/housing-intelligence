@@ -274,6 +274,16 @@ METRIC_SUBJECTS: dict[str, str] = {
     "lights_homes_radiance": "context",
     "osm_bagel_count": "context",
     "osm_pizza_count": "context",
+    # Milestone 60: the Starbucks index and the pizza–bagel line.
+    "overture_wawa_count": "context",
+    "overture_quickchek_count": "context",
+    "overture_starbucks_count": "context",
+    "overture_dunkin_count": "context",
+    "overture_trader_joes_count": "context",
+    "overture_whole_foods_count": "context",
+    "overture_diner_count": "context",
+    "overture_bagel_count": "context",
+    "overture_pizza_count": "context",
     "realtor_median_days_on_market": "price",
     "wikidata_incorporated_year": "context",
     "wikidata_notable_births": "context",
@@ -367,6 +377,9 @@ LICENCE_RIGHTS: dict[str, Rights] = {
     # The visual stories (2026-10-22). Any use, credited; a derived database made public
     # is offered under the ODbL too, which the counts published from it are.
     "Open Database License (ODbL) 1.0": Rights("yes", "yes", "yes", "yes"),
+    # Milestone 60. CDLA Permissive 2.0 puts no conditions on computed results such as
+    # the counts; Apache 2.0 (Foursquare) asks for its notice where the data is shared.
+    "CDLA Permissive 2.0 and Apache 2.0, by source": Rights("yes", "yes", "yes", "yes"),
     # The third batch of stories (2026-10-23). CC0 waives every right Wikidata holds.
     "Creative Commons CC0 1.0 (public domain dedication)": Rights(
         "yes", "yes", "yes", "yes"

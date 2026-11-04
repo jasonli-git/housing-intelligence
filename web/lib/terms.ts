@@ -802,6 +802,42 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     what: "Pizzerias mapped in OpenStreetMap: a place tagged as one or named for pizza.",
     why: "Read only by the visual stories. Volunteer-mapped, so a floor.",
   },
+  overture_wawa_count: {
+    what: "How many Wawa locations Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_quickchek_count: {
+    what: "How many QuickChek locations Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_starbucks_count: {
+    what: "How many Starbucks locations Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_dunkin_count: {
+    what: "How many Dunkin’ locations Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_trader_joes_count: {
+    what: "How many Trader Joe’s locations Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_whole_foods_count: {
+    what: "How many Whole Foods Market locations Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_diner_count: {
+    what: "How many diners Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_bagel_count: {
+    what: "How many bagel shops Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
+  overture_pizza_count: {
+    what: "How many pizzerias Overture Maps Places lists here, closed places left out and a place listed twice counted once. Overture Maps Foundation, from Meta, Microsoft, Foursquare and others.",
+    why: "Read only by the visual stories. A store only All the Places lists is left out, so the count is a floor.",
+  },
   realtor_median_days_on_market: {
     what: "The median number of days a listing spent on the market in the month, as Realtor.com counts them.",
     why: "A short wait means homes sell fast. Shown for the country on the home page and for New Jersey in the visual stories.",

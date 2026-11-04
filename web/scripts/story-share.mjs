@@ -14,6 +14,9 @@ const SITE = 'housing.jasonli.app';
 // card shared off the site is; the rest are named as sources.
 const CREDITS = [
   [/OpenStreetMap/, '© OpenStreetMap contributors'],
+  // Overture's places carry no required credit on derived counts; the site names it, with
+  // each provider's notice on /sources (config/sources.yml, Milestone 60).
+  [/Overture Maps/, 'Overture Maps Foundation'],
   [/Zillow/, 'Data Provided by Zillow Group'],
   [/Census Bureau|American Community Survey|TIGER/, 'US Census Bureau'],
   [/Wikidata/, 'Wikidata'],
@@ -143,7 +146,8 @@ export async function captureShareCard(browser, page, { slug, outDir }) {
          crop its sides whenever a long title leaves the box shorter than planned. */
       .chart img { display: block; width: 100%; ${cut ? 'height: auto;' : 'height: 100%; object-fit: contain; object-position: top center;'} }
       footer { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 24px; padding-top: ${t.foot}px; margin-top: ${t.footGap}px; border-top: 1px solid #e6e6e6; font-size: ${t.foot}px; color: #6f6a62; }
-      footer b { color: #1d1b18; font-weight: 600; }
+      /* The address never breaks; a long credit line wraps instead. */
+      footer b { color: #1d1b18; font-weight: 600; white-space: nowrap; }
       ${short ? format.short.css : ''}
     </style>
     <div class="copy"><span class="kicker">Visual story · New Jersey</span><h1>${escape(story.title)}</h1>${text ? `<p>${text}</p>` : ''}</div>

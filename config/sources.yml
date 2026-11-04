@@ -1676,6 +1676,42 @@ sources:
       Volunteer-mapped: chains' branches are usually all there, a diner nobody tagged
       as one is not, so counts are a floor.
 
+  overture_places:
+    name: Overture Maps Places — New Jersey
+    publisher: Overture Maps Foundation (Meta, Microsoft, Foursquare, BrightQuery and others)
+    license: CDLA Permissive 2.0 and Apache 2.0, by source
+    licence_class: attribution
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        CDLA Permissive 2.0 puts no conditions on results computed from the data, such as
+        the per-town counts published here; Apache 2.0 (Foursquare) asks for its notice
+        when the data itself is redistributed, which it is not.
+    terms_url: https://docs.overturemaps.org/attribution/
+    terms_checked: 2026-11-03
+    terms_note: >-
+      Read 2026-11-03. Each source's credit is shown on /sources; share images credit
+      "Overture Maps Foundation" (owner, 2026-11-03). All the Places, one of its sources,
+      is kept out under ARCHITECTURE #271: a place whose only source it is is dropped.
+    notices:
+      - >-
+        Shop and restaurant counts for the Starbucks index and the pizza–bagel line:
+        Overture Maps Foundation, overturemaps.org. Data from Meta, Microsoft, BrightQuery
+        and Uberall, available under CDLA Permissive 2.0; Foursquare data © 2024
+        Foursquare Labs, Inc., under Apache 2.0, transformed to the Overture schema.
+    url: https://stac.overturemaps.org/catalog.json
+    homepage: https://overturemaps.org/
+    cadence: monthly
+    adapter: hip.sources.overture:OvertureAdapter
+    fallback: >-
+      OpenStreetMap's New Jersey extract (osm_nj), which the stories read before
+      Milestone 60, under the ODbL.
+    notes: >-
+      Merged from several providers, so one shop can appear twice and closed shops linger;
+      staging merges places of one kind within 150 metres, drops closed ones and applies a
+      confidence floor tuned against outside store counts (Milestone 60).
+
   census_tiger_roads:
     name: TIGER/Line road files
     publisher: U.S. Census Bureau

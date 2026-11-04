@@ -2481,6 +2481,150 @@ metrics:
     changed: false
     shown: false
 
+  overture_wawa_count:
+    label: Wawa stores, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places lists under the Wawa brand, within the region
+      (Milestone 60): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_quickchek_count:
+    label: QuickChek stores, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places lists under the QuickChek brand, within the region
+      (Milestone 60): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_starbucks_count:
+    label: Starbucks cafés, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places lists under the Starbucks brand, within the region
+      (Milestone 60): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_dunkin_count:
+    label: Dunkin' shops, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places lists under the Dunkin' brand, within the region
+      (Milestone 60): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_trader_joes_count:
+    label: Trader Joe's stores, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places lists under the Trader Joe's brand, within the region
+      (Milestone 60): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_whole_foods_count:
+    label: Whole Foods Market stores, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places lists under the Whole Foods Market brand, within the region
+      (Milestone 60): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_diner_count:
+    label: Diners, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places files as diners, within the region
+      (Milestone 60): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_bagel_count:
+    label: Bagel shops, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places files as bagel shops, within the region
+      (Milestone 60): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  overture_pizza_count:
+    label: Pizzerias, listed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places Overture Places files as pizza restaurants, within the region
+      (Milestone 60): permanently closed places left out, places of one kind within 150
+      metres counted once, and a place listed only by All the Places left out, so a floor. Overture Maps Foundation; data from Meta, Microsoft,
+      Foursquare and others.
+    source_id: overture_places
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
   tree_canopy_homes_share:
     label: Tree canopy where homes are
     unit: ratio

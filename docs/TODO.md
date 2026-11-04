@@ -29,11 +29,11 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — between milestones (2026-10-30)
+## Now — between milestones (2026-11-03)
 
-Milestone 58 shipped: housing.jasonli.app is served by the Worker `housing-site`
-(ARCHITECTURE #454). The first weekly refresh on the Worker is due 2026-10-30 08:00; if it
-reports a problem, look there first. Next is clearing Open and the Director Notes.
+Milestone 60 is built: the Starbucks index and the pizza–bagel line read Overture Places
+(ARCHITECTURE #468–#470). Next, by the owner's choice: revisit which shops the Starbucks
+index compares, and whether a group needs a minimum number of towns (docs/STORIES.md).
 
 ## Open
 
