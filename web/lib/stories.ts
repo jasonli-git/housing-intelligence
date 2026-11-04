@@ -121,7 +121,13 @@ export function relativePrices(towns: StoryTown[]): Map<number, number> {
   return new Map(priced.map((t) => [t.id, Math.log(t.values[PRICE]!) - countyMean.get(t.county)!]));
 }
 
-export function traitPremiums(towns: StoryTown[], traits: Trait[] = TRAITS): Premium[] {
+/**
+ * How much dearer towns with each trait are than the other towns in their county. A trait is
+ * left out unless at least `minTowns` have it and at least `minTowns` do not, and unless no more
+ * than `maxShare` of the measured towns have it: a trait nearly every town has mostly says a
+ * town is big.
+ */
+export function traitPremiums(towns: StoryTown[], traits: Trait[] = TRAITS, { minTowns = 5, maxShare = 1 } = {}): Premium[] {
   const priced = towns.filter((t) => (t.values[PRICE] ?? 0) > 0);
   const rel = relativePrices(towns);
   const relative = (t: StoryTown) => rel.get(t.id)!;
@@ -131,7 +137,7 @@ export function traitPremiums(towns: StoryTown[], traits: Trait[] = TRAITS): Pre
       const measured = priced.filter((t) => t.values[trait.metric] !== undefined);
       const yes = measured.filter((t) => trait.has(t.values[trait.metric]!));
       const no = measured.filter((t) => !trait.has(t.values[trait.metric]!));
-      if (yes.length < 5 || no.length < 5) return null;
+      if (yes.length < minTowns || no.length < minTowns || yes.length > maxShare * measured.length) return null;
       return {
         trait,
         towns: yes.length,

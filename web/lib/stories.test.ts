@@ -26,6 +26,14 @@ describe("traitPremiums", () => {
     const towns = [1, 2, 3, 4, 5, 6].map((i) => town(i, 1, 100 * i, { m: i === 1 ? 1 : 0 }));
     expect(traitPremiums(towns, [trait])).toEqual([]);
   });
+
+  it("holds a trait to a minimum group and a maximum share when asked", () => {
+    // Ten towns, the first seven with the trait.
+    const towns = Array.from({ length: 10 }, (_, i) => town(i + 1, 1, 100 * (i + 1), { m: i < 7 ? 1 : 0 }));
+    expect(traitPremiums(towns, [trait], { minTowns: 3 })).toHaveLength(1);
+    expect(traitPremiums(towns, [trait], { minTowns: 4 })).toEqual([]);
+    expect(traitPremiums(towns, [trait], { minTowns: 3, maxShare: 2 / 3 })).toEqual([]);
+  });
 });
 
 describe("ladder and extremes", () => {

@@ -13,6 +13,11 @@ are not yet recorded here.
 
 ### Added
 
+- **The Starbucks index compares 13 kinds of place, not 8 chains** (2026-11-03, ARCHITECTURE
+  #471): beside Starbucks, Dunkin', Wawa and QuickChek it now shows an upscale grocer,
+  Playa Bowls, McDonald's and dollar stores, and places that are not chains: tennis courts
+  (+18%), yoga studios, golf courses, pawn shops and laundromats (−22%). Every bubble covers
+  at least 25 towns, where some had 13.
 - **Two stories count shops from Overture Maps Places** (2026-11-03, Milestone 60,
   ARCHITECTURE #468–#470): The pizza–bagel line now counts 2,696 pizzerias and 737 bagel
   shops where OpenStreetMap had 1,086 and 278, and the Starbucks index about 85–94% of

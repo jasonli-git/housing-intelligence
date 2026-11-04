@@ -31,9 +31,9 @@ still outstanding and moved to Housekeeping.
 
 ## Now — between milestones (2026-11-03)
 
-Milestone 60 is built: the Starbucks index and the pizza–bagel line read Overture Places
-(ARCHITECTURE #468–#470). Next, by the owner's choice: revisit which shops the Starbucks
-index compares, and whether a group needs a minimum number of towns (docs/STORIES.md).
+Milestone 60 is live, and the Starbucks index's list has been revisited on
+`story/starbucks-index-shops` (ARCHITECTURE #471): chains and other kinds of place, at
+least 25 towns a bubble. Next: the owner's review of that PR.
 
 ## Open
 

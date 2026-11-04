@@ -75,16 +75,16 @@ Reviewed 2026-11-03 · live
 
 | Source | Used for | As of | Coverage |
 |---|---|---|---|
-| `overture_places` | Starbucks, Dunkin', Trader Joe's, Whole Foods, Wawa, QuickChek and diners by town (Milestone 60) | release 2026-10-21.0, fetched 2026-11-03 | Starbucks 294 of about 345 (~85%); Dunkin' 810 of about 860 (~94%); Wawa 292 of about 298; QuickChek 112 of about 145 (~77%, stores only All the Places lists left out) |
+| `overture_places` | 13 chains and kinds of place by town (Milestone 60; list widened 2026-11-03) | release 2026-10-21.0, fetched 2026-11-03 | Starbucks 294 of about 345 (~85%); Dunkin' 810 of about 860 (~94%); Wawa 292 of about 298; QuickChek 112 of about 145 (~77%, stores only All the Places lists left out); Wegmans 11 of 11. Tennis courts, yoga studios, golf courses, laundromats and pawn shops are Overture's categories, not checked against outside counts |
 | `zillow_zhvi` | typical home value, each town against its county | through September 2026 | — |
 
 **Issues**
 
-- Some groups are small: more Starbucks than Dunkin' in 16 towns, Trader Joe's in 13, Whole Foods in 18; the takeaway headlines the 16-town group (+34%).
+- A category is Overture's own: a public park's tennis courts count as tennis courts, and a pawn shop includes gold buyers (sampled 2026-11-03).
 
 **Ideas** (not decided)
 
-- Revisit which shops the chart compares, and whether a group needs a minimum number of towns (owner, 2026-11-03, after Milestone 60).
+- Before 2026-11-03 the bubbles were 8 chains with groups as small as 13 towns; the list now holds 13 kinds of place, each in 25 to two in three of the towns (ARCHITECTURE #471).
 - Before Milestone 60 it read OpenStreetMap (Starbucks ~69%, Dunkin' ~74%): more Starbucks than Dunkin' +25%, a Starbucks +5%, a Dunkin' −15%; on Overture +34%, +0% and −17%.
 
 ### The pizza–bagel line
