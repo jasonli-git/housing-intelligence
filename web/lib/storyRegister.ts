@@ -39,11 +39,12 @@ export const REVIEWS: Record<string, StoryReview> = {
     status: "live",
     reviewed: "2026-11-03",
     sources: [
-      { id: "osm_nj", use: "Wawa and QuickChek stores by town", asOf: "extract fetched 2026-10-30",
-        coverage: "Wawa 261 of about 298 (~88%); QuickChek 118 of about 145 (~81%)" },
+      { id: "overture_places", use: "Wawa and QuickChek stores by town (from 2026-11-03)", asOf: "release 2026-10-21.0, fetched 2026-11-03",
+        coverage: "Wawa 292 of about 298 (~98%); QuickChek 112 of about 145 (~77%, stores only All the Places lists left out)" },
       { id: "zillow_zhvi", use: "typical home value, each town against its county", asOf: "through September 2026" },
     ],
-    ideas: ["Stays on OpenStreetMap (Milestone 60). Overture, with its duplicates merged and stores only All the Places lists left out, has 292 Wawas but 112 QuickCheks, fewer than OpenStreetMap's 118."],
+    issues: ["The price comparison rests on 23 Wawa-only and 26 QuickChek-only towns: a −4.8% gap with a 95% range of −22% to +16%, so the takeaway calls them alike (ARCHITECTURE #472)."],
+    ideas: ["Before 2026-11-03 it read OpenStreetMap: 261 Wawas (~88%) and 118 QuickCheks (~81%), a −2% gap across 10 counties."],
   },
   "the-pizza-bagel-line": {
     status: "live",

@@ -33,10 +33,12 @@ still outstanding and moved to Housekeeping.
 
 Milestone 60 is live, and the Starbucks index's list has been revisited on
 `story/starbucks-index-shops` (ARCHITECTURE #471): chains and other kinds of place, at
-least 25 towns a bubble. Next: the owner's review of that PR.
+least 25 towns a bubble; the Wawa line moved to Overture on the same branch (#472). Next:
+the owner's review of that PR.
 
 ## Open
 
+- Point the shop counts on place pages at Overture: `web/app/[state]/[place]/page.tsx` still lists the `osm_*` counts the stories have left (#472).
 - Remove components only the old place, state and home layouts used (ARCHITECTURE #457).
 - Add a national rent figure to the home page's rent card; Zillow's Metro & U.S. file needs a hand download.
 - Remove the unreachable `isCounty` branches after the county return in `web/app/[state]/[place]/page.tsx`.

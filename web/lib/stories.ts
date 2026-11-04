@@ -122,6 +122,20 @@ export function relativePrices(towns: StoryTown[]): Map<number, number> {
 }
 
 /**
+ * How much dearer one group of towns is than another, from their relative log prices, with a
+ * 95% range. A story calls the groups alike when the range crosses zero, rather than at a fixed
+ * cutoff a data refresh could tip either way.
+ */
+export function priceGap(group: number[], against: number[]): { gap: number; low: number; high: number; clear: boolean } {
+  const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  const variance = (xs: number[]) => xs.reduce((a, x) => a + (x - mean(xs)) ** 2, 0) / (xs.length - 1);
+  const d = mean(group) - mean(against);
+  const se = Math.sqrt(variance(group) / group.length + variance(against) / against.length);
+  const low = Math.exp(d - 1.96 * se) - 1, high = Math.exp(d + 1.96 * se) - 1;
+  return { gap: Math.exp(d) - 1, low, high, clear: low > 0 || high < 0 };
+}
+
+/**
  * How much dearer towns with each trait are than the other towns in their county. A trait is
  * left out unless at least `minTowns` have it and at least `minTowns` do not, and unless no more
  * than `maxShare` of the measured towns have it: a trait nearly every town has mostly says a

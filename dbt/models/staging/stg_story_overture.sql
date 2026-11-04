@@ -1,7 +1,7 @@
 -- Chains, diners, bagel shops, pizzerias and the other kinds of place the Starbucks index
 -- compares, in each town, from Overture Maps Places (Milestone 60; the index's list
--- widened 2026-11-03): the Starbucks index and the pizza–bagel line. The Wawa line and Diner
--- capital read the OpenStreetMap counts (stg_story_osm) as before.
+-- widened 2026-11-03): the Starbucks index, the pizza–bagel line and, from 2026-11-03, the
+-- Wawa line. Diner capital reads the OpenStreetMap counts (stg_story_osm) as before.
 --
 -- A chain is matched on Overture's brand, a kind of place on its primary category. Wegmans
 -- is mostly listed by name with no brand, so it is matched on either.

@@ -62,12 +62,16 @@ Reviewed 2026-11-03 · live
 
 | Source | Used for | As of | Coverage |
 |---|---|---|---|
-| `osm_nj` | Wawa and QuickChek stores by town | extract fetched 2026-10-30 | Wawa 261 of about 298 (~88%); QuickChek 118 of about 145 (~81%) |
+| `overture_places` | Wawa and QuickChek stores by town (from 2026-11-03) | release 2026-10-21.0, fetched 2026-11-03 | Wawa 292 of about 298 (~98%); QuickChek 112 of about 145 (~77%, stores only All the Places lists left out) |
 | `zillow_zhvi` | typical home value, each town against its county | through September 2026 | — |
+
+**Issues**
+
+- The price comparison rests on 23 Wawa-only and 26 QuickChek-only towns: a −4.8% gap with a 95% range of −22% to +16%, so the takeaway calls them alike (ARCHITECTURE #472).
 
 **Ideas** (not decided)
 
-- Stays on OpenStreetMap (Milestone 60). Overture, with its duplicates merged and stores only All the Places lists left out, has 292 Wawas but 112 QuickCheks, fewer than OpenStreetMap's 118.
+- Before 2026-11-03 it read OpenStreetMap: 261 Wawas (~88%) and 118 QuickCheks (~81%), a −2% gap across 10 counties.
 
 ### The Starbucks index
 

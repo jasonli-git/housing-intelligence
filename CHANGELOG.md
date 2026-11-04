@@ -13,6 +13,10 @@ are not yet recorded here.
 
 ### Added
 
+- **The Wawa line counts stores from Overture Places** (2026-11-03, ARCHITECTURE #472):
+  292 Wawas where OpenStreetMap had 261, and 112 QuickCheks where it had 118. Its finding
+  holds; the takeaway now calls the two sides alike whenever the gap is within chance,
+  rather than under a fixed 5%.
 - **The Starbucks index compares 13 kinds of place, not 8 chains** (2026-11-03, ARCHITECTURE
   #471): beside Starbucks, Dunkin', Wawa and QuickChek it now shows an upscale grocer,
   Playa Bowls, McDonald's and dollar stores, and places that are not chains: tennis courts

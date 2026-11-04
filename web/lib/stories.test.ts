@@ -1,11 +1,24 @@
 import { describe, expect, it } from "vitest";
 
-import { baseName, centre, crossingYear, extremes, inside, ladder, leadingDestination, logTicks, monthlyCost, PRICE, priceTick, priceTicks, ratioBand, traitPremiums, trend, twins, wordPremiums, type StoryTown, type Trait } from "./stories";
+import { baseName, centre, crossingYear, extremes, inside, ladder, leadingDestination, logTicks, monthlyCost, PRICE, priceGap, priceTick, priceTicks, ratioBand, traitPremiums, trend, twins, wordPremiums, type StoryTown, type Trait } from "./stories";
 
 const town = (id: number, county: number, price: number, extra: Record<string, number> = {}): StoryTown => ({
   id, name: `Town ${id}`, county, countyName: `County ${county}`, values: { [PRICE]: price, ...extra },
 });
 const trait: Trait = { key: "t", label: "Has it", rule: "", metric: "m", has: (v) => v > 0 };
+
+describe("priceGap", () => {
+  it("calls a gap clear only when its 95% range leaves zero", () => {
+    const spread = (centre: number) => [-0.02, -0.01, 0, 0.01, 0.02].map((x) => centre + x);
+    const tight = priceGap(spread(0.1), spread(0));
+    expect(tight.gap).toBeCloseTo(Math.exp(0.1) - 1);
+    expect(tight.clear).toBe(true);
+    const loose = priceGap([-0.5, 0.5, 0, 0.3], [0.2, -0.4, 0.1, -0.2]);
+    expect(loose.low).toBeLessThan(0);
+    expect(loose.high).toBeGreaterThan(0);
+    expect(loose.clear).toBe(false);
+  });
+});
 
 describe("traitPremiums", () => {
   it("compares a town only with its own county", () => {
