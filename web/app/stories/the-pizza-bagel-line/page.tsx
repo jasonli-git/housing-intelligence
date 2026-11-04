@@ -42,8 +42,8 @@ export default async function PizzaBagelPage() {
     <StoryShell
       title="The pizza–bagel line"
       takeaway={ratio(south) > ratio(north)
-        ? <><b>The bagel thins out with distance from New York.</b> The north has a bagel shop for every {ratio(north).toFixed(1)} pizzerias; the south, one for every {ratio(south).toFixed(1)}.</>
-        : <><b>Bagels hold up across the state.</b> The north has a bagel shop for every {ratio(north).toFixed(1)} pizzerias; the south, one for every {ratio(south).toFixed(1)}.</>}
+        ? <><b>Bagels fade the farther you get from New York.</b> North Jersey has one bagel shop for every {Math.round(ratio(north))} pizzerias; South Jersey, one for every {Math.round(ratio(south))}.</>
+        : <><b>Bagels hold their own across the state.</b> North Jersey has one bagel shop for every {Math.round(ratio(north))} pizzerias; South Jersey, one for every {Math.round(ratio(south))}.</>}
       lede={<>Pizza is everywhere in New Jersey: {total.pizza.toLocaleString("en-US")} pizzerias against {total.bagel.toLocaleString("en-US")} bagel shops. But the bagel shop is a New York habit, and it thins out with distance from the city. Darker towns lean bagel.</>}
       note={<>Overture Maps Foundation, overturemaps.org, from Meta, Microsoft, Foursquare and other providers: a bagel shop or a pizzeria is a place filed under that kind of restaurant. Closed places are left out and a shop listed twice is counted once. Towns with fewer than two of either are drawn grey.</>}
     >

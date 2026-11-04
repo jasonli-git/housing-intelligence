@@ -39,11 +39,12 @@ export const REVIEWS: Record<string, StoryReview> = {
     status: "live",
     reviewed: "2026-11-03",
     sources: [
-      { id: "osm_nj", use: "Wawa and QuickChek stores by town", asOf: "extract fetched 2026-10-30",
-        coverage: "Wawa 261 of about 298 (~88%); QuickChek 118 of about 145 (~81%)" },
+      { id: "overture_places", use: "Wawa and QuickChek stores by town (from 2026-11-03)", asOf: "release 2026-10-21.0, fetched 2026-11-03",
+        coverage: "Wawa 292 of about 298 (~98%); QuickChek 112 of about 145 (~77%, stores only All the Places lists left out)" },
       { id: "zillow_zhvi", use: "typical home value, each town against its county", asOf: "through September 2026" },
     ],
-    ideas: ["Stays on OpenStreetMap (Milestone 60). Overture, with its duplicates merged and stores only All the Places lists left out, has 292 Wawas but 112 QuickCheks, fewer than OpenStreetMap's 118."],
+    issues: ["The price comparison rests on 23 Wawa-only and 26 QuickChek-only towns: a −4.8% gap with a 95% range of −22% to +16%, so the takeaway calls them alike (ARCHITECTURE #472)."],
+    ideas: ["Before 2026-11-03 it read OpenStreetMap: 261 Wawas (~88%) and 118 QuickCheks (~81%), a −2% gap across 10 counties."],
   },
   "the-pizza-bagel-line": {
     status: "live",
@@ -69,12 +70,12 @@ export const REVIEWS: Record<string, StoryReview> = {
     status: "live",
     reviewed: "2026-11-03",
     sources: [
-      { id: "overture_places", use: "Starbucks, Dunkin', Trader Joe's, Whole Foods, Wawa, QuickChek and diners by town (Milestone 60)", asOf: "release 2026-10-21.0, fetched 2026-11-03",
-        coverage: "Starbucks 294 of about 345 (~85%); Dunkin' 810 of about 860 (~94%); Wawa 292 of about 298; QuickChek 112 of about 145 (~77%, stores only All the Places lists left out)" },
+      { id: "overture_places", use: "13 chains and kinds of place by town (Milestone 60; list widened 2026-11-03)", asOf: "release 2026-10-21.0, fetched 2026-11-03",
+        coverage: "Starbucks 294 of about 345 (~85%); Dunkin' 810 of about 860 (~94%); Wawa 292 of about 298; QuickChek 112 of about 145 (~77%, stores only All the Places lists left out); Wegmans 11 of 11. Against Census County Business Patterns 2023 by county (checked 2026-11-03): laundromats 924 to 586 coin laundries, counties correlating 0.97; golf courses 316 to 199 golf courses and country clubs, 0.76; yoga studios 655 to 1,495 fitness centres of every kind, 0.91. The Census counts only businesses with paid staff and leaves out public courses, so Overture's higher counts are expected. Tennis courts and pawn shops have no matching Census industry and are unchecked" },
       { id: "zillow_zhvi", use: "typical home value, each town against its county", asOf: "through September 2026" },
     ],
-    issues: ["Some groups are small: more Starbucks than Dunkin' in 16 towns, Trader Joe's in 13, Whole Foods in 18; the takeaway headlines the 16-town group (+34%)."],
-    ideas: ["Revisit which shops the chart compares, and whether a group needs a minimum number of towns (owner, 2026-11-03, after Milestone 60).", "Before Milestone 60 it read OpenStreetMap (Starbucks ~69%, Dunkin' ~74%): more Starbucks than Dunkin' +25%, a Starbucks +5%, a Dunkin' −15%; on Overture +34%, +0% and −17%."],
+    issues: ["A category is Overture's own: a public park's tennis courts count as tennis courts, and a pawn shop includes gold buyers (sampled 2026-11-03)."],
+    ideas: ["Before 2026-11-03 the bubbles were 8 chains with groups as small as 13 towns; the list now holds 13 kinds of place, each in 25 to two in three of the towns (ARCHITECTURE #471).", "Before Milestone 60 it read OpenStreetMap (Starbucks ~69%, Dunkin' ~74%): more Starbucks than Dunkin' +25%, a Starbucks +5%, a Dunkin' −15%; on Overture +34%, +0% and −17%."],
   },
 };
 

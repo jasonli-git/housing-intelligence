@@ -31,12 +31,16 @@ still outstanding and moved to Housekeeping.
 
 ## Now — between milestones (2026-11-03)
 
-Milestone 60 is built: the Starbucks index and the pizza–bagel line read Overture Places
-(ARCHITECTURE #468–#470). Next, by the owner's choice: revisit which shops the Starbucks
-index compares, and whether a group needs a minimum number of towns (docs/STORIES.md).
+Milestone 60 is live, and the Starbucks index's list has been revisited on
+`story/starbucks-index-shops` (ARCHITECTURE #471): chains and other kinds of place, at
+least 25 towns a bubble; the Wawa line moved to Overture on the same branch (#472). Next:
+the owner's review of that PR.
 
 ## Open
 
+- Look into promoting the Census County Business Patterns cross-check from a one-off review to a pipeline step that re-runs on refresh (owner, 2026-11-03). It compared Overture's county counts with NAICS 812310, 713910 and 713940 for 2023, using the `CENSUS_API_KEY` the ACS already uses; results are in docs/STORIES.md.
+- Look into giving every visual story the same kind of outside cross-check, not only the Starbucks index (owner, 2026-11-03).
+- Point the shop counts on place pages at Overture: `web/app/[state]/[place]/page.tsx` still lists the `osm_*` counts the stories have left (#472).
 - Remove components only the old place, state and home layouts used (ARCHITECTURE #457).
 - Add a national rent figure to the home page's rent card; Zillow's Metro & U.S. file needs a hand download.
 - Remove the unreachable `isCounty` branches after the county return in `web/app/[state]/[place]/page.tsx`.

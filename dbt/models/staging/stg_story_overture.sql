@@ -1,8 +1,10 @@
--- Chains, diners, bagel shops and pizzerias in each town, from Overture Maps Places
--- (Milestone 60): the Starbucks index and the pizza–bagel line. The Wawa line and Diner
--- capital read the OpenStreetMap counts (stg_story_osm) as before.
+-- Chains, diners, bagel shops, pizzerias and the other kinds of place the Starbucks index
+-- compares, in each town, from Overture Maps Places (Milestone 60; the index's list
+-- widened 2026-11-03): the Starbucks index, the pizza–bagel line and, from 2026-11-03, the
+-- Wawa line. Diner capital reads the OpenStreetMap counts (stg_story_osm) as before.
 --
--- A chain is matched on Overture's brand, a kind of restaurant on its primary category.
+-- A chain is matched on Overture's brand, a kind of place on its primary category. Wegmans
+-- is mostly listed by name with no brand, so it is matched on either.
 -- Overture merges several providers, so a shop can be listed twice: places of one kind
 -- within 150 metres of another with a smaller id are dropped, as for OpenStreetMap.
 -- Places marked permanently closed are dropped. No confidence floor: with duplicates
@@ -15,7 +17,7 @@
 {{ config(materialized='table') }}
 
 with raw as (
-    select id, brand, category, ST_Point(lon, lat) as point
+    select id, name, brand, category, ST_Point(lon, lat) as point
     from read_parquet('{{ var("parquet_dir") }}/overture_places/current/places.parquet')
     where coalesce(operating_status, 'open') <> 'permanently_closed'
       -- Overture's own labels ride along with every provider's.
@@ -31,9 +33,19 @@ labelled as (
                when brand = 'Dunkin''' then 'dunkin'
                when brand = 'Trader Joe''s' then 'trader_joes'
                when brand = 'Whole Foods Market' then 'whole_foods'
+               when brand = 'Kings Food Markets' then 'kings'
+               when 'Wegmans' in (brand, name) then 'wegmans'
+               when brand = 'Playa Bowls' then 'playa_bowls'
+               when brand = 'McDonald''s' then 'mcdonalds'
+               when brand in ('Dollar General', 'Dollar Tree', 'Family Dollar') then 'dollar_store'
                when category = 'diner' then 'diner'
                when category = 'bagel_shop' then 'bagel'
                when category = 'pizza_restaurant' then 'pizza'
+               when category = 'tennis_court' then 'tennis'
+               when category = 'yoga_studio' then 'yoga'
+               when category = 'golf_course' then 'golf'
+               when category = 'laundromat' then 'laundromat'
+               when category = 'pawn_shop' then 'pawn'
            end as kind
     from raw
 ),
@@ -74,7 +86,9 @@ regions as (
 kinds as (
     select * from (values ('wawa'), ('quickchek'), ('starbucks'), ('dunkin'),
                           ('trader_joes'), ('whole_foods'), ('diner'), ('bagel'),
-                          ('pizza')) as k(kind)
+                          ('pizza'), ('kings'), ('wegmans'), ('playa_bowls'),
+                          ('mcdonalds'), ('dollar_store'), ('tennis'), ('yoga'), ('golf'),
+                          ('laundromat'), ('pawn')) as k(kind)
 ),
 counted as (
     select r.geoid, r.level, k.kind,

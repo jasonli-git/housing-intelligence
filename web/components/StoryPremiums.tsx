@@ -1,10 +1,11 @@
 import type { Premium } from "@/lib/stories";
 
 const W = 880;
-const H = 800;
+const H = 850;
 const CX = W / 2;
 const GUTTER = 130;
-const TOP = 70;
+// The size key has its own row above the plot, so no label at the top can run into it.
+const TOP = 120;
 const BOTTOM = H - 40;
 
 const pct = (p: number) => `${p >= 0 ? "+" : "−"}${Math.abs(Math.round(p * 100))}%`;
@@ -61,8 +62,8 @@ export function StoryPremiums({ premiums }: { premiums: Premium[] }) {
         <text className="sub" x={40} y={BOTTOM + 30}>↓ Towns with the trait cost less</text>
         <text className="sub" x={W - 20} y={y(0) - 6} textAnchor="end">No difference</text>
         {[25, 100, 250].map((n, i) => {
-          const r = radius(n), cx = 130 + i * 62;
-          return <g key={n}><circle cx={cx} cy={TOP + 50 - r} r={r} fill="none" className="leader" /><text className="sub" x={cx} y={TOP + 66} textAnchor="middle">{n} towns</text></g>;
+          const r = radius(n), cx = 70 + i * 62;
+          return <g key={n}><circle cx={cx} cy={52 - r} r={r} fill="none" className="leader" /><text className="sub" x={cx} y={68} textAnchor="middle">{n} towns</text></g>;
         })}
       </g>
       {labels.map((b) => {
