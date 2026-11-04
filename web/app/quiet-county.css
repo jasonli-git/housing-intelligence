@@ -303,33 +303,8 @@
 
 /* The public atlas is warm-neutral; source history uses an understated ink-blue ledger. */
 @media screen {
-  body:has(.quiet-nation) { --surface-1: light-dark(#f8f6f1, #201f1c); --surface-2: light-dark(#fffefa, #292823); --border: light-dark(#ded9cf, #49463f); background: var(--surface-1); }
-  .nation-page.quiet-nation { max-width: 1160px; --text-primary: light-dark(#34322e, #ebe7df); --text-secondary: light-dark(#625e55, #c5bfb3); }
-  .quiet-nation > .nation-head { position: relative; isolation: isolate; padding-block: 2.2rem 2rem; border-top: 1px solid var(--border); border-bottom: 0; }
-  .quiet-nation .nation-head h1 { font: 500 clamp(58px, 6.5vw, 84px)/1.04 Georgia, serif; letter-spacing: -0.055em; max-width: 72%; }
-  .quiet-nation .entry-introduction { font: 400 clamp(25px, 3vw, 37px)/1.3 Georgia, serif; letter-spacing: -0.025em; max-width: 26ch; margin-block: 1rem 0.75rem; }
-  .quiet-nation .entry-context { font-size: 13px; max-width: 55ch; }
-  .quiet-nation .entry-free { font-size: 12px; gap: 0.45rem; padding-top: 0.6rem; }
-  .quiet-nation .entry-free svg { stroke: var(--entry-accent); }
   .nation-portrait { position: absolute; right: 0; top: 0; width: 28%; height: 100%; stroke: var(--entry-accent); stroke-width: 0.8; opacity: 0.2; pointer-events: none; z-index: -1; }
   .nation-portrait circle { fill: var(--state-blue); stroke: none; opacity: 1; }
-  .quiet-nation .coverage-entry-map > header { padding-bottom: 0.7rem; margin-bottom: 0; border-bottom: 1px solid var(--border); }
-  .quiet-nation .coverage-entry h2, .quiet-nation .national-context h2 { font: 500 29px/1.2 Georgia, serif; letter-spacing: -0.025em; }
-  .quiet-nation .coverage-atlas { border: 0; border-radius: 0; background: none; }
-  .quiet-nation .coverage-map-stage { background: radial-gradient(ellipse at 55% 50%, light-dark(#ece7dd, #302d26), transparent 80%); border-bottom: 1px solid var(--border); }
-  .quiet-nation .coverage-map { height: clamp(300px, 36vw, 445px); }
-  .quiet-nation .coverage-map-foot { border: 0; padding-inline: 0; }
-  .quiet-nation .coverage-state-preview { border-block: 1px solid var(--border); padding: 1.1rem 0; }
-  .quiet-nation .coverage-state-preview h3 { font: 500 31px/1.2 Georgia, serif; }
-  .quiet-nation .coverage-state-action { border-radius: 4px; background: transparent; min-height: 44px; }
-  .quiet-nation .coverage-map-note { padding: 0.7rem 0 0; }
-  .quiet-nation .national-context { margin-bottom: 0.5rem; background: linear-gradient(110deg, color-mix(in srgb, var(--entry-accent) 6%, transparent), transparent); padding: 0.9rem 1.2rem; }
-  .quiet-nation .national-context h2 { font: 500 17px/1.4 var(--font-text); letter-spacing: -0.015em; margin-bottom: 0.3rem; }
-  .quiet-nation .national-context p { font-size: 12px; }
-  .quiet-nation .national-rate { justify-self: end; border-left: 1px solid var(--border); padding-left: 2rem; }
-  .quiet-nation .national-rate > strong { font: 500 42px/1 Georgia, serif; }
-  .quiet-nation :focus-visible { outline: 2px solid var(--entry-accent); outline-offset: 4px; }
-  main.quiet-nation { padding-bottom: 1rem; }
 
   .quiet-history { --atlas-accent: light-dark(#4e6575, #b7cbd9); }
   .quiet-history > .page-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2rem; align-items: center; }
@@ -392,17 +367,7 @@
     .quiet-tax .tax-card .cost-lines > div { flex-wrap: wrap; gap: 0.3rem 0.75rem; }
     .quiet-tax .tax-card .cost-lines dd { white-space: normal; }
     .quiet-tax .tax-card h2.household-title { font-size: 23px; overflow-wrap: anywhere; }
-    .quiet-nation > .nation-head { padding-block: 1.5rem; }
-    .quiet-nation .nation-head h1 { font-size: clamp(42px, 11vw, 62px); max-width: none; }
-    .quiet-nation .entry-introduction { font-size: 27px; }
     .nation-portrait { right: 0; top: 0.7rem; width: 40%; height: 85px; opacity: 0.08; }
-    .quiet-nation .coverage-entry-map > header { gap: 0.7rem; flex-wrap: wrap; }
-    .quiet-nation .coverage-entry-map > header .entry-kicker { font-size: 9px; }
-    .quiet-nation .national-context { grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; padding: 1rem 0; }
-    .quiet-nation .national-context h2 { font-size: 15px; }
-    .quiet-nation .national-rate { padding-left: 1rem; max-width: 145px; }
-    .quiet-nation .national-rate > strong { font-size: 34px; }
-    .quiet-nation .national-rate :is(.term, small) { font-size: 10px; }
     .quiet-history > .page-head { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
     .quiet-history .page-title { font-size: clamp(33px, 8.5vw, 45px); }
     .history-portrait { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 0.8rem; padding: 0.8rem 1rem; }

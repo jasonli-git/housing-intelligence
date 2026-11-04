@@ -16,8 +16,6 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check:a11y": "node scripts/check-accessibility.mjs",
-    "check:a11y:interactions": "node scripts/check-accessibility-interactions.mjs",
-    "check:ui-refinement": "node scripts/check-ui-refinement.mjs",
     "check:a11y:serve": "node scripts/serve-accessibility.mjs",
     "colours:baseline": "UPDATE_COLOUR_BASELINE=1 vitest run lib/colours.test.ts",
     "stories:register": "UPDATE_STORY_REGISTER=1 vitest run lib/storyRegister.test.ts",

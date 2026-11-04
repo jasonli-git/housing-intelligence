@@ -1,9 +1,6 @@
 /* Geography is a cue, never the only identifier. Utility tools use their own ink. */
 @media print { .state-place-artwork { display:none; } }
 @media screen {
-  .quiet-nation .entry-free.computed { display:inline-flex; flex-wrap:nowrap; align-items:center; width:fit-content; max-width:100%; box-sizing:border-box; padding:.4rem .65rem; border:1px solid var(--border); border-radius:999px; font:10px/1.6 var(--font-mono); letter-spacing:.035em; margin-top:.8rem; }
-  .quiet-nation .entry-free.computed > span { min-width:0; color:var(--text-secondary); }
-  .quiet-nation .entry-free.computed svg { flex-shrink:0; width:13px; height:13px; }
   .atlas-local > .page-head { position:relative; isolation:isolate; }
   .atlas-local .state-place-artwork-header { right:1.5%; top:.5rem; width:clamp(160px,24vw,260px); height:240px; opacity:.42; stroke-width:1.3; }
   .atlas-local:is([data-region-level="municipality"],[data-region-level="zip"]) :is(.cost-monthly-headline,.more) { background:var(--surface-2); }
@@ -27,8 +24,6 @@
   .place-budget-link:hover { text-decoration:underline; }
   .nj-page .place-first-workspace .state-workspace-head { justify-content:space-between; }
   .nj-page .assistance-routes a { background:transparent; border-color:var(--border); }
-  .quiet-nation .entry-free svg { stroke:light-dark(#25714b,#83cfa3); }
-  .quiet-nation .coverage-map-stage { background:light-dark(#eaf0f1,#222c32); }
   @media(prefers-reduced-motion:no-preference) {
     .state-artwork-trace path { stroke-dasharray:1; animation:house-draw 9s cubic-bezier(.22,1,.36,1) infinite both; }
     .state-artwork-trace path:nth-child(2) { animation-delay:.25s; }
