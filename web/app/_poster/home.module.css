@@ -1,6 +1,9 @@
 /* The front door in the place pages' voice: chapter titles, solid colour, the coverage map. */
 .home { --accent: var(--poster-tone-1); --h-bg: var(--poster-tone-49); --h-ink: var(--poster-tone-50); --h-soft: var(--poster-tone-51); --h-mid: var(--poster-tone-52); --h-track: var(--poster-tone-53); --h-line: var(--poster-tone-54); display: grid; gap: 10px; padding-bottom: 40px; font-variant-numeric: tabular-nums; }
-.entry { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 56px); align-items: center; padding: clamp(24px, 4vw, 44px); color: var(--h-ink); background: var(--h-bg); border-radius: 16px; }
+/* No container: the title, search and map sit on the page like every section below them.
+   A card here sat flush with the menu but inset at the sides, which read as a mistake on a
+   phone; a full-width band was tried and set aside for this (2026-11-03). */
+.entry { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 56px); align-items: center; padding: clamp(28px, 4vw, 48px) 0 clamp(24px, 5vw, 64px); color: var(--h-ink); }
 .entry h1 { margin: 0 0 8px; font-family: Georgia, serif; font-size: clamp(40px, 5.6vw, 72px); font-weight: 400; letter-spacing: -.02em; line-height: 1.02; }
 .assurance { margin: 0 0 20px; font-size: var(--text-small); color: var(--h-soft); }
 .scale { margin-top: 16px; font-size: var(--text-small); color: var(--h-soft); }
@@ -8,6 +11,8 @@
 .map p { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin: 0; }
 .map a { color: var(--accent); }
 .section { display: grid; gap: 6px; min-width: 0; scroll-margin-top: 120px; }
+/* The market section opens on a hairline: separation from the open hero without a box. */
+:global(#us-market) { border-top: 1px solid var(--border); padding-top: 16px; }
 .head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
 .head h2, .section > h2 { margin: 37px 0 6px; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.02em; }
 .head a { color: inherit; font-size: var(--text-small); }

@@ -160,7 +160,8 @@
   .heading { padding-bottom: 1.5rem; gap: .8rem; }
   .entry { grid-template-columns: minmax(0, 1fr); gap: 1.6rem; padding: 1.75rem 0 2rem; }
   .coverageCaption { text-align: left; }
-  .home :global(.coverage-home-preview .coverage-map), .home :global(.coverage-home-preview .coverage-map-placeholder) { height: 180px; min-height: 180px; }
+  /* Under the search on a phone the map is a reminder of coverage, not the point (2026-11-03). */
+  .home :global(.coverage-home-preview .coverage-map), .home :global(.coverage-home-preview .coverage-map-placeholder) { height: 120px; min-height: 120px; }
   .home :global(.home-search input) { font-size: 16px; }
   .home :global(.home-search-hints) { display: none; }
   .home :global(.home-tools-grid) { grid-template-columns: minmax(0, 1fr); gap: 10px; }
