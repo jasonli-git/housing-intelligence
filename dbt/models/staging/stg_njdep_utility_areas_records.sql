@@ -38,7 +38,7 @@ with pieces as (
 select 'njdep_utility_areas' as source_id, 'utility_area' as kind, p.entity_id,
        p.fuel || ':' || p.provider as record_id,
        to_json(struct_pack(fuel := p.fuel, provider := p.provider,
-           approximate_share := p.homes / t.homes,
+           approximate_share := round(p.homes / t.homes, 12),
            eia_id := case p.provider when 'Atlantic City Electric' then '963'
                when 'Jersey Central Power & Light' then '9726'
                when 'Public Service Electric & Gas Co.' then '15477'

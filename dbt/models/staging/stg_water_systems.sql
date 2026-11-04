@@ -81,7 +81,7 @@ totals as (
 )
 select p.geoid, p.level, p.pwsid, p.system_name,
        round(p.homes) as homes,
-       p.homes / t.homes as share_of_homes,
+       round(p.homes / t.homes, 12) as share_of_homes,
        coalesce(s.violations, 0) as violations,
        coalesce(s.resolved, 0) as resolved_violations,
        l.began as latest_violation,

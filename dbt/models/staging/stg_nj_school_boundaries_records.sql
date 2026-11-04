@@ -41,7 +41,7 @@ with pieces as (
 select 'nj_school_boundaries' as source_id, 'school_area' as kind, p.entity_id,
        district_type || ':' || district_id as record_id,
        to_json(struct_pack(district_id := district_id, name := name, district_type := district_type,
-           approximate_share := least(1.0,p.homes/t.homes))) as payload,
+           approximate_share := round(least(1.0,p.homes/t.homes), 12))) as payload,
        null::date as snapshot, district_type as release_layer, 'current' as release_vintage, file_sha256
 from places p join totals t using(entity_id)
 where p.homes > 0 and (p.homes/t.homes >= 0.01 or p.homes >= 50)
