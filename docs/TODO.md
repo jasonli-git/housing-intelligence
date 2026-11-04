@@ -38,6 +38,8 @@ the owner's review of that PR.
 
 ## Open
 
+- Look into promoting the Census County Business Patterns cross-check from a one-off review to a pipeline step that re-runs on refresh (owner, 2026-11-03). It compared Overture's county counts with NAICS 812310, 713910 and 713940 for 2023, using the `CENSUS_API_KEY` the ACS already uses; results are in docs/STORIES.md.
+- Look into giving every visual story the same kind of outside cross-check, not only the Starbucks index (owner, 2026-11-03).
 - Point the shop counts on place pages at Overture: `web/app/[state]/[place]/page.tsx` still lists the `osm_*` counts the stories have left (#472).
 - Remove components only the old place, state and home layouts used (ARCHITECTURE #457).
 - Add a national rent figure to the home page's rent card; Zillow's Metro & U.S. file needs a hand download.

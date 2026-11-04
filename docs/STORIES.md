@@ -79,7 +79,7 @@ Reviewed 2026-11-03 · live
 
 | Source | Used for | As of | Coverage |
 |---|---|---|---|
-| `overture_places` | 13 chains and kinds of place by town (Milestone 60; list widened 2026-11-03) | release 2026-10-21.0, fetched 2026-11-03 | Starbucks 294 of about 345 (~85%); Dunkin' 810 of about 860 (~94%); Wawa 292 of about 298; QuickChek 112 of about 145 (~77%, stores only All the Places lists left out); Wegmans 11 of 11. Tennis courts, yoga studios, golf courses, laundromats and pawn shops are Overture's categories, not checked against outside counts |
+| `overture_places` | 13 chains and kinds of place by town (Milestone 60; list widened 2026-11-03) | release 2026-10-21.0, fetched 2026-11-03 | Starbucks 294 of about 345 (~85%); Dunkin' 810 of about 860 (~94%); Wawa 292 of about 298; QuickChek 112 of about 145 (~77%, stores only All the Places lists left out); Wegmans 11 of 11. Against Census County Business Patterns 2023 by county (checked 2026-11-03): laundromats 924 to 586 coin laundries, counties correlating 0.97; golf courses 316 to 199 golf courses and country clubs, 0.76; yoga studios 655 to 1,495 fitness centres of every kind, 0.91. The Census counts only businesses with paid staff and leaves out public courses, so Overture's higher counts are expected. Tennis courts and pawn shops have no matching Census industry and are unchecked |
 | `zillow_zhvi` | typical home value, each town against its county | through September 2026 | — |
 
 **Issues**
