@@ -1128,6 +1128,25 @@ Reasons:
   genuine comments before posting.
 - At a few stories a month, all three are manageable. If one has to go, X goes first.
 
+**Update (owner, 2026-11-05): X becomes the main account.**
+
+| Platform | Role | What gets posted | Status |
+|----------|------|------------------|--------|
+| X (`@HousingIntelHQ`) | Main account | Every story as its share image and a short summary, no link in the post; the site's address is in the bio and on the image | Account live 2026-11-05 |
+| Bluesky (`@housing.jasonli.app`) | Secondary | The same post, with the link and hashtags | Account live 2026-11-04 |
+| Reddit | Unchanged | | Deferred |
+
+- Reason: X has the larger audience, and the share images carry the site's address, so
+  posting without links costs less than first thought.
+- Trade-off accepted: X sends less traffic per post, because there's no link in the post
+  itself.
+- The account is a Creator professional account, category Media & News. Its bio reads
+  "Housing data, made readable."
+- Schedule: one story a week, Fridays at 9 AM Eastern. The first is the Starbucks index
+  on 2026-11-06, with the caveat as a reply in the same thread.
+- "If one has to go, X goes first" no longer applies. Which platform to drop, if any, is
+  now undecided.
+
 Considerations raised, not decided:
 
 - An RSS feed of new stories, generated at build time, as a channel the site owns.
