@@ -1071,3 +1071,30 @@ Do not implement yet.
 The owner promoted *Data Explorer* to Milestone 59, ahead of clearing TODO and the open
 notes. Metadata and aggregates only, generated at publish time, linked from the footer
 rather than the main navigation.
+
+## Automated posting to Bluesky
+
+**Status:** Exploratory — not approved for implementation
+
+**Recorded:** 2026-11-04
+
+The site could post to its Bluesky account (`@housing.jasonli.app`) through Bluesky's
+API, using an app password. Not now: hand-written posts and replies build the first
+audience, and there aren't yet enough new stories to need automation.
+
+Possible triggers, if it's explored later:
+
+- A new story going live, with its share image and takeaway.
+- A monthly data refresh, with one headline change.
+- The Friday build, with one notable change each week.
+
+Considerations:
+
+- Accounts that are clearly automated tend to get less engagement.
+- A script posting a wrong or misleading figure while nobody is watching is the main
+  risk. A safer first step would be a script that drafts each post with its image for
+  the owner to approve.
+- Bluesky's Automation label should be turned on only if the account becomes mainly
+  automated.
+
+Revisit once regular posting shows which kinds of posts get traction.
