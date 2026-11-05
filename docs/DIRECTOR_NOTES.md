@@ -1098,3 +1098,42 @@ Considerations:
   automated.
 
 Revisit once regular posting shows which kinds of posts get traction.
+
+## Social media lineup
+
+**Status:** Approved direction for the posting plan; the considerations below are not
+approved
+
+**Recorded:** 2026-11-04
+
+The goal of posting to social media is both to market the site and to put its data
+visualisations in front of people. The owner settled this lineup:
+
+| Platform | Role | What gets posted | Status |
+|----------|------|------------------|--------|
+| Bluesky (`@housing.jasonli.app`) | Main account | Every story, with links, plus replies and conversation | Account live 2026-11-04 |
+| X | Secondary | Every story as its share image and a short summary, no link; the site's address is in the bio and on the image | Account not yet made |
+| Reddit | Selected stories | Strong fits only, under each subreddit's rules; r/newjersey first (the Wawa line), then r/dataisbeautiful | Deferred until a separate account exists |
+
+Reasons:
+
+- Bluesky's handle is the site's own domain. It has no karma or account-age gates, and
+  it doesn't penalise links.
+- Journalists on Bluesky are more active than those on X (2025 surveys), though X still
+  has far more accounts and sends far more traffic in total.
+- X shows posts with links to fewer people, so posts there carry only the share image,
+  which already shows the site's address.
+- Reddit has the biggest possible payoff and costs the most time: about 1–2 hours
+  answering questions on the day of a post. A new account needs a week or two of
+  genuine comments before posting.
+- At a few stories a month, all three are manageable. If one has to go, X goes first.
+
+Considerations raised, not decided:
+
+- An RSS feed of new stories, generated at build time, as a channel the site owns.
+- Platform tags on links (`?utm_source=bluesky`), so the site's analytics can show which
+  platform brings visitors.
+- A newsletter, later.
+- Getting stories in front of local reporters (NJ.com, NJ Spotlight). This is separate
+  from data-source outreach.
+- Automated posting, covered in its own note, *Automated posting to Bluesky*.
