@@ -36,7 +36,7 @@ are not yet recorded here.
 ### Removed
 
 - **The old page layouts' leftover code** (2026-11-04, ARCHITECTURE #474): 36 components
-  and their tests, six helpers, nine stylesheets, 114 dead CSS rules and 46 stale one-off browser
+  and their tests, six helpers, nine stylesheets, 114 dead CSS rules and 45 stale one-off browser
   check scripts. Nothing readers see changes.
 
 ### Changed
