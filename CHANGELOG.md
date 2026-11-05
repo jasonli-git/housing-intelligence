@@ -33,6 +33,12 @@ are not yet recorded here.
   to save or share, with its sources credited in the publishers' own words. Five stories
   that show nothing until a town is picked have none.
 
+### Removed
+
+- **The old page layouts' leftover code** (2026-11-04, ARCHITECTURE #474): 36 components
+  and their tests, six helpers, nine stylesheets, 114 dead CSS rules and 45 stale one-off browser
+  check scripts. Nothing readers see changes.
+
 ### Changed
 
 - **Visual stories refined** (2026-11-03, ARCHITECTURE #464, #467): the menu bar's link

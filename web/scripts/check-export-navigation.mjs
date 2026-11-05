@@ -12,13 +12,13 @@ const cases=[
  {name:'place to parent county',from:'/nj/princeton',to:'/nj/mercer-county',title:'Mercer',
   act:page=>page.locator('a[href="/nj/mercer-county"]').first().click()},
  {name:'place to report',from:'/nj/princeton',to:'/nj/princeton/report',title:'Princeton',
-  act:page=>page.locator('a.eyebrow-report').click()},
+  act:page=>page.locator('a[href="/nj/princeton/report"]').first().click()},
  {name:'report to place',from:'/nj/princeton/report',to:'/nj/princeton',title:'Princeton',
   act:page=>page.locator('a[href="/nj/princeton"]').first().click()},
- {name:'header buyer guide',from:'/nj/princeton',to:'/guide',title:'buying',
+ {name:'header stories',from:'/nj/princeton',to:'/stories',title:'tories',
   act:async(page,width)=>{
    if(width===390)await page.locator('.bar-tool-menu summary').click();
-   await page.locator(width===390?'.bar-tool-menu a[href="/guide"]':'.bar-desktop-tools a[href="/guide"]').click();
+   await page.locator(width===390?'.bar-tool-menu a[href="/stories"]':'.bar-desktop-tools a[href="/stories"]').click();
   }},
  {name:'header home',from:'/nj/princeton',to:'/',title:'Housing',
   act:page=>page.locator('nav .wordmark').click()},

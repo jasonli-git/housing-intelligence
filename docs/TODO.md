@@ -42,9 +42,7 @@ the owner's review of that PR.
 - Look into giving every visual story the same kind of outside cross-check, not only the Starbucks index (owner, 2026-11-03).
 - Note: before planning a second state, revisit how artifacts are laid out in R2 (owner, 2026-11-04). R2 charges per file written: past 1M Class A operations a month, each started million costs $4.50, rounded up. The Oct 5 – Nov 4 cycle reached 1.03M and was billed $4.50. Each changed file costs about 2 operations: the upload, plus the `--backup-dir` copy (#359). A refresh across many states could reach millions. Options: bundle a state's artifacts into fewer files, back up less, batch refreshes into one deploy. Weigh at the same time whether to render place pages on demand: a Worker would fill a template from that place's R2 data and cache the page, instead of pre-building every page in the static export. That would shrink build and deploy size at many states, but not the data writes. It costs runtime reads and CPU, a slower first visit and a migration away from `output: export`. A possible middle path: pre-built pages for New Jersey and the stories, on-demand pages for other states. Avoid pages that build themselves in the browser, which would break share previews.
 - Point the shop counts on place pages at Overture: `web/app/[state]/[place]/page.tsx` still lists the `osm_*` counts the stories have left (#472).
-- Remove components only the old place, state and home layouts used (ARCHITECTURE #457).
 - Add a national rent figure to the home page's rent card; Zillow's Metro & U.S. file needs a hand download.
-- Remove the unreachable `isCounty` branches after the county return in `web/app/[state]/[place]/page.tsx`.
 
 Every open item, wherever the work originated. The tag in parentheses is where it was
 first raised, not where it must be done.
@@ -85,27 +83,18 @@ Each is registered only once its file lands (a manual source with no file fails
 - **Story pages cannot focus on the state.** The New Jersey page's statewide cards open
   each story at its statewide section instead.
 - **Publisher notices** in the shared footer keep the old plain styling (a site-wide pass).
-- **Stale browser scripts.** About twenty one-off `web/scripts/check-*.mjs` (state page,
-  `check-accessibility-interactions`, `check-local-refinement`, `check-place-exhibits`)
-  test layouts that no longer exist; none is in `make test` or the deploy gates.
+- **Keyboard and reflow checks for the current pages.** `check-accessibility-interactions`
+  went with the stale scripts on 2026-11-04 (ARCHITECTURE #474): it tested the old
+  `/regions/*` layout from its first line. Its checks have no replacement yet: keyboard
+  search, definitions kept in the viewport, 320px reflow, unique IDs and the report's
+  no-JavaScript definitions. The axe gate still runs on every deploy.
 - **Private schools, separated further.** NJDOE enrollment by district of residence would
   split charter and choice students out of "public" (#453).
 
 ### Home page leftovers (Milestones 57, #447)
 
-- **Unused home stylesheets.** `home-plate.css`, `home-refresh.css`, `home-horizon.css`,
-  `landing-search-first.css` and `home-tool-previews.css` are no longer imported by the
-  home page (#447); delete them and lower `colourBaseline.json`.
-- **`check-accessibility-interactions.mjs` fails on the home page** before its map step:
-  it expects the national trend chart open, which #444 put behind a disclosure.
 - **The footer is taller than half the home page** (publisher notices, every source, source
   history, notice). A site-wide change: the source list could collapse behind its heading.
-
-- **Dead national-card CSS.** Rules for `.national-backdrop`, `.national-benchmark` and
-  `.national-rate` in `web/app/home-plate.css`, `home-refresh.css` and `ui-refinement.css`
-  match nothing since #444; removing them lowers `colourBaseline.json` too.
-- **`web/scripts/check-ui-refinement.mjs` checks the pre-#246 home page** (a "Home prices
-  · past year" heading that no longer exists) and fails on any current build.
 
 ### Calendar — dated and recurring chores
 
@@ -202,13 +191,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       address, so the build refuses rather than publish one that could change; the
       scheduled run then reports a failed build. Fix: `cd web && npm run routes:refresh`,
       review and commit. Rare: every place with any observation already has an address.
-
-- [ ] **The atlas's one-off visual checks predate its upgrade.** (found 2026-10-22,
-      ARCHITECTURE #428) `web/scripts/check-atlas-*.mjs`, `check-housing-atlas.mjs`,
-      `check-county-cabinet.mjs`, `check-shared-navigation.mjs` and
-      `check-state-refinement.mjs` look for the retired level breadcrumb, pin-compare or
-      "Compare counties" panel. None runs on deploy (the accessibility gate does, and
-      passes); update or delete each when it is next needed.
 
 - [ ] **The hottest counties' share image is hard to read.** (found 2026-11-03, #465) Its
       slope chart draws county labels at about 6px even on the page at 700px, so neither

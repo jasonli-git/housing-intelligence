@@ -18,7 +18,7 @@
  * across the map any more, so the lean bought nothing and cost the centre its flatness.
  *
  * Every function here is pure and every unit is explicit, so `globe.test.ts` exercises
- * the arithmetic with no DOM, the way `lib/scale.ts` does for the choropleth (#48).
+ * the arithmetic with no DOM.
  */
 
 const DEG = Math.PI / 180;

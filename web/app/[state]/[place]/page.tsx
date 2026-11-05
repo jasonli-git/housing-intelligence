@@ -656,13 +656,13 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   return glossTree(<>
     <Masthead affordability={{ kind: "route" }} />
     <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact}`}>
-      <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county && !isCounty ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
+      <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
       <PosterNav links={townLinks} />
 
-      <header className={`${styles.panel} ${styles.hero}`} data-kind={isCounty ? "county" : isZip ? "zip" : "town"}>
+      <header className={`${styles.panel} ${styles.hero}`} data-kind={isZip ? "zip" : "town"}>
         {region.state_code === "NJ" && <GardenStateArtwork header />}
         <div>
-          <p className={styles.kicker}>{county && !isCounty ? `${displayName(county)}, ` : ""}{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""}</p>
+          <p className={styles.kicker}>{county ? `${displayName(county)}, ` : ""}{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""}</p>
           <h1>{name}</h1>
           {headline && <p className={styles.headline}>{headline}</p>}
           <ComputedBadge />
@@ -782,7 +782,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         {sameHouseRows.map((row) => <div key={row.key} className={styles.townBar} data-own={row.own || undefined}>
           <span>{row.label}</span><div><i style={{ width: `${(row.rate / sameHousePeak) * 100}%` }} /></div><strong>{dollars(billFor(row.rate))}</strong>
         </div>)}
-        <p className={styles.caption}>{ratio !== null ? `Assessments are ${assessment}: ${ratio.toFixed(0)}% of market value. ` : ""}{revaluedIn ? `Last revaluation ${Math.round(revaluedIn)}. ` : ""}{isCounty ? "Each effective rate" : "Each town’s effective rate"} applied to one price, not any home’s actual bill. NJ Division of Taxation, {taxRate.period_end.slice(0, 4)}.</p>
+        <p className={styles.caption}>{ratio !== null ? `Assessments are ${assessment}: ${ratio.toFixed(0)}% of market value. ` : ""}{revaluedIn ? `Last revaluation ${Math.round(revaluedIn)}. ` : ""}Each town’s effective rate applied to one price, not any home’s actual bill. NJ Division of Taxation, {taxRate.period_end.slice(0, 4)}.</p>
       </section>}
       </Chapter>
 
@@ -832,7 +832,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
       <Chapter id="commute" title="Work and school">
       {workBars.length > 0 && <section id="workday" className={`${styles.panel} ${styles.workday}`}>
-        <h2>{elsewhere !== null ? (isCounty ? `${(100 - elsewhere).toFixed(0)}% of residents’ jobs are in the county` : `${elsewhere.toFixed(0)}% of residents work outside ${isZip ? "the ZIP code" : "town"}`) : "Where the workday goes"}{leadPlace ? (isCounty ? `, led by ${leadPlace.name}` : `, most often in ${leadPlace.name}`) : ""}</h2>
+        <h2>{elsewhere !== null ? `${elsewhere.toFixed(0)}% of residents work outside ${isZip ? "the ZIP code" : "town"}` : "Where the workday goes"}{leadPlace ? `, most often in ${leadPlace.name}` : ""}</h2>
         {modes.length > 0 && <div className={styles.commute}>
           <div className={styles.stack}>{modes.map((mode) => <i key={mode.label} title={`${mode.label}: ${mode.value.toFixed(0)}%`} style={{ flexGrow: mode.value, background: mode.color }} />)}{modeOther > 0 && <i title={`Other: ${modeOther.toFixed(0)}%`} style={{ flexGrow: modeOther, background: "var(--tick)" }} />}</div>
           <ul className={styles.key}>{modes.map((mode) => <li key={mode.label}><i style={{ background: mode.color }} />{mode.label} {mode.value.toFixed(0)}%</li>)}{modeOther > 0 && <li><i style={{ background: "var(--tick)" }} />Other {modeOther.toFixed(0)}%</li>}</ul>
@@ -876,7 +876,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         {ground.map((g) => <div key={g.id} className={styles.strip}><span>{g.label}</span><div><i style={{ left: `${g.position * 100}%` }} /></div><strong>{g.value}</strong></div>)}
       </section>}
 
-      {shops.length > 0 && !isCounty && <section className={`${styles.panel} ${styles.street}`}>
+      {shops.length > 0 && <section className={`${styles.panel} ${styles.street}`}>
         <h2>On the map in {name}</h2>
         <div className={styles.facts}>{shops.map((shop) => <div key={shop.label}><strong>{shop.value}</strong><span>{shop.label}</span></div>)}</div>
         <p className={styles.caption}>Mapped in OpenStreetMap, so some may be missing.</p>
@@ -905,7 +905,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
       <Chapter id="wider" title="The wider county">
       {county && contextFacts.length > 0 && <details id="county-context" className={`${styles.panel} ${styles.context}`}>
-        <summary><span><strong>{isCounty ? "Market trends" : `${displayName(county)} context`}</strong><small>{isCounty ? "Pace of sales, heat, prices against incomes, and moves" : `The wider market, published by county, not ${name} alone`}</small></span><span className={styles.contextFacts}>{contextFacts.map((fact) => <span key={fact}>{fact}</span>)}</span></summary>
+        <summary><span><strong>{`${displayName(county)} context`}</strong><small>{`The wider market, published by county, not ${name} alone`}</small></span><span className={styles.contextFacts}>{contextFacts.map((fact) => <span key={fact}>{fact}</span>)}</span></summary>
       {domNow && domUsual !== null && county && <section className={styles.contextItem}>
         <h2>Homes in {displayName(county)} sit about {Math.round(domNow.value)} days, {Math.abs(domGap) < 3 ? "close to usual" : domGap < 0 ? `${Math.round(-domGap)} faster than usual` : `${Math.round(domGap)} slower than usual`}</h2>
         <svg className={styles.scatter} viewBox={`0 0 ${DW} ${DH}`} role="img" aria-label={`Median days on market in ${displayName(county)} by month, now ${Math.round(domNow.value)} days, usually ${Math.round(domUsual)}.`}>
@@ -916,7 +916,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <circle cx={dx(domSeries.length - 1)} cy={dy(domNow.value)} r="5" fill="var(--series-2)" />
           {domYears.map(({ year, i }) => <text key={year} x={dx(i)} y={DH - 6} textAnchor="middle">{year}</text>)}
         </svg>
-        <p className={styles.caption}>Median days on market, by month{domYearAgo ? ` · ${Math.round(domYearAgo.value)} days a year earlier` : ""}{domRank && countyWaits.length ? ` · ${ordinal(domRank)} quickest of ${countyWaits.length} NJ counties` : ""}. {isCounty ? "These" : "County figures, not this town alone, and they"} rise and fall with the seasons. Realtor.com via FRED, {asOf(domNow)}.</p>
+        <p className={styles.caption}>Median days on market, by month{domYearAgo ? ` · ${Math.round(domYearAgo.value)} days a year earlier` : ""}{domRank && countyWaits.length ? ` · ${ordinal(domRank)} quickest of ${countyWaits.length} NJ counties` : ""}. County figures, not this town alone, and they rise and fall with the seasons. Realtor.com via FRED, {asOf(domNow)}.</p>
       </section>}
 
       {heatSeries.length > 20 && county && <section className={styles.contextItem}>
@@ -927,7 +927,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <text x={HL + 4} y={hy(heatBase) - 6}>1951–80 average, {Math.round(heatBase)} days</text>
           {heatSeries.filter((o) => yearOf(o) % 20 === 0).map((o) => <text key={o.period_end} x={HL + heatSeries.indexOf(o) * barW} y={HH - 6} textAnchor="middle">{yearOf(o)}</text>)}
         </svg>
-        <p className={styles.caption}>Days over 90°F each year; orange is the latest ten, the average in the title{heatRank && allHeat.length ? ` · ${ordinal(heatRank)} hottest of ${allHeat.length} NJ counties` : ""}. {isCounty ? "A county average" : "A county average, not this town’s readings"} from NOAA nClimGrid-Daily.{ground.find((g) => g.id === "tree_canopy_homes_share") ? ` Shade: ${ground.find((g) => g.id === "tree_canopy_homes_share")!.value} tree canopy over ${name}’s homes.` : ""}</p>
+        <p className={styles.caption}>Days over 90°F each year; orange is the latest ten, the average in the title{heatRank && allHeat.length ? ` · ${ordinal(heatRank)} hottest of ${allHeat.length} NJ counties` : ""}. A county average, not this town’s readings from NOAA nClimGrid-Daily.{ground.find((g) => g.id === "tree_canopy_homes_share") ? ` Shade: ${ground.find((g) => g.id === "tree_canopy_homes_share")!.value} tree canopy over ${name}’s homes.` : ""}</p>
       </section>}
 
       {persistence && county && <section className={styles.contextItem}>
@@ -938,7 +938,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <text x={UP} y={UH - 6}>{persistence.first_year}</text>
           <text x={UW - UP} y={UH - 6} textAnchor="end">{persistence.last_year}</text>
         </svg>
-        <p className={styles.caption}>{persistence.vs_median_low !== null && persistence.vs_median_high !== null ? `Likely between ${againstUsual(persistence.vs_median_low)} and ${againstUsual(persistence.vs_median_high)}. ` : ""}The line is the usual level, the middle of {persistence.years} years{persistence.peak_year ? `; the peak was ${persistence.peak_year}` : ""}. {isCounty ? `Through ${persistence.last_year}.` : `County figures through ${persistence.last_year}, not this town.`} FHFA and Census SAIPE. · <Link href="/stories/is-today-unusual">Full story</Link></p>
+        <p className={styles.caption}>{persistence.vs_median_low !== null && persistence.vs_median_high !== null ? `Likely between ${againstUsual(persistence.vs_median_low)} and ${againstUsual(persistence.vs_median_high)}. ` : ""}The line is the usual level, the middle of {persistence.years} years{persistence.peak_year ? `; the peak was ${persistence.peak_year}` : ""}. County figures through {persistence.last_year}, not this town. FHFA and Census SAIPE. · <Link href="/stories/is-today-unusual">Full story</Link></p>
       </section>}
 
         {movers.length > 1 && <div className={styles.contextItem}><h2>Moving in and out of {migration!.county_name} County</h2>

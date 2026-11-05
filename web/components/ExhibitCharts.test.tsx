@@ -2,7 +2,6 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { ConstructionExhibit, HistoryExhibit, MigrationExhibit, PaycheckExhibit, SaleExhibit } from "./ExhibitCharts";
-import { ExhibitGallery } from "./ExhibitGallery";
 import type { Migration, PacketMetric, Persistence } from "@/lib/api";
 
 afterEach(cleanup);
@@ -51,11 +50,5 @@ describe("learning exhibits",()=>{
     render(<SaleExhibit median={300000} period="Jan 2024 to Jun 2026"/>);
     expect(screen.queryByRole("button",{name:"Lower quartile"})).toBeNull();
     expect(screen.getByText("$300,000")).toBeTruthy();
-  });
-  it("renders the exhibits with no gallery controls",()=>{
-    const {container}=render(<ExhibitGallery><p>Published figure</p></ExhibitGallery>);
-    expect(screen.queryByRole("button")).toBeNull();
-    expect(container.querySelector(".exhibit-gallery")).toBeTruthy();
-    expect(screen.getByText("Published figure")).toBeTruthy();
   });
 });

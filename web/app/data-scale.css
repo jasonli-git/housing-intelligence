@@ -38,7 +38,6 @@
 
 /* Scale belongs to the map's base, not the title or search instructions. */
 .coverage-search-interaction { position:relative; }
-.nation-page .landing-canvas .coverage-search-interaction .coverage-search-overlay { top:0; }
 .coverage-scale-slot { position:relative; z-index:4; width:100%; padding:0 1rem .3rem; }
 .coverage-scale-slot .scale-map-edge { max-width:680px; margin:.1rem auto 0; justify-content:center; text-align:center; border-top:0; }
 .coverage-scale-slot .scale-signature { flex-basis:100%; }

@@ -95,7 +95,8 @@ QUESTIONS: tuple[Question, ...] = (Question("what_stands_out", "What stands out 
 
 # Answers the reading no longer asks for. "What should I check before moving?" was
 # retired on 2026-10-05 (Milestone 43): the page answers it with rule-based checks
-# (`web/lib/homeChecks.ts`), so asking a model for it would pay for words no page shows.
+# (`web/lib/homeChecks.ts`, removed 2026-11-04 with the old layout), so asking a model
+# for it would pay for words no page shows.
 # A stored reading that still carries one is not stale for it (`freshness`), so retiring
 # a question costs no regeneration; new readings simply stop writing it.
 RETIRED_QUESTIONS: frozenset[str] = frozenset({"before_moving"})
