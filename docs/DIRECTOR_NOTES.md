@@ -1131,8 +1131,11 @@ Reasons:
 Considerations raised, not decided:
 
 - An RSS feed of new stories, generated at build time, as a channel the site owns.
-- Platform tags on links (`?utm_source=bluesky`), so the site's analytics can show which
-  platform brings visitors.
+- ~~Platform tags on links (`?utm_source=bluesky`)~~ — decided against (owner,
+  2026-11-05). The site has no analytics: its privacy text promises "no accounts,
+  cookies, analytics, advertising or third-party trackers", so nothing would read the
+  tags, and adding analytics to read them would break that promise. Each platform's own
+  post statistics stand in for now.
 - A newsletter, later.
 - Getting stories in front of local reporters (NJ.com, NJ Spotlight). This is separate
   from data-source outreach.
