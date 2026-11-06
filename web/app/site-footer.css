@@ -75,3 +75,9 @@ a.site-foot-repo:hover { border-color: var(--text-secondary); }
   .site-foot-repo { display: none; }
   .site-foot-pulse { display: none; }
 }
+
+/* The X and Bluesky marks beside their links (components/SocialIcons.tsx). */
+.social-mark { display: inline-block; width: 0.95em; height: 0.95em; margin-right: 0.3em; vertical-align: -0.12em; fill: currentColor; }
+a[aria-label] > .social-mark { margin-right: 0; }
+.follow-line { margin: 24px 0 0; font-size: 14px; color: var(--text-secondary); text-align: right; }
+.follow-line a { color: var(--text-primary); text-underline-offset: .2em; }

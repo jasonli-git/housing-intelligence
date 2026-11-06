@@ -5,6 +5,7 @@ import { Crumbs, Kind } from "@/components/Crumbs";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { Masthead } from "@/components/Masthead";
 import { StoryShare } from "@/components/StoryShare";
+import { FollowLine } from "@/components/SocialIcons";
 import { StoryShortcuts } from "@/components/StoryShortcuts";
 import { ThemedShot } from "@/components/ThemedShot";
 import { COLLECTIONS, storySlug } from "@/lib/storyLibrary";
@@ -59,6 +60,7 @@ export function StoryShell({ title, lede, takeaway, note, children, focus }: { t
             <Link className="story-next-all" href="/stories" prefetch={false}>All visual stories →</Link>
           </nav>
         </div>
+        <FollowLine />
       </main>
     </>
   );
