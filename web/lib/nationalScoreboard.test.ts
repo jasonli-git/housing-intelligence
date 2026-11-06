@@ -95,3 +95,66 @@ describe("the national scoreboard", () => {
     for (const t of marketTakeaways(tiles)) expect(`${t.headline} ${t.detail}`).not.toMatch(/because|due to|driven|will|expect|likely/i);
   });
 });
+
+describe("the scoreboard's 2026-11-05 additions", () => {
+  const quarter = (date: string, value: number) => ({ period_start: date, period_end: date, value });
+  const year = (y: number, value: number) => ({ period_start: `${y}-01-01`, period_end: `${y}-12-31`, value });
+
+  it("labels quarterly figures by quarter and compares them with the same quarter a year earlier", () => {
+    const vacancy = tile({ rentalVacancy: [quarter("2025-07-01", 7.1), quarter("2026-04-01", 7.3), quarter("2026-07-01", 7.6)] }, "vacancy")!;
+    expect(vacancy.period).toBe("Q3 2026");
+    expect(vacancy.value).toBe("7.6%");
+    expect(vacancy.change).toBe("+0.5 pts");
+    // More empty rentals is easier for a renter.
+    expect(vacancy.tone).toBe("easier");
+  });
+
+  it("gives sales, homeownership and delinquencies no tone: they are context, not easier or harder", () => {
+    const series = {
+      newHomeSales: [month("2025-09", 714_000), month("2026-09", 676_000)],
+      homeownership: [quarter("2025-07-01", 65.3), quarter("2026-07-01", 65.5)],
+      delinquency: [quarter("2025-04-01", 1.78), quarter("2026-04-01", 1.86)],
+    };
+    for (const id of ["sales", "ownership", "delinquency"]) expect(tile(series, id)!.tone).toBe("neutral");
+    expect(tile(series, "delinquency")!.change).toBe("+0.08 pts");
+    expect(tile(series, "sales")!.value).toBe("676K/yr");
+  });
+
+  it("prices affordability as the payment's share of the previous year's income", () => {
+    const series: Partial<ScoreSeries> = {
+      rate: { metricId: "mortgage_rate_30y_weekly", readings: [day("2025-10-28", 6.17), day("2026-10-29", 7.18)] },
+      newHomePrice: [quarter("2025-07-01", 400_000), quarter("2026-07-01", 393_300)],
+      income: [year(2024, 83_160), year(2025, 87_460)],
+    };
+    const afford = tile(series, "afford")!;
+    // Today: 2026's rate and price against 2025's income.
+    const now = (monthlyPayment(393_300 * 0.8, 7.18) / (87_460 / 12)) * 100;
+    expect(afford.now).toBeCloseTo(now, 6);
+    // A year ago: that week's rate and quarter's price against 2024's income.
+    const then = (monthlyPayment(400_000 * 0.8, 6.17) / (83_160 / 12)) * 100;
+    expect(afford.then).toBeCloseTo(then, 6);
+    expect(afford.value).toBe(`${now.toFixed(0)}%`);
+    expect(afford.tone).toBe(now - then >= 0.5 ? "harder" : now - then <= -0.5 ? "easier" : "flat");
+  });
+
+  it("leaves affordability out without an income to set the payment against", () => {
+    expect(tile({ rate: { metricId: "mortgage_rate_30y_weekly", readings: [day("2026-10-29", 7.18)] }, newHomePrice: [quarter("2026-07-01", 393_300)] }, "afford")).toBeUndefined();
+  });
+
+  it("writes a takeaway for each, naming the period it describes", () => {
+    const tiles = scoreboard({
+      ...empty,
+      rentalVacancy: [quarter("2025-07-01", 7.1), quarter("2026-07-01", 7.6)],
+      newHomeSales: [month("2025-09", 714_000), month("2026-09", 676_000)],
+      homeownership: [quarter("2025-07-01", 65.3), quarter("2026-07-01", 65.5)],
+      delinquency: [quarter("2025-04-01", 1.78), quarter("2026-04-01", 1.86)],
+    });
+    const told = new Map(marketTakeaways(tiles).map((t) => [t.id, t]));
+    expect(told.get("vacancy")).toMatchObject({ headline: "More empty rentals" });
+    expect(told.get("vacancy")!.detail).toContain("Q3 2026");
+    expect(told.get("sales")).toMatchObject({ headline: "Fewer new homes selling" });
+    expect(told.get("ownership")).toMatchObject({ headline: "Homeownership up" });
+    expect(told.get("delinquency")).toMatchObject({ headline: "More owners behind on payments" });
+    expect(told.get("delinquency")!.detail).toContain("Q2 2026");
+  });
+});

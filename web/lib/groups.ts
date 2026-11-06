@@ -74,6 +74,11 @@ export const GROUPS: readonly Group[] = [
       "housing_starts_saar",
       "new_home_months_supply",
       "new_home_median_sale_price",
+      "new_home_sales_saar",
+      "us_median_hh_income",
+      "hvs_rental_vacancy_rate",
+      "hvs_homeownership_rate",
+      "mortgage_delinquency_rate",
     ],
   },
   {

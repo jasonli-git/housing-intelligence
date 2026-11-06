@@ -328,6 +328,83 @@ metrics:
     changed: false
     shown: false
 
+  new_home_sales_saar:
+    label: New houses sold, annual rate
+    unit: count
+    frequency: monthly
+    direction: neutral
+    description: >-
+      New single-family houses sold in the month, at the yearly pace the month would set,
+      seasonally adjusted (Census Bureau and HUD, FRED HSN1F, published in thousands).
+      National only. Existing-home sales are NAR's and copyrighted.
+    source_id: fred
+    record_type: survey
+    originator: U.S. Census Bureau
+    ranked: false
+    changed: false
+    shown: false
+
+  us_median_hh_income:
+    label: Median household income, national
+    unit: usd
+    frequency: annual
+    direction: higher_is_better
+    description: >-
+      The nation's median household income in the year's own dollars (Census Bureau,
+      Current Population Survey; FRED MEHOINUSA646N). National only; places use the ACS.
+    source_id: fred
+    record_type: survey
+    originator: U.S. Census Bureau
+    ranked: false
+    changed: false
+    shown: false
+
+  hvs_rental_vacancy_rate:
+    label: Rental vacancy rate, national
+    unit: percent
+    frequency: quarterly
+    direction: neutral
+    description: >-
+      The share of rental homes standing empty and for rent in the quarter (Census Bureau,
+      Housing Vacancy Survey; FRED RRVRUSQ156N), not seasonally adjusted. National only.
+    source_id: fred
+    record_type: survey
+    originator: U.S. Census Bureau
+    ranked: false
+    changed: false
+    shown: false
+
+  hvs_homeownership_rate:
+    label: Homeownership rate, national
+    unit: percent
+    frequency: quarterly
+    direction: neutral
+    description: >-
+      The share of occupied homes lived in by their owners in the quarter (Census Bureau,
+      Housing Vacancy Survey; FRED RHORUSQ156N), not seasonally adjusted. National only.
+    source_id: fred
+    record_type: survey
+    originator: U.S. Census Bureau
+    ranked: false
+    changed: false
+    shown: false
+
+  mortgage_delinquency_rate:
+    label: Single-family mortgage delinquency rate
+    unit: percent
+    frequency: quarterly
+    direction: lower_is_better
+    description: >-
+      The share of single-family residential mortgages held by commercial banks that are
+      30 or more days past due, seasonally adjusted (Federal Reserve; FRED DRSFRMACBS).
+      Bank-held loans only. National only.
+    source_id: fred
+    record_type: administrative
+    originator: Board of Governors of the Federal Reserve System
+    ranked: false
+    changed: false
+    shown: false
+
   unemployment_rate:
     label: Unemployment rate
     unit: percent
