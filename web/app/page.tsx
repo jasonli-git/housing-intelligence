@@ -158,8 +158,10 @@ export default async function HousingLandingPage() {
             <span className={home.tag}>{TONE_WORDS[story.tone]}</span>
             <h4>{story.headline}</h4>
             {lead(story.id) && <p className={home.lead}><b>{lead(story.id)!.value}</b>{lead(story.id)!.label}</p>}
-            <p className="visually-hidden">{story.detail}</p>
-            <ul className="visually-hidden">{story.tiles.map((t) => <li key={t.id}>{t.summary}</li>)}</ul>
+            {/* Screen-reader copies of the back: a definition popup cannot open in hidden
+                text, so the glossary check skips them (as /changes's hidden caption). */}
+            <p className="visually-hidden" data-terms="off">{story.detail}</p>
+            <ul className="visually-hidden" data-terms="off">{story.tiles.map((t) => <li key={t.id}>{t.summary}</li>)}</ul>
           </>}
           back={<>
             <span className={home.tag}>{story.headline}</span>
