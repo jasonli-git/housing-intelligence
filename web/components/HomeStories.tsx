@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LIBRARY_STORIES } from "@/lib/storyLibrary";
+import { FollowLine } from "./SocialIcons";
 import { ThemedShot } from "./ThemedShot";
 
 export function HomeStories() {
@@ -17,5 +18,6 @@ export function HomeStories() {
         <ThemedShot name="stories/the-flood-claims-calendar" width={1440} height={900} className="gallery-fragment gallery-calendar" />
       </div>
     </Link>
+    <FollowLine />
   </section>;
 }

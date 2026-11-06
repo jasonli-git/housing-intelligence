@@ -19,6 +19,14 @@ export const PRIVACY_EMAIL = "privacy@jasonli.app";
 /** The date the terms and privacy pages were last changed; each prints it. */
 export const POLICIES_UPDATED = "2026-10-10";
 
+/**
+ * The site's social accounts (Director Notes, *Social media lineup*). Plain links only:
+ * an embedded follow button or timeline would load the platform's scripts, and the
+ * privacy page promises no third-party trackers.
+ */
+export const X_URL = "https://x.com/HousingIntelHQ";
+export const BLUESKY_URL = "https://bsky.app/profile/housing.jasonli.app";
+
 export const REPO_URL = "https://github.com/jasonli-git/housing-intelligence";
 export const FRED_TERMS_URL = "https://fred.stlouisfed.org/docs/api/terms_of_use.html";
 

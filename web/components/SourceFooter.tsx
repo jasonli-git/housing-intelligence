@@ -3,9 +3,10 @@ import Link from "next/link";
 import { BuiltAgo } from "@/components/BuiltAgo";
 import { HOME_TOOLS } from "@/components/HomeTools";
 import { SiteStatus } from "@/components/SiteStatus";
+import { BlueskyMark, XMark } from "@/components/SocialIcons";
 import { api } from "@/lib/api";
 import { dayLabel } from "@/lib/freshness";
-import { CONTACT_EMAIL, REPO_URL } from "@/lib/site";
+import { BLUESKY_URL, CONTACT_EMAIL, REPO_URL, X_URL } from "@/lib/site";
 import { FOOTER_NOTICE_SOURCES } from "@/lib/notices";
 import { byInstitution, isRestricted, shortPublisher } from "@/lib/sources";
 
@@ -153,6 +154,17 @@ export async function SourceFooter() {
               License: AGPL-3.0 <span aria-hidden="true">↗</span>
             </a>
           </nav>
+        </section>
+
+        {/* Plain links, no embedded follow buttons: those load the platforms' trackers. */}
+        <section className="site-foot-band" aria-label="Follow">
+          <h2 className="site-foot-label">Follow</h2>
+          <p className="site-foot-intro">
+            New stories every week on{" "}
+            <a href={X_URL} rel="noreferrer noopener" target="_blank" aria-label="X"><XMark /></a>
+            {" and "}
+            <a href={BLUESKY_URL} rel="noreferrer noopener" target="_blank"><BlueskyMark />Bluesky</a>
+          </p>
         </section>
 
         {/* The site's pulse, a bubble each: when it was built, when its sources were last

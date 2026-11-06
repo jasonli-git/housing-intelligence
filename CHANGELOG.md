@@ -13,6 +13,9 @@ are not yet recorded here.
 
 ### Added
 
+- **Links to the site's X and Bluesky accounts** (2026-11-05): a line under every story
+  and under the home page's stories card, and a Follow row in the footer. Plain links with
+  inline logos; no embedded widgets, so nothing loads from either platform.
 - **The Wawa line counts stores from Overture Places** (2026-11-03, ARCHITECTURE #472):
   292 Wawas where OpenStreetMap had 261, and 112 QuickCheks where it had 118. Its finding
   holds; the takeaway now calls the two sides alike whenever the gap is within chance,
