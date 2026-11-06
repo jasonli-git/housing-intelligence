@@ -44,6 +44,16 @@ export function monthLabel(date: string): string {
   return `${MONTHS[Number(date.slice(5, 7)) - 1]} ${date.slice(0, 4)}`;
 }
 
+/** "2026-07-01" → "Q3 2026", for a quarterly series. */
+export function quarterLabel(date: string): string {
+  return `Q${Math.floor((Number(date.slice(5, 7)) - 1) / 3) + 1} ${date.slice(0, 4)}`;
+}
+
+/** "2025-01-01" → "2025", for a yearly series. */
+function yearLabel(date: string): string {
+  return date.slice(0, 4);
+}
+
 function weekLabel(date: string): string {
   return `${MONTHS[Number(date.slice(5, 7)) - 1]} ${Number(date.slice(8, 10))}`;
 }
@@ -164,6 +174,13 @@ export type ScoreSeries = {
   newHomeSupply: readonly Reading[];
   /** Not a tile: the price the summary prices a mortgage on. */
   newHomePrice?: readonly Reading[];
+  /** 2026-11-05: new-home sales, national median household income (yearly), the rental
+   *  vacancy and homeownership rates and the mortgage delinquency rate (quarterly). */
+  newHomeSales?: readonly Reading[];
+  income?: readonly Reading[];
+  rentalVacancy?: readonly Reading[];
+  homeownership?: readonly Reading[];
+  delinquency?: readonly Reading[];
 };
 
 /** Up to eight tiles, in reading order; a series with no readings drops its tile. */
@@ -201,12 +218,12 @@ export function scoreboard(series: ScoreSeries): ScoreTile[] {
 
   percentChange({ id: "prices", metricId: "fhfa_hpi_us_monthly", label: "Home prices y/y", unit: "percent", easier: "down", source: { name: "FHFA", href: "https://www.fhfa.gov/data/hpi/datasets?tab=monthly-data" } }, series.hpi);
 
-  const level = (spec: Spec, readings: readonly Reading[], show: (n: number) => string, change: (now: number, then: number) => { text: string; n: number; flatBelow: number }) => {
+  const level = (spec: Spec, readings: readonly Reading[], show: (n: number) => string, change: (now: number, then: number) => { text: string; n: number; flatBelow: number }, label: (date: string) => string = monthLabel) => {
     const r = sorted(readings);
     const latest = r.at(-1);
     if (!latest) return;
     const pair = sameMonthLastYear(r);
-    tiles.push(tile(spec, show(latest.value), pair ? change(latest.value, pair[0].value) : null, monthLabel(latest.period_start), trendOf(r), latest.value, pair?.[0].value ?? null));
+    tiles.push(tile(spec, show(latest.value), pair ? change(latest.value, pair[0].value) : null, label(latest.period_start), trendOf(r), latest.value, pair?.[0].value ?? null));
   };
   const pct = (now: number, then: number) => {
     const n = then > 0 ? (now / then - 1) * 100 : 0;
@@ -230,7 +247,55 @@ export function scoreboard(series: ScoreSeries): ScoreTile[] {
   level({ id: "supply", metricId: "new_home_months_supply", label: "New-home supply", unit: "months", easier: "up", source: { name: "Census", href: FRED("MSACSR") } },
     series.newHomeSupply, (n) => `${n.toFixed(1)} mo`, (now, then) => ({ text: `${signed(now - then, 1)} mo`, n: now - then, flatBelow: 0.05 }));
 
+  // 2026-11-05. More sales is neither easier nor harder for a buyer, so it has no tone;
+  // nor do homeownership and delinquencies, which describe owners rather than buyers.
+  const points = (now: number, then: number, digits = 1) => ({ text: `${signed(now - then, digits)} pts`, n: now - then, flatBelow: 0.5 * 10 ** -digits });
+  level({ id: "sales", metricId: "new_home_sales_saar", label: "New-home sales", unit: "count", easier: null, source: { name: "Census", href: FRED("HSN1F") } },
+    series.newHomeSales ?? [], (n) => `${compact(n)}/yr`, pct);
+  level({ id: "vacancy", metricId: "hvs_rental_vacancy_rate", label: "Rental vacancy", unit: "percent", easier: "up", source: { name: "Census", href: FRED("RRVRUSQ156N") } },
+    series.rentalVacancy ?? [], (n) => `${n.toFixed(1)}%`, (now, then) => points(now, then), quarterLabel);
+  level({ id: "ownership", metricId: "hvs_homeownership_rate", label: "Homeownership", unit: "percent", easier: null, source: { name: "Census", href: FRED("RHORUSQ156N") } },
+    series.homeownership ?? [], (n) => `${n.toFixed(1)}%`, (now, then) => points(now, then), quarterLabel);
+  level({ id: "delinquency", metricId: "mortgage_delinquency_rate", label: "Mortgage delinquencies", unit: "percent", easier: null, source: { name: "Federal Reserve", href: FRED("DRSFRMACBS") } },
+    series.delinquency ?? [], (n) => `${n.toFixed(2)}%`, (now, then) => points(now, then, 2), quarterLabel);
+  level({ id: "income", metricId: "us_median_hh_income", label: "Median household income", unit: "count", easier: "up", source: { name: "Census", href: FRED("MEHOINUSA646N") } },
+    series.income ?? [], (n) => `$${Math.round(n).toLocaleString("en-US")}`, pct, yearLabel);
+
+  const afford = affordability(series);
+  if (afford) tiles.push(afford);
   return tiles;
+}
+
+/**
+ * How much of a typical household's income the payment on a typical new home takes: the
+ * monthly principal and interest on the median new-home price, 20% down, at the weekly
+ * rate, over a twelfth of the median household income.
+ *
+ * Income is a year's figure published the following autumn, so each date is set against
+ * the year before it: today against 2025's income, a year ago against 2024's. That is the
+ * income a reader could have known at the time, and keeps the comparison a year apart.
+ */
+function affordability(series: ScoreSeries): ScoreTile | null {
+  const rates = sorted(series.rate?.readings ?? []), prices = sorted(series.newHomePrice ?? []), incomes = sorted(series.income ?? []);
+  const asOf = (r: Reading[], date: string) => r.filter((x) => x.period_start <= date).at(-1) ?? null;
+  const shareOn = (date: string) => {
+    const rate = asOf(rates, date), price = asOf(prices, date), income = asOf(incomes, `${Number(date.slice(0, 4)) - 1}-12-31`);
+    return rate && price && income ? (monthlyPayment(price.value * (1 - DOWN), rate.value) / (income.value / 12)) * 100 : null;
+  };
+  const latest = rates.at(-1);
+  if (!latest || !series.rate) return null;
+  const now = shareOn(latest.period_start);
+  if (now === null) return null;
+  const then = shareOn(yearEarlier(latest.period_start));
+  const from = yearEarlier(yearEarlier(latest.period_start));
+  const trend: TrendPoint[] = [...prices.filter((p) => p.period_start >= from).map((p) => p.period_start), latest.period_start]
+    .flatMap((date) => { const value = shareOn(date); return value === null ? [] : [{ date, value }]; });
+  return tile(
+    { id: "afford", metricId: "us_median_hh_income", label: "Payment share of income", unit: "percent", easier: "down", source: { name: "Census", href: FRED("MEHOINUSA646N") } },
+    `${now.toFixed(0)}%`,
+    then === null ? null : { text: `${signed(now - then, 1)} pts`, n: now - then, flatBelow: 0.5 },
+    weekLabel(latest.period_start), trend, now, then,
+  );
 }
 
 /** The monthly principal and interest on a 30-year fixed loan, in dollars. */
@@ -281,6 +346,14 @@ export function marketTakeaways(tiles: readonly ScoreTile[], homePrice: number |
     out.push({ id: "rate", headline, detail: `A typical 30-year mortgage rate is ${rate.now.toFixed(2)}%, against ${rate.then.toFixed(2)}% a year ago.${effect}` });
   }
 
+  const afford = by.get("afford"), income = by.get("income");
+  if (compared(afford)) {
+    const headline = afford.direction === "up" ? "Homes less affordable" : afford.direction === "down" ? "Homes more affordable" : "Homes about as affordable";
+    const pay = homePrice && rate ? `The payment on a typical new home (${dollars(homePrice)}, with 20% down, at ${rate.now.toFixed(2)}%) is about ${dollars(Math.round(monthlyPayment(homePrice * (1 - DOWN), rate.now) / 10) * 10)} a month. ` : "";
+    const of = income ? ` (${income.value} in ${income.period})` : "";
+    out.push({ id: "afford", headline, detail: `${pay}That is ${afford.now.toFixed(0)}% of a typical household's income${of}, against ${afford.then.toFixed(0)}% a year earlier. Lenders often look for 28% or less.` });
+  }
+
   const listings = by.get("listings"), days = by.get("days"), cuts = by.get("cuts");
   if (compared(listings)) {
     const headline = listings.direction === "up" ? "More homes to choose from" : listings.direction === "down" ? "Fewer homes to choose from" : "About as many homes to choose from";
@@ -306,12 +379,37 @@ export function marketTakeaways(tiles: readonly ScoreTile[], homePrice: number |
     out.push({ id: "rent", headline, detail: `Rents rose ${rent.now.toFixed(1)}% over the past year${steady ? ", about as much as the year before" : `, against ${rent.then.toFixed(1)}% the year before`}.` });
   }
 
+  const vacancy = by.get("vacancy");
+  if (compared(vacancy)) {
+    const headline = vacancy.direction === "up" ? "More empty rentals" : vacancy.direction === "down" ? "Fewer empty rentals" : "Rental vacancy steady";
+    out.push({ id: "vacancy", headline, detail: `${vacancy.now.toFixed(1)}% of rental homes stood empty and for rent in ${vacancy.period}, against ${vacancy.then.toFixed(1)}% a year earlier.` });
+  }
+
   const starts = by.get("starts"), supply = by.get("supply");
   if (compared(starts)) {
     const headline = starts.direction === "down" ? "Fewer homes being built" : starts.direction === "up" ? "More homes being built" : "About as many homes being built";
     const change = starts.direction === "flat" ? "about as many homes as a year ago" : `${bare(starts)} ${starts.direction === "up" ? "more" : "fewer"} homes than a year ago`;
     const stock = supply ? ` Unsold new homes would take ${supply.now.toFixed(1)} months to sell at today's pace${supply.now > 6 ? ", more than the roughly six months usually read as balanced" : supply.now < 4 ? ", less than the roughly six months usually read as balanced" : ""}.` : "";
     out.push({ id: "building", headline, detail: `Construction began on ${change}.${stock}` });
+  }
+
+  const sales = by.get("sales");
+  if (compared(sales)) {
+    const headline = sales.direction === "up" ? "More new homes selling" : sales.direction === "down" ? "Fewer new homes selling" : "New-home sales steady";
+    const change = sales.direction === "flat" ? "about as many as a year earlier" : `${bare(sales)} ${sales.direction === "up" ? "more" : "fewer"} than a year earlier`;
+    out.push({ id: "sales", headline, detail: `New houses sold at a yearly pace of ${compact(sales.now)} in ${sales.period}, ${change}.` });
+  }
+
+  const ownership = by.get("ownership");
+  if (compared(ownership)) {
+    const headline = ownership.direction === "up" ? "Homeownership up" : ownership.direction === "down" ? "Homeownership down" : "Homeownership steady";
+    out.push({ id: "ownership", headline, detail: `${ownership.now.toFixed(1)}% of occupied homes were lived in by their owners in ${ownership.period}, against ${ownership.then.toFixed(1)}% a year earlier.` });
+  }
+
+  const late = by.get("delinquency");
+  if (compared(late)) {
+    const headline = late.direction === "up" ? "More owners behind on payments" : late.direction === "down" ? "Fewer owners behind on payments" : "About as many owners behind";
+    out.push({ id: "delinquency", headline, detail: `${late.now.toFixed(2)}% of single-family mortgages held by banks were 30 days or more late in ${late.period}, against ${late.then.toFixed(2)}% a year earlier.` });
   }
   return out;
 }

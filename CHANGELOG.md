@@ -13,6 +13,12 @@ are not yet recorded here.
 
 ### Added
 
+- **The home page's US market section is a dashboard of ten turning cards** (2026-11-05,
+  ARCHITECTURE #475): each card shows its takeaway and turns over for the chart, sentence
+  and source; the cards sit in four groups (Buying, Renting, Building, Owners), and on a
+  phone each is a row that opens in place. Five new national measures from FRED: how much
+  of a typical income a typical new home's payment takes, rental vacancy, new-home sales,
+  homeownership and mortgage delinquencies.
 - **Links to the site's X and Bluesky accounts** (2026-11-05): a line under every story
   and under the home page's stories card, and a Follow row in the footer. Plain links with
   inline logos; no embedded widgets, so nothing loads from either platform.

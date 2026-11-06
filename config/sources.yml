@@ -690,6 +690,13 @@ sources:
         Department of Housing and Urban Development, New Privately-Owned Housing Units
         Started [HOUST], Monthly Supply of New Houses [MSACSR] and Median Sales Price of
         New Houses Sold [MSPUS], retrieved from FRED.
+      - >-
+        New-home sales, rental vacancy and homeownership: U.S. Census Bureau, New One Family
+        Houses Sold [HSN1F], Rental Vacancy Rate [RRVRUSQ156N] and Homeownership Rate
+        [RHORUSQ156N]; median household income: U.S. Census Bureau, Median Household Income
+        in the United States [MEHOINUSA646N]; mortgage delinquencies: Board of Governors of
+        the Federal Reserve System, Delinquency Rate on Single-Family Residential Mortgages
+        [DRSFRMACBS]; all retrieved from FRED, Federal Reserve Bank of St. Louis.
     url: https://api.stlouisfed.org/fred
     homepage: https://fred.stlouisfed.org/
     cadence: monthly

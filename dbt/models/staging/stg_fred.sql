@@ -85,17 +85,18 @@ select
         when 'CUSR0000SEHA' then 'cpi_rent_primary_residence'
         when 'HOUST' then 'housing_starts_saar'
         when 'MSACSR' then 'new_home_months_supply'
+        when 'HSN1F' then 'new_home_sales_saar'
     end as metric_id,
     'US' as geoid,
     'nation' as level,
     date as period_start,
     last_day(date) as period_end,
-    try_cast(value as double) * case when series_id = 'HOUST' then 1000 else 1 end as value,
+    try_cast(value as double) * case when series_id in ('HOUST', 'HSN1F') then 1000 else 1 end as value,
     'national' as match_method,
     series_id as release_layer,
     'current' as release_vintage
 from read_parquet('{{ var("parquet_dir") }}/fred/current/*.parquet')
-where series_id in ('ACTLISCOUUS', 'PRIREDCOUUS', 'MEDDAYONMARUS', 'CUSR0000SEHA', 'HOUST', 'MSACSR')
+where series_id in ('ACTLISCOUUS', 'PRIREDCOUUS', 'MEDDAYONMARUS', 'CUSR0000SEHA', 'HOUST', 'MSACSR', 'HSN1F')
   and try_cast(value as double) is not null
 
 union all
@@ -136,3 +137,45 @@ select
     'current' as release_vintage
 from read_parquet('{{ var("parquet_dir") }}/fred/current/*.parquet')
 where series_id = 'MSPUS' and try_cast(value as double) is not null
+
+union all
+
+-- Quarterly national rates (2026-11-05): Census's rental vacancy and homeownership rates
+-- and the Federal Reserve's single-family mortgage delinquency rate, in percent, each
+-- dated to its quarter.
+select
+    'fred' as source_id,
+    case series_id
+        when 'RRVRUSQ156N' then 'hvs_rental_vacancy_rate'
+        when 'RHORUSQ156N' then 'hvs_homeownership_rate'
+        when 'DRSFRMACBS' then 'mortgage_delinquency_rate'
+    end as metric_id,
+    'US' as geoid,
+    'nation' as level,
+    date as period_start,
+    last_day(date + interval 2 month) as period_end,
+    try_cast(value as double) as value,
+    'national' as match_method,
+    series_id as release_layer,
+    'current' as release_vintage
+from read_parquet('{{ var("parquet_dir") }}/fred/current/*.parquet')
+where series_id in ('RRVRUSQ156N', 'RHORUSQ156N', 'DRSFRMACBS')
+  and try_cast(value as double) is not null
+
+union all
+
+-- Median household income for the nation (Census Bureau, from the CPS), yearly, in the
+-- year's own dollars: what the affordability card divides a mortgage payment by.
+select
+    'fred' as source_id,
+    'us_median_hh_income' as metric_id,
+    'US' as geoid,
+    'nation' as level,
+    date as period_start,
+    last_day(date + interval 11 month) as period_end,
+    try_cast(value as double) as value,
+    'national' as match_method,
+    series_id as release_layer,
+    'current' as release_vintage
+from read_parquet('{{ var("parquet_dir") }}/fred/current/*.parquet')
+where series_id = 'MEHOINUSA646N' and try_cast(value as double) is not null

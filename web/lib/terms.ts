@@ -122,6 +122,26 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     what: "The middle price of new houses sold across the country in the quarter, from the Census Bureau: half sold for more, half for less. New homes only.",
     why: "The home page prices a mortgage on it, to show what a change in the rate costs a month.",
   },
+  new_home_sales_saar: {
+    what: "New houses sold across the country in the month, at the yearly pace the month would set, adjusted for the season. From the Census Bureau.",
+    why: "Sales of new homes show whether buyers are taking up what builders put up.",
+  },
+  us_median_hh_income: {
+    what: "The middle income of households across the country in a year, from the Census Bureau’s Current Population Survey: half earn more, half less.",
+    why: "The home page sets a typical mortgage payment against it, to show how much of a typical income a typical new home takes.",
+  },
+  hvs_rental_vacancy_rate: {
+    what: "The share of the country’s rental homes standing empty and for rent in the quarter, from the Census Bureau’s Housing Vacancy Survey.",
+    why: "More empty rentals give renters more choice and landlords less room to raise rents.",
+  },
+  hvs_homeownership_rate: {
+    what: "The share of the country’s occupied homes lived in by their owners in the quarter, from the Census Bureau’s Housing Vacancy Survey.",
+    why: "It moves slowly, so a change of a point is a large one.",
+  },
+  mortgage_delinquency_rate: {
+    what: "The share of home mortgages held by commercial banks that are 30 days or more past due, adjusted for the season. From the Federal Reserve. Bank-held loans only.",
+    why: "A rise is an early sign that owners are struggling with their payments.",
+  },
   fhfa_hpi_all_transactions: {
     what: "The same kind of index from FHFA, but counting refinance appraisals as well as sales. An index: 100 is early 1980. Statewide only.",
     why: "It reaches back further than the purchase-only index, so it shows the long run of prices.",

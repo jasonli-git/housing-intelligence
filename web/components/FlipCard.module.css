@@ -1,0 +1,43 @@
+/* The front is in flow and sets the height; the back lies over it until the card turns,
+   then takes the flow itself so the card grows to fit it. */
+.card { position: relative; display: grid; min-width: 0; perspective: 1400px; }
+.face {
+  grid-area: 1 / 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 14px 16px;
+  background: color-mix(in srgb, var(--edge) 15%, var(--surface-1));
+  border: 1px solid color-mix(in srgb, var(--edge) 40%, var(--border));
+  border-top: 4px solid var(--edge); border-radius: 12px;
+  backface-visibility: hidden; transition: transform .55s cubic-bezier(.2, .7, .2, 1);
+}
+.back { position: absolute; inset: 0; overflow: hidden; transform: rotateY(180deg); }
+.card[data-flipped] .back { position: static; overflow: visible; transform: rotateY(0); }
+.card[data-flipped] .front { position: absolute; inset: 0; overflow: hidden; transform: rotateY(-180deg); }
+.turn {
+  align-self: flex-start; margin-top: auto; min-height: 44px; padding: 0; border: 0; background: none;
+  font: inherit; font-size: var(--text-note); font-weight: 600; color: var(--text-primary);
+  text-decoration: underline; text-underline-offset: .2em; cursor: pointer;
+}
+.turn:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .face, .back, .card[data-flipped] .front { transform: none; transition: opacity .2s; }
+  .back, .card[data-flipped] .front { opacity: 0; }
+  .card[data-flipped] .back { opacity: 1; }
+}
+
+/* A phone: one row a takeaway, opening downward. */
+@media (max-width: 560px) {
+  .card { display: block; perspective: none; }
+  .face, .back, .card[data-flipped] .front, .card[data-flipped] .back {
+    position: static; inset: auto; overflow: visible; transform: none; opacity: 1;
+    backface-visibility: visible; transition: none; border: 0; border-radius: 0;
+  }
+  .face { padding: 12px 14px; background: none; }
+  .front { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 10px; }
+  .back { display: none; padding-top: 0; background: color-mix(in srgb, var(--edge) 10%, transparent); }
+  .card[data-flipped] .back { display: flex; }
+  .card + .card { border-top: 1px solid var(--border); }
+  /* The whole row is the button. */
+  .front .turn { position: absolute; inset: 0; align-self: stretch; justify-self: stretch; min-height: 0; margin: 0; }
+  .front::after { content: "›"; grid-column: 4; font-size: 20px; line-height: 1; color: var(--text-secondary); transition: transform .2s; }
+  .card[data-flipped] .front::after { transform: rotate(90deg); }
+  .front .turn:focus-visible { outline-offset: -3px; border-radius: 8px; }
+}

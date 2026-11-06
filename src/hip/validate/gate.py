@@ -67,6 +67,13 @@ VALUE_BOUNDS = {
     "new_home_months_supply": (0.5, 30.0),
     # $17,000 in 1963 to about $440,000 at its peak.
     "new_home_median_sale_price": (10_000.0, 2_000_000.0),
+    # The 2026-11-05 additions. New-home sales ran 270,000 to 1.4 million a year since
+    # 1963; the rates are percents, not fractions as the ACS's are.
+    "new_home_sales_saar": (50_000.0, 5_000_000.0),
+    "us_median_hh_income": (5_000.0, 500_000.0),
+    "hvs_rental_vacancy_rate": (0.0, 100.0),
+    "hvs_homeownership_rate": (0.0, 100.0),
+    "mortgage_delinquency_rate": (0.0, 100.0),
     # Milestone 48: HMDA's medians and FHA's limit. Rates as reported by lenders; a
     # loan amount is HMDA's rounded midpoint; the limit sits between HUD's national floor
     # and ceiling, with room for either to move.

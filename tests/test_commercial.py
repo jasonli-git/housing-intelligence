@@ -86,6 +86,12 @@ def test_what_survives_each_use_today() -> None:
             "housing_starts_saar",
             "new_home_months_supply",
             "new_home_median_sale_price",
+            # The scoreboard's 2026-11-05 additions, through FRED on the same terms.
+            "new_home_sales_saar",
+            "us_median_hh_income",
+            "hvs_rental_vacancy_rate",
+            "hvs_homeownership_rate",
+            "mortgage_delinquency_rate",
         ]
     )
     assert restricted == {"ads": expected, "paid": expected}

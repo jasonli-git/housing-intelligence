@@ -7,6 +7,7 @@ import "./housing-entry.css";
 import "./state-navigation.css";
 import "./data-scale.css";
 import { DataScale, ScaleSignature } from "@/components/DataScale";
+import { FlipCard } from "@/components/FlipCard";
 import { Masthead } from "@/components/Masthead";
 import { NationalCoverageMap } from "@/components/NationalCoverageMap";
 import { PlaceSearch } from "@/components/PlaceSearch";
@@ -24,10 +25,20 @@ export const metadata: Metadata = pageMetadata({
   path: "/",
 });
 
-const TONE_WORDS = { harder: "Harder", easier: "Easier", mixed: "Mixed", flat: "Little changed" };
+const TONE_WORDS = { harder: "Harder", easier: "Easier", mixed: "Mixed", flat: "Little changed", context: "Context" };
 const SHORT_KIND: Record<RecordType, string> = { survey: "Survey", administrative: "Records", determination: "Determination", benchmark: "Benchmark", calculated: "Calculated", modelled: "Modelled" };
 // Which figures back each takeaway; the takeaway leads, the figures are its evidence.
-const EVIDENCE: Record<string, string[]> = { rate: ["rate"], choice: ["listings", "days", "cuts"], prices: ["prices"], rent: ["rent"], building: ["starts", "supply"] };
+const EVIDENCE: Record<string, string[]> = { rate: ["rate"], afford: ["afford", "income"], choice: ["listings", "days", "cuts"], prices: ["prices"], rent: ["rent"], vacancy: ["vacancy"], building: ["starts", "supply"], sales: ["sales"], ownership: ["ownership"], delinquency: ["delinquency"] };
+
+// The takeaways in four groups, so ten read as a dashboard rather than a list. `span` is
+// each group's share of the six-column desktop grid: buying and renting fill the first
+// row, building and owners split the second.
+const GROUPS = [
+  { label: "Buying", ids: ["rate", "afford", "prices", "choice"], span: 4 },
+  { label: "Renting", ids: ["rent", "vacancy"], span: 2 },
+  { label: "Building", ids: ["building", "sales"], span: 3 },
+  { label: "Owners", ids: ["ownership", "delinquency"], span: 3 },
+];
 
 const points = (tile: ScoreTile) => tile.trend.flatMap((p) => (p.value === null ? [] : [{ date: p.date, value: p.value }]));
 /** The reading a year before the latest one, or null when the series is shorter than that. */
@@ -94,11 +105,13 @@ export default async function HousingLandingPage() {
 
   const tiles = scoreboard(series);
   // Prices still rising is no gift to buyers even when the rise slows, so that card reads mixed.
-  const toneOf = (id: string, group: ScoreTile[]) => { const tones = new Set(group.map((t) => t.tone)); const only = tones.size === 1 ? [...tones][0] : "mixed"; return id === "prices" || only === "neutral" ? "mixed" as const : only === "flat" ? "flat" as const : only as "harder" | "easier" | "mixed"; };
-  const told = marketTakeaways(tiles, latestPrice(series.newHomePrice)).map((t) => { const group = tiles.filter((tile) => EVIDENCE[t.id]?.includes(tile.id)); return { id: t.id, headline: t.headline, detail: t.detail, tiles: group, tone: toneOf(t.id, group) }; });
+  // Figures that are neither easier nor harder for a buyer (sales, homeownership, delinquencies) read as context.
+  const toneOf = (id: string, group: ScoreTile[]) => { const tones = new Set(group.map((t) => t.tone)); const only = tones.size === 1 ? [...tones][0] : "mixed"; return id === "prices" ? "mixed" as const : only === "neutral" ? "context" as const : only === "flat" ? "flat" as const : only as "harder" | "easier" | "mixed"; };
+  // Affordability's tone is its own: income rising is good news, but the card is about the share.
+  const told = marketTakeaways(tiles, latestPrice(series.newHomePrice)).map((t) => { const group = tiles.filter((tile) => EVIDENCE[t.id]?.includes(tile.id)); return { id: t.id, headline: t.headline, detail: t.detail, tiles: group, tone: toneOf(t.id, t.id === "afford" ? group.filter((tile) => tile.id === "afford") : group) }; });
   // A figure whose takeaway did not run still shows, so nothing drops silently.
   const rest = tiles.filter((tile) => !told.some((t) => t.tiles.includes(tile)));
-  const stories = rest.length ? [...told, { id: "rest", headline: "Other figures", detail: "", tiles: rest, tone: "mixed" as const }] : told;
+  const stories = rest.length ? [...told, { id: "rest", headline: "Other figures", detail: "", tiles: rest, tone: "mixed" as "harder" | "easier" | "mixed" | "flat" | "context" }] : told;
   const tile = (id: string) => tiles.find((t) => t.id === id);
   // Each takeaway leads with where things stand; its chart and change show which way they moved.
   const lead = (id: string) => ({
@@ -107,6 +120,11 @@ export default async function HousingLandingPage() {
     prices: tile("prices") && { value: tile("prices")!.value, label: "Change in home prices over a year" },
     rent: tile("rent") && { value: tile("rent")!.value, label: "Change in rents over a year" },
     building: tile("starts") && { value: tile("starts")!.value, label: "New homes started, at a yearly pace" },
+    afford: tile("afford") && { value: tile("afford")!.value, label: "Of a typical income goes to a typical new home’s payment" },
+    vacancy: tile("vacancy") && { value: tile("vacancy")!.value, label: `Of rentals empty and for rent, ${tile("vacancy")!.period}` },
+    sales: tile("sales") && { value: tile("sales")!.value, label: "New homes sold, at a yearly pace" },
+    ownership: tile("ownership") && { value: tile("ownership")!.value, label: `Of homes lived in by their owners, ${tile("ownership")!.period}` },
+    delinquency: tile("delinquency") && { value: tile("delinquency")!.value, label: `Of bank-held mortgages 30+ days late, ${tile("delinquency")!.period}` },
   } as Record<string, { value: string; label: string } | undefined>)[id];
   const newest = tiles.map((t) => t.trend.at(-1)?.date ?? "").sort().at(-1);
 
@@ -128,16 +146,30 @@ export default async function HousingLandingPage() {
 
       {tiles.length > 0 && <section id="us-market" className={home.section}>
         <div className={home.head}><h2>The US housing market</h2>{newest && <span>Latest through {monthLabel(newest)}, against a year earlier</span>}</div>
-        <div className={home.takeaways}>{stories.map((story) => <article key={story.id} className={home[story.tone]} title={story.detail}>
-          <span className={home.tag}>{TONE_WORDS[story.tone]}</span>
-          <h3>{story.headline}</h3>
-          {lead(story.id) && <p className={home.lead}><b>{lead(story.id)!.value}</b>{lead(story.id)!.label}</p>}
-          <p className="visually-hidden">{story.detail}</p>
-          {story.id === "choice" ? <Pairs tiles={story.tiles} /> : story.id === "building" ? <Building tiles={story.tiles} /> : story.tiles[0] && <YearLine tile={story.tiles[0]} />}
-          <ul className="visually-hidden">{story.tiles.map((t) => <li key={t.id}>{t.summary}</li>)}</ul>
-          {/* One footnote per card: each source once, with the kinds of figure it gave. */}
-          <p className={home.cite}>{bySource(story.tiles).map(({ source, kinds }, i) => <span key={source.name}>{i > 0 && " · "}{kinds.map((kind, k) => <span key={kind} title={`${KIND_LABELS[kind]}: ${KIND_MEANINGS[kind]}`}>{k > 0 ? ", " : ""}{k > 0 ? SHORT_KIND[kind].toLowerCase() : SHORT_KIND[kind]}</span>)}{kinds.length > 0 && " · "}<a href={source.href} target="_blank" rel="noreferrer noopener">{source.name}</a></span>)}</p>
-        </article>)}</div>
+        {/* Each card turns over: the takeaway on the front, the figures behind it on the back.
+            The front keeps the figures as hidden text, so a screen reader hears them unturned.
+            A takeaway no group names (the "Other figures" fallback) joins the last group. */}
+        <div className={home.takeaways}>{GROUPS.map((group, g) => ({ ...group, cards: stories.filter((s) => group.ids.includes(s.id) || (g === GROUPS.length - 1 && !GROUPS.some((o) => o.ids.includes(s.id)))) }))
+          .filter((group) => group.cards.length > 0).map((group) => <section key={group.label} className={home.group} aria-label={group.label}
+            style={{ "--span": group.span, "--cards": group.cards.length } as React.CSSProperties}>
+          <h3 className={home.groupLabel}>{group.label}</h3>
+          <div className={home.groupCards}>{group.cards.map((story) => <FlipCard key={story.id} className={home[story.tone]}
+          front={<>
+            <span className={home.tag}>{TONE_WORDS[story.tone]}</span>
+            <h4>{story.headline}</h4>
+            {lead(story.id) && <p className={home.lead}><b>{lead(story.id)!.value}</b>{lead(story.id)!.label}</p>}
+            <p className="visually-hidden">{story.detail}</p>
+            <ul className="visually-hidden">{story.tiles.map((t) => <li key={t.id}>{t.summary}</li>)}</ul>
+          </>}
+          back={<>
+            <span className={home.tag}>{story.headline}</span>
+            {story.detail && <p className={home.detail}>{story.detail}</p>}
+            {story.id === "choice" ? <Pairs tiles={story.tiles} /> : story.id === "building" ? <Building tiles={story.tiles} /> : story.tiles[0] && <YearLine tile={story.tiles[0]} />}
+            {/* One footnote per card: each source once, with the kinds of figure it gave. */}
+            <p className={home.cite}>{bySource(story.tiles).map(({ source, kinds }, i) => <span key={source.name}>{i > 0 && " · "}{kinds.map((kind, k) => <span key={kind} title={`${KIND_LABELS[kind]}: ${KIND_MEANINGS[kind]}`}>{k > 0 ? ", " : ""}{k > 0 ? SHORT_KIND[kind].toLowerCase() : SHORT_KIND[kind]}</span>)}{kinds.length > 0 && " · "}<a href={source.href} target="_blank" rel="noreferrer noopener">{source.name}</a></span>)}</p>
+          </>}
+        />)}</div>
+        </section>)}</div>
       </section>}
 
       <div className={home.storiesCard}><HomeStories /></div>

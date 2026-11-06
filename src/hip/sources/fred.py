@@ -55,6 +55,17 @@ SERIES: dict[str, tuple[str, str | None]] = {
     # The Census Bureau's median sale price of new houses, quarterly: what the scoreboard
     # prices a mortgage on. The all-homes median is NAR's, whose data is copyrighted.
     "MSPUS": ("MSPUS", None),
+    # Five more for the scoreboard (2026-11-05): new houses sold, monthly at an annual
+    # rate in thousands (Census); median household income, yearly, current dollars
+    # (Census, from the CPS); the rental vacancy and homeownership rates, quarterly
+    # (Census's Housing Vacancy Survey); and the delinquency rate on single-family
+    # mortgages at commercial banks, quarterly (Federal Reserve). Existing-home sales
+    # are NAR's and copyrighted, so new-home sales stand in.
+    "HSN1F": ("HSN1F", None),
+    "MEHOINUSA646N": ("MEHOINUSA646N", None),
+    "RRVRUSQ156N": ("RRVRUSQ156N", None),
+    "RHORUSQ156N": ("RHORUSQ156N", None),
+    "DRSFRMACBS": ("DRSFRMACBS", None),
 }
 
 
