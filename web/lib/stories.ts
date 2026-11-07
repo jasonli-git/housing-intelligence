@@ -27,7 +27,6 @@ export const STORIES = [
   { href: "/stories/is-today-unusual", title: "Is today unusual here?", blurb: "Each county's home prices against incomes now, set against its own history." },
   { href: "/stories/whats-in-a-name", title: "What’s in a name?", blurb: "Do “Lake” towns cost more than “Park” towns? Every word New Jersey's town names share, priced against its own county." },
   { href: "/stories/the-long-commute-premium", title: "The long commute premium", blurb: "Longer commutes go with pricier towns, not cheaper ones. Who is doing the commuting explains it." },
-  { href: "/stories/twin-towns", title: "Twin towns, different price tags", blurb: "Pairs of towns alike in income, housing and commute, yet one costs twice the other." },
   { href: "/stories/what-a-house-buys-in-land", title: "What a house buys in land", blurb: "The typical home's value per acre of its lot, from Hoboken's slivers to the Pinelands' acres." },
   { href: "/stories/your-towns-time-machine", title: "Your town's time machine", blurb: "The year each town's typical home first passed $500,000, and $1 million." },
   { href: "/stories/the-winter-empty-shore", title: "The winter-empty Shore", blurb: "Towns where most homes stand empty for much of the year, kept for the summer." },
@@ -322,43 +321,3 @@ export function crossingYear(series: { year: number; value: number }[], threshol
   return series.find((p) => p.value >= threshold)?.year ?? null;
 }
 
-export type Twin = { a: StoryTown; b: StoryTown; distance: number; ratio: number };
-
-/**
- * Pairs of towns alike on every measure in `keys` (each scaled to its spread across towns)
- * but far apart in price: each town's nearest neighbour, kept where the two are within
- * `near` of each other, ordered by how many times dearer the pricier one is, each town
- * in one pair at most. With `sameCounty`, a town is matched only within its own county,
- * so a pair's gap is not the distance between two ends of the state.
- */
-export function twins(towns: StoryTown[], keys: string[], near = 0.6, sameCounty = false): Twin[] {
-  const ready = towns.filter((t) => (t.values[PRICE] ?? 0) > 0 && keys.every((k) => t.values[k] !== undefined));
-  const spread = keys.map((k) => {
-    const xs = ready.map((t) => t.values[k]!);
-    const m = xs.reduce((a, b) => a + b, 0) / (xs.length || 1);
-    return { m, sd: Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / (xs.length || 1)) || 1 };
-  });
-  const z = (t: StoryTown) => keys.map((k, i) => (t.values[k]! - spread[i].m) / spread[i].sd);
-  const zs = new Map(ready.map((t) => [t.id, z(t)]));
-  const dist = (a: StoryTown, b: StoryTown) => Math.sqrt(zs.get(a.id)!.reduce((s, v, i) => s + (v - zs.get(b.id)![i]) ** 2, 0) / keys.length);
-  const seen = new Set<string>();
-  const out: Twin[] = [];
-  for (const a of ready) {
-    let best: StoryTown | null = null, d = Infinity;
-    for (const b of ready) if (b.id !== a.id && (!sameCounty || b.county === a.county)) { const x = dist(a, b); if (x < d) { d = x; best = b; } }
-    if (!best || d > near) continue;
-    const [hi, lo] = a.values[PRICE]! >= best.values[PRICE]! ? [a, best] : [best, a];
-    const key = `${hi.id}-${lo.id}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push({ a: hi, b: lo, distance: d, ratio: hi.values[PRICE]! / lo.values[PRICE]! });
-  }
-  // Each town in one pair at most, its widest gap: a town twinned twice reads as a mistake.
-  const used = new Set<number>();
-  return out.sort((x, y) => y.ratio - x.ratio).filter((t) => {
-    if (used.has(t.a.id) || used.has(t.b.id)) return false;
-    used.add(t.a.id);
-    used.add(t.b.id);
-    return true;
-  });
-}

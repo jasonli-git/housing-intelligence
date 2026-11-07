@@ -14,7 +14,7 @@ export function HomeStories() {
           or separate destinations. The collection supplies full charts and sources. */}
       <div className="home-stories-gallery" aria-hidden="true">
         <ThemedShot name="stories/the-wawa-line" width={1440} height={900} className="gallery-fragment gallery-map" />
-        <ThemedShot name="stories/twin-towns" width={1440} height={900} className="gallery-fragment gallery-dots" />
+        <ThemedShot name="stories/the-starbucks-index" width={1440} height={900} className="gallery-fragment gallery-dots" />
         <ThemedShot name="stories/the-flood-claims-calendar" width={1440} height={900} className="gallery-fragment gallery-calendar" />
       </div>
     </Link>
