@@ -296,7 +296,11 @@ export function baseName(name: string): string {
   return name.replace(/ (city|borough|township|town|village)$/, "");
 }
 
-export type WordPremium = { word: string; towns: StoryTown[]; premium: number };
+export type WordPremium = {
+  word: string; towns: StoryTown[]; premium: number;
+  /** Each town's own premium against its county, in the order of `towns`. */
+  each: number[];
+};
 
 /**
  * What a word in a town's name goes with: the mean county-relative price of towns whose
@@ -311,7 +315,9 @@ export function wordPremiums(towns: StoryTown[], words: string[], min = 5): Word
       const pattern = new RegExp(word, "i");
       const having = towns.filter((t) => rel.has(t.id) && pattern.test(baseName(t.name)));
       const mean = having.reduce((a, t) => a + rel.get(t.id)!, 0) / (having.length || 1);
-      return { word, towns: having.sort((a, b) => b.values[PRICE]! - a.values[PRICE]!), premium: Math.exp(mean - base) - 1 };
+      having.sort((a, b) => b.values[PRICE]! - a.values[PRICE]!);
+      const each = having.map((t) => Math.exp(rel.get(t.id)! - base) - 1);
+      return { word, towns: having, premium: Math.exp(mean - base) - 1, each };
     })
     .filter((w) => w.towns.length >= min)
     .sort((a, b) => b.premium - a.premium);
