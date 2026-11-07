@@ -11,7 +11,7 @@ const BOTTOM = H - 40;
 const pct = (p: number) => `${p >= 0 ? "+" : "−"}${Math.abs(Math.round(p * 100))}%`;
 
 /**
- * What goes with pricier towns: each trait a bubble, up the page by its premium against
+ * The Starbucks index: each trait a bubble, up the page by its premium against
  * towns without it in the same county, sized by how many towns have it. Labels alternate
  * sides and are pushed apart where they would collide, joined to their bubble by a line.
  */
