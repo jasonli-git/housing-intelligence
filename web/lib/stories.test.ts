@@ -127,9 +127,6 @@ describe("the experimental stories", () => {
     const [lake] = wordPremiums(towns, ["Lake"]);
     expect(lake.towns).toHaveLength(5);
     expect(lake.premium).toBeCloseTo(Math.SQRT2 - 1);
-    // Every Lake town is priced alike, so each sits at the group's premium.
-    expect(lake.each).toHaveLength(5);
-    lake.each.forEach((p) => expect(p).toBeCloseTo(lake.premium));
   });
 
   it("reads a name without its legal type", () => {

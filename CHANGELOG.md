@@ -60,8 +60,7 @@ are not yet recorded here.
   1.5×, between neighbours such as Rumson and Fair Haven.
 - **What goes with pricier towns draws bars** (2026-11-06): its traits are ranked as bars
   out from zero, with a takeaway, instead of the bubble chart the Starbucks index also
-  uses, which made the two stories look alike. What's in a name, whose bars it would then
-  have matched, now draws a dot for each town behind each word's average.
+  uses, which made the two stories look alike.
 - **Visual stories refined** (2026-11-03, ARCHITECTURE #464, #467): the menu bar's link
   and the place pages' shortcut now read Stories. The stories page has its search on the
   main view, Editor's picks on a full-width coloured band and a quieter glow; story cards
