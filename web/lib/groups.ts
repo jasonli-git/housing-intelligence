@@ -360,6 +360,7 @@ export const GROUPS: readonly Group[] = [
       "overture_pawn_count",
       "realtor_median_days_on_market",
       "wikidata_incorporated_year",
+      "nj_incorporated_year",
       "wikidata_notable_births",
       "nclimgrid_days_over_90",
       "nlcd_impervious_homes_share",

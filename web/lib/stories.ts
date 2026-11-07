@@ -328,9 +328,10 @@ export type Twin = { a: StoryTown; b: StoryTown; distance: number; ratio: number
  * Pairs of towns alike on every measure in `keys` (each scaled to its spread across towns)
  * but far apart in price: each town's nearest neighbour, kept where the two are within
  * `near` of each other, ordered by how many times dearer the pricier one is, each town
- * in one pair at most.
+ * in one pair at most. With `sameCounty`, a town is matched only within its own county,
+ * so a pair's gap is not the distance between two ends of the state.
  */
-export function twins(towns: StoryTown[], keys: string[], near = 0.6): Twin[] {
+export function twins(towns: StoryTown[], keys: string[], near = 0.6, sameCounty = false): Twin[] {
   const ready = towns.filter((t) => (t.values[PRICE] ?? 0) > 0 && keys.every((k) => t.values[k] !== undefined));
   const spread = keys.map((k) => {
     const xs = ready.map((t) => t.values[k]!);
@@ -344,7 +345,7 @@ export function twins(towns: StoryTown[], keys: string[], near = 0.6): Twin[] {
   const out: Twin[] = [];
   for (const a of ready) {
     let best: StoryTown | null = null, d = Infinity;
-    for (const b of ready) if (b.id !== a.id) { const x = dist(a, b); if (x < d) { d = x; best = b; } }
+    for (const b of ready) if (b.id !== a.id && (!sameCounty || b.county === a.county)) { const x = dist(a, b); if (x < d) { d = x; best = b; } }
     if (!best || d > near) continue;
     const [hi, lo] = a.values[PRICE]! >= best.values[PRICE]! ? [a, best] : [best, a];
     const key = `${hi.id}-${lo.id}`;

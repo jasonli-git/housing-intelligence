@@ -301,6 +301,7 @@ METRIC_SUBJECTS: dict[str, str] = {
     "overture_pawn_count": "context",
     "realtor_median_days_on_market": "price",
     "wikidata_incorporated_year": "context",
+    "nj_incorporated_year": "context",
     "wikidata_notable_births": "context",
     "nclimgrid_days_over_90": "hazards",
     "nlcd_impervious_homes_share": "context",

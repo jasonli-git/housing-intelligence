@@ -525,6 +525,15 @@ models:
         tests:
           - not_null
           - accepted_range: {name: stg_story_wikidata_in_range, min_value: 0, max_value: 2100}
+  - name: stg_story_civil_boundaries
+    description: >-
+      The year each town became its present kind of municipality, from Snyder's The
+      Story of New Jersey's Civil Boundaries; built once landed.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_story_civil_boundaries_in_range, min_value: 1600, max_value: 1968}
   - name: stg_story_heat
     description: Days a year each county's average high passed 90°F; built once landed.
     columns:

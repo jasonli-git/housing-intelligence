@@ -906,6 +906,10 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     what: "The year the town was incorporated or set off, as Wikidata records it.",
     why: "Read only by the visual stories. Some towns have no date recorded.",
   },
+  nj_incorporated_year: {
+    what: "The year the town became the kind of municipality it is now, from John P. Snyder’s history of New Jersey’s civil boundaries (1969).",
+    why: "Read only by the visual stories. A town changed since 1968 keeps Wikidata’s date.",
+  },
   wikidata_notable_births: {
     what: "How many people Wikidata records as born in the town.",
     why: "Read only by the visual stories: notable as Wikidata’s editors judge it.",

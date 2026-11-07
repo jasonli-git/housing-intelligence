@@ -16,7 +16,7 @@ open work is in [TODO.md](TODO.md), and ideas here are not decided.
 | [Where internet reaches](../web/app/stories/where-internet-reaches/page.tsx) | place pages | none (no chart until a place is picked) | not yet reviewed | — |
 | [Where students go](../web/app/stories/where-students-go/page.tsx) | place pages | none (no chart until a place is picked) | not yet reviewed | — |
 | [Who feels housing costs most?](../web/app/stories/who-feels-housing-costs/page.tsx) | place pages | yes | not yet reviewed | — |
-| [What goes with pricier towns](../web/app/stories/pricier-towns/page.tsx) | editor's pick, What your money buys | yes | not yet reviewed | — |
+| [What goes with pricier towns](../web/app/stories/pricier-towns/page.tsx) | editor's pick, What your money buys | yes | live | 2026-11-06 |
 | [The price ladder](../web/app/stories/price-ladder/page.tsx) | place pages | yes | not yet reviewed | — |
 | [Priciest and cheapest in each county](../web/app/stories/priciest-and-cheapest/page.tsx) | place pages | yes | not yet reviewed | — |
 | [Income against home value](../web/app/stories/income-and-home-value/page.tsx) | place pages | yes | not yet reviewed | — |
@@ -31,7 +31,7 @@ open work is in [TODO.md](TODO.md), and ideas here are not decided.
 | [Is today unusual here?](../web/app/stories/is-today-unusual/page.tsx) | place pages | yes | not yet reviewed | — |
 | [What’s in a name?](../web/app/stories/whats-in-a-name/page.tsx) | Only in New Jersey | yes | not yet reviewed | — |
 | [The long commute premium](../web/app/stories/the-long-commute-premium/page.tsx) | What your money buys | yes | not yet reviewed | — |
-| [Twin towns, different price tags](../web/app/stories/twin-towns/page.tsx) | editor's pick, What your money buys | yes | not yet reviewed | — |
+| [Twin towns, different price tags](../web/app/stories/twin-towns/page.tsx) | editor's pick, What your money buys | yes | live | 2026-11-06 |
 | [What a house buys in land](../web/app/stories/what-a-house-buys-in-land/page.tsx) | place pages | yes | not yet reviewed | — |
 | [Your town's time machine](../web/app/stories/your-towns-time-machine/page.tsx) | place pages | yes | not yet reviewed | — |
 | [The winter-empty Shore](../web/app/stories/the-winter-empty-shore/page.tsx) | place pages | yes | not yet reviewed | — |
@@ -42,12 +42,12 @@ open work is in [TODO.md](TODO.md), and ideas here are not decided.
 | [Court, Circle, Lane](../web/app/stories/court-circle-lane/page.tsx) | Only in New Jersey | yes | not yet reviewed | — |
 | [Living higher](../web/app/stories/living-higher/page.tsx) | The feel of a place | yes | not yet reviewed | — |
 | [What quiet costs](../web/app/stories/what-quiet-costs/page.tsx) | The feel of a place | yes | not yet reviewed | — |
-| [Where you can see the stars](../web/app/stories/where-you-can-see-the-stars/page.tsx) | editor's pick, The feel of a place | yes | not yet reviewed | — |
+| [Where you can see the stars](../web/app/stories/where-you-can-see-the-stars/page.tsx) | editor's pick, The feel of a place | yes | live | 2026-11-06 |
 | [How data gets rewritten](../web/app/stories/how-data-gets-rewritten/page.tsx) | place pages | yes | not yet reviewed | — |
-| [Boroughitis](../web/app/stories/boroughitis/page.tsx) | editor's pick, Only in New Jersey | yes | not yet reviewed | — |
-| [The flood claims calendar](../web/app/stories/the-flood-claims-calendar/page.tsx) | editor's pick, The feel of a place | yes | not yet reviewed | — |
+| [Boroughitis](../web/app/stories/boroughitis/page.tsx) | editor's pick, Only in New Jersey | yes | live | 2026-11-06 |
+| [The flood claims calendar](../web/app/stories/the-flood-claims-calendar/page.tsx) | editor's pick, The feel of a place | yes | live | 2026-11-06 |
 | [How long homes sit](../web/app/stories/how-long-homes-sit/page.tsx) | place pages | yes | not yet reviewed | — |
-| [When the town was built](../web/app/stories/when-the-town-was-built/page.tsx) | editor's pick, The feel of a place | yes | not yet reviewed | — |
+| [When the town was built](../web/app/stories/when-the-town-was-built/page.tsx) | editor's pick, The feel of a place | yes | live | 2026-11-06 |
 | [How big the houses really are](../web/app/stories/how-big-the-houses-are/page.tsx) | The feel of a place | yes | not yet reviewed | — |
 | [Pavement or lawn](../web/app/stories/pavement-or-lawn/page.tsx) | The feel of a place | yes | not yet reviewed | — |
 | [The hottest counties](../web/app/stories/the-hottest-counties/page.tsx) | place pages | yes | not yet reviewed | — |
@@ -55,6 +55,48 @@ open work is in [TODO.md](TODO.md), and ideas here are not decided.
 | [Hometown famous](../web/app/stories/hometown-famous/page.tsx) | Only in New Jersey | yes | live | 2026-11-03 |
 
 ## Reviews
+
+### What goes with pricier towns
+
+Reviewed 2026-11-06 · live
+
+| Source | Used for | As of | Coverage |
+|---|---|---|---|
+| `zillow_zhvi` | typical home value, each town against towns in its county | through September 2026 | 388 of 564 towns have a value |
+| `census_acs` | work from home, owners, detached, long commutes, old housing, transit, renter strain, big buildings | 2020–2024 ACS | — |
+| `census_lodes` | share of residents' jobs in New York City | 2023 | — |
+| `bts_ntm` | homes within reach of a rail station | current stops | — |
+| `nj_tax_rates` | the Director's Ratio (assessments overdue) | 2025, published 2026-03-11 | — |
+| `fema_nfhl` | share of homes in a flood zone | fetched 2026-10-03 | 369 of the 388 towns |
+| `epa_sdwis` | homes on a water system with a health-based violation since 2015 | fetched 2026-10-03 | — |
+| `njdep_kcsl` | open contaminated sites | fetched 2026-10-30 | — |
+
+**Issues**
+
+- No uncertainty is shown, and three traits rest on small groups: near a train 24 towns (+15%), transit commuters 30 (−5%), big apartment buildings 37 (−17%). The Wawa line shows a 95% range for the same reason (ARCHITECTURE #472).
+- "Contaminated sites" counts sites, not sites per home, so it partly measures a town's size; its priciest examples are Franklin Lakes, Summit and Colts Neck.
+- "Many work from home" (+47%) largely stands in for income and occupation; the note's "goes with, does not make" covers it, but it leads the chart.
+
+**Ideas** (not decided)
+
+- Show each premium's range, or drop traits under about 50 towns; count contaminated sites per 1,000 homes.
+
+### Twin towns, different price tags
+
+Reviewed 2026-11-06 · live
+
+| Source | Used for | As of | Coverage |
+|---|---|---|---|
+| `census_acs` | the six measures that make two towns alike | 2020–2024 ACS | — |
+| `zillow_zhvi` | typical home value, the price gap | through September 2026 | — |
+
+**Issues**
+
+- Survey figures in small towns carry wide margins, unshown; the note says so.
+
+**Ideas** (not decided)
+
+- Fixed 2026-11-06 (ARCHITECTURE #477): matched statewide, 10 of 12 pairs crossed counties and four set North Jersey against South Jersey (Rochelle Park and Runnemede 1.9×), so the gap was location. Pairs are now within a county and at least 1.1× apart; the widest is 1.5× (Point Pleasant and Brick, Rumson and Fair Haven).
 
 ### The Wawa line
 
@@ -90,6 +132,64 @@ Reviewed 2026-11-03 · live
 
 - Before 2026-11-03 the bubbles were 8 chains with groups as small as 13 towns; the list now holds 13 kinds of place, each in 25 to two in three of the towns (ARCHITECTURE #471).
 - Before Milestone 60 it read OpenStreetMap (Starbucks ~69%, Dunkin' ~74%): more Starbucks than Dunkin' +25%, a Starbucks +5%, a Dunkin' −15%; on Overture +34%, +0% and −17%.
+
+### Where you can see the stars
+
+Reviewed 2026-11-06 · live
+
+| Source | Used for | As of | Coverage |
+|---|---|---|---|
+| `eog_vnl` | night-time radiance over each town's homes | 2024 annual composite, fetched 2026-10-22 | about 460 m pixels, weighted by each census block's homes |
+| `zillow_zhvi` | typical home value, each town against its county | through September 2026 | — |
+
+**Issues**
+
+- Radiance seen from orbit stands in for sky darkness, as the note says; the darkest towns are also the most rural, with bigger lots, so "+6% each time the glow halves" carries land and quiet with it.
+- `eog_vnl` is not tracked for new releases (freshness status not_tracked); the 2025 composite will not be noticed.
+
+### Boroughitis
+
+Reviewed 2026-11-06 · live
+
+| Source | Used for | As of | Coverage |
+|---|---|---|---|
+| `nj_civil_boundaries` | the year each town became its present kind of municipality | Bulletin 67 (1969), fetched 2026-11-06 | 536 of 564 towns; 244 of 252 boroughs |
+| `wikidata` | inception, for a town the book does not date | queried 2026-10-23 | — |
+
+**Issues**
+
+- Towns the book does not date fall back to Wikidata, which can hold a settlement date: Princeton (consolidated 2013) is drawn at 1699 and Verona at 1701. Essex's towns that became townships after 1968 have no book entry under today's type.
+- The scan's OCR misreads some headings and years; a misread year is left to Wikidata, not guessed.
+
+**Ideas** (not decided)
+
+- Fixed 2026-11-06 (ARCHITECTURE #476): on Wikidata alone, 9 boroughs were drawn before 1850 (Runnemede 1625, Chatham 1709) and the headline read 48 of 181 boroughs (27%) in the 1890s; with Snyder first it is 76 of 250 (30%), and 34 towns in 1894.
+
+### The flood claims calendar
+
+Reviewed 2026-11-06 · live
+
+| Source | Used for | As of | Coverage |
+|---|---|---|---|
+| `fema_nfip_claims` | claims with anything paid, by day of loss, statewide | fetched 2026-10-03 | 169,093 claims, 1978 to 2026 |
+
+**Issues**
+
+- 2026 is a part year (83 claims) and claims arrive months after a loss, so the latest year reads darker than it will be.
+- Fewer homes were insured before the 1990s, as the note says, so early years understate their floods.
+
+### When the town was built
+
+Reviewed 2026-11-06 · live
+
+| Source | Used for | As of | Coverage |
+|---|---|---|---|
+| `nj_modiv` | one-to-four-family houses (class 2) by year built, counted by decade | 2024 tax list, published 2025-09-11 | — |
+
+**Issues**
+
+- Class 2 leaves out apartment buildings, so Hudson's and Essex's ridges count only their houses; the note says houses throughout.
+- An assessor's year for an old house is often an estimate, and only standing houses are counted; the note says both.
 
 ### The pizza–bagel line
 

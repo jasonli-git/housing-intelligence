@@ -75,6 +75,8 @@ KEYED_MODELS = (
     # The third batch (2026-10-23); each but the first two waits for its source.
     "stg_story_market",
     "stg_story_wikidata",
+    # Boroughitis's incorporation dates (review of 2026-11-06).
+    "stg_story_civil_boundaries",
     "stg_story_heat",
     "stg_story_impervious",
     "stg_story_footprints",
@@ -143,6 +145,11 @@ def dbt_vars(
         "story_wikidata_landed": any(
             (settings.parquet_dir / "wikidata").glob("*/births.parquet")
         ),
+        "story_boundaries_landed": any(
+            (settings.parquet_dir / "nj_civil_boundaries").glob(
+                "*/municipalities.parquet"
+            )
+        ),
         "story_heat_landed": any(
             (settings.parquet_dir / "noaa_nclimgrid").glob("*/tmax.parquet")
         ),
@@ -174,6 +181,8 @@ READ_DATED = (
     # The visual stories' extracts republished in place (2026-10-22).
     "osm_nj",
     "overture_places",
+    # A book read for its dates: the year it was read, as the other stories' extracts.
+    "nj_civil_boundaries",
     "usgs_3dep",
     "wikidata",
     "msft_buildings",

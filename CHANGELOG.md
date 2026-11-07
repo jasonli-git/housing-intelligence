@@ -50,6 +50,14 @@ are not yet recorded here.
 
 ### Changed
 
+- **Boroughitis dates each town from the state's own history** (2026-11-06,
+  ARCHITECTURE #476): John P. Snyder's *The Story of New Jersey's Civil Boundaries,
+  1606–1968* replaces Wikidata, which had recorded settlement dates for some boroughs
+  (Runnemede 1625, now 1926). 556 of 564 towns are dated, up from 430; the 1890s made 30%
+  of the boroughs, and 1894 alone 34 towns.
+- **Twin towns pairs towns within a county** (2026-11-06, ARCHITECTURE #477): matched
+  statewide, its widest gaps were North Jersey against South Jersey. The widest is now
+  1.5×, between neighbours such as Rumson and Fair Haven.
 - **Visual stories refined** (2026-11-03, ARCHITECTURE #464, #467): the menu bar's link
   and the place pages' shortcut now read Stories. The stories page has its search on the
   main view, Editor's picks on a full-width coloured band and a quieter glow; story cards

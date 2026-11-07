@@ -58,6 +58,7 @@ from hip.sources.manual_rasters import NightLightsAdapter, NoiseAdapter
 from hip.sources.nclimgrid import NClimGridAdapter
 from hip.sources.nj_affordable import NjAffordableAdapter
 from hip.sources.nj_bpu import BpuAnnualReportsAdapter, BpuReliabilityAdapter
+from hip.sources.nj_civil_boundaries import NjCivilBoundariesAdapter
 from hip.sources.nj_construction import NjConstructionAdapter
 from hip.sources.nj_equalized import NjEqualizedAdapter
 from hip.sources.nj_modiv import ModivAdapter
@@ -171,6 +172,8 @@ IMPLEMENTED: tuple[str, ...] = (
     NightLightsAdapter.source_id,
     # The third batch of stories (2026-10-23).
     WikidataAdapter.source_id,
+    # Boroughitis's incorporation dates (review of 2026-11-06).
+    NjCivilBoundariesAdapter.source_id,
     NClimGridAdapter.source_id,
     ImperviousAdapter.source_id,
     FootprintsAdapter.source_id,
@@ -247,6 +250,8 @@ METRIC_SOURCES: tuple[str, ...] = (
     NightLightsAdapter.source_id,
     # The third batch of stories (2026-10-23).
     WikidataAdapter.source_id,
+    # Boroughitis's incorporation dates (review of 2026-11-06).
+    NjCivilBoundariesAdapter.source_id,
     NClimGridAdapter.source_id,
     ImperviousAdapter.source_id,
     FootprintsAdapter.source_id,
@@ -468,6 +473,8 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return NightLightsAdapter()
     if source_id == WikidataAdapter.source_id:
         return WikidataAdapter()
+    if source_id == NjCivilBoundariesAdapter.source_id:
+        return NjCivilBoundariesAdapter()
     if source_id == NClimGridAdapter.source_id:
         return NClimGridAdapter()
     if source_id == ImperviousAdapter.source_id:

@@ -250,6 +250,7 @@ export const KINDS: Record<string, RecordType> = {
   hvs_homeownership_rate: "survey",
   mortgage_delinquency_rate: "administrative",
   wikidata_incorporated_year: "administrative",
+  nj_incorporated_year: "administrative",
   wikidata_notable_births: "administrative",
   nclimgrid_days_over_90: "modelled",
   nlcd_impervious_homes_share: "calculated",

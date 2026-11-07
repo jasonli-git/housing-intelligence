@@ -77,6 +77,88 @@ export const REVIEWS: Record<string, StoryReview> = {
     issues: ["A category is Overture's own: a public park's tennis courts count as tennis courts, and a pawn shop includes gold buyers (sampled 2026-11-03)."],
     ideas: ["Before 2026-11-03 the bubbles were 8 chains with groups as small as 13 towns; the list now holds 13 kinds of place, each in 25 to two in three of the towns (ARCHITECTURE #471).", "Before Milestone 60 it read OpenStreetMap (Starbucks ~69%, Dunkin' ~74%): more Starbucks than Dunkin' +25%, a Starbucks +5%, a Dunkin' −15%; on Overture +34%, +0% and −17%."],
   },
+  // The six editor's picks, reviewed 2026-11-06 from the build deployed that day.
+  "twin-towns": {
+    status: "live",
+    reviewed: "2026-11-06",
+    sources: [
+      { id: "census_acs", use: "the six measures that make two towns alike", asOf: "2020–2024 ACS" },
+      { id: "zillow_zhvi", use: "typical home value, the price gap", asOf: "through September 2026" },
+    ],
+    issues: ["Survey figures in small towns carry wide margins, unshown; the note says so."],
+    ideas: [
+      "Fixed 2026-11-06 (ARCHITECTURE #477): matched statewide, 10 of 12 pairs crossed counties and four set North Jersey against South Jersey (Rochelle Park and Runnemede 1.9×), so the gap was location. Pairs are now within a county and at least 1.1× apart; the widest is 1.5× (Point Pleasant and Brick, Rumson and Fair Haven).",
+    ],
+  },
+  "pricier-towns": {
+    status: "live",
+    reviewed: "2026-11-06",
+    sources: [
+      { id: "zillow_zhvi", use: "typical home value, each town against towns in its county", asOf: "through September 2026", coverage: "388 of 564 towns have a value" },
+      { id: "census_acs", use: "work from home, owners, detached, long commutes, old housing, transit, renter strain, big buildings", asOf: "2020–2024 ACS" },
+      { id: "census_lodes", use: "share of residents' jobs in New York City", asOf: "2023" },
+      { id: "bts_ntm", use: "homes within reach of a rail station", asOf: "current stops" },
+      { id: "nj_tax_rates", use: "the Director's Ratio (assessments overdue)", asOf: "2025, published 2026-03-11" },
+      { id: "fema_nfhl", use: "share of homes in a flood zone", asOf: "fetched 2026-10-03", coverage: "369 of the 388 towns" },
+      { id: "epa_sdwis", use: "homes on a water system with a health-based violation since 2015", asOf: "fetched 2026-10-03" },
+      { id: "njdep_kcsl", use: "open contaminated sites", asOf: "fetched 2026-10-30" },
+    ],
+    issues: [
+      "No uncertainty is shown, and three traits rest on small groups: near a train 24 towns (+15%), transit commuters 30 (−5%), big apartment buildings 37 (−17%). The Wawa line shows a 95% range for the same reason (ARCHITECTURE #472).",
+      "\"Contaminated sites\" counts sites, not sites per home, so it partly measures a town's size; its priciest examples are Franklin Lakes, Summit and Colts Neck.",
+      "\"Many work from home\" (+47%) largely stands in for income and occupation; the note's \"goes with, does not make\" covers it, but it leads the chart.",
+    ],
+    ideas: ["Show each premium's range, or drop traits under about 50 towns; count contaminated sites per 1,000 homes."],
+  },
+  "where-you-can-see-the-stars": {
+    status: "live",
+    reviewed: "2026-11-06",
+    sources: [
+      { id: "eog_vnl", use: "night-time radiance over each town's homes", asOf: "2024 annual composite, fetched 2026-10-22", coverage: "about 460 m pixels, weighted by each census block's homes" },
+      { id: "zillow_zhvi", use: "typical home value, each town against its county", asOf: "through September 2026" },
+    ],
+    issues: [
+      "Radiance seen from orbit stands in for sky darkness, as the note says; the darkest towns are also the most rural, with bigger lots, so \"+6% each time the glow halves\" carries land and quiet with it.",
+      "`eog_vnl` is not tracked for new releases (freshness status not_tracked); the 2025 composite will not be noticed.",
+    ],
+  },
+  "boroughitis": {
+    status: "live",
+    reviewed: "2026-11-06",
+    sources: [
+      { id: "nj_civil_boundaries", use: "the year each town became its present kind of municipality", asOf: "Bulletin 67 (1969), fetched 2026-11-06", coverage: "536 of 564 towns; 244 of 252 boroughs" },
+      { id: "wikidata", use: "inception, for a town the book does not date", asOf: "queried 2026-10-23" },
+    ],
+    issues: [
+      "Towns the book does not date fall back to Wikidata, which can hold a settlement date: Princeton (consolidated 2013) is drawn at 1699 and Verona at 1701. Essex's towns that became townships after 1968 have no book entry under today's type.",
+      "The scan's OCR misreads some headings and years; a misread year is left to Wikidata, not guessed.",
+    ],
+    ideas: [
+      "Fixed 2026-11-06 (ARCHITECTURE #476): on Wikidata alone, 9 boroughs were drawn before 1850 (Runnemede 1625, Chatham 1709) and the headline read 48 of 181 boroughs (27%) in the 1890s; with Snyder first it is 76 of 250 (30%), and 34 towns in 1894.",
+    ],
+  },
+  "the-flood-claims-calendar": {
+    status: "live",
+    reviewed: "2026-11-06",
+    sources: [
+      { id: "fema_nfip_claims", use: "claims with anything paid, by day of loss, statewide", asOf: "fetched 2026-10-03", coverage: "169,093 claims, 1978 to 2026" },
+    ],
+    issues: [
+      "2026 is a part year (83 claims) and claims arrive months after a loss, so the latest year reads darker than it will be.",
+      "Fewer homes were insured before the 1990s, as the note says, so early years understate their floods.",
+    ],
+  },
+  "when-the-town-was-built": {
+    status: "live",
+    reviewed: "2026-11-06",
+    sources: [
+      { id: "nj_modiv", use: "one-to-four-family houses (class 2) by year built, counted by decade", asOf: "2024 tax list, published 2025-09-11" },
+    ],
+    issues: [
+      "Class 2 leaves out apartment buildings, so Hudson's and Essex's ridges count only their houses; the note says houses throughout.",
+      "An assessor's year for an old house is often an estimate, and only standing houses are counted; the note says both.",
+    ],
+  },
 };
 
 const where = (slug: string) => [
