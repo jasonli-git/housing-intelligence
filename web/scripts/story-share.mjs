@@ -19,6 +19,8 @@ const CREDITS = [
   [/Overture Maps/, 'Overture Maps Foundation'],
   [/Zillow/, 'Data Provided by Zillow Group'],
   [/Census Bureau|American Community Survey|TIGER/, 'US Census Bureau'],
+  // Snyder's Story of New Jersey's Civil Boundaries (NJGS Bulletin 67; ARCHITECTURE #476).
+  [/New Jersey Geological Survey/, 'NJ Geological Survey'],
   [/Wikidata/, 'Wikidata'],
   [/FEMA/, 'FEMA'],
   [/NJDEP|Department of Environmental Protection/, 'NJDEP'],
