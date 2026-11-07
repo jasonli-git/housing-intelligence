@@ -12,7 +12,7 @@ import "../stories.css";
 
 export const metadata: Metadata = pageMetadata({
   title: "Twin towns, different price tags — Housing",
-  description: "Pairs of New Jersey towns alike in income, housing and commute whose homes are priced far apart.",
+  description: "Pairs of New Jersey towns in the same county, alike in income, housing and commute, whose homes are priced apart.",
   path: "/stories/twin-towns",
 });
 
@@ -29,7 +29,10 @@ const usd = (v: number) => formatValue(v, "usd");
 
 export default async function TwinTownsPage() {
   const towns = await storyTowns([PRICE, ...ALIKE.map((a) => a.key)]);
-  const pairs = twins(towns, ALIKE.map((a) => a.key), 0.25).slice(0, 12);
+  // Same county only: matched statewide, the widest gaps were North Jersey against South
+  // Jersey, which is location, not what the six measures leave out (review 2026-11-06).
+  // A pair under 1.1× is not a different price tag.
+  const pairs = twins(towns, ALIKE.map((a) => a.key), 0.25, true).filter((p) => p.ratio >= 1.1).slice(0, 12);
   const values = pairs.flatMap((p) => [p.a.values[PRICE]!, p.b.values[PRICE]!]);
   // Room past the cheapest and priciest homes for the names written beside their dots.
   const lo = Math.log(Math.min(...values) / 2.2), hi = Math.log(Math.max(...values) * 2.2);
@@ -37,8 +40,8 @@ export default async function TwinTownsPage() {
   return (
     <StoryShell
       title="Twin towns, different price tags"
-      lede={<>Each pair below is as alike as any two New Jersey towns get on the six measures in grey: what households earn, the kind of homes, how many own, how old the housing is, the commute, the household size. Yet one twin&rsquo;s homes cost up to {pairs[0]?.ratio.toFixed(1)} times the other&rsquo;s. The gap is everything those measures leave out: the schools, the train, the water, the name.</>}
-      note={<>Alike: each town&rsquo;s nearest neighbour on the six measures, each scaled to its spread across all towns, kept only where the two are close; then ordered by the price gap. Measures: the Census Bureau&rsquo;s five-year American Community Survey. Price: Zillow&rsquo;s typical home value. Survey figures carry margins of error, wide in small towns.</>}
+      lede={<>Each pair below is two towns in the same county, as alike as any two get on the six measures in grey: what households earn, the kind of homes, how many own, how old the housing is, the commute, the household size. Yet one twin&rsquo;s homes cost up to {pairs[0]?.ratio.toFixed(1)} times the other&rsquo;s. The gap is everything those measures leave out: the schools, the train, the water, the name.</>}
+      note={<>Alike: each town&rsquo;s nearest neighbour in its own county on the six measures, each scaled to its spread across all towns, kept only where the two are close and one costs at least 1.1 times the other; then ordered by the price gap. Measures: the Census Bureau&rsquo;s five-year American Community Survey. Price: Zillow&rsquo;s typical home value. Survey figures carry margins of error, wide in small towns.</>}
     >
       <figure className="story-figure" tabIndex={0}>
         <p className="ladder-key"><span><i style={{ background: "var(--story-up)" }} />The pricier twin</span><span><i className="starter" />The cheaper twin</span></p>

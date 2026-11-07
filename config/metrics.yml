@@ -3015,6 +3015,21 @@ metrics:
     changed: false
     shown: false
 
+  nj_incorporated_year:
+    label: Year incorporated (state record)
+    unit: year
+    frequency: annual
+    direction: neutral
+    description: >-
+      The year the municipality became the kind it is now (borough, township, city, town
+      or village), from John P. Snyder's The Story of New Jersey's Civil Boundaries,
+      1606-1968. A rename keeps the earlier year. Absent where the book does not date it.
+    source_id: nj_civil_boundaries
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
   wikidata_notable_births:
     label: Notable people born here
     unit: count

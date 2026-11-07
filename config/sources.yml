@@ -1886,6 +1886,40 @@ sources:
       it; 134 of 564 had none on 2026-10-23. A person's notability is the number of
       Wikipedia language editions with an article on them.
 
+  nj_civil_boundaries:
+    name: The Story of New Jersey's Civil Boundaries, 1606-1968 (John P. Snyder)
+    publisher: New Jersey Geological Survey (Bulletin 67, 1969); scan by the New Jersey State Library
+    license: Open public record
+    licence_class: public_record
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        Only dates are read, which are facts, as with the Division of Taxation's tables;
+        the book's text and maps are not reproduced.
+    terms_url: https://www.nj.gov/nj/legal.shtml
+    terms_checked: 2026-11-06
+    terms_note: >-
+      The State Library's record (handle 10929/21587) states no rights or licence, checked
+      2026-11-06. Read for facts only: the year each municipality was formed, which is
+      not anyone's expression. Nothing of the book's text, tables or maps is published.
+    notices:
+      - >-
+        Incorporation dates: John P. Snyder, The Story of New Jersey's Civil Boundaries,
+        1606-1968, NJ Geological Survey Bulletin 67 (1969).
+    url: https://dspace.njstatelib.org/handle/10929/21587
+    homepage: https://dspace.njstatelib.org/handle/10929/21587
+    cadence: irregular
+    adapter: hip.sources.nj_civil_boundaries:NjCivilBoundariesAdapter
+    fallback: >-
+      The New Jersey Geological Survey's own copy, Bulletin 67 on its old-publications
+      page; for a town formed or changed since 1968, its Wikidata inception.
+    notes: >-
+      The scan is read with pdftotext, so headings carry OCR slips; a year that does not
+      read as four digits leaves the town to Wikidata. 535 of 564 towns dated on
+      2026-11-06. A town's year is when it became its present kind of municipality,
+      following renames back (ARCHITECTURE #476).
+
   noaa_nclimgrid:
     name: nClimGrid-Daily county averages
     publisher: NOAA National Centers for Environmental Information

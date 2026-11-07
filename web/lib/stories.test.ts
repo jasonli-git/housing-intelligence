@@ -146,4 +146,11 @@ describe("the experimental stories", () => {
     expect(out.map((t) => [t.a.id, t.b.id])).toEqual([[1, 2], [3, 4]]);
     expect(out[0].ratio).toBe(3);
   });
+
+  it("pairs only within a county when asked", () => {
+    // Town 1's nearest twin is town 2 in another county; within its own it is town 3.
+    const towns = [town(1, 1, 900, { k: 1 }), town(2, 2, 300, { k: 1.01 }), town(3, 1, 600, { k: 1.05 })];
+    expect(twins(towns, ["k"], 3).map((t) => [t.a.id, t.b.id])).toEqual([[1, 2]]);
+    expect(twins(towns, ["k"], 3, true).map((t) => [t.a.id, t.b.id])).toEqual([[1, 3]]);
+  });
 });
