@@ -6,7 +6,7 @@ Every visual story, where it appears and how its sources stood when last reviewe
 Decisions about how the stories are built are in [ARCHITECTURE.md](ARCHITECTURE.md);
 open work is in [TODO.md](TODO.md), and ideas here are not decided.
 
-## All stories (43)
+## All stories (42)
 
 | Story | Where it appears | Share image | Status | Reviewed |
 |---|---|---|---|---|
@@ -31,7 +31,6 @@ open work is in [TODO.md](TODO.md), and ideas here are not decided.
 | [Is today unusual here?](../web/app/stories/is-today-unusual/page.tsx) | place pages | yes | not yet reviewed | — |
 | [What’s in a name?](../web/app/stories/whats-in-a-name/page.tsx) | Only in New Jersey | yes | not yet reviewed | — |
 | [The long commute premium](../web/app/stories/the-long-commute-premium/page.tsx) | What your money buys | yes | not yet reviewed | — |
-| [Twin towns, different price tags](../web/app/stories/twin-towns/page.tsx) | editor's pick, What your money buys | yes | live | 2026-11-06 |
 | [What a house buys in land](../web/app/stories/what-a-house-buys-in-land/page.tsx) | place pages | yes | not yet reviewed | — |
 | [Your town's time machine](../web/app/stories/your-towns-time-machine/page.tsx) | place pages | yes | not yet reviewed | — |
 | [The winter-empty Shore](../web/app/stories/the-winter-empty-shore/page.tsx) | place pages | yes | not yet reviewed | — |
@@ -80,23 +79,6 @@ Reviewed 2026-11-06 · live
 **Ideas** (not decided)
 
 - Show each premium's range, or drop traits under about 50 towns; count contaminated sites per 1,000 homes.
-
-### Twin towns, different price tags
-
-Reviewed 2026-11-06 · live
-
-| Source | Used for | As of | Coverage |
-|---|---|---|---|
-| `census_acs` | the six measures that make two towns alike | 2020–2024 ACS | — |
-| `zillow_zhvi` | typical home value, the price gap | through September 2026 | — |
-
-**Issues**
-
-- Survey figures in small towns carry wide margins, unshown; the note says so.
-
-**Ideas** (not decided)
-
-- Fixed 2026-11-06 (ARCHITECTURE #477): matched statewide, 10 of 12 pairs crossed counties and four set North Jersey against South Jersey (Rochelle Park and Runnemede 1.9×), so the gap was location. Pairs are now within a county and at least 1.1× apart; the widest is 1.5× (Point Pleasant and Brick, Rumson and Fair Haven).
 
 ### The Wawa line
 

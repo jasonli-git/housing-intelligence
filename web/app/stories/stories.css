@@ -165,23 +165,12 @@
 .diverging .ladder-axis .track::before { display: none; }
 .diverging .ladder-axis .track { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
 .story-figure .seq { fill: var(--story-1); }
-.twins li { min-height: 64px; }
-.twin-traits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 .6rem; }
-.twin-traits small { color: var(--text-muted); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.twins li { grid-template-columns: minmax(220px, 300px) 1fr minmax(48px, auto) !important; }
-/* Below 900px a pair takes two lines, its measures and gap above and its prices across the
-   full width below, so the twins' names have room beside their dots. */
-@media (max-width: 900px) {
-  .twins li { grid-template-columns: 1fr auto !important; row-gap: .35rem; padding: .4rem 0; }
-  .twins li > .ladder-track { grid-column: 1 / -1; grid-row: 2; }
-  .twins li > .num { grid-column: 2; grid-row: 1; }
-}
-/* On a phone the price ladder and the counties' extremes take the twins' two lines too: the
-   three columns left their price tracks about 40px wide, too narrow for dots or prices. */
+/* On a phone the price ladder and the counties' extremes take two lines: three columns left
+   their price tracks about 40px wide, too narrow for dots or prices. */
 @media (max-width: 600px) {
-  .ladder:not(.twins) li { grid-template-columns: 1fr auto; row-gap: .35rem; padding: .4rem 0; }
-  .ladder:not(.twins) li > .ladder-track { grid-column: 1 / -1; grid-row: 2; }
-  .ladder:not(.twins) li > .num { grid-column: 2; grid-row: 1; }
+  .ladder li { grid-template-columns: 1fr auto; row-gap: .35rem; padding: .4rem 0; }
+  .ladder li > .ladder-track { grid-column: 1 / -1; grid-row: 2; }
+  .ladder li > .num { grid-column: 2; grid-row: 1; }
 }
 /* A chart wider than a phone scrolls sideways inside its figure, which the keyboard can
    reach (tabIndex on each figure); the page itself never scrolls sideways. */

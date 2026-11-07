@@ -28,7 +28,7 @@ describe("story library curation", () => {
   });
   it("searches titles and descriptions, ignoring case and extra whitespace", () => {
     expect(findStories("  WAWA  ").map(storySlug)).toContain("the-wawa-line");
-    expect(findStories("  homes  income ").length).toBeGreaterThan(0);
+    expect(findStories("  homes  PRICE ").length).toBeGreaterThan(0);
     expect(findStories("unfindablequery")).toEqual([]);
     expect(findStories("leafy").map(storySlug)).toContain("the-leafy-premium");
     expect(findStories(" ")).toHaveLength(LIBRARY_STORIES.length);

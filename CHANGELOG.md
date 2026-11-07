@@ -47,6 +47,10 @@ are not yet recorded here.
 - **The old page layouts' leftover code** (2026-11-04, ARCHITECTURE #474): 36 components
   and their tests, six helpers, nine stylesheets, 114 dead CSS rules and 45 stale one-off browser
   check scripts. Nothing readers see changes.
+- **Twin towns, different price tags** (2026-11-06, ARCHITECTURE #478): the story, its
+  pairing code and its styles. Each town page's "similar towns cost at least 10% less"
+  panel and the Compare page already answer what it asked, with far less to read. Editor's
+  picks are now five; its address no longer exists.
 
 ### Changed
 

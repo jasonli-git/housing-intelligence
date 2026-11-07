@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { baseName, centre, crossingYear, extremes, inside, ladder, leadingDestination, logTicks, monthlyCost, PRICE, priceGap, priceTick, priceTicks, ratioBand, traitPremiums, trend, twins, wordPremiums, type StoryTown, type Trait } from "./stories";
+import { baseName, centre, crossingYear, extremes, inside, ladder, leadingDestination, logTicks, monthlyCost, PRICE, priceGap, priceTick, priceTicks, ratioBand, traitPremiums, trend, wordPremiums, type StoryTown, type Trait } from "./stories";
 
 const town = (id: number, county: number, price: number, extra: Record<string, number> = {}): StoryTown => ({
   id, name: `Town ${id}`, county, countyName: `County ${county}`, values: { [PRICE]: price, ...extra },
@@ -140,17 +140,4 @@ describe("the experimental stories", () => {
     expect(crossingYear([{ year: 2000, value: 1 }], 5)).toBeNull();
   });
 
-  it("pairs alike towns and orders them by the price gap", () => {
-    const towns = [town(1, 1, 900, { k: 1 }), town(2, 1, 300, { k: 1.01 }), town(3, 1, 500, { k: 9 }), town(4, 1, 450, { k: 9.02 })];
-    const out = twins(towns, ["k"], 0.1);
-    expect(out.map((t) => [t.a.id, t.b.id])).toEqual([[1, 2], [3, 4]]);
-    expect(out[0].ratio).toBe(3);
-  });
-
-  it("pairs only within a county when asked", () => {
-    // Town 1's nearest twin is town 2 in another county; within its own it is town 3.
-    const towns = [town(1, 1, 900, { k: 1 }), town(2, 2, 300, { k: 1.01 }), town(3, 1, 600, { k: 1.05 })];
-    expect(twins(towns, ["k"], 3).map((t) => [t.a.id, t.b.id])).toEqual([[1, 2]]);
-    expect(twins(towns, ["k"], 3, true).map((t) => [t.a.id, t.b.id])).toEqual([[1, 3]]);
-  });
 });

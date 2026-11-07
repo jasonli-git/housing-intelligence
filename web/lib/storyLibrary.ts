@@ -10,7 +10,7 @@ export const ON_PLACE_PAGES: ReadonlySet<string> = new Set(["who-feels-housing-c
 export const LIBRARY_STORIES = STORIES.filter((story) => !ON_PLACE_PAGES.has(story.href.split("/").at(-1)!));
 export const COLLECTIONS = [
   { id: "jersey", title: "Only in New Jersey", description: "The state’s unmistakable character.", stories: ["the-wawa-line", "boroughitis", "the-pizza-bagel-line", "diner-capital", "whats-in-a-name", "the-starbucks-index", "court-circle-lane", "hometown-famous"] },
-  { id: "money", title: "What your money buys", description: "Beyond the asking price.", stories: ["twin-towns", "pricier-towns", "the-long-commute-premium"] },
+  { id: "money", title: "What your money buys", description: "Beyond the asking price.", stories: ["pricier-towns", "the-long-commute-premium"] },
   { id: "place", title: "The feel of a place", description: "Trees, streets, space and quiet.", stories: ["the-leafy-premium", "what-quiet-costs", "where-you-can-see-the-stars", "pavement-or-lawn", "living-higher", "how-big-the-houses-are", "when-the-town-was-built", "the-flood-claims-calendar"] },
 ] as const;
 
@@ -22,7 +22,7 @@ export type CollectionId = (typeof COLLECTIONS)[number]["id"];
  */
 export const FEATURED_STORY = "the-wawa-line";
 export const FEATURED_HEADLINE = ["Where South Jersey", "begins."] as const;
-export const EDITOR_PICKS = ["twin-towns", "the-flood-claims-calendar", "boroughitis", "pricier-towns", "where-you-can-see-the-stars", "when-the-town-was-built"];
+export const EDITOR_PICKS = ["the-flood-claims-calendar", "boroughitis", "pricier-towns", "where-you-can-see-the-stars", "when-the-town-was-built"];
 export const storySlug = (story: Story) => story.href.split("/").at(-1)!;
 
 /** Short library previews; full story descriptions and search vocabulary stay intact. */
@@ -48,7 +48,6 @@ export const STORY_PREVIEWS: Record<string, string> = {
   "is-today-unusual": "Today’s prices and incomes against each county’s history.",
   "whats-in-a-name": "Do “Lake” towns cost more than “Park” towns?",
   "the-long-commute-premium": "Why longer commutes go with pricier towns.",
-  "twin-towns": "Similar incomes, homes and commutes. Different home values.",
   "what-a-house-buys-in-land": "Home values per acre, from city lots to the Pinelands.",
   "your-towns-time-machine": "When typical home values crossed $500,000 and $1 million.",
   "the-winter-empty-shore": "Shore towns with homes kept for the summer.",

@@ -77,19 +77,7 @@ export const REVIEWS: Record<string, StoryReview> = {
     issues: ["A category is Overture's own: a public park's tennis courts count as tennis courts, and a pawn shop includes gold buyers (sampled 2026-11-03)."],
     ideas: ["Before 2026-11-03 the bubbles were 8 chains with groups as small as 13 towns; the list now holds 13 kinds of place, each in 25 to two in three of the towns (ARCHITECTURE #471).", "Before Milestone 60 it read OpenStreetMap (Starbucks ~69%, Dunkin' ~74%): more Starbucks than Dunkin' +25%, a Starbucks +5%, a Dunkin' −15%; on Overture +34%, +0% and −17%."],
   },
-  // The six editor's picks, reviewed 2026-11-06 from the build deployed that day.
-  "twin-towns": {
-    status: "live",
-    reviewed: "2026-11-06",
-    sources: [
-      { id: "census_acs", use: "the six measures that make two towns alike", asOf: "2020–2024 ACS" },
-      { id: "zillow_zhvi", use: "typical home value, the price gap", asOf: "through September 2026" },
-    ],
-    issues: ["Survey figures in small towns carry wide margins, unshown; the note says so."],
-    ideas: [
-      "Fixed 2026-11-06 (ARCHITECTURE #477): matched statewide, 10 of 12 pairs crossed counties and four set North Jersey against South Jersey (Rochelle Park and Runnemede 1.9×), so the gap was location. Pairs are now within a county and at least 1.1× apart; the widest is 1.5× (Point Pleasant and Brick, Rumson and Fair Haven).",
-    ],
-  },
+  // Editor's picks, reviewed 2026-11-06 from the build deployed that day.
   "pricier-towns": {
     status: "live",
     reviewed: "2026-11-06",
