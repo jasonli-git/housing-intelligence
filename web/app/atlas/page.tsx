@@ -54,8 +54,16 @@ async function loadEntries(catalog:MetricEntry[],sources:SourceEntry[]):Promise<
     // Each level's newest period end, from the top-ranked place's own series: the catalog
     // says when the newest period starts, and a five-year survey is labelled by its end.
     const found=await Promise.all(levels.map(async level=>{
-      const top=(await api.values(metric.metric_id,level,1))?.items?.[0];
+      const ranking=await api.values(metric.metric_id,level,1);
+      const top=ranking?.items?.[0];
       if(!top)return null;
+      // A layer where most places' figures are left out of the ranking — an older survey,
+      // or a margin over half the figure — would be a map of hatching, so the measure is
+      // not offered there; its places' figures stay on their own pages (owner, 2026-11-09).
+      // Counted against the places that have a figure, so a source that covers only some
+      // places is not judged by it.
+      const leftOut=ranking.left_out?.length??0;
+      if(ranking.total<leftOut)return null;
       const series=await api.observations(top.region_id,metric.metric_id);
       return [level,series?.observations.map(o=>o.period_end).sort().at(-1)??null] as const;
     }));
