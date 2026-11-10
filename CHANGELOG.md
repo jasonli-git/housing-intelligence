@@ -54,6 +54,13 @@ are not yet recorded here.
 
 ### Changed
 
+- **The home page's US market section is an indicators table** (2026-11-10, ARCHITECTURE
+  #486), replacing the ten turning cards: all 14 national figures in rows under Buying,
+  Renting, Building and Owners, each with its latest value, the value a year ago, the
+  change, a two-year line, how it reads, its period and its source. A line above names
+  what got harder and easier. On a phone the table keeps the name, latest, change and
+  line, with the reading, period and source under the name. `FlipCard` is removed.
+
 - **The housing map no longer scrolls to the site footer** (2026-11-10, ARCHITECTURE
   #485): its tools, publisher notices and sources open from the map's menu ("Sources &
   notices") as a panel over the map, with a close button.
