@@ -202,6 +202,19 @@
   }
   main.atlas-app .atlas-measure-picker .atlas-tile > span:last-child { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 11px; line-height: 1.25; color: var(--text-secondary); }
   main.atlas-app .atlas-measure-picker .atlas-tile[aria-pressed="true"] > span:last-child { color: var(--plate-ink); font-weight: 650; }
+  /* Readable small text (owner, 2026-11-09): the measure's definition, the notes and the
+     legend's lines were 10-12px. */
+  main.atlas-app .atlas-how-to-read { font-size: 14px !important; line-height: 1.5 !important; }
+  main.atlas-app .atlas-reading span { font-size: 13px !important; }
+  main.atlas-app .atlas-notes { font-size: 14px !important; line-height: 1.55 !important; }
+  main.atlas-app .atlas-legend small { font-size: 12.5px !important; line-height: 1.4; }
+  main.atlas-app .atlas-measure-about {
+    position: sticky; top: -1rem; z-index: 2; min-height: 3.2em; margin: 0 -1rem .3rem; padding: .55rem 1rem;
+    background: var(--plate-paper); border-bottom: 1px solid var(--plate-rule);
+    color: var(--text-secondary); font: 14px/1.45 var(--font-text);
+  }
+  main.atlas-app .atlas-measure-about b { color: var(--plate-ink); font-weight: 600; }
+  @media (hover: none) { main.atlas-app .atlas-measure-about { display: none; } }
   main.atlas-app .atlas-unavailable { padding: 6rem var(--atlas-edge) 0; }
 
   /* ---------- phones and narrow windows ---------- */

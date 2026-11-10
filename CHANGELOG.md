@@ -54,6 +54,12 @@ are not yet recorded here.
 
 ### Changed
 
+- **Definitions and small print are readable** (2026-11-09): a definition opened from an
+  underlined word is set at 15px rather than 12px, in a wider box (384px, the screen's
+  width less a margin on a phone); notes and source lines everywhere go from 12px to
+  13px. On the housing map, the measure's definition and notes are 14px, the legend's
+  lines 12.5px (from 10px), and the catalogue defines the measure pointed at or focused
+  in a line above its tiles, on screens with a pointer.
 - **Survey rankings use one survey, and leave out figures too uncertain to place**
   (2026-11-09, ARCHITECTURE #484): a Census survey measure is ranked, and mapped, on its
   newest five-year survey only; a place that survey publishes nothing for was ranked on
