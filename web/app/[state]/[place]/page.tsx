@@ -47,7 +47,7 @@ import { TREND_METRICS } from "@/lib/trendMetrics";
 import { marketDistribution } from "@/lib/marketPortrait";
 import { marketPortraitData } from "@/lib/marketPortraitData";
 import { arc, projector, ringsOf, shapes } from "@/lib/storyMap";
-import { leadingDestination } from "@/lib/stories";
+import { leadingDestination, STORIES } from "@/lib/stories";
 import { ordinal } from "@/lib/ranks";
 import { uncertaintiesFrom } from "@/lib/uncertainty";
 import { verdictHeadline } from "@/lib/verdict";
@@ -318,6 +318,12 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   // Every panel's title states its finding, from the same figures the picture draws.
   const asOf = (row?: { period_end: string }) => row ? new Date(`${row.period_end.slice(0, 7)}-15`).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }) : "";
   const homeBox = boxes.find((b) => b.id === "zhvi_sfr");
+  // The header leads with recorded sales where they exist, so its chart sets the same
+  // measure among the same peers, on the log axis the other cohorts use.
+  const saleValues = medianSale ? [...(await townValues("sr1a_median_sale_price", medianSale.period_start)).values()].filter((v) => v > 0) : [];
+  const saleDist = marketDistribution(saleValues);
+  const saleBox: typeof homeBox = medianSale && saleDist && saleDist.max > saleDist.min ? { id: "sr1a_median_sale_price", label: "Sale price", box: saleDist, own: medianSale.value, count: saleValues.length,
+    x: (v: number) => (Math.log(v / saleDist.min) / Math.log(saleDist.max / saleDist.min)) * 100, below: saleValues.filter((v) => v < medianSale.value).length / saleValues.length * 100 } : undefined;
   const versusTypical = homeBox ? (homeBox.own / homeBox.box.median - 1) * 100 : null;
   const peers = `${region.state_code} ${peerNoun(peer_level)}`;
   const priceTitle = versusTypical === null ? "The typical home" : `${Math.abs(versusTypical).toFixed(0)}% ${versusTypical >= 0 ? "above" : "below"} the typical ${peers.replace(/ies$/, "y").replace(/s$/, "")}`;
@@ -701,7 +707,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   // Each act closes by handing on: a tool for the question, then the stories behind its figures.
   const tales = (topics: PlaceStoryTopic[]) => { const items = deepStories.filter((item) => topics.includes(item.topic)); return items.length > 0 && <ul className={acts.tales}>{items.map((item) => <li key={item.topic}><Link href={item.href} prefetch={false}>
     <ThemedShot name={`stories/${item.slug}`} width={1440} height={900} className={acts.thumb} />
-    <span><strong>{item.headline}</strong><small>Story · {item.title}</small></span>
+    <span><strong>{STORIES.find((entry) => entry.href === `/stories/${item.slug}`)?.title ?? item.title}</strong><small>In {name}: {item.headline}</small></span>
   </Link></li>)}</ul>; };
   const said = (items: { value: string; label: string }[]) => <dl className={`${acts.rows} ${acts.said}`}>{items.map((item) => <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl>;
   const compareHref = `/compare${placesQuery([regionId, ...(similar?.matches.slice(0, 3).map((m) => m.region_id) ?? [])])}`;
@@ -1006,10 +1012,16 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
   const rentBox = boxes.find((b) => b.id !== "zhvi_sfr");
   const placeChart = (box: typeof homeBox, what: string, who: "buy" | "rent") => box && <figure className={acts.place} data-for={who} role="img" aria-label={`${what}: ${name} ${dollars(box.own)}, median ${dollars(box.box.median)} of ${box.count} ${peers}.`}>
-    <figcaption><span>Where {name} sits among {box.count} {peers}, by {what}</span><span>{dollars(box.own)}</span></figcaption>
+    <figcaption><span>Where {name} sits by {what}, among the {box.count} {peers} with a figure for the same period</span><span>{dollars(box.own)}</span></figcaption>
     <div className={acts.track}><hr /><u style={{ left: `${box.x(box.box.q1)}%`, width: `${box.x(box.box.q3) - box.x(box.box.q1)}%` }} /><b style={{ left: `${box.x(box.box.median)}%` }} /><i style={{ left: `${box.x(box.own)}%` }} /></div>
     <p className={acts.scale}><span>Lowest {dollars(box.box.min)}</span><span>Middle half boxed · median {dollars(box.box.median)}</span><span>Highest {dollars(box.box.max)}</span></p>
   </figure>;
+
+  // The renting reader's opening sentence, by the thirds the home-value sentence uses.
+  const rentMeasure = comparisonMeasures(packet.levels, uncertainties, [askRow ? "zori_all" : "acs_median_gross_rent"])[0];
+  const third = (lowAt: number, highAt: number) => (lowAt >= 2 / 3 ? "higher than in most of" : highAt <= 1 / 3 ? "lower than in most of" : lowAt >= 1 / 3 && highAt <= 2 / 3 ? "near the middle among" : "difficult to place among");
+  const rentPace = rentChange && rentChangePosition !== null ? (rentChange.pct_change < 0 ? "they fell over the past five years" : rentChange.pct_change === 0 ? "they were unchanged over the past five years" : `they rose ${rentChangePosition >= 2 / 3 ? "faster than most" : rentChangePosition <= 1 / 3 ? "more slowly than most" : "at about the typical pace"} over the past five years`) : null;
+  const rentHeadline = rentMeasure ? `${askRow ? "Asking rents" : "The rents tenants pay"} in ${name} are ${third(rentMeasure.low, rentMeasure.high)} the ${rentMeasure.row.of} ${unitPlural} ${askRow ? "Zillow covers" : "the Census survey covers"} in ${scopeName(region.state_code)}${askRow && rentPace ? `, and ${rentPace}` : ""}.` : null;
 
   const actList = ([
     { id: "values", nav: "Prices and rents", title: "Home prices", question: "What do homes cost here?", body: priceAct, rent: { title: "Rents", question: "What does renting cost here?", body: rentAct } },
@@ -1030,7 +1042,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <div>
           <p className={styles.kicker}>{county ? `${displayName(county)}, ` : ""}{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""}</p>
           <h1>{name}</h1>
-          {headline && <p className={acts.thesis}>{headline}</p>}
+          {rentHeadline ? <>{headline && <p className={acts.thesis} data-for="buy">{headline}</p>}<p className={acts.thesis} data-for="rent">{rentHeadline}</p></> : headline && <p className={acts.thesis}>{headline}</p>}
           <ComputedBadge />
         </div>
         {frame && town && <svg viewBox={`0 0 ${frame.width} ${frame.height}`} role="img" aria-label={`${name} on a map of ${scopeName(region.state_code)}`}>
@@ -1038,7 +1050,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <circle cx={town.centre[0]} cy={town.centre[1]} r="8" fill="var(--here)" stroke="var(--hero-kind)" strokeWidth="2" />
         </svg>}
         <TenureSwitch />
-        {placeChart(homeBox, "typical home value", "buy")}
+        {placeChart(saleBox ?? homeBox, saleBox ? "median sale price" : "typical home value", "buy")}
         {placeChart(rentBox, "typical asking rent", "rent")}
         {band(figures, "buy")}
         {band(rentFigures, "rent")}
