@@ -130,7 +130,22 @@ export type RankedRegion = {
   /** The margin of `value`, whichever the basis, and of each end of a change (0018). */
   margin_of_error?: number | null;
   start_margin?: number | null;
-  end_margin?: number | null;
+  end_margin?: number | null;  /** basis=value: the end of the period the value describes. */
+  period_end?: string | null;
+};
+
+/**
+ * A place with a figure a value ranking leaves out (2026-11-09): a survey ranks only its
+ * newest edition (`older`), and no figure whose margin is over half of it (`uncertain`).
+ */
+export type LeftOutRegion = {
+  region_id: number;
+  name: string;
+  value: number;
+  margin_of_error: number | null;
+  period_start: string;
+  period_end: string;
+  reason: "older" | "uncertain";
 };
 
 export type Ranking = {
@@ -144,6 +159,8 @@ export type Ranking = {
   /** Full cohort size before the request limit; compare with items.length. */
   total: number;
   items: RankedRegion[];
+  /** basis=value only; absent from files published before 2026-11-09. */
+  left_out?: LeftOutRegion[];
 };
 
 export type WaterSystem = {
