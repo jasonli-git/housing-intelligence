@@ -1,5 +1,5 @@
 import {expect,it} from "vitest";
-import {atlasColor,atlasQuintileColor,atlasValue,atlasReading,ATLAS_COLORS,quintileBreaks,layerForZoom,type AtlasMeasure} from "./housingAtlas";
+import {atlasColor,atlasQuintileColor,atlasRank,atlasValue,atlasReading,ATLAS_COLORS,quintileBreaks,layerForZoom,type AtlasMeasure} from "./housingAtlas";
 const row={id:5,name:"Atlantic County",rank:1,of:21,change:20,latest:300000};
 const measure:AtlasMeasure={metric_id:"zhvi_sfr",label:"Home value",unit:"usd",direction:"neutral",source:"Zillow",sourceUrl:"",definition:"",windows:{"5y":{start:"2021-08-31",end:"2026-08-31",rows:[row]}},latest:{start:null,end:"2026-09-30",rows:[{...row,latest:310000}],periods:{5:"2026-09-30"}}};
 it("latest uses actual latest records, not the change window endpoint",()=>{expect(atlasReading(measure,"latest")?.rows[0].latest).toBe(310000);expect(atlasReading(measure,"5y")?.rows[0].latest).toBe(300000);});
@@ -23,4 +23,10 @@ it("zooming moves only between the nation and the state; the state's layer is ke
   expect(layerForZoom("zip",9,"zip")).toBe("zip");
   expect(layerForZoom("municipality",.9,"municipality")).toBe("municipality");
   expect(layerForZoom("municipality",.82,"municipality")).toBe("states");
+});
+it("ranks a figure highest first, ties sharing a rank and a missing figure unranked",()=>{
+  expect(atlasRank(30,[10,30,20])).toEqual({rank:1,of:3,tied:false});
+  expect(atlasRank(10,[10,30,20])).toEqual({rank:3,of:3,tied:false});
+  expect(atlasRank(20,[30,20,20,10])).toEqual({rank:2,of:4,tied:true});
+  expect(atlasRank(null,[1,2])).toBeNull();
 });

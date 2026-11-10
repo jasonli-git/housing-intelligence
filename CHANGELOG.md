@@ -54,6 +54,49 @@ are not yet recorded here.
 
 ### Changed
 
+- **The housing atlas is a full-screen map** (2026-11-09, ARCHITECTURE #479): no site bar
+  and no title block; a slim bar of its own runs across the top, with the map below it. Each card can be put away
+  to a chip, and "Map only" clears every panel. On a phone the controls wait behind a chip
+  and the ranking is a bottom sheet that peeks with the selected place. The atlas now opens
+  on New Jersey's towns and their typical home price instead of the United States and
+  population, a selected place shows its rank ("5th highest of 388 towns"), and the ranked
+  table's header no longer lets rows show through it. A home-value map switches between
+  Zillow (current, 388 towns) and the Census survey (560 towns) in one tap, and a town
+  Zillow leaves out shows its Census figure in its card, labelled as the survey's.
+- **Suggested measures on the housing atlas** (2026-11-09, ARCHITECTURE #479): one-tap
+  buttons for the measures most readers come for — home prices, rent, property taxes,
+  affordability, incomes, commute, flood risk, nearness to a train, age of homes and
+  moving in — each shown only where the layer has it. They are the controls card's
+  measure picker, with the full catalogue one "More" tile further. Each is a layer tile: a
+  small map of New Jersey's towns in that measure's own shades, so a reader sees where it
+  is high before choosing it (county shades where only counties are published). The shades
+  are worked out at build time into one small file, `/atlas/previews.json`. The card is now
+  the measure as its title, one row for Zillow or Census and the layer, the tiles, and a
+  footer with time, the way out to the United States and sharing. How many places have
+  no figure moved to the legend. On a phone a "Layers" tile beside the zoom buttons opens
+  the card.
+- **The housing atlas's catalogue is a grid of layer tiles, and shorter** (2026-11-09,
+  ARCHITECTURE #482): every measure is a tile, grouped as before; search waits behind a
+  magnifier, so opening the catalogue on a phone no longer raises the keyboard (typing a
+  letter on a keyboard opens it). Near-twin measures are folded together: rent by size of
+  home (all, studio, 1 to 4+ beds) and the three flood areas are switches on the card, as
+  Zillow or Census already was, and duplicates and technical measures (HUD's cost burdens,
+  the Census survey's population where the annual estimate exists, the parcels' year built,
+  the split private-school shares, the Director's Ratio and general tax rate, homes without
+  plumbing or a kitchen, parcel counts, the rent quartiles) are left out of the atlas only.
+  The town catalogue went from 64 measures to 41; a shared link to one left out still opens.
+- **The housing atlas sits on a map, and gives a phone more of it** (2026-11-09,
+  ARCHITECTURE #483): New Jersey is drawn on water among its neighbours' land, with nine
+  of its cities and New York and Philadelphia named, on warmer paper (a deep blue-black in
+  dark mode). On a phone the measure's name sits in the bar and opens the controls, the
+  chip row under the bar is gone, and the ranking rests as one line — the chosen place,
+  its figure and rank, or the ranking's name — with the colour scale beside it in place
+  of the floating legend, pulling up for the list. The menu is an icon there.
+- **The housing atlas pans and zooms without lag** (2026-11-09, ARCHITECTURE #480): the
+  map's 564 town outlines and the ranked table are no longer rebuilt on every frame of a
+  move, and figures are formatted with formatters built once. Zoom frames in the
+  development build went from about 29ms to 13ms, and the stall at the start of a zoom
+  from about 225ms to 60ms.
 - **Boroughitis dates each town from the state's own history** (2026-11-06,
   ARCHITECTURE #476): John P. Snyder's *The Story of New Jersey's Civil Boundaries,
   1606–1968* replaces Wikidata, which had recorded settlement dates for some boroughs

@@ -148,3 +148,15 @@ export function layerForZoom(current: AtlasLayer, zoom: number, stateLayer: Atla
   if (current === "states") return zoom >= ENTER_STATE ? stateLayer : "states";
   return zoom < LEAVE_STATE ? "states" : current;
 }
+
+/**
+ * Where a place's figure falls among the places shown, highest first, whatever order the
+ * table is sorted in: a figure on the map means more beside its rank (review of
+ * 2026-11-09). Equal figures share a rank; a place with no figure has none.
+ */
+export function atlasRank(value: number | null, values: number[]): { rank: number; of: number; tied: boolean } | null {
+  if (value === null || !Number.isFinite(value)) return null;
+  const higher = values.filter((v) => v > value).length;
+  const same = values.filter((v) => v === value).length;
+  return { rank: higher + 1, of: values.length, tied: same > 1 };
+}
