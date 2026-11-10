@@ -79,8 +79,9 @@ Each is registered only once its file lands (a manual source with no file fails
 - **Reader testing.** Five task-based conversations on the new town and ZIP pages (find
   the cost of owning, the tax bill, whether a place is pricier than its neighbours)
   before any further restructure. Not done.
-- **Accessibility run.** `make check-accessibility` was not run on the new layout; it
-  needs a full static build.
+- **The accessibility gate does not scan the renting view.** `make check-accessibility`
+  passed on 2026-11-10, and a one-off scan of `?for=rent` pages and four more places
+  passed after one contrast fix; the gate's own page list has no `?for=rent` address.
 - **Share image per place.** Place pages still share the site's generic preview image.
 - **Download and citation per chart.** Each act links to the full report instead. Check
   each source's redistribution terms first (Zillow's above all).
