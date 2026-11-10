@@ -1,4 +1,4 @@
-.poster { --poster-hero: var(--poster-tone-11); --on-series: var(--poster-tone-8); --paper: var(--poster-tone-12); --paper-2: var(--poster-tone-13); max-width: var(--shell); margin-inline: auto; padding: 0 16px 48px; }
+.poster { --part-1: var(--series-1); --part-2: color-mix(in srgb, var(--series-1) 58%, var(--surface-card)); --part-3: color-mix(in srgb, var(--series-1) 30%, var(--surface-card)); --part-4: color-mix(in srgb, var(--text-secondary) 55%, var(--surface-card)); --poster-hero: var(--poster-tone-11); --on-series: var(--poster-tone-8); --paper: var(--poster-tone-12); --paper-2: var(--poster-tone-13); max-width: var(--shell); margin-inline: auto; padding: 0 16px 48px; }
 .panel { padding: clamp(24px, 5vw, 40px); }
 .panel h2 { margin: 0 0 16px; font-size: var(--text-small); font-weight: 700; letter-spacing: var(--track-label); text-transform: uppercase; }
 .caption { margin: 10px 0 0; font-size: var(--text-note); }
@@ -352,3 +352,5 @@
 .poster.compact > .hero:has(:global(.place-photo)) > svg:global(.state-place-artwork-header) { top: calc(var(--banner) + 14px); right: 116px; }
 .poster > .hero > svg:global(.state-place-artwork-header) :is(:global(.state-artwork-wash), :global(.state-artwork-points)) { fill: currentColor; }
 @media (max-width: 999px) { .poster > .hero > svg:global(.state-place-artwork-header), .poster.compact > .hero > svg:global(.state-place-artwork-header) { top: 8px; right: -8px; width: 130px; opacity: .3; } .poster.compact > .hero:has(:global(.place-photo)) > svg:global(.state-place-artwork-header) { top: calc(var(--banner) + 14px); right: 64px; } }
+/* Plain sheets (county pages): panels drop their tints, so colour is left to the data. */
+.plain .panel:not(.hero):not(.reading) { --county-line: var(--surface-card); color: var(--text-primary); background: var(--surface-card); }

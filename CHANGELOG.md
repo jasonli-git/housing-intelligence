@@ -60,6 +60,15 @@ are not yet recorded here.
 
 ### Changed
 
+- **Town and ZIP pages are a poster and four acts** (2026-11-10, ARCHITECTURE #489): the
+  header gives the computed sentence, where the place sits among its peers and the same
+  four figures on every place; the body is home prices, monthly cost, homes and people,
+  and living here, each ending in a link to the tool for that question. Recorded sale
+  prices lead and Zillow's estimate is labelled as modelled; every exhibit says what kind
+  of figure it shows. Panels are plain, one colour marks the place in every chart, and on
+  phones the supporting exhibits open from one button per act. County pages take the same
+  header, labels and plain panels, and gain the same-house tax comparison.
+
 - **The home page's US market section is an indicators table** (2026-11-10, ARCHITECTURE
   #486), replacing the ten turning cards: all 14 national figures in rows under Buying,
   Renting, Building and Owners, each with its latest value, the value a year ago, the

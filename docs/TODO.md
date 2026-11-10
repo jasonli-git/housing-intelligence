@@ -74,6 +74,24 @@ Each is registered only once its file lands (a manual source with no file fails
 - **Theme CSS consolidation.** Guide and support-tool modules override cross-page theme rules
   with scoped selectors; folding those rules together is separate work.
 
+### Place pages after #489 (poster and four acts)
+
+- **Reader testing.** Five task-based conversations on the new town and ZIP pages (find
+  the cost of owning, the tax bill, whether a place is pricier than its neighbours)
+  before any further restructure. Not done.
+- **Accessibility run.** `make check-accessibility` was not run on the new layout; it
+  needs a full static build.
+- **Share image per place.** Place pages still share the site's generic preview image.
+- **Download and citation per chart.** Each act links to the full report instead. Check
+  each source's redistribution terms first (Zillow's above all).
+- **Story pages link back** to the place page's matching act; not built.
+- **The New Jersey page** keeps the earlier poster layout, its own bar colour and the
+  hypothetical-home tax figure in its header.
+- **`page.tsx` is still one 1,000-line component.** A panel registry (each exhibit
+  declaring its question, the data it needs and its priority) would replace the
+  hand-ordered acts.
+- **County pages still embed the calculator** the town pages now hand to the buyer's guide.
+
 ### Place and state pages after #451–#453
 
 - **Reader testing** of the market-first place page against the earlier cost-first one,
