@@ -41,8 +41,9 @@
 .prov a { color: inherit; }
 
 /* The acts */
-.act { margin-top: 56px; scroll-margin-top: 52px; }
-.actHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 12px; padding-top: 12px; border-top: 3px solid var(--text-primary); }
+/* Room between acts, so one question is on screen at a time. */
+.act { margin-top: clamp(96px, 12vw, 160px); scroll-margin-top: 52px; }
+.actHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 18px; padding-top: 16px; border-top: 3px solid var(--text-primary); }
 .actHead b { font: 600 13px var(--font-mono); color: var(--text-secondary); }
 .actHead h2 { margin: 0; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.02em; }
 .actHead p { margin: 0 0 0 auto; font-size: 14px; color: var(--text-secondary); }
@@ -125,7 +126,7 @@
   .figures > div:nth-child(odd) { padding-left: 0; border-left: 0; }
   .figures > div:nth-child(even) { padding-right: 0; }
   .actHead p { margin-left: 0; flex-basis: 100%; }
-  .act { margin-top: 40px; }
+  .act { margin-top: 88px; }
   .profileHead, .profile > div { grid-template-columns: minmax(0, 1fr) auto; }
   .profileHead span:nth-child(3) { display: none; }
   .profile > div > div { grid-column: 1 / -1; grid-row: 2; margin: 6px 0 4px; }
@@ -158,3 +159,21 @@
 .page:not([data-tenure="rent"]) .tenure button:first-child, .page[data-tenure="rent"] .tenure button:last-child { color: var(--hero-kind); background: var(--poster-tone-8); }
 .tenure button:focus-visible { outline: 3px solid currentColor; outline-offset: -5px; }
 @media print { .tenure { display: none; } }
+
+/* Colour with a job: each act has one accent, saying which question you are in. Its lead
+   exhibit is tinted with it, and the supporting exhibits are separate neutral cards. */
+.act[id="values"] { --act: var(--kind-tax); }
+.act[id="owning"] { --act: var(--cost-accent); }
+.act[id="housing"] { --act: var(--explore-accent); }
+.act[id="area"] { --act: var(--place-accent); }
+.page .actHead { border-top-color: var(--act); }
+.page .actHead b { display: inline-grid; place-items: center; width: 26px; height: 26px; font-size: 14px; color: var(--surface-1); background: var(--act); border-radius: 50%; align-self: center; }
+.page .sheet { display: grid; gap: 10px; overflow: visible; background: none; border-radius: 0; }
+.page .sheet > [data-for] { display: grid; gap: 10px; min-width: 0; }
+.page .lead { min-width: 0; background: var(--surface-card); border: 0; border-radius: 16px; }
+.page :is(.sheet, .sheet > [data-for]) > .lead:first-child { background: color-mix(in srgb, var(--act) 24%, var(--surface-card)); box-shadow: inset 0 3px 0 var(--act); }
+.page .tiles { gap: 10px; border-top: 0; }
+.page .tile { margin: 0; background: var(--surface-card); border: 0; border-radius: 16px; }
+.page .foot { padding: 6px 4px 0; border-top: 0; }
+.page .next a:first-child { color: var(--surface-1) !important; background: var(--act); border-color: var(--act); }
+@media (max-width: 720px) { .page .more { background: var(--surface-card); border: 0; border-radius: 16px; } }
