@@ -81,3 +81,6 @@ a.site-foot-repo:hover { border-color: var(--text-secondary); }
 a[aria-label] > .social-mark { margin-right: 0; }
 .follow-line { margin: 24px 0 0; font-size: 14px; color: var(--text-secondary); text-align: right; }
 .follow-line a { color: var(--text-primary); text-underline-offset: .2em; }
+
+/* Only the housing map shows the footer as a panel with a close button (atlas-app.css). */
+.site-foot-close { display: none; }

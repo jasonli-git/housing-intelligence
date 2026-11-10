@@ -54,6 +54,9 @@ are not yet recorded here.
 
 ### Changed
 
+- **The housing map no longer scrolls to the site footer** (2026-11-10, ARCHITECTURE
+  #485): its tools, publisher notices and sources open from the map's menu ("Sources &
+  notices") as a panel over the map, with a close button.
 - **Definitions and small print are readable** (2026-11-09): a definition opened from an
   underlined word is set at 15px rather than 12px, in a wider box (384px, the screen's
   width less a margin on a phone); notes and source lines everywhere go from 12px to

@@ -74,7 +74,11 @@ export async function SourceFooter() {
   // Three bands in one style (#460): the notices, the sources with the pages about the
   // data, and the code and data terms. No cards, so no band outranks the page above it.
   return (
-    <footer className="site-foot" aria-label="Site footer">
+    // An id to open it by: the housing map has no room below for a footer, and shows it
+    // as a panel from its menu instead (owner, 2026-11-10).
+    <footer className="site-foot" id="site-foot" tabIndex={-1} aria-label="Site footer">
+      {/* Closes the panel the housing map opens this footer in; hidden everywhere else. */}
+      <a className="site-foot-close" href="#main-content" aria-label="Close sources and notices">×</a>
       <div className="site-foot-inner">
         {/* Every tool from every page: the poster pages carry the short menu (#460). The
             same list as the home page's Tools section, so a new tool reaches both. */}

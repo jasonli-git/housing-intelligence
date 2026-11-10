@@ -52,6 +52,28 @@
   main.atlas-app .housing-atlas[data-moving="true"] .atlas-cities { opacity: .35; }
   main.atlas-app .atlas-bar-measure, main.atlas-app .atlas-peek { display: none; }
 
+  /* ---------- sources and notices (owner, 2026-11-10) ----------
+     The site footer carries the notices and sources every page must show (#137). Below a
+     full-screen map it made the page scroll; here it waits off screen and opens from the
+     menu ("Sources & notices", #site-foot) as a panel over the map. */
+  body:has(main.atlas-app) .site-foot {
+    position: fixed; top: calc(var(--atlas-bar, 48px) + 8px); right: 8px; bottom: 8px; z-index: 60;
+    width: min(34rem, calc(100vw - 16px)); margin: 0; overflow-y: auto; display: none;
+    background: var(--plate-paper); border: 1px solid var(--plate-strong-rule); border-radius: 16px;
+    box-shadow: 0 16px 40px var(--atlas-menu-shadow); font-size: 13.5px;
+  }
+  body:has(main.atlas-app) .site-foot:target { display: block; outline: none; }
+  body:has(main.atlas-app) .site-foot .site-foot-inner { padding: 1rem 1.1rem 1.5rem; }
+  body:has(main.atlas-app) .site-foot .site-foot-band { grid-template-columns: minmax(0, 1fr); gap: .45rem; }
+  body:has(main.atlas-app) .site-foot .site-foot-band > * { grid-column: 1; }
+  body:has(main.atlas-app) .site-foot .site-foot-band:first-child { border-top: 0; padding-right: 2.5rem; }
+  body:has(.site-foot:target) main.atlas-app .atlas-bar-menu-panel { display: none; }
+  body:has(main.atlas-app) .site-foot .site-foot-close {
+    position: sticky; top: .7rem; float: right; z-index: 2; margin: .7rem .7rem 0 0; display: grid; place-items: center;
+    width: 36px; height: 36px; border: 1px solid var(--plate-strong-rule); border-radius: 999px;
+    background: var(--plate-paper); color: var(--plate-ink); font: 22px/1 var(--font-text); text-decoration: none;
+  }
+
   /* ---------- the bar ----------
      A solid strip across the top edge, not a floating glass one: the map showing round a
      floating bar distracted more than it helped (owner, 2026-11-09). The map is drawn
