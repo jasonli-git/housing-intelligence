@@ -1159,3 +1159,61 @@ Considerations raised, not decided:
 - Getting stories in front of local reporters (NJ.com, NJ Spotlight). This is separate
   from data-source outreach.
 - Automated posting, covered in its own note, *Automated posting to Bluesky*.
+
+## Product shape: a funnel on a data foundation
+
+**Status:** Exploratory: an outside review generated with Fable 5.2, which the owner
+pasted on 2026-11-10. These are suggestions, not decisions, and nothing is approved for
+implementation.
+
+A suggested way to frame the site and what to work on next.
+
+1. **The three pillars as a funnel, not siblings.** Discover (stories), then understand
+   (places), then investigate (tools). The hand-offs between them would be the product:
+   - each story links to the places it names and to the tool view behind its chart;
+   - each place page shows the stories that feature it.
+2. **The data library as the foundation, not a fourth pillar.** Much of it already exists
+   internally: the source register, the completeness check, the stories register and
+   the measured-vs-modelled rule. A suggested order:
+   - first, a public catalogue and methodology page, plus "download this chart's data"
+     and a citation on every chart;
+   - next, bulk downloads (CSV/Parquet) and lineage;
+   - last, and only if people ask for it, a public API, which means committing to
+     versioning, uptime and support;
+   - before any of these, a check of each source's terms for redistribution. Zillow's
+     are the obvious risk.
+3. **A primary audience.** Movers and buyers, journalists and researchers, and local
+   officials and advocates want different things. One possible reason the tools take
+   long to refine is that "investigate" has no named investigator. The idea is to choose
+   one audience and serve the others incidentally.
+4. **Fewer, deeper tools.** Each tool would answer one question that fits in a sentence,
+   with the rest merged or cut. Stories could act as prototypes: one that keeps
+   prompting "what about my town?" points to the next tool.
+5. **Stories that are cheap to maintain.**
+   - Prefer stories that regenerate when the data refreshes over one-offs that go
+     stale.
+   - Pruning, like dropping Twin towns, is healthy.
+   - Stories are the distribution channel and place pages are the search long tail, so
+     investment could follow those roles.
+6. **Measure before the next big direction.** Suggested: privacy-friendly analytics,
+   on-site search logs, a feedback link and five conversations with real users. The
+   concern is that direction is currently set by what is interesting to build.
+7. **Make trust visible.** Sources, as-of dates and measured-vs-modelled labels on every
+   page are what Zillow doesn't show, and could be the site's differentiator.
+8. **Depth before breadth.** Hold off on other states until the New Jersey loop works end
+   to end and refreshes are close to automatic. One flagship topic specific to New
+   Jersey could give the site an identity a generic dashboard lacks.
+
+**The review's pick for one short-term move:** the cross-linking in point 1, plus the
+catalogue and downloads in point 2. Both mostly expose work already done.
+
+**Conflicts and overlaps with existing decisions** (noted, not resolved):
+
+- **Point 6 and the privacy text.** Point 6 conflicts with the privacy text's promise of
+  "no accounts, cookies, analytics, advertising or third-party trackers". On 2026-11-05
+  the owner decided against link tags for that reason. Search logs and analytics would
+  need that promise revisited.
+- **Point 2 and existing work.** Point 2 overlaps the Data Explorer (Milestone 59) and
+  the existing source pages.
+- **Point 8 and the second state.** Point 8 is close to ROADMAP's current position: the
+  second state is on hold until TODO and the open Director Notes are cleared.
