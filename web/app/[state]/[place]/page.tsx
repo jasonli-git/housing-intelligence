@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { glossTree } from "../../_poster/glossTree";
 import { MoreTiles } from "../../_poster/MoreTiles";
+import { TENURE_SCRIPT, TenureSwitch } from "../../_poster/TenureSwitch";
 import { OwnNumbers } from "../../_poster/OwnNumbers";
 import { CountyAtlas, type AtlasTown as AtlasTownRow } from "../../_poster/CountyAtlas";
 import { PosterNav } from "../../_poster/PosterNav";
@@ -15,6 +16,7 @@ import acts from "../../_poster/acts.module.css";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { Crumbs } from "@/components/Crumbs";
 import { Glossed } from "@/components/Glossed";
+import { InlineScript } from "@/components/InlineScript";
 import { ConsumerReading } from "@/components/ExplanationPanel";
 import { Masthead } from "@/components/Masthead";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
@@ -162,7 +164,11 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
 
   const month = cost ? eachMonth(ownershipInputs({ state: region.state_code, price: cost.home.value, ratePct: cost.rate.value,
     taxYear: cost.tax?.value ?? null, insuranceYear: cost.insurance?.value ?? null, utilitiesMonth: cost.utilities?.month ?? null, rentMonth: cost.rent?.value ?? null })) : null;
-  const rent = cost?.rent?.value ?? null;
+  // Zillow's asking rent covers 238 of 564 towns; the Census survey's median covers 499.
+  // Where Zillow has none the survey's figure stands in, and every use of it says so.
+  const askRow = level("zori_all"), paidRow = level("acs_median_gross_rent");
+  const rent = cost?.rent?.value ?? askRow?.value ?? paidRow?.value ?? null;
+  const rentIsSurvey = !cost?.rent && !askRow && !!paidRow;
   const line = (key: string) => month?.lines.find((l) => l.key === key)?.value ?? 0;
   const parts = [
     { label: "Mortgage", value: line("mortgage"), color: "var(--series-1)" },
@@ -500,18 +506,31 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const changePosition = change?.rank && change.of && change.of > 1 ? 1 - (change.rank - 1) / (change.of - 1) : null;
   const figures = [
     priceLevel && { label: medianSale ? "Median home sale price" : "Typical home value", value: money(priceLevel.value), kind: kind(priceLevel.metric_id), ...standing(priceLevel.metric_id), fine: medianSale ? `${medianSale.period_start ? `${monthYear(medianSale.period_start)} to ` : ""}${monthYear(medianSale.period_end)} · NJ deed records` : `${asOf(priceLevel)} · Zillow` },
-    month && { label: "Monthly cost to own", value: money(month.total), kind: "calculated" as RecordType, position: null, text: rent !== null ? `${money(rent)} to rent the typical rental` : null, fine: `Typical home, 20% down at ${cost!.rate.value.toFixed(2)}%` },
+    month && { label: "Monthly cost to own", value: money(month.total), kind: "calculated" as RecordType, position: null, text: rent !== null ? (rentIsSurvey ? `${money(rent)} median rent tenants pay` : `${money(rent)} to rent the typical rental`) : null, fine: `Typical home, 20% down at ${cost!.rate.value.toFixed(2)}%` },
     taxBill ? { label: "Median yearly property tax", value: money(taxBill.value), kind: kind("modiv_median_tax_bill"), ...standing("modiv_median_tax_bill"), fine: `${taxBill.period_end.slice(0, 4)} · NJ tax records` }
       : rentRow && { label: "Typical monthly rent", value: money(rentRow.value), kind: kind("zori_all"), ...standing("zori_all"), fine: `${asOf(rentRow)} · Zillow` },
     change && { label: `Home value, ${change.window_start.slice(0, 4)} to ${change.window_end.slice(0, 4)}`, value: formatChange(change.pct_change), kind: kind("zhvi_sfr"), position: changePosition,
       text: changePosition === null ? null : changePosition >= 0.5 ? `A bigger change than ${Math.min(Math.round(changePosition * 100), 99)}% of ${change.of} ${unitPlural}` : `A smaller change than ${Math.min(100 - Math.round(changePosition * 100), 99)}% of ${change.of} ${unitPlural}`, fine: "Zillow" },
   ].flatMap((figure) => (figure ? [figure] : []));
-  const figureBand = figures.length > 0 && <dl className={acts.figures} aria-label={`${name} at a glance`}>{figures.map((f) => <div key={f.label}>
+  type Figure = { label: string; value: string; kind: RecordType | null | undefined; position: number | null; text: string | null; fine: string };
+  const band = (items: Figure[], who?: "buy" | "rent") => items.length > 0 && <dl className={acts.figures} data-for={who} aria-label={`${name} at a glance${who === "rent" ? ", renting" : who === "buy" ? ", buying" : ""}`}>{items.map((f) => <div key={f.label}>
     <dt>{f.label}</dt>
     <dd className={acts.value}>{f.value}</dd>
     {f.text && <dd className={acts.peer}>{f.position !== null && <span className={acts.tick} aria-hidden="true"><i style={{ left: `${f.position * 100}%` }} /></span>}{f.text}</dd>}
     <dd className={acts.fine}>{f.kind && <Chip kind={f.kind} />}{f.fine}</dd>
   </div>)}</dl>;
+  const figureBand = band(figures);
+  // The renting reader's four: asking rent, what tenants pay, five-year change, cost burden.
+  const rentChange = packet.metrics.find((m) => m.metric_id === "zori_all");
+  const rentChangePosition = rentChange?.rank && rentChange.of && rentChange.of > 1 ? 1 - (rentChange.rank - 1) / (rentChange.of - 1) : null;
+  const burdenRow = level("acs_renter_cost_burden"), vacancyRow = level("acs_rental_vacancy_rate");
+  const rentFigures: Figure[] = [
+    askRow && { label: "Typical asking rent", value: money(askRow.value), kind: kind("zori_all"), ...standing("zori_all"), fine: `${asOf(askRow)} · Zillow` },
+    paidRow && { label: "Median rent tenants pay, with utilities", value: money(paidRow.value), kind: kind("acs_median_gross_rent"), ...standing("acs_median_gross_rent"), fine: `${paidRow.period_end.slice(0, 4)} · Census ACS` },
+    rentChange && { label: `Asking rent, ${rentChange.window_start.slice(0, 4)} to ${rentChange.window_end.slice(0, 4)}`, value: formatChange(rentChange.pct_change), kind: kind("zori_all"), position: rentChangePosition,
+      text: rentChangePosition === null ? null : rentChangePosition >= 0.5 ? `A bigger change than ${Math.min(Math.round(rentChangePosition * 100), 99)}% of ${rentChange.of} ${unitPlural}` : `A smaller change than ${Math.min(100 - Math.round(rentChangePosition * 100), 99)}% of ${rentChange.of} ${unitPlural}`, fine: "Zillow" },
+    burdenRow && { label: "Renters paying over 30% of income", value: `${(burdenRow.value * 100).toFixed(0)}%`, kind: kind("acs_renter_cost_burden"), ...standing("acs_renter_cost_burden"), fine: `${burdenRow.period_end.slice(0, 4)} · Census ACS` },
+  ].flatMap((figure) => (figure ? [figure] : []));
 
   // What stands out: the measures where this place sits at one end of its peers, each
   // handing on to the story that explains it, or to the report where no story does.
@@ -695,16 +714,9 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     .sort((a, b) => Math.abs(b.position - 0.5) - Math.abs(a.position - 0.5));
   const profileLead = profile[0];
 
-  const priceAct = (salesFigure || estimateFigure) ? <>
-    <div className={acts.lead}>
-      <h3 className={acts.find}>{priceFind}</h3>
-      <div className={acts.cols}>{salesFigure}{estimateFigure}</div>
-      {priceNote}
-    </div>
-    {(growthSeries.length > 1 || (ranked.length > 1 && county) || (similar && similar.matches.length > 0 && priceRow)) && <MoreTiles names={[growthSeries.length > 1 && "five-year growth", ranked.length > 1 && county && "rank in the county", similar && similar.matches.length > 0 && priceRow && "similar cheaper places"].flatMap((n) => (n ? [n] : []))}>
-      {growthSeries.length > 1 && <section className={`${acts.tile} ${acts.wide}`}>
-        <h3 className={acts.find}>{growthLeader.label} grew fastest: up {(growthLeader.points.at(-1)!.index - 100).toFixed(0)}% since {growthStart!.slice(0, 4)}</h3>
-        <svg className={styles.scatter} viewBox={`0 0 ${GW} ${GH}`} role="img" aria-label={`${growthSeries.map((g) => `${g.label} ${(g.points.at(-1)!.index - 100).toFixed(0)}%`).join(", ")} since ${growthStart!.slice(0, 4)}.`}>
+  const growthTileFor = (title: string) => growthSeries.length > 1 ? <section className={`${acts.tile} ${acts.wide}`}>
+        <h3 className={acts.find}>{title}</h3>
+        <svg className={styles.scatter} style={{ maxWidth: 720 }} viewBox={`0 0 ${GW} ${GH}`} role="img" aria-label={`${growthSeries.map((g) => `${g.label} ${(g.points.at(-1)!.index - 100).toFixed(0)}%`).join(", ")} since ${growthStart!.slice(0, 4)}.`}>
           <line x1={GL} x2={GW - GR} y1={gy(100)} y2={gy(100)} stroke="currentColor" strokeOpacity="0.4" />
           <text x={GL - 6} y={gy(100) + 4} textAnchor="end">0%</text>
           {growthSeries.map((g) => { const last = g.points.at(-1)!; return <g key={g.label}><polyline points={g.points.map((p) => `${gx(p.time)},${gy(p.index)}`).join(" ")} fill="none" stroke={g.color} strokeWidth="2.5" strokeLinejoin="round" /><text x={gx(last.time) + 8} y={gy(last.index) + 4}>{`${g.label} ${last.index >= 100 ? "+" : ""}${(last.index - 100).toFixed(0)}%`}</text></g>; })}
@@ -712,7 +724,28 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <text x={GW - GR} y={GH - 6} textAnchor="end">{new Date(Math.max(...growthTimes)).getUTCFullYear()}</text>
         </svg>
         <Prov kind="modelled">Each line starts at 0% in {growthStart!.slice(0, 4)}, in dollars not adjusted for inflation. Zillow; income is the Census ACS five-year survey, so it moves slowly.</Prov>
-      </section>}
+      </section> : null;
+  const rentLine = growthSeries.find((g) => g.label === "Rent");
+  const growthTile = growthSeries.length > 1 ? growthTileFor(`${growthLeader.label} grew fastest: up ${(growthLeader.points.at(-1)!.index - 100).toFixed(0)}% since ${growthStart!.slice(0, 4)}`) : null;
+  const rentGrowthTile = growthSeries.length > 1 ? growthTileFor(rentLine ? `Asking rent is ${rentLine.points.at(-1)!.index >= 100 ? "up" : "down"} ${Math.abs(rentLine.points.at(-1)!.index - 100).toFixed(0)}% since ${growthStart!.slice(0, 4)}` : `${growthLeader.label} grew fastest: up ${(growthLeader.points.at(-1)!.index - 100).toFixed(0)}% since ${growthStart!.slice(0, 4)}`) : null;
+  const billsTile = bills.length > 0 ? <section className={acts.tile}>
+        <h3 className={acts.find}>Utilities run about {dollars(billTotal)} a month</h3>
+        <StoryBars rows={bills.map((b) => ({ label: b.label, value: b.value, formatted: dollars(b.value) }))} />
+        <Prov kind="survey">Typical bills for homes billed for each, Census ACS. Already counted in the cost to own.</Prov>
+      </section> : null;
+  const pressureTile = pressureStory ? <section className={`${acts.tile} ${acts.wide} ${styles.pressure}`}>
+        <h3 className={acts.find}>{pressureStory.headline}</h3>
+        <StoryBars rows={pressureStory.rows} />
+        <Prov kind="survey">{pressureStory.source}, {pressureStory.period} · {storyLink("pressure")}</Prov>
+      </section> : null;
+  const priceAct = (salesFigure || estimateFigure) ? <>
+    <div className={acts.lead}>
+      <h3 className={acts.find}>{priceFind}</h3>
+      <div className={acts.cols}>{salesFigure}{estimateFigure}</div>
+      {priceNote}
+    </div>
+    {(growthSeries.length > 1 || (ranked.length > 1 && county) || (similar && similar.matches.length > 0 && priceRow)) && <MoreTiles names={[growthSeries.length > 1 && "five-year growth", ranked.length > 1 && county && "rank in the county", similar && similar.matches.length > 0 && priceRow && "similar cheaper places"].flatMap((n) => (n ? [n] : []))}>
+      {growthTile}
       {ranked.length > 1 && county && <section id="county" className={acts.tile}>
         <h3 className={acts.find}>{countyRank === 0 ? `The priciest of ${ranked.length} Zillow-covered towns in ${displayName(county)}` : `${ordinal(countyRank + 1)} of ${ranked.length} Zillow-covered towns in ${displayName(county)}`}</h3>
         {countyFrame && <svg className={acts.mapSmall} viewBox={`0 0 ${countyFrame.width} ${countyFrame.height}`} role="img" aria-label={`Towns in ${displayName(county)} shaded by typical home value, with ${name} outlined.`}>
@@ -759,7 +792,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <p className={acts.note}>The typical home against the median household income, not any one household. The mark is the common 30% guideline.{multiple !== null && lessThanHere !== null ? ` A typical home here costs ${multiple.toFixed(1)} times the typical income, a higher multiple than ${lessThanHere.toFixed(0)}% of ${unitPlural}. ` : " "}{multiple !== null && story("market") && <Link href={placeStoryHref("market", regionId)} prefetch={false}>See every {unitWord} on one chart</Link>}</p>
         </div>}
       </div>
-      <Prov kind="calculated">An estimate, not a quote: 20% down at {cost!.rate.value.toFixed(2)}%, {homeRow ? "typical home and typical rental" : "at a recent sale price"}.{month.principal > 0 ? ` About ${dollars(month.principal)} of owning goes into the home.` : ""} Zillow, Census ACS, NJ Division of Taxation, Freddie Mac.</Prov>
+      <Prov kind="calculated">An estimate, not a quote: 20% down at {cost!.rate.value.toFixed(2)}%, {homeRow ? "typical home" : "at a recent sale price"}{rent === null ? "" : rentIsSurvey ? ", against the Census survey’s median rent, which includes long-time tenants" : " and typical rental"}.{month.principal > 0 ? ` About ${dollars(month.principal)} of owning goes into the home.` : ""} Zillow, Census ACS, NJ Division of Taxation, Freddie Mac.</Prov>
     </div>}
     {taxBill && <div id="taxes" className={acts.lead}>
       <h3 className={acts.find}>Property tax is {dollars(taxBill.value)} a year{taxStanding ? `, ${taxStanding.charAt(0).toLowerCase()}${taxStanding.slice(1)}` : ""}</h3>
@@ -785,27 +818,85 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <StoryBars rows={rentSizes} />
         <Prov kind="survey"><Glossed text="Median" /> gross rent, Census ACS. Lower than the typical market rent above, partly because it includes long-time tenants.</Prov>
       </section>}
-      {bills.length > 0 && <section className={acts.tile}>
-        <h3 className={acts.find}>Utilities run about {dollars(billTotal)} a month</h3>
-        <StoryBars rows={bills.map((b) => ({ label: b.label, value: b.value, formatted: dollars(b.value) }))} />
-        <Prov kind="survey">Typical bills for homes billed for each, Census ACS. Already counted in the cost to own.</Prov>
-      </section>}
+      {billsTile}
       {lendingStory && <section className={acts.tile}>
         <h3 className={acts.find}>{lendingStory.headline}</h3>
         <StoryBars rows={lendingStory.rows} />
         {said([level("hmda_denial_rate") && { value: pct("hmda_denial_rate")!, label: "of applications denied" }, level("hmda_median_rate") && { value: `${level("hmda_median_rate")!.value.toFixed(2)}%`, label: "median mortgage rate" }, level("hmda_median_ltv") && { value: `${level("hmda_median_ltv")!.value.toFixed(0)}%`, label: "median loan-to-value" }].flatMap((fact) => (fact ? [fact] : [])))}
         <Prov kind="calculated">{lendingStory.source}, {lendingStory.period} · {storyLink("lending")}</Prov>
       </section>}
-      {pressureStory && <section id="affordability" className={`${acts.tile} ${acts.wide} ${styles.pressure}`}>
-        <h3 className={acts.find}>{pressureStory.headline}</h3>
-        <StoryBars rows={pressureStory.rows} />
-        <Prov kind="survey">{pressureStory.source}, {pressureStory.period} · {storyLink("pressure")}</Prov>
-      </section>}
+      {pressureTile}
     </MoreTiles>}
     <div className={acts.foot}>
       <p className={acts.next}><Link href={`/guide?place=${regionId}`}>Work it out with your own numbers</Link>{!isZip && <Link href={`/afford?place=${regionId}&county=${county?.region_id ?? "all"}`}>Places within my budget</Link>}{taxBill && <Link href={taxHref}>Look up a property’s tax bill</Link>}<Link href="/help">Housing help</Link></p>
     </div>
   </> : null;
+
+  // The renting reader's first act: asking rent, then what tenants pay, each labelled.
+  const fitLine = (values: number[]) => { const hi = Math.max(...values), lo = Math.min(...values); return values.map((v, i) => `${(i / Math.max(values.length - 1, 1)) * 600},${94 - ((v - lo) / (hi - lo || 1)) * 88}`).join(" "); };
+  const rentObs = series.find((item) => item.metricId === "zori_all")?.observations ?? [];
+  const rentEnd = rentObs.at(-1)?.period_end;
+  const rentRecent = rentEnd ? rentObs.filter((o) => o.period_end >= `${Number(rentEnd.slice(0, 4)) - 10}${rentEnd.slice(4)}`) : [];
+  const lower = (text: string | null) => (text ? `, ${text.charAt(0).toLowerCase()}${text.slice(1)}` : "");
+  const rentFind = askRow ? `Asking rent is ${dollars(askRow.value)} a month${lower(standing("zori_all").text)}` : paidRow ? `Tenants here pay a median of ${dollars(paidRow.value)} a month${lower(standing("acs_median_gross_rent").text)}` : "";
+  const none = (what: string) => <div className={acts.lead}><p className={acts.note}>No {what} is published for {name}. <Link href={reportHref}>Every figure that is, in the full report</Link>.</p></div>;
+  const rentAct = (askRow || paidRow) ? <>
+    <div className={acts.lead}>
+      <h3 className={acts.find}>{rentFind}</h3>
+      <div className={acts.cols}>
+        {askRow && <div>
+          <p className={acts.sub}>Zillow’s estimate of asking rent</p>
+          <p className={acts.big}>{dollars(askRow.value)}<small style={{ fontSize: "0.4em", letterSpacing: 0 }}> a month</small></p>
+          {rentRecent.length > 1 && <>
+            <svg className={acts.trend} viewBox="0 0 600 100" preserveAspectRatio="none" role="img" aria-label={`Typical asking rent from ${rentRecent[0].period_end.slice(0, 4)} to ${rentEnd!.slice(0, 4)}: ${dollars(rentRecent[0].value)} to ${dollars(rentRecent.at(-1)!.value)}.`}><polyline points={fitLine(rentRecent.map((o) => o.value))} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" /></svg>
+            <p className={acts.ends}><span>{rentRecent[0].period_end.slice(0, 4)} · <b>{dollars(rentRecent[0].value)}</b></span><span>{rentEnd!.slice(0, 4)} · <b>{dollars(rentRecent.at(-1)!.value)}</b></span></p>
+          </>}
+          <Prov kind={kind("zori_all")}>Zillow Observed Rent Index, {asOf(askRow)}. The line is drawn to its own range, not from $0.</Prov>
+        </div>}
+        {paidRow && <div>
+          <p className={acts.sub}>What tenants pay now</p>
+          <p className={acts.big}>{dollars(paidRow.value)}<small style={{ fontSize: "0.4em", letterSpacing: 0 }}> a month</small></p>
+          {rentSizes.length > 1 && <div style={{ marginTop: 14 }}><StoryBars rows={rentSizes} /></div>}
+          <Prov kind={kind("acs_median_gross_rent")}><Glossed text="Median" /> gross rent, utilities included, Census ACS five-year survey ending {paidRow.period_end.slice(0, 4)}.</Prov>
+        </div>}
+      </div>
+      <p className={acts.note}>{askRow && paidRow ? "Asking rent is what a new lease costs. The survey’s figure includes long-time tenants and counts utilities, so the two differ." : askRow ? "The Census survey publishes no median rent for this place." : `Zillow publishes no asking rent for ${name}, so this is the Census survey’s figure. It includes long-time tenants, so a new lease usually costs more.`}</p>
+    </div>
+    {rentGrowthTile && <MoreTiles names={["rent, prices and income since " + growthStart!.slice(0, 4)]}>{rentGrowthTile}</MoreTiles>}
+    <div className={acts.foot}>
+      <p className={acts.next}><Link href={compareHref}>Compare {name} side by side</Link><Link href="/atlas">See rents on the map</Link></p>
+      {tales(["market"])}
+    </div>
+  </> : null;
+
+  // The renting reader's second act: rent against income, and who is stretched.
+  const rentedShare = owned !== null ? 1 - owned : null;
+  const rentCostAct = (rent !== null || pressureTile) ? <>
+    {rent !== null && <div className={acts.lead}>
+      <h3 className={acts.find}>{rentShare !== null ? `Renting takes ${rentShare.toFixed(0)}% of a typical income here` : `Rent runs ${dollars(rent)} a month`}</h3>
+      <div className={acts.cols}>
+        <div>
+          {rentShare !== null && <div className={styles.meter}><span>Renting</span><div><i style={{ width: `${Math.min(rentShare, 100)}%` }} /><b style={{ left: "30%" }} /></div><strong>{rentShare.toFixed(0)}%</strong></div>}
+          <p className={acts.note}>{rentShare !== null ? `${dollars(rent)} a month against the median income of every household, owners included. Renters usually earn less than that, so their own share is usually higher. The mark is the common 30% guideline.` : `${dollars(rent)} a month. No household income is published here to set it against.`}</p>
+        </div>
+        <div>{said([
+          burdenRow && { value: `${(burdenRow.value * 100).toFixed(0)}%`, label: "of renters pay over 30% of their income in rent" },
+          rentedShare !== null && { value: `${(rentedShare * 100).toFixed(0)}%`, label: "of homes are rented" },
+          vacancyRow && { value: `${(vacancyRow.value * 100).toFixed(1)}%`, label: "of rental homes are vacant" },
+          month && { value: dollars(month.total), label: `a month to own the typical home instead, ${(month.total / rent).toFixed(1)} times the rent` },
+        ].flatMap((fact) => (fact ? [fact] : [])))}</div>
+      </div>
+      <Prov kind="calculated">{rentIsSurvey ? "Census survey median rent" : "Zillow asking rent"} against Census ACS income. Shares of renters and homes: Census ACS five-year survey.</Prov>
+    </div>}
+    {(pressureTile || billsTile) && <MoreTiles names={[pressureTile && "cost burden by income", billsTile && "utilities"].flatMap((n) => (n ? [n] : []))}>
+      {pressureTile}
+      {billsTile}
+    </MoreTiles>}
+    <div className={acts.foot}>
+      <p className={acts.next}><Link href="/help">Find housing help</Link>{!isZip && <Link href={`/afford?place=${regionId}&county=${county?.region_id ?? "all"}`}>Places within my budget</Link>}<Link href={compareHref}>Compare rents side by side</Link></p>
+    </div>
+  </> : null;
+
 
   const homesAct = (bedrooms.length > 0 || stock.length > 0 || eras.length > 0 || owned !== null) ? <>
     {(bedrooms.length > 0 || owned !== null || stock.length > 0) && <div id="homes" className={acts.lead}>
@@ -913,13 +1004,26 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     </div>
   </> : null;
 
-  const actList = ([["values", "Home prices", "What do homes cost here?", priceAct], ["owning", "Monthly cost", "What would it cost me each month?", costAct], ["housing", "Homes and people", "What kind of housing is here?", homesAct], ["area", "Living here", "What is daily life like?", livingAct]] as const).filter(([, , , body]) => body !== null);
+  const rentBox = boxes.find((b) => b.id !== "zhvi_sfr");
+  const placeChart = (box: typeof homeBox, what: string, who: "buy" | "rent") => box && <figure className={acts.place} data-for={who} role="img" aria-label={`${what}: ${name} ${dollars(box.own)}, median ${dollars(box.box.median)} of ${box.count} ${peers}.`}>
+    <figcaption><span>Where {name} sits among {box.count} {peers}, by {what}</span><span>{dollars(box.own)}</span></figcaption>
+    <div className={acts.track}><hr /><u style={{ left: `${box.x(box.box.q1)}%`, width: `${box.x(box.box.q3) - box.x(box.box.q1)}%` }} /><b style={{ left: `${box.x(box.box.median)}%` }} /><i style={{ left: `${box.x(box.own)}%` }} /></div>
+    <p className={acts.scale}><span>Lowest {dollars(box.box.min)}</span><span>Middle half boxed · median {dollars(box.box.median)}</span><span>Highest {dollars(box.box.max)}</span></p>
+  </figure>;
+
+  const actList = ([
+    { id: "values", nav: "Prices and rents", title: "Home prices", question: "What do homes cost here?", body: priceAct, rent: { title: "Rents", question: "What does renting cost here?", body: rentAct } },
+    { id: "owning", nav: "Monthly cost", title: "Monthly cost", question: "What would it cost me each month?", body: costAct, rent: { title: "Monthly cost", question: "What would rent take each month?", body: rentCostAct } },
+    { id: "housing", nav: "Homes and people", title: "Homes and people", question: "What kind of housing is here?", body: homesAct, rent: null },
+    { id: "area", nav: "Living here", title: "Living here", question: "What is daily life like?", body: livingAct, rent: null },
+  ]).filter((act) => act.body !== null || !!act.rent?.body);
 
   return glossTree(<>
     <Masthead affordability={{ kind: "route" }} />
-    <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact} ${acts.page}`}>
+    <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact} ${acts.page}`} suppressHydrationWarning>
+      <InlineScript html={TENURE_SCRIPT} />
       <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
-      <PosterNav links={actList.map(([id, label]) => ({ id, label }))} />
+      <PosterNav links={actList.map(({ id, nav }) => ({ id, label: nav }))} />
 
       <header className={`${styles.panel} ${styles.hero} ${acts.hero}`} data-kind={isZip ? "zip" : "town"}>
         {region.state_code === "NJ" && <GardenStateArtwork header />}
@@ -933,18 +1037,19 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           {counties.map((c) => <path key={c.id} d={c.d} fill="currentColor" fillOpacity={c.id === county?.region_id ? 0.55 : 0.2} />)}
           <circle cx={town.centre[0]} cy={town.centre[1]} r="8" fill="var(--here)" stroke="var(--hero-kind)" strokeWidth="2" />
         </svg>}
-        {homeBox && <figure className={acts.place} role="img" aria-label={`Typical home value: ${name} ${dollars(homeBox.own)}, median ${dollars(homeBox.box.median)} of ${homeBox.count} ${peers}.`}>
-          <figcaption><span>Where {name} sits among {homeBox.count} {peers}, by typical home value</span><span>{dollars(homeBox.own)}</span></figcaption>
-          <div className={acts.track}><hr /><u style={{ left: `${homeBox.x(homeBox.box.q1)}%`, width: `${homeBox.x(homeBox.box.q3) - homeBox.x(homeBox.box.q1)}%` }} /><b style={{ left: `${homeBox.x(homeBox.box.median)}%` }} /><i style={{ left: `${homeBox.x(homeBox.own)}%` }} /></div>
-          <p className={acts.scale}><span>Lowest {dollars(homeBox.box.min)}</span><span>Middle half boxed · median {dollars(homeBox.box.median)}</span><span>Highest {dollars(homeBox.box.max)}</span></p>
-        </figure>}
-        {figureBand}
+        <TenureSwitch />
+        {placeChart(homeBox, "typical home value", "buy")}
+        {placeChart(rentBox, "typical asking rent", "rent")}
+        {band(figures, "buy")}
+        {band(rentFigures, "rent")}
         {standStrip}
       </header>
 
-      {actList.map(([id, title, question, body], i) => <section key={id} id={id} className={acts.act}>
-        <div className={acts.actHead}><b>{i + 1}</b><h2>{title}</h2><p>{question}</p></div>
-        <div className={acts.sheet}>{body}</div>
+      {actList.map(({ id, title, question, body, rent: renting }, i) => <section key={id} id={id} className={acts.act}>
+        <div className={acts.actHead}><b>{i + 1}</b>
+          {renting ? <><h2 data-for="buy">{title}</h2><h2 data-for="rent">{renting.title}</h2><p data-for="buy">{question}</p><p data-for="rent">{renting.question}</p></> : <><h2>{title}</h2><p>{question}</p></>}
+        </div>
+        <div className={acts.sheet}>{renting ? <><div data-for="buy">{body ?? none("sale price or home value")}</div><div data-for="rent">{renting.body ?? none("rent")}</div></> : body}</div>
         {id === "area" && <>
       {county && contextFacts.length > 0 && <details id="county-context" className={`${styles.panel} ${styles.context} ${acts.context}`}>
         <summary><span><strong>{`${displayName(county)} context`}</strong><small>{`The wider market, published by county, not ${name} alone`}</small></span><span className={styles.contextFacts}>{contextFacts.map((fact) => <span key={fact}>{fact}</span>)}</span></summary>

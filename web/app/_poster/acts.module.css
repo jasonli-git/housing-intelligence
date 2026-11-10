@@ -149,3 +149,12 @@
   .quart b { font-size: 16px; }
 }
 @media print { .tiles:not([data-open]) { display: flex; } .more { display: none; } }
+/* Buying or renting: both views are in the page, and the switch shows one. */
+.page[data-tenure="rent"] [data-for="buy"], .page:not([data-tenure="rent"]) [data-for="rent"] { display: none !important; }
+.tenure { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 12px; font-size: 13px; font-weight: 600; }
+.tenure div { display: inline-flex; overflow: hidden; border: 1.5px solid currentColor; border-radius: 20px; }
+.tenure button { min-width: 6rem; min-height: 38px; padding: 0 18px; font: inherit; font-size: 15px; font-weight: 700; color: inherit; background: none; border: 0; cursor: pointer; }
+/* Drawn from the page's own state, so a `?for=rent` link is right before the script loads. */
+.page:not([data-tenure="rent"]) .tenure button:first-child, .page[data-tenure="rent"] .tenure button:last-child { color: var(--hero-kind); background: var(--poster-tone-8); }
+.tenure button:focus-visible { outline: 3px solid currentColor; outline-offset: -5px; }
+@media print { .tenure { display: none; } }

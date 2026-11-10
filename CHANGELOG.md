@@ -60,6 +60,11 @@ are not yet recorded here.
 
 ### Changed
 
+- **Buying or renting on town and ZIP pages** (2026-11-10, ARCHITECTURE #490): a switch in
+  the header shows the figures a buyer or a renter needs, and `?for=rent` in the address
+  opens the renting view. Renters get asking rent beside what tenants pay, rent by size,
+  rent against income and who is cost-burdened. About 260 towns with no Zillow rent now
+  show the Census survey's median rent, labelled as such.
 - **Town and ZIP pages are a poster and four acts** (2026-11-10, ARCHITECTURE #489): the
   header gives the computed sentence, where the place sits among its peers and the same
   four figures on every place; the body is home prices, monthly cost, homes and people,

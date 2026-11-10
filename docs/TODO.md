@@ -90,6 +90,20 @@ Each is registered only once its file lands (a manual source with no file fails
 - **`page.tsx` is still one 1,000-line component.** A panel registry (each exhibit
   declaring its question, the data it needs and its priority) would replace the
   hand-ordered acts.
+- **Income by tenure.** The renting view sets rent against every household's median
+  income and says renters usually earn less; the ACS publishes median income by tenure
+  (B25119), which is not ingested.
+- **The Buy / Rent choice does not carry to the next place.** It lives in the address
+  only (#490); remembering it would add a third item to the privacy policy's list of
+  what is kept in the browser, which is the owner's decision.
+- **Held but not shown on place pages:** what owners with a mortgage pay each month
+  (`acs_owner_costs_mortgage`), median closing costs (`hmda_median_loan_costs`), sales
+  turnover (`sr1a_turnover_per_1000`). HUD fair market rents are defined but absent from
+  town packets.
+- **Renter and buyer measures not yet sourced** (ideas, not approved work): rent control
+  by town, eviction filings, flood insurance cost, the five-year change in the tax
+  bill, ANCHOR and Stay NJ relief, condo and association-fee share, crime, travel time
+  to New York and Philadelphia.
 - **County pages still embed the calculator** the town pages now hand to the buyer's guide.
 
 ### Place and state pages after #451–#453
