@@ -39,7 +39,7 @@ Taken from the build each deploy ships, so they always show the live site (ARCHI
 | <a href="https://housing.jasonli.app/"><img src="https://housing-data.jasonli.app/screenshots/home-desktop.png" alt="Home page" width="420"></a><br>**Home** — search any place, or start from a tool | <a href="https://housing.jasonli.app/states/new-jersey"><img src="https://housing-data.jasonli.app/screenshots/new-jersey-desktop.png" alt="New Jersey page" width="420"></a><br>**New Jersey** — the state, its 21 counties |
 | <a href="https://housing.jasonli.app/nj/mercer-county"><img src="https://housing-data.jasonli.app/screenshots/county-desktop.png" alt="Mercer County page" width="420"></a><br>**A county** — costs, the towns, about the place | <a href="https://housing.jasonli.app/nj/princeton"><img src="https://housing-data.jasonli.app/screenshots/town-desktop.png" alt="Princeton page" width="420"></a><br>**A town** — with cheaper alternatives |
 | <a href="https://housing.jasonli.app/afford"><img src="https://housing-data.jasonli.app/screenshots/budget-explorer-desktop.png" alt="Budget explorer" width="420"></a><br>**Budget explorer** — where can I afford? | <a href="https://housing.jasonli.app/guide"><img src="https://housing-data.jasonli.app/screenshots/buyers-guide-desktop.png" alt="Buyer’s guide" width="420"></a><br>**Buyer’s guide** — thinking of buying here? |
-| <a href="https://housing.jasonli.app/tax"><img src="https://housing-data.jasonli.app/screenshots/tax-lookup-desktop.png" alt="Property tax lookup" width="420"></a><br>**Property tax lookup** — any address’s bill | <a href="https://housing.jasonli.app/atlas"><img src="https://housing-data.jasonli.app/screenshots/atlas-desktop.png" alt="Housing atlas" width="420"></a><br>**Housing atlas** — every measure on a map |
+| <a href="https://housing.jasonli.app/tax"><img src="https://housing-data.jasonli.app/screenshots/tax-lookup-desktop.png" alt="Property tax lookup" width="420"></a><br>**Property tax lookup** — any address’s bill | <a href="https://housing.jasonli.app/atlas"><img src="https://housing-data.jasonli.app/screenshots/atlas-desktop.png" alt="Housing map" width="420"></a><br>**Housing map** — every measure on a map |
 | <a href="https://housing.jasonli.app/compare?places=224,394,85"><img src="https://housing-data.jasonli.app/screenshots/compare-desktop.png" alt="Compare places" width="420"></a><br>**Compare** — up to four places side by side | <a href="https://housing.jasonli.app/help"><img src="https://housing-data.jasonli.app/screenshots/housing-help-desktop.png" alt="Housing help" width="420"></a><br>**Housing help** — affordable homes, vouchers, authorities |
 | <a href="https://housing.jasonli.app/stories"><img src="https://housing-data.jasonli.app/screenshots/visual-stories-desktop.png" alt="Visual stories" width="420"></a><br>**Visual stories** — New Jersey’s figures, drawn | |
 
@@ -60,7 +60,7 @@ On a phone:
   broadband, schools, commutes and transit, affordable housing, and who is moving in.
 - **Cheaper alternatives** — towns and ZIP codes like this one that cost less.
 - **Five tools** — a budget explorer, a buyer's guide, a property tax lookup for any
-  address in the state, a housing atlas mapping every measure, and a page comparing up to
+  address in the state, a housing map of every measure, and a page comparing up to
   four places side by side, shareable by its link.
 - **Sourced and honest** — every figure names its source, date and kind; survey figures
   carry their margin of error and uncertain ranks a range; revisions are recorded.

@@ -182,6 +182,24 @@
   --action: #0071e3;
   --on-action: #ffffff;
 
+  /* ---------- the housing atlas's floating bar and chips (2026-11-09) ---------- */
+  --atlas-float: light-dark(#ffffffc2, #15171bcc);
+  /* The atlas's ground (2026-11-09): warm paper and a deep blue-black rather than pure
+     white and black, water a quiet blue-grey, the neighbouring land paler than the water. */
+  --atlas-paper: light-dark(#f6f4ee, #0d1015);
+  --atlas-water: light-dark(#dde5e9, #0a1219);
+  --atlas-land: light-dark(#fbfaf6, #20242b);
+  --atlas-land-edge: light-dark(#cfd6d9, #2c323b);
+  --atlas-city: light-dark(#3d4046, #c9ccd2);
+  --atlas-city-beyond: light-dark(#7a7f87, #858a93);
+  /* Layer tiles: the ground under New Jersey, and a town with no figure. */
+  --atlas-preview-ground: light-dark(#f3f4f7, #1d2026);
+  --atlas-preview-missing: light-dark(#c9ccd3, #4a4e57);
+  --atlas-float-highlight: light-dark(#ffffff, #ffffff14);
+  --atlas-field: light-dark(#ffffffb0, #ffffff0d);
+  --atlas-float-shadow: #000000aa;
+  --atlas-menu-shadow: #00000040;
+
   /* ---------- the shared bar: jasonli.app's values (#122) ---------- */
   --jl-font: var(--font-space-grotesk), "Space Grotesk", ui-sans-serif, system-ui,
     -apple-system, "Segoe UI", sans-serif;

@@ -31,7 +31,9 @@
   .horizon-page .atlas-selected { background: color-mix(in srgb, var(--plate-accent) 8%, transparent) !important; border-color: color-mix(in srgb, var(--plate-accent) 35%, transparent) !important; border-radius: 16px !important; }
   .horizon-page .atlas-selected h3 { font: 400 22px/1.15 Georgia, serif !important; }
   .horizon-page .atlas-selected strong { font: 400 30px/1.15 Georgia, serif !important; letter-spacing: -.03em; font-variant-numeric: lining-nums; }
-  .horizon-page .atlas-table-wrap thead { background: transparent !important; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+  /* Solid, not frosted: rows scrolled under a blurred header showed through it (review of 2026-11-09). */
+  .horizon-page .atlas-table-wrap thead { background: var(--plate-paper) !important; }
+  .horizon-page .atlas-selected .atlas-rank { display: block; margin-top: .2rem; font: 500 13px/1.4 var(--font-text); color: var(--plate-ink); }
 
   /* Phones and narrow windows: one column, nothing over the map. */
   @media (max-width: 900px) {
@@ -40,7 +42,9 @@
     .horizon-page .atlas-workspace { display: flex !important; flex-direction: column; gap: .8rem; height: auto !important; min-height: 0 !important; max-height: none !important; position: static !important; }
     .horizon-page .atlas-map-stage { position: relative !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
     .horizon-page .atlas-county-map { height: min(62svh, 520px) !important; min-height: 320px; }
-    .horizon-page .atlas-map-buttons { position: absolute !important; top: 10px !important; right: 10px !important; left: auto !important; bottom: auto !important; display: flex !important; flex-direction: column; gap: 6px; }
+    /* Top left, in a row: at the top right they sat on New Jersey itself on the US map, and
+       the bottom is the legend's (review of 2026-11-09). */
+    .horizon-page .atlas-map-buttons { position: absolute !important; top: 10px !important; right: auto !important; left: 10px !important; bottom: auto !important; display: flex !important; flex-direction: row; gap: 6px; }
     .horizon-page .atlas-map-buttons button { min-width: 40px; min-height: 40px; padding: 0 .55rem; font-size: 15px; }
     .horizon-page .atlas-legend, .horizon-page .housing-atlas:has(.atlas-results[data-expanded="true"]) .atlas-legend { position: static !important; inset: auto !important; display: flex !important; margin: .4rem auto 0 !important; max-width: 100% !important; width: auto !important; }
     .horizon-page .atlas-map-credit { position: static !important; display: block !important; margin-top: .5rem; }

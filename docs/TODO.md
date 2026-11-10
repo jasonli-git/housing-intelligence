@@ -121,6 +121,15 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Correctness and data integrity
 
+- [ ] **Census survey figures from older years shown as current.** (owner, 2026-11-09;
+      own branch after the atlas PR.) Where the newest five-year survey publishes nothing
+      for a place, the value rankings use its last older figure, and the atlas labels every
+      row with the newest year: 58 of 522 towns' two-bedroom rents are older, back to
+      2015–2019; Alexandria's $142 ± $128 is 2019–2023. Decided: (1) one survey per map, a
+      place the newest survey skips shows no figure, its card naming the older one — needs
+      the published rankings to carry each row's period; (2) also leave out figures whose
+      margin of error is more than half the figure. Check place pages and other rankings
+      for the same fallback.
 - [ ] **Crime newer than 2023.** (M47, #320) NJSP's newer reporting route warns a zero
       can be delinquent reporting; audit its missing-report codes and schema before
       replacing the reviewed 2023 workbook. A town's own figures need an evidenced

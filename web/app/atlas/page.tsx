@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Masthead } from "@/components/Masthead";
+import { AtlasBar } from "@/components/AtlasBar";
 import { HousingAtlas } from "@/components/HousingAtlas";
 import { api, artifactUrl, type Region, type MetricEntry, type SourceEntry } from "@/lib/api";
 import { GROUPS } from "@/lib/groups";
@@ -12,8 +12,9 @@ import "./atlas.css";
 import "../income-pressure.css";
 import "../horizon-theme.css";
 import "./atlas-horizon.css";
+import "./atlas-app.css";
 
-export const metadata:Metadata=pageMetadata({title:"Housing atlas — Housing",description:"Explore New Jersey housing figures for every county, town and ZIP code on one map.",path:"/atlas"});
+export const metadata:Metadata=pageMetadata({title:"Housing map — Housing",description:"Explore New Jersey housing figures for every county, town and ZIP code on one map.",path:"/atlas"});
 const METRICS=["zhvi_sfr","zori_all","acs_median_hh_income","acs_median_gross_rent","acs_median_home_value","acs_renter_cost_burden","pep_population","permits_total_units"];
 async function loadMeasures(level:"county"|"state",members:Region[],catalog:MetricEntry[],sources:SourceEntry[]) {
   const countyIds=new Set(members.map(r=>r.region_id));
@@ -69,10 +70,9 @@ export default async function AtlasPage() {
   const [catalog,regions,stateRegions,sources]=await Promise.all([api.metrics(),api.regions("level=county&state=NJ&limit=100"),api.regions("level=state&limit=100"),api.sources()]);
   const [entries,stateMeasures]=await Promise.all([loadEntries(catalog??[],sources??[]),loadMeasures("state",stateRegions?.items??[],catalog??[],sources??[])]);
   return <>
-    <Masthead affordability={{kind:"route"}} atlasActive />
-    <main id="main-content" tabIndex={-1} className="housing-atlas-page horizon-page" data-region-level="atlas">
-      <header className="atlas-title"><div><h1>Housing atlas</h1><p className="atlas-lede">Every place’s figures on one map. Pick a measure, then tap a place.</p></div></header>
-      {entries.length && stateMeasures.length && regions?.items.length ? <HousingAtlas entries={entries} artifactUrl={artifactUrl} stateMeasures={stateMeasures} states={(stateRegions?.items??[]).map(r=>({id:r.region_id,name:r.name,code:r.state_code}))} counties={regions.items.map(r=>({id:r.region_id,name:`${r.name.replace(/ County$/,"")} County`}))} /> : <p>Figures are unavailable in this build. <Link href="/states/new-jersey">Explore New Jersey instead.</Link></p>}
+    {/* The atlas is a full-screen map with a bar of its own (AtlasBar), not the site bar. */}
+    <main id="main-content" tabIndex={-1} className="housing-atlas-page horizon-page atlas-app" data-region-level="atlas">
+      {entries.length && stateMeasures.length && regions?.items.length ? <HousingAtlas bar={<AtlasBar />} entries={entries} artifactUrl={artifactUrl} stateMeasures={stateMeasures} states={(stateRegions?.items??[]).map(r=>({id:r.region_id,name:r.name,code:r.state_code}))} counties={regions.items.map(r=>({id:r.region_id,name:`${r.name.replace(/ County$/,"")} County`}))} /> : <><AtlasBar /><p className="atlas-unavailable">Figures are unavailable in this build. <Link href="/states/new-jersey">Explore New Jersey instead.</Link></p></>}
     </main>
   </>;
 }

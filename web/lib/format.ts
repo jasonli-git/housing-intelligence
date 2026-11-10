@@ -6,14 +6,19 @@
  * boundary as props, so a client chart imports its formatter rather than receiving one.
  */
 
+// Built once: `toLocaleString` builds a formatter on every call, about 6µs each, and the
+// atlas formats over a thousand figures a render (2026-11-09). Same locale and output.
+const WHOLE = new Intl.NumberFormat();
+const ONE_PLACE = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
+
 export function formatValue(value: number, unit: string): string {
   if (unit === "usd" || unit === "usd_month") {
-    return `$${Math.round(value).toLocaleString()}`;
+    return `$${WHOLE.format(Math.round(value))}`;
   }
   if (unit === "percent") return `${value.toFixed(1)}%`;
   if (unit === "rate_per_100") return `$${value.toFixed(2)} per $100`;
   if (unit === "ratio") return value.toFixed(2);
-  if (unit === "count") return Math.round(value).toLocaleString();
+  if (unit === "count") return WHOLE.format(Math.round(value));
   // A year is a label, not a quantity: "1,955" is wrong.
   if (unit === "year") return String(Math.round(value));
   if (unit === "acres") return `${value.toFixed(2)} ac`;
@@ -25,7 +30,7 @@ export function formatValue(value: number, unit: string): string {
   // Milestone 39: net homes added per 1,000 homes standing.
   if (unit === "per_1000_homes") return `${value.toFixed(1)} per 1,000 homes`;
   if (unit === "per_1000_returns") return `${value.toFixed(1)} per 1,000 returns`;
-  return value.toLocaleString(undefined, { maximumFractionDigits: 1 });
+  return ONE_PLACE.format(value);
 }
 
 export function formatChange(pct: number): string {
