@@ -13,6 +13,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from hip.api.deps import SessionDep
 from hip.api.params import LATEST_WINDOW, RankingBasis, RegionLevel, Window
@@ -52,6 +53,26 @@ class RankedRegion(BaseModel):
     margin_of_error: float | None = None
     start_margin: float | None = None
     end_margin: float | None = None
+    # Under `basis=value`, the end of the period the value describes, so a reader can be
+    # told when places' figures are of different dates. None under `basis=change`, whose
+    # period is `window_start` to `window_end`.
+    period_end: date | None = None
+
+
+class LeftOutRegion(BaseModel):
+    """A place with a figure that a value ranking leaves out, and why (owner, 2026-11-09).
+
+    `older`: a survey metric ranks only its newest edition, and this place's newest
+    figure is from an earlier one. `uncertain`: its margin is over half the figure.
+    """
+
+    region_id: int
+    name: str
+    value: float
+    margin_of_error: float | None = None
+    period_start: date
+    period_end: date
+    reason: str
 
 
 class Ranking(BaseModel):
@@ -64,6 +85,8 @@ class Ranking(BaseModel):
     level: str
     total: int
     items: list[RankedRegion]
+    # Under `basis=value` only: places with a figure the ranking leaves out.
+    left_out: list[LeftOutRegion] = []
 
 
 @router.get("/rankings", response_model=Ranking, summary="Rank regions")
@@ -112,12 +135,18 @@ def rankings(
                    c.pct_change, c.start_value, c.end_value,
                    c.window_start, c.window_end, k.rank_best, k.rank_worst,
                    k.margin_of_error, c.start_margin, c.end_margin,
+                   CASE WHEN k.basis = 'value' THEN o.period_end END AS period_end,
                    count(*) OVER () AS total
             FROM region_rankings k
             JOIN regions r ON r.region_id = k.region_id
             LEFT JOIN fact_metric_change c
               ON c.region_id = k.region_id AND c.metric_id = k.metric_id
              AND c."window" = k."window"
+            LEFT JOIN LATERAL (
+                SELECT f.period_end FROM fact_metric_observation f
+                WHERE f.region_id = k.region_id AND f.metric_id = k.metric_id
+                ORDER BY f.period_end DESC LIMIT 1
+            ) o ON k.basis = 'value'
             WHERE k.metric_id = :m AND k.level = :level
               AND k.basis = :basis AND k."window" = :w
             -- Tied regions by id: otherwise their order, and which of them a LIMIT
@@ -139,6 +168,8 @@ def rankings(
         .all()
     )
 
+    left_out = _left_out(session, metric_id, level) if basis == "value" else []
+
     return Ranking(
         metric_id=metric["metric_id"],
         label=metric["label"],
@@ -149,7 +180,46 @@ def rankings(
         level=level,
         total=int(rows[0]["total"]) if rows else 0,
         items=[RankedRegion(**row) for row in rows],
+        left_out=left_out,
     )
+
+
+def _left_out(session: Session, metric_id: str, level: str) -> list[LeftOutRegion]:
+    """Places at `level` whose newest figure the value ranking does not hold.
+
+    Only where the ranking holds someone: a metric ranked nowhere at this level (one
+    unranked by configuration, or with a single place) leaves nobody out of anything.
+    """
+    rows = session.execute(
+        text(
+            """
+            WITH latest AS (
+                SELECT DISTINCT ON (f.region_id)
+                       f.region_id, r.name, f.value, f.margin_of_error,
+                       f.period_start, f.period_end
+                FROM fact_metric_observation f
+                JOIN regions r ON r.region_id = f.region_id
+                WHERE f.metric_id = :m AND r.level = CAST(:level AS region_level)
+                ORDER BY f.region_id, f.period_end DESC
+            ),
+            ranked AS (
+                SELECT region_id FROM region_rankings
+                WHERE metric_id = :m AND level = CAST(:level AS text)
+                  AND basis = 'value'
+            )
+            SELECT l.region_id, l.name, l.value, l.margin_of_error,
+                   l.period_start, l.period_end,
+                   CASE WHEN l.period_end < (SELECT max(period_end) FROM latest)
+                        THEN 'older' ELSE 'uncertain' END AS reason
+            FROM latest l
+            WHERE EXISTS (SELECT 1 FROM ranked)
+              AND l.region_id NOT IN (SELECT region_id FROM ranked)
+            ORDER BY l.name, l.region_id
+            """
+        ),
+        {"m": metric_id, "level": level},
+    ).mappings()
+    return [LeftOutRegion(**row) for row in rows]
 
 
 class SeriesPoint(BaseModel):
