@@ -57,6 +57,22 @@ are not yet recorded here.
 - **The housing map no longer scrolls to the site footer** (2026-11-10, ARCHITECTURE
   #485): its tools, publisher notices and sources open from the map's menu ("Sources &
   notices") as a panel over the map, with a close button.
+- **Definitions and small print are readable** (2026-11-09): a definition opened from an
+  underlined word is set at 15px rather than 12px, in a wider box (384px, the screen's
+  width less a margin on a phone); notes and source lines everywhere go from 12px to
+  13px. On the housing map, the measure's definition and notes are 14px, the legend's
+  lines 12.5px (from 10px), and the catalogue defines the measure pointed at or focused
+  in a line above its tiles, on screens with a pointer.
+- **Survey rankings use one survey, and leave out figures too uncertain to place**
+  (2026-11-09, ARCHITECTURE #484): a Census survey measure is ranked, and mapped, on its
+  newest five-year survey only; a place that survey publishes nothing for was ranked on
+  an older one and labelled with the newest years (58 of 522 towns' two-bedroom rents,
+  back to 2015–2019). A figure whose margin of error is over half of it is left out too.
+  Both stay on the place's page with their margins, unranked. `/rankings` now gives each
+  row's period and lists the places left out and why; the housing map's card names a
+  left-out place's figure and survey, and a layer where most places would be left out
+  no longer offers that measure (towns lose 13, among them vacancy rates, crowding, the
+  transit and car-free shares and four-bedroom rent; ZIP codes lose 11).
 - **The housing atlas is a full-screen map** (2026-11-09, ARCHITECTURE #479): no site bar
   and no title block; a slim bar of its own runs across the top, with the map below it. Each card can be put away
   to a chip, and "Map only" clears every panel. On a phone the controls wait behind a chip

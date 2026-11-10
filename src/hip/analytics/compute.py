@@ -133,7 +133,7 @@ def rebuild(engine: Engine) -> AnalyticsResult:
         # the table and leave a stale basis behind.
         conn.execute(text("TRUNCATE region_rankings"))
         result.rankings = _rankings(conn)
-        result.value_rankings = _value_rankings(conn, unranked)
+        result.value_rankings = _value_rankings(conn, unranked, survey_metrics())
         result.rank_ranges = _rank_ranges(conn)
     return result
 
@@ -619,7 +619,13 @@ def _rankings(conn: object) -> int:
     )
 
 
-def _value_rankings(conn: object, unranked: list[str]) -> int:
+# A survey figure whose 90% margin is more than this share of the figure is left out of
+# a value ranking: $142 ± $128 says almost nothing about where a town stands (owner,
+# 2026-11-09). The figure itself is still published and shown with its margin.
+UNCERTAIN_SHARE = 0.5
+
+
+def _value_rankings(conn: object, unranked: list[str], survey: list[str]) -> int:
     """Rank regions by their most recent observed value, within their own level.
 
     The question "which municipality has the highest assessed value" is different from
@@ -629,6 +635,13 @@ def _value_rankings(conn: object, unranked: list[str]) -> int:
 
     `window` is the literal 'latest' rather than a span, because a level has no span.
     `basis` is what actually distinguishes these rows (migration 0006).
+
+    A survey metric ranks one edition (owner, 2026-11-09): the newest its level has. A
+    place the newest edition publishes nothing for is left out rather than ranked on an
+    older one, which the map labelled with the newest edition's years — 58 of New
+    Jersey's 522 two-bedroom rents were older, back to 2015-2019. So is a figure whose
+    margin is over `UNCERTAIN_SHARE` of it. Both stay in the facts, on the place's page
+    and in its packet, unranked; `/rankings` lists them as left out.
     """
     return int(
         conn.execute(  # type: ignore[attr-defined]
@@ -639,16 +652,32 @@ def _value_rankings(conn: object, unranked: list[str]) -> int:
                      rank, of, percentile, margin_of_error, ties)
                 WITH latest AS (
                     SELECT DISTINCT ON (f.region_id, f.metric_id)
-                           f.region_id, f.metric_id, f.value, f.margin_of_error
+                           f.region_id, f.metric_id, f.value, f.margin_of_error,
+                           f.period_end
                     FROM fact_metric_observation f
                     WHERE NOT (f.metric_id = ANY(:unranked))
                     ORDER BY f.region_id, f.metric_id, f.period_end DESC
                 ),
+                leveled AS (
+                    SELECT l.*, r.level,
+                           max(l.period_end) OVER (
+                               PARTITION BY l.metric_id, r.level
+                           ) AS newest
+                    FROM latest l
+                    JOIN regions r ON r.region_id = l.region_id
+                ),
+                kept AS (
+                    SELECT * FROM leveled
+                    WHERE NOT (metric_id = ANY(:survey))
+                       OR (period_end = newest
+                           AND (margin_of_error IS NULL
+                                OR margin_of_error <= :share * abs(value)))
+                ),
                 ranked AS (
-                    SELECT l.metric_id, r.level::text AS level, l.region_id, l.value,
+                    SELECT l.metric_id, l.level::text AS level, l.region_id, l.value,
                            l.margin_of_error AS margin,
                            rank() OVER (
-                               PARTITION BY l.metric_id, r.level
+                               PARTITION BY l.metric_id, l.level
                                -- Same convention as change rankings: rank 1 is the
                                -- better end wherever the metric defines one. A
                                -- `neutral` metric ranks largest first, which is
@@ -657,10 +686,9 @@ def _value_rankings(conn: object, unranked: list[str]) -> int:
                                              THEN l.value ELSE -l.value END
                            ) AS rank,
                            count(*) OVER (
-                               PARTITION BY l.metric_id, r.level
+                               PARTITION BY l.metric_id, l.level
                            ) AS of
-                    FROM latest l
-                    JOIN regions r ON r.region_id = l.region_id
+                    FROM kept l
                     JOIN metrics m ON m.metric_id = l.metric_id
                 )
                 SELECT metric_id, level, 'value', 'latest', region_id, value, rank, of,
@@ -674,7 +702,7 @@ def _value_rankings(conn: object, unranked: list[str]) -> int:
                 WHERE of > 1
                 """
             ),
-            {"unranked": unranked},
+            {"unranked": unranked, "survey": survey, "share": UNCERTAIN_SHARE},
         ).rowcount
     )
 

@@ -1,7 +1,10 @@
+import type { LeftOutRegion } from "./api";
 import type { Measure, RankRow } from "./measures";
 import type { WindowKey } from "./windows";
 
-export type AtlasMeasure = Measure & { source: string; sourceUrl: string; definition: string; latest:{rows:RankRow[];start:null;end:string|null;periods:Record<string,string>} };
+export type AtlasMeasure = Measure & { source: string; sourceUrl: string; definition: string; latest:{rows:RankRow[];start:null;end:string|null;periods:Record<string,string>};
+  /** Places with a figure the map leaves out, and why (survey editions and margins, 2026-11-09). */
+  leftOut?: Record<number, LeftOutRegion> };
 export type AtlasCounty = { id:number; name:string };
 export type AtlasMode = "latest" | WindowKey;
 // Mist to indigo (2026-10-15, #378): one hue, lightness falling at every step, so the
@@ -64,14 +67,16 @@ type PublishedRanking = {
     rank_worst: number | null;
     margin_of_error: number | null;
     end_margin: number | null;
+    period_end?: string | null;
   }[];
+  left_out?: LeftOutRegion[];
 };
 
 /**
  * One measure at one level, read from the ranking files `hip publish` writes — the latest
  * value ranking and each window's change ranking — so the page carries no figures and a
- * measure costs a reader nothing until it is chosen. A value ranking holds no period per
- * row, so the date shown is the level's newest period end (`lastPeriod`).
+ * measure costs a reader nothing until it is chosen. Each row's date is its own period
+ * end; files published before rows carried one fall back to the level's (`lastPeriod`).
  */
 export async function loadAtlasMeasure(base: string, entry: AtlasEntry, level: AtlasLevel, windows: readonly WindowKey[]): Promise<AtlasMeasure> {
   const read = (path: string) =>
@@ -91,9 +96,12 @@ export async function loadAtlasMeasure(base: string, entry: AtlasEntry, level: A
     latest: {
       start: null,
       end: entry.lastPeriod[level] ?? null,
-      periods: Object.fromEntries((latest?.items ?? []).flatMap((i) => (entry.lastPeriod[level] ? [[String(i.region_id), entry.lastPeriod[level]!]] : []))),
+      // Each row's own period where the file says it (2026-11-09), so mixed dates show as
+      // mixed; older files carry none, and every row takes the level's newest.
+      periods: Object.fromEntries((latest?.items ?? []).flatMap((i) => { const end = i.period_end ?? entry.lastPeriod[level]; return end ? [[String(i.region_id), end]] : []; })),
       rows: (latest?.items ?? []).map((i) => ({ id: i.region_id, name: i.name, rank: i.rank, of: i.of, change: 0, latest: i.value, latestMargin: i.margin_of_error })),
     },
+    leftOut: Object.fromEntries((latest?.left_out ?? []).map((r) => [r.region_id, r])),
   };
   windows.forEach((key, index) => {
     const items = (changes[index]?.items ?? []).filter((i) => i.window_start && i.window_end);

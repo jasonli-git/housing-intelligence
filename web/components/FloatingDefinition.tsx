@@ -4,6 +4,9 @@ import { type CSSProperties, type ReactNode, useCallback, useEffect, useId, useL
 import { createPortal } from "react-dom";
 
 /** Server-rendered fallback text, progressively enhanced above clipped containers. */
+// About 50 characters a line at the definition's 15px (`--text-tip`, 2026-11-09).
+const WIDTH = 384;
+
 export function FloatingDefinition({ label, content, up = false }: { label: ReactNode; content: ReactNode; up?: boolean }) {
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
@@ -11,7 +14,7 @@ export function FloatingDefinition({ label, content, up = false }: { label: Reac
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [enhanced, setEnhanced] = useState(false);
   const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState<CSSProperties>({ left: 16, top: 16, width: 288 });
+  const [position, setPosition] = useState<CSSProperties>({ left: 16, top: 16, width: WIDTH });
   const cancelClose = () => { if (closeTimer.current) clearTimeout(closeTimer.current); };
   const show = () => { cancelClose(); setOpen(true); };
   const scheduleClose = () => {
@@ -23,7 +26,7 @@ export function FloatingDefinition({ label, content, up = false }: { label: Reac
   const place = useCallback(() => {
     if (!anchor.current || !tooltip.current) return;
     const rect = anchor.current.getBoundingClientRect();
-    const width = Math.min(288, window.innerWidth - 32);
+    const width = Math.min(WIDTH, window.innerWidth - 32);
     const height = tooltip.current.getBoundingClientRect().height;
     const left = Math.min(Math.max(16, rect.left), window.innerWidth - width - 16);
     const below = rect.bottom + 8;

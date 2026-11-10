@@ -323,3 +323,73 @@ def test_a_survey_change_is_never_shorter_than_its_label(
         """,
     )
     assert zip_five[0]["n"] == 0
+
+
+@pytest.fixture(scope="module")
+def edition_engine() -> Iterator[Engine]:
+    """Rents for three counties and three ZIPs, with one figure in each level that the
+    newest-edition rule (counties) or the margin rule (ZIPs) leaves out of the ranking."""
+    with scratch_warehouse(get_engine()) as engine:
+        seed_analytics(engine)
+        with engine.begin() as conn:
+            conn.execute(
+                text("DELETE FROM fact_metric_observation WHERE metric_id <> 'zhvi_sfr'")
+            )
+            conn.execute(
+                text(
+                    """
+                    WITH placed AS (
+                        SELECT region_id, level,
+                               row_number() OVER (
+                                   PARTITION BY level ORDER BY region_id
+                               ) AS n
+                        FROM regions
+                    )
+                    INSERT INTO fact_metric_observation
+                      (region_id, metric_id, period_start, period_end, value,
+                       release_id, match_method, margin_of_error)
+                    SELECT p.region_id, 'acs_median_gross_rent',
+                           make_date(y - 4, 1, 1), make_date(y, 12, 31),
+                           1000 + p.n * 100,
+                           (SELECT min(release_id) FROM source_releases), 'fips',
+                           CASE WHEN p.level = 'zip' AND p.n = 3 THEN 700 ELSE 50 END
+                    FROM placed p CROSS JOIN generate_series(2023, 2024) y
+                    -- The third county's newest figure is from the 2019-2023 survey.
+                    WHERE NOT (p.level = 'county' AND p.n = 3 AND y = 2024)
+                    """
+                )
+            )
+        rebuild(engine)
+        yield engine
+
+
+def test_a_survey_ranks_one_edition_and_no_figure_mostly_margin(
+    edition_engine: Engine,
+) -> None:
+    from hip.api.routers.analytics import _left_out
+
+    ranked = _rows(
+        edition_engine,
+        """
+        SELECT r.level::text AS level, count(*) AS n, max(k.of) AS of
+        FROM region_rankings k JOIN regions r USING (region_id)
+        WHERE k.metric_id = 'acs_median_gross_rent' AND k.basis = 'value'
+        GROUP BY 1
+        """,
+    )
+    assert {r["level"]: (r["n"], r["of"]) for r in ranked} == {
+        "county": (2, 2),
+        "zip": (2, 2),
+    }
+    with Session(edition_engine) as session:
+        county = _left_out(session, "acs_median_gross_rent", "county")
+        zip_ = _left_out(session, "acs_median_gross_rent", "zip")
+    assert [(r.reason, r.period_end.year) for r in county] == [("older", 2023)]
+    assert [(r.reason, r.margin_of_error) for r in zip_] == [("uncertain", 700)]
+    # An index is not a survey: every county's newest month is ranked, whatever its date.
+    zillow = _rows(
+        edition_engine,
+        "SELECT count(*) AS n FROM region_rankings k JOIN regions r USING (region_id) "
+        "WHERE k.metric_id = 'zhvi_sfr' AND k.basis = 'value' AND r.level = 'county'",
+    )
+    assert zillow[0]["n"] == 3
