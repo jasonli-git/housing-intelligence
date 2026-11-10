@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type React from "react";
 import Link from "next/link";
 
 import type { AtlasTown } from "../../_poster/CountyAtlas";
@@ -8,6 +9,7 @@ import { StateDashboard } from "../../_poster/StateDashboard";
 import { StoryBars } from "../../_poster/StoryBars";
 import state from "../../_poster/state.module.css";
 import styles from "../../_poster/poster.module.css";
+import acts from "../../_poster/acts.module.css";
 import "../../place-photo.css";
 import "../../housing-entry.css";
 import "../../stories/story-cards.css";
@@ -103,7 +105,7 @@ export default async function NewJerseyPoster() {
   const monthYear = (date: string) => new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
   const snapshot = [
     sale && { value: dollars(sale.value), label: "Typical home sale price", fine: `${sale.period_start ? `${monthYear(sale.period_start)} to ` : ""}${monthYear(sale.period_end)}. NJ SR-1A` },
-    tax && { value: dollars(tax.value * 5000), label: "Yearly property tax on a $500,000 home", fine: `At the ${tax.value.toFixed(2)}% statewide rate, ${tax.period_end.slice(0, 4)}. NJ Division of Taxation` },
+    tax && { value: `${tax.value.toFixed(2)}%`, label: "Of a home’s market value goes to property tax each year", fine: `Statewide effective rate, ${tax.period_end.slice(0, 4)}. NJ Division of Taxation` },
     added && { value: whole(added.value), label: `More homes in ${added.period_end.slice(0, 4)}, after demolitions`, fine: "Census BPS / NJ DCA" },
     burdened && pressureStory && { value: burdened, label: "Of the lowest-income renters spend too much on housing", fine: `Cost-burdened. ${pressureStory.source}, ${pressureStory.period}` },
     fiber && fiberStory && { value: fiber, label: "Of homes and businesses can get fiber internet", fine: `${fiberStory.source}, ${fiberStory.period.slice(0, 4)}` },
@@ -118,9 +120,13 @@ export default async function NewJerseyPoster() {
   const LIVING = stories.map(({ topic }) => topic).filter((topic) => !["lending", "pressure", "building", "migration"].includes(topic));
   const links = [{ id: "counties", label: "Counties compared" }, ...(sale || tax ? [{ id: "cost", label: "Cost to buy, own & rent" }] : []), { id: "afford", label: "Cost burden & mortgages" }, { id: "supply", label: "New homes built" }, { id: "living", label: "Living here" }, ...(jersey.length ? [{ id: "visual", label: "Stories" }] : [])];
 
+  // Numbered as they appear, so a chapter with no data leaves no gap.
+  let step = 0;
+  const head = (title: React.ReactNode, question: React.ReactNode) => <div className={acts.actHead}><b>{++step}</b>{title}{question}</div>;
+
   return glossTree(<>
     <Masthead affordability={{ kind: "route" }} />
-    <main id="main-content" tabIndex={-1} className={`${styles.poster} ${state.page}`}>
+    <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.plain} ${state.page} ${acts.page}`}>
       <Crumbs trail={[{ href: "/", label: "Home" }]} here="New Jersey" />
       <PosterNav links={links} />
 
@@ -138,8 +144,8 @@ export default async function NewJerseyPoster() {
 
 
 
-      {(sale || tax) && <section id="cost" className={state.chapter}>
-        <h2>What it costs to buy, own or rent a home</h2>
+      {(sale || tax) && <section id="cost" className={acts.act} data-accent="cost">
+        {head(<h2>Cost to buy, own or rent</h2>, <p>What does a home cost in New Jersey?</p>)}
         <div className={`${styles.compact} ${styles.chapterGrid} ${state.infographic}`}>
         {sale && <section id="price" className={`${styles.panel} ${styles.price}`}>
           <h2>What homes sold for</h2>
@@ -151,8 +157,9 @@ export default async function NewJerseyPoster() {
 
         {tax && <section id="tax" className={`${styles.panel} ${styles.tax}`}>
           <h2>Property tax takes {tax.value.toFixed(2)}% of a home’s value a year</h2>
-          <p className={state.figure}>{dollars(tax.value * 5000)}</p>
-          <p className={state.note}>The yearly bill that rate puts on a $500,000 home, not any home’s actual bill. NJ Division of Taxation.</p>
+          <p className={state.figure}>{tax.value.toFixed(2)}%</p>
+          <p className={state.note}>The statewide effective rate, {tax.period_end.slice(0, 4)}.{sale ? ` On a home at the median recorded sale price of ${dollars(sale.value)}, that rate comes to about ${dollars((tax.value / 100) * sale.value)} a year: an illustration, not any home’s actual bill.` : ""} NJ Division of Taxation.</p>
+          {byTax.length > 1 && <p className={state.note}>By county it runs from {byTax[0].tax!.toFixed(2)}% in {byTax[0].name} to {byTax.at(-1)!.tax!.toFixed(2)}% in {byTax.at(-1)!.name}.</p>}
         </section>}
 
         {byRent.length > 1 && <section id="rent" className={`${styles.panel} ${styles.homes}`}>
@@ -164,18 +171,18 @@ export default async function NewJerseyPoster() {
         </div>
       </section>}
 
-      {tileFor(["lending", "pressure"]).length > 0 && <section id="afford" className={state.chapter}>
-        <h2>Housing cost burden and mortgages</h2>
+      {tileFor(["lending", "pressure"]).length > 0 && <section id="afford" className={acts.act} data-accent="price">
+        {head(<h2>Cost burden and mortgages</h2>, <p>Who is stretched, and who gets a loan?</p>)}
         <div className={`${styles.compact} ${styles.chapterGrid} ${state.infographic}`}>{tileFor(["lending", "pressure"])}</div>
       </section>}
 
-      {tileFor(["building", "migration"]).length > 0 && <section id="supply" className={state.chapter}>
-        <h2>How many homes New Jersey is adding</h2>
+      {tileFor(["building", "migration"]).length > 0 && <section id="supply" className={acts.act} data-accent="homes">
+        {head(<h2>New homes</h2>, <p>How many homes is New Jersey adding?</p>)}
         <div className={`${styles.compact} ${styles.chapterGrid} ${state.infographic}`}>{tileFor(["building", "migration"])}</div>
       </section>}
 
-      {(commute.length > 0 || tileFor(LIVING).length > 0) && <section id="living" className={state.chapter}>
-        <h2>Daily life around a home</h2>
+      {(commute.length > 0 || tileFor(LIVING).length > 0) && <section id="living" className={acts.act} data-accent="life">
+        {head(<h2>Living here</h2>, <p>What is daily life like around a home?</p>)}
         <div className={`${styles.compact} ${styles.chapterGrid} ${state.infographic}`}>
         {commute.length > 0 && <section id="workday" className={`${styles.panel} ${styles.workday}`}>
           <h2>{lead.value.toFixed(0)}% of workers commute to {lead.label === "Elsewhere in NJ" ? "another NJ county" : lead.label}</h2>

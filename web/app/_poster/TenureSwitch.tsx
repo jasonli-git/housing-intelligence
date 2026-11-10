@@ -25,7 +25,7 @@ export function TenureSwitch() {
     if (next === "rent") url.searchParams.set("for", "rent"); else url.searchParams.delete("for");
     window.history.replaceState(null, "", url);
   };
-  return <div className={acts.tenure} role="group" aria-label="Show figures for">
+  return <div id="view" className={acts.tenure} role="group" aria-label="Show figures for">
     <span aria-hidden="true">Show figures for</span>
     <div>
       <button type="button" aria-pressed={tenure === "buy"} onClick={() => choose("buy")}>Buying</button>

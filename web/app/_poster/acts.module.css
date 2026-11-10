@@ -163,10 +163,10 @@
 
 /* Colour with a job: each act has one accent, saying which question you are in. Its lead
    exhibit is tinted with it, and the supporting exhibits are separate neutral cards. */
-.act[id="values"] { --act: var(--kind-tax); }
-.act[id="owning"] { --act: var(--cost-accent); }
-.act[id="housing"] { --act: var(--explore-accent); }
-.act[id="area"] { --act: var(--place-accent); }
+.act[data-accent="price"] { --act: var(--kind-tax); }
+.act[data-accent="cost"] { --act: var(--cost-accent); }
+.act[data-accent="homes"] { --act: var(--explore-accent); }
+.act[data-accent="life"] { --act: var(--place-accent); }
 .page .actHead { border-top-color: var(--act); }
 .page .actHead b { display: inline-grid; place-items: center; width: 26px; height: 26px; font-size: 14px; color: var(--surface-1); background: var(--act); border-radius: 50%; align-self: center; }
 .page .sheet { display: grid; gap: 10px; overflow: visible; background: none; border-radius: 0; }
@@ -178,3 +178,15 @@
 .page .foot { padding: 6px 4px 0; border-top: 0; }
 .page .next a:first-child { color: var(--surface-1) !important; background: var(--act); border-color: var(--act); }
 @media (max-width: 720px) { .page .more { background: var(--surface-card); border: 0; border-radius: 16px; } }
+/* Dark surfaces swallow a light tint, so the lead exhibit takes more of its accent there.
+   Its small print lightens with it: at 34% the usual secondary text fell to 3.9:1. */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .page :is(.sheet, .sheet > [data-for]) > .lead:first-child { background: color-mix(in srgb, var(--act) 34%, var(--surface-card)); --text-secondary: color-mix(in srgb, var(--text-primary) 80%, var(--act)); } }
+:root[data-theme="dark"] .page :is(.sheet, .sheet > [data-for]) > .lead:first-child { background: color-mix(in srgb, var(--act) 34%, var(--surface-card)); --text-secondary: color-mix(in srgb, var(--text-primary) 80%, var(--act)); }
+/* A figure's yardstick, under what it counts. */
+.said dt small { display: block; font-size: 12px; color: var(--text-secondary); }
+.thin { grid-column: 1 / -1; max-width: 46rem; margin: 14px 0 0; font-size: 14px; line-height: 1.45; }
+.thin a { color: inherit !important; }
+.tenure { scroll-margin-top: 64px; }
+.ends + :global(ul) { margin-top: 10px; }
+/* County and state pages: the same numbered acts over their own rows of neutral panels. */
+.page .act > .sheet + .sheet { margin-top: 10px; }

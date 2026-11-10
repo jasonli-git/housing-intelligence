@@ -60,6 +60,14 @@ are not yet recorded here.
 
 ### Changed
 
+- **County and state pages join the act system; eight place-page refinements** (2026-11-10,
+  ARCHITECTURE #491): county pages get numbered acts, accents and the Buy / Rent switch;
+  the New Jersey page gets the acts and shows the effective tax rate in place of a bill
+  on a hypothetical home; places with few figures say what is not published; service
+  figures carry a yardstick (statewide fiber share, transit against other towns, outage
+  minutes without major storms); the stand-outs strip fills from the outer tenth, money
+  first; the sticky bar names the view; growth-chart labels sit outside the drawing; the
+  lead exhibit's tint is stronger in dark mode; days on market sits in the price act.
 - **Buying or renting on town and ZIP pages** (2026-11-10, ARCHITECTURE #490): a switch in
   the header shows the figures a buyer or a renter needs, and `?for=rent` in the address
   opens the renting view. Renters get asking rent beside what tenants pay, rent by size,

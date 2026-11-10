@@ -243,14 +243,6 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const uninsured = community?.health.find((h) => h.payload.measure === "ACCESS2")?.payload;
   const violations = water?.systems.reduce((sum, w) => sum + w.violations, 0) ?? null;
   const electric = utilities?.providers.find((p) => p.fuel === "electric")?.provider;
-  const facts = [
-    fiber && fiber.locations > 0 && { value: `${((fiber.fiber / fiber.locations) * 100).toFixed(0)}%`, label: "of locations can get fiber" },
-    pct("transit_any_homes_share") && { value: pct("transit_any_homes_share")!, label: "of homes near a transit stop" },
-    siteRate !== null && { value: siteRate.toFixed(1), label: `open site cleanups per 1,000 homes${typicalSites !== null ? ` (typical ${unitWord} ${typicalSites.toFixed(1)})` : ""}` },
-    violations !== null && { value: violations.toLocaleString("en-US"), label: `drinking-water violations, ${water?.first_year}–${water?.last_year}` },
-    story("utilities")?.rows[0] && { value: story("utilities")!.rows[0].formatted, label: "without power per customer, utility-wide" },
-    uninsured?.value != null && { value: `${uninsured.value.toFixed(0)}%`, label: `of adults 18–64 uninsured (county, ${uninsured.year})` },
-  ].flatMap((fact) => (fact ? [fact] : []));
   const bedrooms = [["acs_share_0_1_bedrooms", "0–1 bed"], ["acs_share_2_bedrooms", "2 bed"], ["acs_share_3_bedrooms", "3 bed"], ["acs_share_4plus_bedrooms", "4+ bed"]].flatMap(([id, label], i) => { const v = level(id)?.value; return v ? [{ label, value: v * 100, color: ["var(--part-4)", "var(--part-3)", "var(--part-2)", "var(--part-1)"][i] }] : []; });
   const stock = [
     level("modiv_median_year_built") && { value: String(Math.round(level("modiv_median_year_built")!.value)), label: "typical year built" },
@@ -284,6 +276,19 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     placed("elevation_homes_feet", "Height above sea level", (v) => `${Math.round(v)} ft`),
     placed("msft_median_footprint_sqft", "Typical house footprint", (v) => `${Math.round(v).toLocaleString("en-US")} sq ft`),
   ])).flatMap((item) => (item ? [item] : []));
+  // Each service figure with something to judge it by, where a comparison is published.
+  const stateFiber = stateId ? (await api.community(stateId))?.broadband_place?.payload : null;
+  const transitPlace = level("transit_any_homes_share") ? await placed("transit_any_homes_share", "", share) : null;
+  const than = (position: number) => (position >= 0.5 ? `more than in ${Math.min(Math.round(position * 100), 99)}% of ${unitPlural}` : `less than in ${Math.min(Math.round((1 - position) * 100), 99)}% of ${unitPlural}`);
+  const power = utilities?.providers.find((p) => p.fuel === "electric")?.electricity?.payload;
+  const facts: { value: string; label: string; note?: string }[] = [
+    fiber && fiber.locations > 0 && { value: `${((fiber.fiber / fiber.locations) * 100).toFixed(0)}%`, label: "of locations can get fiber", note: stateFiber && stateFiber.locations > 0 ? `${((stateFiber.fiber / stateFiber.locations) * 100).toFixed(0)}% across ${scopeName(region.state_code)}` : undefined },
+    pct("transit_any_homes_share") && { value: pct("transit_any_homes_share")!, label: "of homes near a transit stop", note: transitPlace ? than(transitPlace.position) : undefined },
+    siteRate !== null && { value: siteRate.toFixed(1), label: "open site cleanups per 1,000 homes", note: typicalSites !== null ? `the typical ${unitWord} has ${typicalSites.toFixed(1)}` : undefined },
+    violations !== null && { value: violations.toLocaleString("en-US"), label: `drinking-water violations, ${water?.first_year}–${water?.last_year}`, note: violations === 0 ? "none on record" : undefined },
+    story("utilities")?.rows[0] && { value: story("utilities")!.rows[0].formatted, label: "without power per customer in a year, across the whole utility", note: power?.saidi_normal != null ? `${power.saidi_normal.toFixed(0)} min leaving out major storms` : undefined },
+    uninsured?.value != null && { value: `${uninsured.value.toFixed(0)}%`, label: `of adults 18–64 uninsured (county, ${uninsured.year})` },
+  ].flatMap((fact) => (fact ? [fact] : []));
   const SHOPS = [["osm_starbucks_count", "Starbucks"], ["osm_dunkin_count", "Dunkin’"], ["osm_wawa_count", "Wawa"], ["osm_quickchek_count", "QuickChek"], ["osm_trader_joes_count", "Trader Joe’s"], ["osm_whole_foods_count", "Whole Foods"], ["osm_pizza_count", "Pizzerias"], ["osm_bagel_count", "Bagel shops"], ["osm_diner_count", "Diners"]];
   const shops = (await Promise.all(SHOPS.map(async ([id, label]) => ({ label, value: (await latest(id))?.value ?? 0 })))).filter((shop) => shop.value > 0);
   const eras = [["acs_share_built_pre_1940", "Before 1940"], ["acs_share_built_1940_1979", "1940–79"], ["acs_share_built_1980_1999", "1980–99"], ["acs_share_built_2000_later", "2000 on"]].flatMap(([id, label]) => { const v = level(id)?.value; return v !== undefined ? [{ label, value: v * 100 }] : []; });
@@ -408,7 +413,6 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const uY = (v: number) => (UH - 24) / 2 - (v / uSpan) * ((UH - 24) / 2 - 8);
 
   const contextFacts = [
-    domNow && `${Math.round(domNow.value)} days to sell`,
     heatSeries.length > 20 && `${Math.round(heatNow)} days over 90°F`,
     persistence && `${againstUsual(persistence.vs_median!)} usual prices`,
     movers.length > 1 && `${movers.at(-1)!.net_per_1000! > 0 ? "+" : ""}${movers.at(-1)!.net_per_1000!.toFixed(1)} net moves per 1,000`,
@@ -465,7 +469,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     const rows = g.rows.filter((o) => o.period_end >= growthStart);
     return rows.length >= 2 && rows[0].value > 0 ? [{ ...g, points: rows.map((o) => ({ time: Date.parse(o.period_end), index: (o.value / rows[0].value) * 100 })) }] : [];
   }) : [];
-  const GW = 640, GH = 240, GL = 40, GR = 124, GT = 12, GB = 24;
+  const GW = 640, GH = 220, GL = 4, GR = 8, GT = 12, GB = 8;
   const growthTimes = growthSeries.flatMap((g) => g.points.map((p) => p.time));
   const growthHigh = Math.max(...growthSeries.flatMap((g) => g.points.map((p) => p.index)), 100);
   const growthLow = Math.min(...growthSeries.flatMap((g) => g.points.map((p) => p.index)), 100);
@@ -538,6 +542,10 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     burdenRow && { label: "Renters paying over 30% of income", value: `${(burdenRow.value * 100).toFixed(0)}%`, kind: kind("acs_renter_cost_burden"), ...standing("acs_renter_cost_burden"), fine: `${burdenRow.period_end.slice(0, 4)} · Census ACS` },
   ].flatMap((figure) => (figure ? [figure] : []));
 
+  // A place with few figures says so, and names what no source publishes for it.
+  const absent = [!medianSale && "recorded home sales", !homeRow && "a Zillow home value", !taxBill && "a median property tax bill", !askRow && !paidRow && "rents"].flatMap((item) => (item ? [item] : []));
+  const thinLine = figures.length <= 2 && absent.length > 0 ? <p className={acts.thin}>Few figures are published for {name}. Not available here: {absent.join(", ")}. Small places often have too few sales or survey answers for a source to report. <Link href={`${regionPath(regionId)}/report`}>Everything that is published</Link></p> : null;
+
   // What stands out: the measures where this place sits at one end of its peers, each
   // handing on to the story that explains it, or to the report where no story does.
   const topicFor = (id: string): PlaceStoryTopic | null => /^(zhvi|zori|acs_median_(hh_income|home_value)|price_to|rent_to|sale_price_to)/.test(id) ? "market" : /^sr1a/.test(id) ? "sales" : /^(chas|acs_(renter|owner)_(cost|severe))/.test(id) ? "pressure" : /^hmda/.test(id) ? "lending"
@@ -547,7 +555,16 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   // Not news: counts that follow a place's size, and a median year built "changing".
   const dull = /(population|housing_units|year_built|parcels|resident_jobs)/;
   const family = (id: string) => (/tax_rate/.test(id) ? "tax_rate" : /^acs_median_rent_/.test(id) ? "rent_by_size" : id);
-  const outs = standOuts(packet, uncertainties).filter((o) => !inHeader.has(o.metric_id) && !dull.test(o.metric_id)).sort((a, b) => atAnEnd(a.detail) - atAnEnd(b.detail))
+  // In the reader's order: money, then risk, then the daily round, then the rest.
+  const weight = (id: string) => (/(tax|rent|income|price|zhvi|zori|cost|burden|hmda)/.test(id) ? 0 : /(fema|flood|sites|water_|noise)/.test(id) ? 1 : /(commute|transit|lodes|k12|k8|_hs_|work_from)/.test(id) ? 2 : 3);
+  const strict = standOuts(packet, uncertainties).filter((o) => !inHeader.has(o.metric_id) && !dull.test(o.metric_id));
+  // The packet's rule is the outer 5%. Where that leaves the strip short, measures whose
+  // whole range sits in the outer tenth fill it, worded as a share and never as "the highest". Prices are left out: the header leads with one.
+  const near = comparisonMeasures(packet.levels, uncertainties, packet.levels.map((l) => l.metric_id)).filter((m) => (m.low >= 0.9 || m.high <= 0.1) && !inHeader.has(m.row.metric_id) && !dull.test(m.row.metric_id) && !/^(acs_share_|sr1a_|zhvi|acs_median_home_value)|_count$/.test(m.row.metric_id) && m.row.unit !== "count" && !strict.some((o) => o.metric_id === m.row.metric_id))
+    .map((m) => ({ metric_id: m.row.metric_id, label: m.label, group: "value" as const, rank: "", figure: m.row.unit === "year" ? String(Math.round(m.row.value)) : formatMetric(m.row.value, m.row.unit, m.row.metric_id), margin: null, detail: m.position >= 0.5 ? `higher than ${Math.min(Math.round(m.position * 100), 99)}% of ${m.row.of}` : `lower than ${Math.min(Math.round((1 - m.position) * 100), 99)}% of ${m.row.of}` }));
+  const byReader = <T extends { metric_id: string; detail: string }>(list: T[]) => [...list].sort((a, b) => weight(a.metric_id) - weight(b.metric_id) || atAnEnd(a.detail) - atAnEnd(b.detail));
+  // One fill-in per subject, so a building boom is not told twice.
+  const outs = [...byReader(strict), ...byReader(near).filter((o, i, all) => all.findIndex((other) => (topicFor(other.metric_id) ?? other.metric_id) === (topicFor(o.metric_id) ?? o.metric_id)) === i)]
     .filter((o, i, all) => all.findIndex((other) => family(other.metric_id) === family(o.metric_id)) === i).slice(0, 3);
   const standStrip = outs.length > 0 && <div className={acts.stand}>
     <h2>What stands out</h2>
@@ -577,139 +594,12 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   </div> : null;
   const priceNote = salesFigure && estimateFigure ? <p className={acts.note}>Recorded sales count only the homes that changed hands. Zillow’s figure estimates a typical single-family home, sold or not, so the two differ.</p> : null;
 
-  if (isCounty) {
-    const countyLinks = [["county", "Towns compared"], ["reading", "AI highlights"], ["costs", "Cost to buy & own"], ["compares", "How it compares"], ["market", "Market direction"], ["life", "Living here"], ["stories", "Stories"]].filter(([id]) => id === "county" ? !!countyFrame : id === "reading" ? hasReading : id === "stories" ? deepStories.length > 0 : true).map(([id, label]) => ({ id, label }));
-    return glossTree(<>
-      <Masthead affordability={{ kind: "route" }} />
-      <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact} ${styles.plain} ${acts.page}`}>
-        <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code)]} here={name} />
-        <PosterNav links={countyLinks} />
-
-        <header className={`${styles.panel} ${styles.hero} ${acts.hero}`} data-kind="county">
-          {region.state_code === "NJ" && <GardenStateArtwork header />}
-          <div>
-            <p className={styles.kicker}>{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""} · {townRows.length} towns</p>
-            <h1>{name}</h1>
-            {headline && <p className={acts.thesis}>{headline}</p>}
-            <ComputedBadge />
-          </div>
-          {frame && town && <svg viewBox={`0 0 ${frame.width} ${frame.height}`} role="img" aria-label={`${name} on a map of ${scopeName(region.state_code)}`}>
-            {counties.map((c) => <path key={c.id} d={c.d} fill="currentColor" fillOpacity={c.id === regionId ? 1 : 0.2} />)}
-          </svg>}
-          <PlacePhoto geoid={region.geoid} />
-          {figureBand}
-          {standStrip}
-        </header>
-
-        {countyFrame && <section id="county" className={`${styles.panel} ${styles.county}`}>
-          <h2>Its {townRows.length} towns</h2>
-          {townRanges.length > 0 && <div className={styles.ranges}>{townRanges.map((range) => <div key={range.label}><span>{range.label}</span><strong>{range.low} – {range.high}</strong><small>{range.lowName} to {range.highName}</small></div>)}</div>}
-          <CountyAtlas name={name} width={countyFrame.width} height={countyFrame.height} shapes={countyShapes.map(({ id, d }) => ({ id, d }))} towns={townRows} />
-        </section>}
-
-        {readingPanel}
-
-        {(homeRow || month || taxBill) && <section id="costs" className={styles.chapter}>
-          <h2>What it costs to buy and own a home</h2>
-          <div className={styles.chapterGrid}>
-        {homeRow && <section id="price" className={`${styles.panel} ${styles.price}`}>
-          <h2>{priceFind}</h2>
-          {salesFigure}
-          {estimateFigure && <div className={salesFigure ? styles.building : undefined}>{estimateFigure}</div>}
-          {priceNote}
-        </section>}
-        {month && <section id="cost" className={`${styles.panel} ${styles.cost}`}>
-          <h2>{costTitle}</h2>
-          <div className={styles.versus}>
-            <div><span>Own</span><strong>{dollars(month.total)}</strong>
-              <div className={styles.stack}>{parts.map((p) => <i key={p.label} title={`${p.label}: ${dollars(p.value)}`} style={{ flexGrow: p.value, background: p.color }} />)}</div></div>
-            {rent !== null && <div><span>Rent</span><strong>{dollars(rent)}</strong>
-              <div className={styles.stack} style={{ width: `${(rent / month.total) * 100}%` }}><i style={{ flexGrow: 1, background: "var(--text-secondary)" }} /></div></div>}
-          </div>
-          <ul className={styles.key}>{parts.map((p) => <li key={p.label}><i style={{ background: p.color }} />{p.label} {dollars(p.value)}</li>)}</ul>
-          <p className={styles.caption}>An estimate, with 20% down at {cost!.rate.value.toFixed(2)}%.</p>
-          <details className={styles.tool}>
-            <summary>Use your own numbers</summary>
-            <OwnNumbers income={income} guideHref={`/guide?place=${regionId}`} source={{ state: region.state_code, price: cost!.home.value, ratePct: cost!.rate.value, taxYear: cost!.tax?.value ?? null, insuranceYear: cost!.insurance?.value ?? null, utilitiesMonth: cost!.utilities?.month ?? null, rentMonth: cost!.rent?.value ?? null }} />
-          </details>
-          <p className={styles.actions}><Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link><Link href={`/afford?place=${regionId}&county=${regionId}`}>Places within my budget</Link><Link href="/help">Housing help</Link></p>
-        </section>}
-        {taxBill && <section id="tax" className={`${styles.panel} ${styles.tax}`}>
-          <h2>Property tax adds {dollars(taxBill.value / 12)} a month</h2>
-          <p className={styles.giant}>{dollars(taxBill.value)}</p>
-          <p className={styles.caption}><Glossed text="Median" /> yearly bill{taxRate ? ` · ${taxRate.value.toFixed(2)}% effective rate` : ""}{taxBillMeasure ? ` · ${ordinal(taxBillMeasure.row.rank!)} highest of ${taxBillMeasure.row.of}` : ""}</p>
-          {sameHouseRows.length > 0 && taxRate && <div className={styles.building}>
-            <p className={acts.sub}>The same {dollars(HOUSE)} house pays {dollars(billFor(taxRate.value))} a year here</p>
-            {sameHouseRows.map((row) => <div key={row.key} className={`${styles.townBar} ${acts.sameBar}`} data-own={row.own || undefined}>
-              <span>{row.label}</span><div><i style={{ width: `${(row.rate / sameHousePeak) * 100}%` }} /></div><strong>{dollars(billFor(row.rate))}</strong>
-            </div>)}
-            <Prov kind={kind("nj_effective_tax_rate")}>Each place’s effective rate applied to one price, not any home’s actual bill. NJ Division of Taxation, {taxRate.period_end.slice(0, 4)}.</Prov>
-          </div>}
-        </section>}
-          </div>
-        </section>}
-
-        {(strips.length > 0 || pressureStory) && <section id="compares" className={styles.chapter}>
-          <h2>How it compares across New Jersey</h2>
-          <div className={styles.chapterGrid}>
-        {strips.length > 0 && <section id="ranks" className={`${styles.panel} ${styles.rank}`}>
-          <h2>Among {scopeName(peer_scope)} {peerNoun(peer_level)}</h2>
-          {strips.map((s) => <div key={s.id} className={styles.strip}>
-            <span>{s.label}</span>
-            <div><u style={{ left: `${s.low * 100}%`, width: `${(s.high - s.low) * 100}%` }} /><i style={{ left: `${s.position * 100}%` }} /></div>
-            <strong>{s.value}</strong>
-          </div>)}
-        </section>}
-        {pressureStory && <section id="affordability" className={`${styles.panel} ${styles.pressure}`}>
-          <h2>{pressureStory.headline}</h2>
-          <StoryBars rows={pressureStory.rows} />
-          <p className={styles.caption}>{pressureStory.source}, {pressureStory.period} · {storyLink("pressure")}</p>
-        </section>}
-          </div>
-        </section>}
-
-        {(domNow || persistence || movers.length > 1) && <section id="market" className={styles.chapter}>
-          <h2>Where the market is heading</h2>
-          <div className={styles.chapterGrid}>
-          {domNow && domUsual !== null && <section className={`${styles.panel} ${styles.pace}`}><h2>Homes sit {Math.round(domNow.value)} days, {Math.abs(domGap) < 3 ? "close to usual" : domGap < 0 ? `${Math.round(-domGap)} faster than usual` : `${Math.round(domGap)} slower than usual`}</h2><MiniLine values={domSeries.map((o) => o.value)} base={domUsual} /><p className={styles.caption}>{domRank ? `${ordinal(domRank)} quickest of ${countyWaits.length} counties. ` : ""}Realtor.com via FRED, {asOf(domNow)}</p></section>}
-          {persistence && <section className={`${styles.panel} ${styles.unusual}`}><h2>Prices against incomes: {againstUsual(persistence.vs_median!)} usual</h2><MiniBars values={persistence.series.map((p) => p.vs_median)} /><p className={styles.caption}>{persistence.first_year}–{persistence.last_year}. FHFA and Census</p></section>}
-          {movers.length > 1 && <section className={`${styles.panel} ${styles.moving}`}><h2>Moving in and out</h2><div className={styles.moves}>{movers.map((y) => <div key={y.year} title={`${y.year}: ${y.net_per_1000!.toFixed(1)} per 1,000 households`}><i data-gain={y.net_per_1000! > 0 || undefined} style={{ height: `${(Math.abs(y.net_per_1000!) / moverPeak) * 50}%` }} /><span>{String(y.year).slice(2)}</span></div>)}</div><p className={styles.caption}>Net households per 1,000; above the line, more arrived{migration!.arrivals[0] ? `. Most from ${migration!.arrivals[0].name}` : ""}</p></section>}
-          </div>
-        </section>}
-
-        {(workBars.length > 0 || heatSeries.length > 20 || seasonalHomes >= 0.1) && <section id="life" className={styles.chapter}>
-          <h2>Life across the county</h2>
-          <div className={styles.chapterGrid}>
-        {workBars.length > 0 && <section id="workday" className={`${styles.panel} ${styles.workday}`}>
-          <h2>{elsewhere !== null ? `${(100 - elsewhere).toFixed(0)}% of residents’ jobs are in the county` : "Where the workday goes"}{leadPlace ? `, led by ${leadPlace.name}` : ""}</h2>
-          {modes.length > 0 && <div className={styles.commute}>
-            <div className={styles.stack}>{modes.map((mode) => <i key={mode.label} title={`${mode.label}: ${mode.value.toFixed(0)}%`} style={{ flexGrow: mode.value, background: mode.color }} />)}{modeOther > 0 && <i title={`Other: ${modeOther.toFixed(0)}%`} style={{ flexGrow: modeOther, background: "var(--tick)" }} />}</div>
-            <ul className={styles.key}>{modes.map((mode) => <li key={mode.label}><i style={{ background: mode.color }} />{mode.label} {mode.value.toFixed(0)}%</li>)}</ul>
-          </div>}
-          {workBars.slice(0, 4).map((d) => <div key={d.name} className={styles.townBar}><span>{d.name}</span><div><i style={{ width: `${(d.share / workPeak) * 100}%` }} /></div><strong>{(d.share * 100).toFixed(0)}%</strong></div>)}
-        </section>}
-          {heatSeries.length > 20 && <section className={`${styles.panel} ${styles.heat}`}><h2>{Math.round(heatNow)} days over 90°F a year, {heatNow >= heatBase ? "up" : "down"} from {Math.round(heatBase)}</h2><MiniBars values={heatSeries.map((o) => o.value)} recent={10} /><p className={styles.caption}>Since {yearOf(heatSeries[0])}, latest ten in orange. NOAA</p></section>}
-        {seasonalHomes >= 0.1 && <section className={`${styles.panel} ${styles.seasonal}`}>
-          <h2>{(seasonalHomes * 100).toFixed(0)}% of homes are kept for seasonal use</h2>
-          <div className={styles.waffle} role="img" aria-label={`Of every 100 homes, ${homeDots.filter((d) => d === "lived").length} are lived in year-round and ${homeDots.filter((d) => d === "seasonal").length} are seasonal.`}>{homeDots.map((dot, i) => <i key={i} data-kind={dot} />)}</div>
-          <ul className={styles.key}><li><i data-kind="lived" />Lived in</li><li><i data-kind="seasonal" />Seasonal</li><li><i data-kind="empty" />Other empty</li></ul>
-        </section>}
-          </div>
-        </section>}
-
-        {storyRail}
-
-        <footer className={styles.close}>Sources: Zillow, Census Bureau, NJ Division of Taxation, FEMA, NOAA, FHFA and Realtor.com. <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link> · <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a></footer>
-      </main>
-    </>);
-  }
-
   // Each act closes by handing on: a tool for the question, then the stories behind its figures.
   const tales = (topics: PlaceStoryTopic[]) => { const items = deepStories.filter((item) => topics.includes(item.topic)); return items.length > 0 && <ul className={acts.tales}>{items.map((item) => <li key={item.topic}><Link href={item.href} prefetch={false}>
     <ThemedShot name={`stories/${item.slug}`} width={1440} height={900} className={acts.thumb} />
     <span><strong>{STORIES.find((entry) => entry.href === `/stories/${item.slug}`)?.title ?? item.title}</strong><small>In {name}: {item.headline}</small></span>
   </Link></li>)}</ul>; };
-  const said = (items: { value: string; label: string }[]) => <dl className={`${acts.rows} ${acts.said}`}>{items.map((item) => <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl>;
+  const said = (items: { value: string; label: string; note?: string }[]) => <dl className={`${acts.rows} ${acts.said}`}>{items.map((item) => <div key={item.label}><dt>{item.label}{item.note && <small>{item.note}</small>}</dt><dd>{item.value}</dd></div>)}</dl>;
   const compareHref = `/compare${placesQuery([regionId, ...(similar?.matches.slice(0, 3).map((m) => m.region_id) ?? [])])}`;
   const reportHref = `${regionPath(regionId)}/report`;
   const taxStanding = taxBill ? standing("modiv_median_tax_bill").text : null;
@@ -724,12 +614,11 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <h3 className={acts.find}>{title}</h3>
         <svg className={styles.scatter} style={{ maxWidth: 720 }} viewBox={`0 0 ${GW} ${GH}`} role="img" aria-label={`${growthSeries.map((g) => `${g.label} ${(g.points.at(-1)!.index - 100).toFixed(0)}%`).join(", ")} since ${growthStart!.slice(0, 4)}.`}>
           <line x1={GL} x2={GW - GR} y1={gy(100)} y2={gy(100)} stroke="currentColor" strokeOpacity="0.4" />
-          <text x={GL - 6} y={gy(100) + 4} textAnchor="end">0%</text>
-          {growthSeries.map((g) => { const last = g.points.at(-1)!; return <g key={g.label}><polyline points={g.points.map((p) => `${gx(p.time)},${gy(p.index)}`).join(" ")} fill="none" stroke={g.color} strokeWidth="2.5" strokeLinejoin="round" /><text x={gx(last.time) + 8} y={gy(last.index) + 4}>{`${g.label} ${last.index >= 100 ? "+" : ""}${(last.index - 100).toFixed(0)}%`}</text></g>; })}
-          <text x={GL} y={GH - 6}>{growthStart!.slice(0, 4)}</text>
-          <text x={GW - GR} y={GH - 6} textAnchor="end">{new Date(Math.max(...growthTimes)).getUTCFullYear()}</text>
+          {growthSeries.map((g) => <polyline key={g.label} points={g.points.map((p) => `${gx(p.time)},${gy(p.index)}`).join(" ")} fill="none" stroke={g.color} strokeWidth="2.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />)}
         </svg>
-        <Prov kind="modelled">Each line starts at 0% in {growthStart!.slice(0, 4)}, in dollars not adjusted for inflation. Zillow; income is the Census ACS five-year survey, so it moves slowly.</Prov>
+        <p className={acts.ends}><span>{growthStart!.slice(0, 4)} · <b>0%</b></span><span>{new Date(Math.max(...growthTimes)).getUTCFullYear()}</span></p>
+        <ul className={styles.key}>{growthSeries.map((g) => { const last = g.points.at(-1)!; return <li key={g.label}><i style={{ background: g.color }} />{g.label} <b>{last.index >= 100 ? "+" : "−"}{Math.abs(last.index - 100).toFixed(0)}%</b></li>; })}</ul>
+        <Prov kind="modelled">Each line starts at 0% in {growthStart!.slice(0, 4)}, the faint rule, in dollars not adjusted for inflation. Zillow; income is the Census ACS five-year survey, so it moves slowly.</Prov>
       </section> : null;
   const rentLine = growthSeries.find((g) => g.label === "Rent");
   const growthTile = growthSeries.length > 1 ? growthTileFor(`${growthLeader.label} grew fastest: up ${(growthLeader.points.at(-1)!.index - 100).toFixed(0)}% since ${growthStart!.slice(0, 4)}`) : null;
@@ -744,14 +633,27 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <StoryBars rows={pressureStory.rows} />
         <Prov kind="survey">{pressureStory.source}, {pressureStory.period} · {storyLink("pressure")}</Prov>
       </section> : null;
+  const paceTile = domNow && domUsual !== null && county ? <section id="pace" className={`${acts.tile} ${acts.wide}`}>
+        <h3 className={acts.find}>Homes in {displayName(county)} sit about {Math.round(domNow.value)} days, {Math.abs(domGap) < 3 ? "close to usual" : domGap < 0 ? `${Math.round(-domGap)} faster than usual` : `${Math.round(domGap)} slower than usual`}</h3>
+        <svg className={styles.scatter} viewBox={`0 0 ${DW} ${DH}`} role="img" aria-label={`Median days on market in ${displayName(county)} by month, now ${Math.round(domNow.value)} days, usually ${Math.round(domUsual)}.`}>
+          <line x1={DL} x2={DW} y1={dy(domUsual)} y2={dy(domUsual)} stroke="currentColor" strokeOpacity="0.6" strokeDasharray="5 4" />
+          <text x={DL + 4} y={dy(domUsual) - 6}>Usual, {Math.round(domUsual)} days</text>
+          <line x1={DL} x2={DW} y1={dy(0)} y2={dy(0)} stroke="currentColor" strokeOpacity="0.25" />
+          <polyline points={domSeries.map((o, i) => `${dx(i)},${dy(o.value)}`).join(" ")} fill="none" stroke="var(--series-1)" strokeWidth="2" strokeLinejoin="round" />
+          <circle cx={dx(domSeries.length - 1)} cy={dy(domNow.value)} r="5" fill="var(--series-2)" />
+          {domYears.map(({ year, i }) => <text key={year} x={dx(i)} y={DH - 6} textAnchor="middle">{year}</text>)}
+        </svg>
+        <Prov kind={kindOf("realtor_median_days_on_market")}>Median days on market, by month{domYearAgo ? ` · ${Math.round(domYearAgo.value)} days a year earlier` : ""}{domRank && countyWaits.length ? ` · ${ordinal(domRank)} quickest of ${countyWaits.length} NJ counties` : ""}. County figures, not this town alone, and they rise and fall with the seasons. Realtor.com via FRED, {asOf(domNow)}.</Prov>
+      </section> : null;
   const priceAct = (salesFigure || estimateFigure) ? <>
     <div className={acts.lead}>
       <h3 className={acts.find}>{priceFind}</h3>
       <div className={acts.cols}>{salesFigure}{estimateFigure}</div>
       {priceNote}
     </div>
-    {(growthSeries.length > 1 || (ranked.length > 1 && county) || (similar && similar.matches.length > 0 && priceRow)) && <MoreTiles names={[growthSeries.length > 1 && "five-year growth", ranked.length > 1 && county && "rank in the county", similar && similar.matches.length > 0 && priceRow && "similar cheaper places"].flatMap((n) => (n ? [n] : []))}>
+    {(growthSeries.length > 1 || paceTile || (ranked.length > 1 && county) || (similar && similar.matches.length > 0 && priceRow)) && <MoreTiles names={[growthSeries.length > 1 && "five-year growth", paceTile && "time to sell", ranked.length > 1 && county && "rank in the county", similar && similar.matches.length > 0 && priceRow && "similar cheaper places"].flatMap((n) => (n ? [n] : []))}>
       {growthTile}
+      {paceTile}
       {ranked.length > 1 && county && <section id="county" className={acts.tile}>
         <h3 className={acts.find}>{countyRank === 0 ? `The priciest of ${ranked.length} Zillow-covered towns in ${displayName(county)}` : `${ordinal(countyRank + 1)} of ${ranked.length} Zillow-covered towns in ${displayName(county)}`}</h3>
         {countyFrame && <svg className={acts.mapSmall} viewBox={`0 0 ${countyFrame.width} ${countyFrame.height}`} role="img" aria-label={`Towns in ${displayName(county)} shaded by typical home value, with ${name} outlined.`}>
@@ -1023,11 +925,141 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const rentPace = rentChange && rentChangePosition !== null ? (rentChange.pct_change < 0 ? "they fell over the past five years" : rentChange.pct_change === 0 ? "they were unchanged over the past five years" : `they rose ${rentChangePosition >= 2 / 3 ? "faster than most" : rentChangePosition <= 1 / 3 ? "more slowly than most" : "at about the typical pace"} over the past five years`) : null;
   const rentHeadline = rentMeasure ? `${askRow ? "Asking rents" : "The rents tenants pay"} in ${name} are ${third(rentMeasure.low, rentMeasure.high)} the ${rentMeasure.row.of} ${unitPlural} ${askRow ? "Zillow covers" : "the Census survey covers"} in ${scopeName(region.state_code)}${askRow && rentPace ? `, and ${rentPace}` : ""}.` : null;
 
+  if (isCounty) {
+    const hasCosts = !!(homeRow || month || taxBill), hasMarket = strips.length > 0 || !!pressureStory || !!domNow || !!persistence || movers.length > 1, hasLife = workBars.length > 0 || heatSeries.length > 20 || seasonalHomes >= 0.1;
+    const hasRent = !!(rentAct || rentCostAct);
+    const countyLinks = [["county", "Towns compared"], ["costs", "Cost to buy or rent"], ["market", "The market"], ["life", "Living here"], ["stories", "Stories"]].filter(([id]) => id === "county" ? !!countyFrame : id === "costs" ? hasCosts || hasRent : id === "market" ? hasMarket : id === "life" ? hasLife : deepStories.length > 0).map(([id, label]) => ({ id, label }));
+    let step = 0;
+    const head = (title: ReactNode, question: ReactNode) => <div className={acts.actHead}><b>{++step}</b>{title}{question}</div>;
+    return glossTree(<>
+      <Masthead affordability={{ kind: "route" }} />
+      <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact} ${styles.plain} ${acts.page}`} suppressHydrationWarning>
+        <InlineScript html={TENURE_SCRIPT} />
+        <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code)]} here={name} />
+        <PosterNav links={countyLinks} view={hasRent} />
+
+        <header className={`${styles.panel} ${styles.hero} ${acts.hero}`} data-kind="county">
+          {region.state_code === "NJ" && <GardenStateArtwork header />}
+          <div>
+            <p className={styles.kicker}>{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""} · {townRows.length} towns</p>
+            <h1>{name}</h1>
+            {hasRent && rentHeadline ? <>{headline && <p className={acts.thesis} data-for="buy">{headline}</p>}<p className={acts.thesis} data-for="rent">{rentHeadline}</p></> : headline && <p className={acts.thesis}>{headline}</p>}
+            <ComputedBadge />
+          </div>
+          {frame && town && <svg viewBox={`0 0 ${frame.width} ${frame.height}`} role="img" aria-label={`${name} on a map of ${scopeName(region.state_code)}`}>
+            {counties.map((c) => <path key={c.id} d={c.d} fill="currentColor" fillOpacity={c.id === regionId ? 1 : 0.2} />)}
+          </svg>}
+          <PlacePhoto geoid={region.geoid} />
+          {hasRent && <TenureSwitch />}
+          {hasRent ? <>{band(figures, "buy")}{band(rentFigures, "rent")}</> : figureBand}
+          {standStrip}
+        </header>
+
+        {countyFrame && <section id="county" className={acts.act} data-accent="homes">
+          {head(<h2>Its {townRows.length} towns</h2>, <p>How do its towns differ?</p>)}
+          <div className={`${styles.panel} ${styles.county}`}>
+          {townRanges.length > 0 && <div className={styles.ranges}>{townRanges.map((range) => <div key={range.label}><span>{range.label}</span><strong>{range.low} – {range.high}</strong><small>{range.lowName} to {range.highName}</small></div>)}</div>}
+          <CountyAtlas name={name} width={countyFrame.width} height={countyFrame.height} shapes={countyShapes.map(({ id, d }) => ({ id, d }))} towns={townRows} />
+          </div>
+        </section>}
+
+        {(hasCosts || hasRent) && <section id="costs" className={acts.act} data-accent="cost">
+          {hasRent ? head(<><h2 data-for="buy">Cost to buy and own</h2><h2 data-for="rent">Cost to rent</h2></>, <><p data-for="buy">What does a home cost here?</p><p data-for="rent">What does renting cost here?</p></>) : head(<h2>Cost to buy and own</h2>, <p>What does a home cost here?</p>)}
+          {hasRent && <><div className={acts.sheet} data-for="rent">{rentAct ?? none("rent")}</div>{rentCostAct && <div className={acts.sheet} data-for="rent">{rentCostAct}</div>}</>}
+          <div className={styles.chapterGrid} data-for={hasRent ? "buy" : undefined}>
+        {homeRow && <section id="price" className={`${styles.panel} ${styles.price}`}>
+          <h2>{priceFind}</h2>
+          {salesFigure}
+          {estimateFigure && <div className={salesFigure ? styles.building : undefined}>{estimateFigure}</div>}
+          {priceNote}
+        </section>}
+        {month && <section id="cost" className={`${styles.panel} ${styles.cost}`}>
+          <h2>{costTitle}</h2>
+          <div className={styles.versus}>
+            <div><span>Own</span><strong>{dollars(month.total)}</strong>
+              <div className={styles.stack}>{parts.map((p) => <i key={p.label} title={`${p.label}: ${dollars(p.value)}`} style={{ flexGrow: p.value, background: p.color }} />)}</div></div>
+            {rent !== null && <div><span>Rent</span><strong>{dollars(rent)}</strong>
+              <div className={styles.stack} style={{ width: `${(rent / month.total) * 100}%` }}><i style={{ flexGrow: 1, background: "var(--text-secondary)" }} /></div></div>}
+          </div>
+          <ul className={styles.key}>{parts.map((p) => <li key={p.label}><i style={{ background: p.color }} />{p.label} {dollars(p.value)}</li>)}</ul>
+          <p className={styles.caption}>An estimate, with 20% down at {cost!.rate.value.toFixed(2)}%.</p>
+          <details className={styles.tool}>
+            <summary>Use your own numbers</summary>
+            <OwnNumbers income={income} guideHref={`/guide?place=${regionId}`} source={{ state: region.state_code, price: cost!.home.value, ratePct: cost!.rate.value, taxYear: cost!.tax?.value ?? null, insuranceYear: cost!.insurance?.value ?? null, utilitiesMonth: cost!.utilities?.month ?? null, rentMonth: cost!.rent?.value ?? null }} />
+          </details>
+          <p className={styles.actions}><Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link><Link href={`/afford?place=${regionId}&county=${regionId}`}>Places within my budget</Link><Link href="/help">Housing help</Link></p>
+        </section>}
+        {taxBill && <section id="tax" className={`${styles.panel} ${styles.tax}`}>
+          <h2>Property tax adds {dollars(taxBill.value / 12)} a month</h2>
+          <p className={styles.giant}>{dollars(taxBill.value)}</p>
+          <p className={styles.caption}><Glossed text="Median" /> yearly bill{taxRate ? ` · ${taxRate.value.toFixed(2)}% effective rate` : ""}{taxBillMeasure ? ` · ${ordinal(taxBillMeasure.row.rank!)} highest of ${taxBillMeasure.row.of}` : ""}</p>
+          {sameHouseRows.length > 0 && taxRate && <div className={styles.building}>
+            <p className={acts.sub}>The same {dollars(HOUSE)} house pays {dollars(billFor(taxRate.value))} a year here</p>
+            {sameHouseRows.map((row) => <div key={row.key} className={`${styles.townBar} ${acts.sameBar}`} data-own={row.own || undefined}>
+              <span>{row.label}</span><div><i style={{ width: `${(row.rate / sameHousePeak) * 100}%` }} /></div><strong>{dollars(billFor(row.rate))}</strong>
+            </div>)}
+            <Prov kind={kind("nj_effective_tax_rate")}>Each place’s effective rate applied to one price, not any home’s actual bill. NJ Division of Taxation, {taxRate.period_end.slice(0, 4)}.</Prov>
+          </div>}
+        </section>}
+          </div>
+        </section>}
+
+        {hasMarket && <section id="market" className={acts.act} data-accent="price">
+          {head(<h2>The market</h2>, <p>How does it compare, and where is it heading?</p>)}
+          <div className={styles.chapterGrid}>
+        {strips.length > 0 && <section id="ranks" className={`${styles.panel} ${styles.rank}`}>
+          <h2>Among {scopeName(peer_scope)} {peerNoun(peer_level)}</h2>
+          {strips.map((s) => <div key={s.id} className={styles.strip}>
+            <span>{s.label}</span>
+            <div><u style={{ left: `${s.low * 100}%`, width: `${(s.high - s.low) * 100}%` }} /><i style={{ left: `${s.position * 100}%` }} /></div>
+            <strong>{s.value}</strong>
+          </div>)}
+        </section>}
+        {pressureStory && <section id="affordability" className={`${styles.panel} ${styles.pressure}`}>
+          <h2>{pressureStory.headline}</h2>
+          <StoryBars rows={pressureStory.rows} />
+          <p className={styles.caption}>{pressureStory.source}, {pressureStory.period} · {storyLink("pressure")}</p>
+        </section>}
+          {domNow && domUsual !== null && <section className={`${styles.panel} ${styles.pace}`}><h2>Homes sit {Math.round(domNow.value)} days, {Math.abs(domGap) < 3 ? "close to usual" : domGap < 0 ? `${Math.round(-domGap)} faster than usual` : `${Math.round(domGap)} slower than usual`}</h2><MiniLine values={domSeries.map((o) => o.value)} base={domUsual} /><p className={styles.caption}>{domRank ? `${ordinal(domRank)} quickest of ${countyWaits.length} counties. ` : ""}Realtor.com via FRED, {asOf(domNow)}</p></section>}
+          {persistence && <section className={`${styles.panel} ${styles.unusual}`}><h2>Prices against incomes: {againstUsual(persistence.vs_median!)} usual</h2><MiniBars values={persistence.series.map((p) => p.vs_median)} /><p className={styles.caption}>{persistence.first_year}–{persistence.last_year}. FHFA and Census</p></section>}
+          {movers.length > 1 && <section className={`${styles.panel} ${styles.moving}`}><h2>Moving in and out</h2><div className={styles.moves}>{movers.map((y) => <div key={y.year} title={`${y.year}: ${y.net_per_1000!.toFixed(1)} per 1,000 households`}><i data-gain={y.net_per_1000! > 0 || undefined} style={{ height: `${(Math.abs(y.net_per_1000!) / moverPeak) * 50}%` }} /><span>{String(y.year).slice(2)}</span></div>)}</div><p className={styles.caption}>Net households per 1,000; above the line, more arrived{migration!.arrivals[0] ? `. Most from ${migration!.arrivals[0].name}` : ""}</p></section>}
+          </div>
+        </section>}
+
+        {hasLife && <section id="life" className={acts.act} data-accent="life">
+          {head(<h2>Living here</h2>, <p>What is daily life like across the county?</p>)}
+          <div className={styles.chapterGrid}>
+        {workBars.length > 0 && <section id="workday" className={`${styles.panel} ${styles.workday}`}>
+          <h2>{elsewhere !== null ? `${(100 - elsewhere).toFixed(0)}% of residents’ jobs are in the county` : "Where the workday goes"}{leadPlace ? `, led by ${leadPlace.name}` : ""}</h2>
+          {modes.length > 0 && <div className={styles.commute}>
+            <div className={styles.stack}>{modes.map((mode) => <i key={mode.label} title={`${mode.label}: ${mode.value.toFixed(0)}%`} style={{ flexGrow: mode.value, background: mode.color }} />)}{modeOther > 0 && <i title={`Other: ${modeOther.toFixed(0)}%`} style={{ flexGrow: modeOther, background: "var(--tick)" }} />}</div>
+            <ul className={styles.key}>{modes.map((mode) => <li key={mode.label}><i style={{ background: mode.color }} />{mode.label} {mode.value.toFixed(0)}%</li>)}</ul>
+          </div>}
+          {workBars.slice(0, 4).map((d) => <div key={d.name} className={styles.townBar}><span>{d.name}</span><div><i style={{ width: `${(d.share / workPeak) * 100}%` }} /></div><strong>{(d.share * 100).toFixed(0)}%</strong></div>)}
+        </section>}
+          {heatSeries.length > 20 && <section className={`${styles.panel} ${styles.heat}`}><h2>{Math.round(heatNow)} days over 90°F a year, {heatNow >= heatBase ? "up" : "down"} from {Math.round(heatBase)}</h2><MiniBars values={heatSeries.map((o) => o.value)} recent={10} /><p className={styles.caption}>Since {yearOf(heatSeries[0])}, latest ten in orange. NOAA</p></section>}
+        {seasonalHomes >= 0.1 && <section className={`${styles.panel} ${styles.seasonal}`}>
+          <h2>{(seasonalHomes * 100).toFixed(0)}% of homes are kept for seasonal use</h2>
+          <div className={styles.waffle} role="img" aria-label={`Of every 100 homes, ${homeDots.filter((d) => d === "lived").length} are lived in year-round and ${homeDots.filter((d) => d === "seasonal").length} are seasonal.`}>{homeDots.map((dot, i) => <i key={i} data-kind={dot} />)}</div>
+          <ul className={styles.key}><li><i data-kind="lived" />Lived in</li><li><i data-kind="seasonal" />Seasonal</li><li><i data-kind="empty" />Other empty</li></ul>
+        </section>}
+          </div>
+        </section>}
+
+        {storyRail}
+
+        {readingPanel && <div className={acts.reading}>{readingPanel}</div>}
+
+        <footer className={styles.close}>Dashed labels mark estimates; solid ones mark records and official figures. Sources: Zillow, Census Bureau, NJ Division of Taxation, FEMA, NOAA, FHFA and Realtor.com. <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link> · <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a></footer>
+      </main>
+    </>);
+  }
+
   const actList = ([
-    { id: "values", nav: "Prices and rents", title: "Home prices", question: "What do homes cost here?", body: priceAct, rent: { title: "Rents", question: "What does renting cost here?", body: rentAct } },
-    { id: "owning", nav: "Monthly cost", title: "Monthly cost", question: "What would it cost me each month?", body: costAct, rent: { title: "Monthly cost", question: "What would rent take each month?", body: rentCostAct } },
-    { id: "housing", nav: "Homes and people", title: "Homes and people", question: "What kind of housing is here?", body: homesAct, rent: null },
-    { id: "area", nav: "Living here", title: "Living here", question: "What is daily life like?", body: livingAct, rent: null },
+    { id: "values", accent: "price", nav: "Prices and rents", title: "Home prices", question: "What do homes cost here?", body: priceAct, rent: { title: "Rents", question: "What does renting cost here?", body: rentAct } },
+    { id: "owning", accent: "cost", nav: "Monthly cost", title: "Monthly cost", question: "What would it cost me each month?", body: costAct, rent: { title: "Monthly cost", question: "What would rent take each month?", body: rentCostAct } },
+    { id: "housing", accent: "homes", nav: "Homes and people", title: "Homes and people", question: "What kind of housing is here?", body: homesAct, rent: null },
+    { id: "area", accent: "life", nav: "Living here", title: "Living here", question: "What is daily life like?", body: livingAct, rent: null },
   ]).filter((act) => act.body !== null || !!act.rent?.body);
 
   return glossTree(<>
@@ -1035,7 +1067,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact} ${acts.page}`} suppressHydrationWarning>
       <InlineScript html={TENURE_SCRIPT} />
       <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
-      <PosterNav links={actList.map(({ id, nav }) => ({ id, label: nav }))} />
+      <PosterNav links={actList.map(({ id, nav }) => ({ id, label: nav }))} view />
 
       <header className={`${styles.panel} ${styles.hero} ${acts.hero}`} data-kind={isZip ? "zip" : "town"}>
         {region.state_code === "NJ" && <GardenStateArtwork header />}
@@ -1054,10 +1086,11 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         {placeChart(rentBox, "typical asking rent", "rent")}
         {band(figures, "buy")}
         {band(rentFigures, "rent")}
+        {thinLine}
         {standStrip}
       </header>
 
-      {actList.map(({ id, title, question, body, rent: renting }, i) => <section key={id} id={id} className={acts.act}>
+      {actList.map(({ id, accent, title, question, body, rent: renting }, i) => <section key={id} id={id} className={acts.act} data-accent={accent}>
         <div className={acts.actHead}><b>{i + 1}</b>
           {renting ? <><h2 data-for="buy">{title}</h2><h2 data-for="rent">{renting.title}</h2><p data-for="buy">{question}</p><p data-for="rent">{renting.question}</p></> : <><h2>{title}</h2><p>{question}</p></>}
         </div>
@@ -1065,19 +1098,6 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         {id === "area" && <>
       {county && contextFacts.length > 0 && <details id="county-context" className={`${styles.panel} ${styles.context} ${acts.context}`}>
         <summary><span><strong>{`${displayName(county)} context`}</strong><small>{`The wider market, published by county, not ${name} alone`}</small></span><span className={styles.contextFacts}>{contextFacts.map((fact) => <span key={fact}>{fact}</span>)}</span></summary>
-      {domNow && domUsual !== null && county && <section className={styles.contextItem}>
-        <h2>Homes in {displayName(county)} sit about {Math.round(domNow.value)} days, {Math.abs(domGap) < 3 ? "close to usual" : domGap < 0 ? `${Math.round(-domGap)} faster than usual` : `${Math.round(domGap)} slower than usual`}</h2>
-        <svg className={styles.scatter} viewBox={`0 0 ${DW} ${DH}`} role="img" aria-label={`Median days on market in ${displayName(county)} by month, now ${Math.round(domNow.value)} days, usually ${Math.round(domUsual)}.`}>
-          <line x1={DL} x2={DW} y1={dy(domUsual)} y2={dy(domUsual)} stroke="currentColor" strokeOpacity="0.6" strokeDasharray="5 4" />
-          <text x={DL + 4} y={dy(domUsual) - 6}>Usual, {Math.round(domUsual)} days</text>
-          <line x1={DL} x2={DW} y1={dy(0)} y2={dy(0)} stroke="currentColor" strokeOpacity="0.25" />
-          <polyline points={domSeries.map((o, i) => `${dx(i)},${dy(o.value)}`).join(" ")} fill="none" stroke="var(--series-1)" strokeWidth="2" strokeLinejoin="round" />
-          <circle cx={dx(domSeries.length - 1)} cy={dy(domNow.value)} r="5" fill="var(--series-2)" />
-          {domYears.map(({ year, i }) => <text key={year} x={dx(i)} y={DH - 6} textAnchor="middle">{year}</text>)}
-        </svg>
-        <p className={styles.caption}>Median days on market, by month{domYearAgo ? ` · ${Math.round(domYearAgo.value)} days a year earlier` : ""}{domRank && countyWaits.length ? ` · ${ordinal(domRank)} quickest of ${countyWaits.length} NJ counties` : ""}. County figures, not this town alone, and they rise and fall with the seasons. Realtor.com via FRED, {asOf(domNow)}.</p>
-      </section>}
-
       {heatSeries.length > 20 && county && <section className={styles.contextItem}>
         <h2>{displayName(county)} now passes 90°F about {Math.round(heatNow)} days a year, {heatNow >= heatBase ? "up" : "down"} from {Math.round(heatBase)}</h2>
         <svg className={styles.scatter} viewBox={`0 0 ${HW} ${HH}`} role="img" aria-label={`Days over 90 degrees in ${displayName(county)} each year since ${yearOf(heatSeries[0])}. The last ten years average ${Math.round(heatNow)} days, against ${Math.round(heatBase)} from 1951 to 1980.`}>

@@ -86,8 +86,14 @@ Each is registered only once its file lands (a manual source with no file fails
 - **Download and citation per chart.** Each act links to the full report instead. Check
   each source's redistribution terms first (Zillow's above all).
 - **Story pages link back** to the place page's matching act; not built.
-- **The New Jersey page** keeps the earlier poster layout, its own bar colour and the
-  hypothetical-home tax figure in its header.
+- **The New Jersey page has no Buy / Rent switch and no provenance chips** (#491). No
+  statewide rent is held, so a renting view would have one county-range exhibit.
+- **County acts are not tinted.** Their panels are neutral cards under an accented head;
+  the town page's tinted lead exhibit has no county equivalent yet.
+- **#491 was checked in the browser, by type check and by the 773 web tests only.** The
+  full static build and `make check-accessibility` have not been re-run since.
+- **Service figures without a yardstick:** drinking-water violations and the county
+  uninsured share still stand alone; no peer figure is held for either.
 - **`page.tsx` is still one 1,000-line component.** A panel registry (each exhibit
   declaring its question, the data it needs and its priority) would replace the
   hand-ordered acts.

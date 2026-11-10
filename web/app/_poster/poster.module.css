@@ -354,3 +354,5 @@
 @media (max-width: 999px) { .poster > .hero > svg:global(.state-place-artwork-header), .poster.compact > .hero > svg:global(.state-place-artwork-header) { top: 8px; right: -8px; width: 130px; opacity: .3; } .poster.compact > .hero:has(:global(.place-photo)) > svg:global(.state-place-artwork-header) { top: calc(var(--banner) + 14px); right: 64px; } }
 /* Plain sheets (county pages): panels drop their tints, so colour is left to the data. */
 .plain .panel:not(.hero):not(.reading) { --county-line: var(--surface-card); color: var(--text-primary); background: var(--surface-card); }
+/* The bar's first item names the view (buying or renting) and leads back to the switch. */
+.poster .topics .view { position: sticky; left: 0; z-index: 1; margin-right: 4px; font-weight: 700; color: var(--text-primary) !important; background: var(--surface-1); border: 1px solid color-mix(in srgb, currentColor 35%, transparent); }
