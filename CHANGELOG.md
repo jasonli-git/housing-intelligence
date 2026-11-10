@@ -13,6 +13,12 @@ are not yet recorded here.
 
 ### Added
 
+- **`hip datacommons-discover`** (2026-11-10, ARCHITECTURE #487): asks Google Data
+  Commons for each measure in `config/metrics.yml`, by name, and lists for each the
+  variable it matched, how closely, its newest figure for the same place and ours. A
+  developer's survey to check by hand; nothing it finds reaches the site.
+  `hip datacommons-catalogue` goes the other way: everything Data Commons holds for a
+  place, grouped by source, with our sources from the same publisher beside each.
 - **The home page's US market section is a dashboard of ten turning cards** (2026-11-05,
   ARCHITECTURE #475): each card shows its takeaway and turns over for the chart, sentence
   and source; the cards sit in four groups (Buying, Renting, Building, Owners), and on a

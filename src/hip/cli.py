@@ -26,7 +26,7 @@ import typer
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from hip import __version__, archive, refresh
+from hip import __version__, archive, datacommons, refresh
 from hip.addresses import parse as parse_address
 from hip.analytics.compute import rebuild
 from hip.analytics.persistence import rebuild_persistence
@@ -1798,6 +1798,110 @@ def schema(
     SCHEMA_PATH.parent.mkdir(parents=True, exist_ok=True)
     SCHEMA_PATH.write_text(text)
     typer.secho(f"wrote {SCHEMA_PATH}", fg=typer.colors.GREEN)
+
+
+@app.command("datacommons-discover")
+def datacommons_discover_command(
+    geoid: Annotated[
+        str, typer.Option("--geoid", help="The place to ask about; Princeton by default.")
+    ] = "3402160900",
+    metric: Annotated[
+        list[str] | None,
+        typer.Option("--metric", help="Ask about only these metric ids; repeatable."),
+    ] = None,
+    out: Annotated[
+        Path | None,
+        typer.Option("--out", help="Where to write; <data_dir>/datacommons by default."),
+    ] = None,
+) -> None:
+    """Ask Google Data Commons which of our measures it has, and how current it is.
+
+    A survey to check by hand; nothing it finds reaches the site (hip.datacommons).
+    """
+    try:
+        key = datacommons.key_from_env()
+    except RuntimeError as error:
+        typer.secho(str(error), fg=typer.colors.RED, err=True)
+        raise typer.Exit(1) from error
+    metrics = load_metrics()
+    if metric:
+        unknown = sorted(set(metric) - set(metrics))
+        if unknown:
+            typer.secho(f"unknown metric ids: {', '.join(unknown)}", fg=typer.colors.RED)
+            raise typer.Exit(1)
+        metrics = {m: metrics[m] for m in metric}
+    settings = get_settings()
+
+    def progress(i: int, total: int, finding: datacommons.Finding) -> None:
+        typer.echo(f"[{i:>3}/{total}] {finding.verdict:<34} {finding.metric_id}")
+
+    con = duckdb.connect(str(settings.duckdb_path), read_only=True)
+    try:
+        findings = datacommons.survey(
+            metrics, datacommons.DataCommons(key), con, geoid, progress=progress
+        )
+    except ValueError as error:
+        typer.secho(str(error), fg=typer.colors.RED, err=True)
+        raise typer.Exit(1) from error
+    finally:
+        con.close()
+    json_path, csv_path = datacommons.write(
+        findings, out or settings.data_dir / "datacommons", geoid, date.today()
+    )
+    typer.echo()
+    for verdict in datacommons.VERDICTS:
+        count = sum(f.verdict == verdict for f in findings)
+        if count:
+            typer.echo(f"{count:>5}  {verdict}")
+    typer.secho(f"wrote {csv_path}", fg=typer.colors.GREEN)
+    typer.echo(f"      {json_path}")
+
+
+@app.command("datacommons-catalogue")
+def datacommons_catalogue_command(
+    geoid: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--geoid",
+            help="Places to list; repeatable. Princeton and Mercer County by default. "
+            "A Census place code (3460900) or a full id (country/USA) works too.",
+        ),
+    ] = None,
+    out: Annotated[
+        Path | None,
+        typer.Option("--out", help="Where to write; <data_dir>/datacommons by default."),
+    ] = None,
+) -> None:
+    """List everything Google Data Commons holds for a place, grouped by source.
+
+    The other direction from datacommons-discover: what they have, not what we have.
+    """
+    try:
+        key = datacommons.key_from_env()
+    except RuntimeError as error:
+        typer.secho(str(error), fg=typer.colors.RED, err=True)
+        raise typer.Exit(1) from error
+    geoids = geoid or ["3402160900", "34021"]
+    dc = datacommons.DataCommons(key, pause=0.2)
+    holdings: list[datacommons.Holding] = []
+    for place in geoids:
+        variables = dc.variables(place)
+        typer.echo(f"{datacommons.dcid(place)}: {len(variables):,} variables")
+        holdings += dc.newest_by_source(place, variables)
+    ours = datacommons.our_domains(
+        {k: [s.url, s.homepage or ""] for k, s in load_sources().items()}
+    )
+    summaries = datacommons.catalogue(holdings, ours)
+    settings = get_settings()
+    json_path, csv_path = datacommons.write_catalogue(
+        summaries, out or settings.data_dir / "datacommons", geoids, date.today()
+    )
+    unmatched = sum(not s.same_publisher for s in summaries)
+    typer.echo(
+        f"{len(summaries)} sources, {unmatched} from publishers we take nothing from"
+    )
+    typer.secho(f"wrote {csv_path}", fg=typer.colors.GREEN)
+    typer.echo(f"      {json_path}")
 
 
 if __name__ == "__main__":  # pragma: no cover
