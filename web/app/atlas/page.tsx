@@ -14,7 +14,7 @@ import "../horizon-theme.css";
 import "./atlas-horizon.css";
 import "./atlas-app.css";
 
-export const metadata:Metadata=pageMetadata({title:"Housing atlas — Housing",description:"Explore New Jersey housing figures for every county, town and ZIP code on one map.",path:"/atlas"});
+export const metadata:Metadata=pageMetadata({title:"Housing map — Housing",description:"Explore New Jersey housing figures for every county, town and ZIP code on one map.",path:"/atlas"});
 const METRICS=["zhvi_sfr","zori_all","acs_median_hh_income","acs_median_gross_rent","acs_median_home_value","acs_renter_cost_burden","pep_population","permits_total_units"];
 async function loadMeasures(level:"county"|"state",members:Region[],catalog:MetricEntry[],sources:SourceEntry[]) {
   const countyIds=new Set(members.map(r=>r.region_id));

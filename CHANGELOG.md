@@ -92,6 +92,10 @@ are not yet recorded here.
   chip row under the bar is gone, and the ranking rests as one line — the chosen place,
   its figure and rank, or the ranking's name — with the colour scale beside it in place
   of the floating legend, pulling up for the list. The menu is an icon there.
+- **The housing atlas is called the housing map wherever a reader sees it** (2026-11-09):
+  the site's menu already said "Map"; the page's heading, its browser title and the home
+  page's tool card now agree. The address stays `/atlas`. Clicking a place or the map no
+  longer draws the browser's focus box over the map; keyboard focus still shows.
 - **The housing atlas pans and zooms without lag** (2026-11-09, ARCHITECTURE #480): the
   map's 564 town outlines and the ranked table are no longer rebuilt on every frame of a
   move, and figures are formatted with formatters built once. Zoom frames in the

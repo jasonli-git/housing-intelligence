@@ -19,7 +19,7 @@ export function AtlasBar() {
         <span>Housing</span>
       </Link>
       <span className="atlas-bar-sep" aria-hidden="true">/</span>
-      <h1 className="atlas-bar-title">Atlas</h1>
+      <h1 className="atlas-bar-title">Map</h1>
       <div className="atlas-bar-search"><PlaceSearch /></div>
       <div className="atlas-bar-licence"><LicenceLine /></div>
       <details className="atlas-bar-menu">

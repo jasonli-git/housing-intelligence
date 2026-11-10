@@ -7,7 +7,7 @@ export const HOME_TOOLS = [
   { href: "/tax", shot: "tax-lookup", title: "Property tax lookup", text: "Check assessments and tax bills." },
   { href: "/compare", shot: "compare", title: "Compare places", text: "Costs and incomes, side by side." },
   { href: "/help", shot: "housing-help", title: "Housing help", text: "Affordable homes, vouchers and local help." },
-  { href: "/atlas", shot: "atlas", title: "Housing atlas", text: "Explore housing data by map." },
+  { href: "/atlas", shot: "atlas", title: "Housing map", text: "Explore housing data by map." },
 ] as const;
 
 export function HomeTools() {

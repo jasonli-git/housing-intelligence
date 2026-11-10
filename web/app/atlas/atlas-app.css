@@ -36,6 +36,12 @@
   main.atlas-app .atlas-map-stage { background: var(--atlas-water) !important; overflow: hidden !important; }
   /* The land runs past the fitted frame to the window's edges. */
   main.atlas-app .atlas-county-map { overflow: visible; }
+  /* The map takes focus when clicked, and its frame is only part of what it draws now, so
+     the browser's focus ring boxed a patch of the map, and a clicked place got a box
+     round it too (owner, 2026-11-09). No ring after a click or tap: a place shows focus
+     by its outline, as when selected; the map, by a ring round the whole map area. */
+  main.atlas-app :is(.atlas-county-map, .atlas-map-geography path):focus { outline: none !important; }
+  main.atlas-app .atlas-map-stage:has(.atlas-county-map:focus-visible) { outline: 2px solid var(--plate-ink); outline-offset: -4px; }
   main.atlas-app .atlas-context .atlas-context-land { fill: var(--atlas-land) !important; stroke: var(--atlas-land-edge) !important; stroke-width: .6 !important; vector-effect: non-scaling-stroke; }
   main.atlas-app .atlas-cities text {
     fill: var(--atlas-city); font: 600 11px/1 var(--font-text); letter-spacing: .01em; pointer-events: none;

@@ -367,7 +367,7 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
     if(next!==level)changeLevel(next);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[viewport.scale,restored]);
-  return <section className="housing-atlas" aria-label="Housing atlas map and comparison" data-level={level} data-mobile-view={expanded ? "list" : "map"} data-controls={panels.controls?"open":"away"} data-results={panels.results?"open":"away"} data-map-only={mapOnly} data-moving={dragging||camera!==targetCamera} style={{"--atlas-panel-width":`${panelWidth}px`,"--atlas-sheet-height":`${sheetHeight}px`} as CSSProperties}>
+  return <section className="housing-atlas" aria-label="Housing map and comparison" data-level={level} data-mobile-view={expanded ? "list" : "map"} data-controls={panels.controls?"open":"away"} data-results={panels.results?"open":"away"} data-map-only={mapOnly} data-moving={dragging||camera!==targetCamera} style={{"--atlas-panel-width":`${panelWidth}px`,"--atlas-sheet-height":`${sheetHeight}px`} as CSSProperties}>
     {/* On a phone the measure takes the bar's middle, in place of the page's name, and
         opens the controls: the strip of chips under the bar is gone (owner, 2026-11-09). */}
     {bar&&<div className="atlas-bar-slot">{bar}<button type="button" className="atlas-bar-measure" aria-expanded={panels.controls} onClick={()=>setPanels(p=>({...p,controls:!p.controls}))}><span>{FRIENDLY[measure.metric_id]??measure.label}</span><small>{nj?levelInfo!.label:"United States"}</small><span aria-hidden="true">⌄</span></button></div>}
