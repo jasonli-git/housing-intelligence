@@ -190,3 +190,6 @@
 .ends + :global(ul) { margin-top: 10px; }
 /* County and state pages: the same numbered acts over their own rows of neutral panels. */
 .page .act > .sheet + .sheet { margin-top: 10px; }
+/* On that stronger tint the renters' segment is darkened, not lightened: a lighter one left its label at 4.46:1 (axe, 2026-11-10). */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .page .lead:first-child .split i:nth-child(2) { background: rgb(0 0 0 / .28); } }
+:root[data-theme="dark"] .page .lead:first-child .split i:nth-child(2) { background: rgb(0 0 0 / .28); }

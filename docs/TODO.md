@@ -90,8 +90,9 @@ Each is registered only once its file lands (a manual source with no file fails
   statewide rent is held, so a renting view would have one county-range exhibit.
 - **County acts are not tinted.** Their panels are neutral cards under an accented head;
   the town page's tinted lead exhibit has no county equivalent yet.
-- **#491 was checked in the browser, by type check and by the 773 web tests only.** The
-  full static build and `make check-accessibility` have not been re-run since.
+- **#491 passed the full build and `make check-accessibility` on 2026-11-10**, after one
+  dark-mode contrast fix (the renters' segment of the owner/renter bar). A one-off scan
+  of ten more addresses, six of them `?for=rent`, was also clean.
 - **Service figures without a yardstick:** drinking-water violations and the county
   uninsured share still stand alone; no peer figure is held for either.
 - **`page.tsx` is still one 1,000-line component.** A panel registry (each exhibit

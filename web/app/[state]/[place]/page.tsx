@@ -814,7 +814,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           {bedrooms.length > 0 && <><div className={styles.stack}>{bedrooms.map((b) => <i key={b.label} title={`${b.label}: ${b.value.toFixed(0)}%`} style={{ flexGrow: b.value, background: b.color }} />)}</div>
             <ul className={styles.key} style={{ marginTop: 8 }}>{bedrooms.map((b) => <li key={b.label}><i style={{ background: b.color }} />{b.label} {b.value.toFixed(0)}%</li>)}</ul></>}
           {owned !== null && <><p className={acts.sub} style={{ marginTop: bedrooms.length > 0 ? 22 : 0 }}>{(owned * 100).toFixed(0)}% of homes are owner-occupied</p>
-            <div className={styles.split}><i style={{ flexGrow: owned }}>{(owned * 100).toFixed(0)}% own</i><i style={{ flexGrow: 1 - owned }}>{((1 - owned) * 100).toFixed(0)}% rent</i></div></>}
+            <div className={`${styles.split} ${acts.split}`}><i style={{ flexGrow: owned }}>{(owned * 100).toFixed(0)}% own</i><i style={{ flexGrow: 1 - owned }}>{((1 - owned) * 100).toFixed(0)}% rent</i></div></>}
           <Prov kind="survey">Census ACS five-year survey{vacant ? ` · ${pct("acs_vacancy_rate", 1)} of homes vacant${seasonal ? `, ${pct("acs_vacant_seasonal_share")} of those seasonal` : ""}` : ""}.</Prov>
         </div>
         {stock.length > 0 && <div>
