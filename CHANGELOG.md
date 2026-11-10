@@ -54,6 +54,9 @@ are not yet recorded here.
 
 ### Changed
 
+- **The housing map no longer scrolls to the site footer** (2026-11-10, ARCHITECTURE
+  #485): its tools, publisher notices and sources open from the map's menu ("Sources &
+  notices") as a panel over the map, with a close button.
 - **The housing atlas is a full-screen map** (2026-11-09, ARCHITECTURE #479): no site bar
   and no title block; a slim bar of its own runs across the top, with the map below it. Each card can be put away
   to a chip, and "Map only" clears every panel. On a phone the controls wait behind a chip
