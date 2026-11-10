@@ -74,6 +74,46 @@ Each is registered only once its file lands (a manual source with no file fails
 - **Theme CSS consolidation.** Guide and support-tool modules override cross-page theme rules
   with scoped selectors; folding those rules together is separate work.
 
+### Place pages after #489 (poster and four acts)
+
+- **Reader testing.** Five task-based conversations on the new town and ZIP pages (find
+  the cost of owning, the tax bill, whether a place is pricier than its neighbours)
+  before any further restructure. Not done.
+- **The accessibility gate does not scan the renting view.** `make check-accessibility`
+  passed on 2026-11-10, and a one-off scan of `?for=rent` pages and four more places
+  passed after one contrast fix; the gate's own page list has no `?for=rent` address.
+- **Share image per place.** Place pages still share the site's generic preview image.
+- **Download and citation per chart.** Each act links to the full report instead. Check
+  each source's redistribution terms first (Zillow's above all).
+- **Story pages link back** to the place page's matching act; not built.
+- **The New Jersey page has no Buy / Rent switch and no provenance chips** (#491). No
+  statewide rent is held, so a renting view would have one county-range exhibit.
+- **County acts are not tinted.** Their panels are neutral cards under an accented head;
+  the town page's tinted lead exhibit has no county equivalent yet.
+- **#491 passed the full build and `make check-accessibility` on 2026-11-10**, after one
+  dark-mode contrast fix (the renters' segment of the owner/renter bar). A one-off scan
+  of ten more addresses, six of them `?for=rent`, was also clean.
+- **Service figures without a yardstick:** drinking-water violations and the county
+  uninsured share still stand alone; no peer figure is held for either.
+- **`page.tsx` is still one 1,000-line component.** A panel registry (each exhibit
+  declaring its question, the data it needs and its priority) would replace the
+  hand-ordered acts.
+- **Income by tenure.** The renting view sets rent against every household's median
+  income and says renters usually earn less; the ACS publishes median income by tenure
+  (B25119), which is not ingested.
+- **The Buy / Rent choice does not carry to the next place.** It lives in the address
+  only (#490); remembering it would add a third item to the privacy policy's list of
+  what is kept in the browser, which is the owner's decision.
+- **Held but not shown on place pages:** what owners with a mortgage pay each month
+  (`acs_owner_costs_mortgage`), median closing costs (`hmda_median_loan_costs`), sales
+  turnover (`sr1a_turnover_per_1000`). HUD fair market rents are defined but absent from
+  town packets.
+- **Renter and buyer measures not yet sourced** (ideas, not approved work): rent control
+  by town, eviction filings, flood insurance cost, the five-year change in the tax
+  bill, ANCHOR and Stay NJ relief, condo and association-fee share, crime, travel time
+  to New York and Philadelphia.
+- **County pages still embed the calculator** the town pages now hand to the buyer's guide.
+
 ### Place and state pages after #451–#453
 
 - **Reader testing** of the market-first place page against the earlier cost-first one,

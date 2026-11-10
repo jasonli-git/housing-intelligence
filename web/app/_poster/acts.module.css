@@ -1,0 +1,195 @@
+/* Town and ZIP pages: a poster that answers first, then four acts on plain sheets.
+   Colour is spent on two things only: the header wears its kind of place, and one hue
+   (--here) marks this place in every chart. Parts of a whole are shades of one blue. */
+.page.page.page { display: block; --here: var(--series-2); --rule: color-mix(in srgb, currentColor 14%, transparent); font-variant-numeric: tabular-nums; }
+
+/* The poster */
+.page.page .hero.hero { grid-template-columns: minmax(0, 1fr) 84px; align-items: start; gap: 8px 20px; --hl: color-mix(in srgb, currentColor 28%, transparent); }
+.page .hero h1 { margin: 2px 0 8px; font-size: clamp(40px, 6vw, 68px); }
+.thesis { max-width: 42rem; margin: 0; font-size: clamp(18px, 2.1vw, 24px); font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+.place { grid-column: 1 / -1; margin: 10px 0 0; }
+.place figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 16px; font-size: 14px; font-weight: 600; }
+.track { position: relative; height: 34px; margin-top: 4px; }
+.track hr { position: absolute; inset: 50% 0 auto; margin: 0; border: 0; border-top: 2px solid currentColor; opacity: .55; }
+.track u { position: absolute; top: 7px; bottom: 7px; border: 2px solid currentColor; background: color-mix(in srgb, currentColor 10%, transparent); }
+.track b { position: absolute; top: 7px; bottom: 7px; width: 3px; margin-left: -1px; background: currentColor; }
+.track i { position: absolute; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; background: var(--here); box-shadow: 0 0 0 3px var(--hero-kind); }
+.scale { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0 0; font-size: 12px; }
+.figures { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 12px 0 0; border-top: 1px solid var(--hl); }
+.figures > div { min-width: 0; padding: 14px 16px 0; border-left: 1px solid var(--hl); }
+.figures > div:first-child { padding-left: 0; border-left: 0; }
+.figures dt { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.figures dd { margin: 0; }
+.figures .value { margin-top: 2px; font-size: clamp(26px, 3.1vw, 40px); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+.figures .peer { margin-top: 6px; font-size: 13px; line-height: 1.3; }
+.figures .fine { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-top: 6px; font-size: 12px; line-height: 1.3; }
+.tick { position: relative; display: block; height: 2px; margin: 8px 0 7px; background: color-mix(in srgb, currentColor 35%, transparent); }
+.tick i { position: absolute; top: -4px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--here); box-shadow: 0 0 0 2px var(--hero-kind); }
+.stand { grid-column: 1 / -1; margin: 16px 0 0; }
+.stand h2 { margin: 0 0 8px; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.stand ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.stand a { display: grid; gap: 2px; height: 100%; padding: 10px 12px; color: inherit !important; text-decoration: none; border-radius: 10px; background: rgb(0 0 0 / .1); }
+/* Darkened, never lightened: white text on a lightened teal fell to 4.42:1 (axe, 2026-11-10). */
+.stand a:hover { background: rgb(0 0 0 / .17); }
+.stand strong { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+.stand span { font-size: 14px; font-weight: 600; line-height: 1.3; }
+.stand small { font-size: 12px; }
+
+/* What kind of figure it is: a solid outline is counted or set, a dashed one is estimated. */
+.chip { display: inline-block; padding: 0 7px; font-size: 11px; font-weight: 600; line-height: 1.6; white-space: nowrap; border: 1px solid currentColor; border-radius: 10px; }
+.chip:is([data-kind="modelled"], [data-kind="survey"], [data-kind="calculated"]) { border-style: dashed; }
+.prov { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 12px 0 0; font-size: 12px; line-height: 1.4; color: var(--text-secondary); }
+.prov a { color: inherit; }
+
+/* The acts */
+/* Room between acts, so one question is on screen at a time. */
+.act { margin-top: clamp(96px, 12vw, 160px); scroll-margin-top: 52px; }
+.actHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 18px; padding-top: 16px; border-top: 3px solid var(--text-primary); }
+.actHead b { font: 600 13px var(--font-mono); color: var(--text-secondary); }
+.actHead h2 { margin: 0; font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.02em; }
+.actHead p { margin: 0 0 0 auto; font-size: 14px; color: var(--text-secondary); }
+.sheet { overflow: hidden; color: var(--text-primary); background: var(--surface-card); border-radius: 16px; }
+.lead { padding: clamp(18px, 3vw, 28px); }
+.lead + .lead { border-top: 1px solid var(--rule); }
+.find { margin: 0 0 12px; font-size: 17px; font-weight: 700; line-height: 1.25; letter-spacing: -.01em; }
+.lead > .find { max-width: 46rem; margin-bottom: 16px; font-size: clamp(20px, 2.4vw, 27px); font-weight: 800; }
+.sub { margin: 0 0 8px; font-size: 14px; font-weight: 700; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr)); gap: 24px 40px; align-items: start; }
+.cols > * { min-width: 0; }
+.tiles { display: flex; flex-wrap: wrap; border-top: 1px solid var(--rule); }
+.page .tile { flex: 1 1 19rem; color: inherit; background: none; min-width: 0; margin: -1px 0 0 -1px; padding: 18px 20px 20px; border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); scroll-margin-top: 64px; }
+.big { margin: 0; font-size: clamp(34px, 4.4vw, 52px); font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+.note { margin: 8px 0 0; font-size: 13px; line-height: 1.45; color: var(--text-secondary); }
+.note a { color: inherit; }
+
+/* Recorded sales: the middle half of what sold, with the median marked. */
+.quart { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.quart div { padding-top: 8px; font-size: 13px; color: var(--text-secondary); border-top: 3px solid var(--rule); }
+.quart div:nth-child(2) { border-color: var(--here); }
+.quart b { display: block; font-size: clamp(17px, 2vw, 22px); color: var(--text-primary); }
+.trend { display: block; width: 100%; height: 96px; margin-top: 10px; overflow: visible; color: var(--series-1); }
+.ends { display: flex; justify-content: space-between; gap: 12px; margin: 4px 0 0; font-size: 12px; color: var(--text-secondary); }
+.ends b { color: var(--text-primary); }
+
+/* One row per fact: the label, then the figure. */
+.rows { margin: 0; }
+.rows > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 7px 0; font-size: 14px; line-height: 1.35; border-top: 1px solid var(--rule); }
+.rows > div:first-child { border-top: 0; padding-top: 0; }
+.rows dt { color: var(--text-secondary); }
+.rows dd { margin: 0; font-weight: 700; text-align: right; }
+
+/* Every ranked measure on one scale, so the eye finds the outliers. */
+.profile { display: grid; gap: 0; }
+.profileHead, .profile > div { display: grid; grid-template-columns: minmax(0, 12.5rem) minmax(0, 1fr) 5.5rem; gap: 14px; align-items: center; }
+.profileHead { margin-bottom: 2px; font-size: 12px; color: var(--text-secondary); }
+.profileHead span:nth-child(2) { display: flex; justify-content: space-between; }
+.profile > div { padding: 9px 0; font-size: 14px; border-top: 1px solid var(--rule); }
+.profile > div > div { position: relative; height: 2px; background: color-mix(in srgb, currentColor 30%, transparent); }
+.profile > div > div::before { content: ""; position: absolute; left: 50%; top: -5px; height: 12px; border-left: 1px solid color-mix(in srgb, currentColor 45%, transparent); }
+.profile u { position: absolute; top: -6px; height: 14px; background: color-mix(in srgb, currentColor 16%, transparent); }
+.profile i { position: absolute; top: -7px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: var(--here); box-shadow: 0 0 0 2px var(--surface-card); }
+.profile strong { text-align: right; }
+
+/* Where an act hands the reader on: a tool for the question, then the stories behind it. */
+.foot { display: grid; gap: 16px; padding: 16px 20px 20px; border-top: 1px solid var(--rule); }
+.next { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+.next a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; font-size: 14px; font-weight: 600; color: var(--text-primary) !important; text-decoration: none; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 18px; }
+.next a:first-child { color: var(--surface-card) !important; background: var(--text-primary); border-color: var(--text-primary); }
+.next a:hover { text-decoration: underline; }
+.tales { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr)); gap: 10px 20px; margin: 0; padding: 0; list-style: none; }
+.tales a { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; align-items: center; color: inherit !important; text-decoration: none; }
+.tales a:hover strong { text-decoration: underline; }
+.thumb { display: block; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 6px; background: color-mix(in srgb, currentColor 10%, transparent); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.tales strong { display: block; font-size: 14px; line-height: 1.3; }
+.tales small { font-size: 12px; color: var(--text-secondary); }
+.similar { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(9.5rem, 100%), 1fr)); gap: 8px; }
+.similar a { display: grid; gap: 1px; padding: 10px 12px; color: inherit !important; text-decoration: none; border-radius: 10px; background: color-mix(in srgb, currentColor 6%, transparent); }
+.similar a:hover { background: color-mix(in srgb, currentColor 11%, transparent); }
+.similar strong { font-size: 14px; }
+.similar span { font-size: 18px; font-weight: 800; }
+.similar small { font-size: 12px; color: var(--text-secondary); }
+
+/* Shared charts, set on a plain sheet. */
+.page .tile :global(.place-map), .mapSmall { display: block; width: auto; max-width: 100%; max-height: 190px; margin: 0 auto 10px; }
+.page .sameBar { grid-template-columns: minmax(0, 13rem) minmax(0, 1fr) 5rem; margin-bottom: 6px; }
+.page .sameBar i { height: 16px; }
+.page .waffleKey i[data-kind="lived"] { background: var(--series-1); }
+.page .waffleKey i[data-kind="seasonal"] { background: var(--here); }
+.page .waffleKey i[data-kind="empty"] { background: color-mix(in srgb, currentColor 25%, transparent); }
+.page.page .context.context { margin-top: 10px; background: var(--surface-card); }
+.page .reading { margin-top: 40px; }
+
+@media (max-width: 720px) {
+  .page.page .hero.hero { grid-template-columns: minmax(0, 1fr) 52px; }
+  .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 14px; border-top: 0; }
+  .figures > div { padding: 12px 0 0 12px; border-top: 1px solid var(--hl); }
+  .figures > div:nth-child(odd) { padding-left: 0; border-left: 0; }
+  .figures > div:nth-child(even) { padding-right: 0; }
+  .actHead p { margin-left: 0; flex-basis: 100%; }
+  .act { margin-top: 88px; }
+  .profileHead, .profile > div { grid-template-columns: minmax(0, 1fr) auto; }
+  .profileHead span:nth-child(3) { display: none; }
+  .profile > div > div { grid-column: 1 / -1; grid-row: 2; margin: 6px 0 4px; }
+  .profileHead span:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
+  .profileHead span:first-child { display: none; }
+}
+@media print { .next { display: none; } .sheet { break-inside: avoid; } }
+/* A figure, then what it counts: "99% of locations can get fiber". */
+.said > div { grid-template-columns: 5.25rem minmax(0, 1fr); }
+.said dd { order: -1; text-align: left; }
+.said dt { color: var(--text-primary); }
+.page .wide { flex: 2 1 34rem; }
+/* Phones: supporting exhibits wait behind one button per act. */
+.more { display: none; }
+@media (max-width: 720px) {
+  .more { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 10px 20px; font: inherit; font-size: 14px; font-weight: 600; text-align: left; color: inherit; background: none; border: 0; border-top: 1px solid var(--rule); cursor: pointer; }
+  .more span:last-child { font-size: 22px; line-height: 1; }
+  .tiles:not([data-open]) { display: none; }
+  .figures .value { font-size: clamp(21px, 6.2vw, 30px); }
+  .quart { gap: 8px; }
+  .quart b { font-size: 16px; }
+}
+@media print { .tiles:not([data-open]) { display: flex; } .more { display: none; } }
+/* Buying or renting: both views are in the page, and the switch shows one. */
+.page[data-tenure="rent"] [data-for="buy"], .page:not([data-tenure="rent"]) [data-for="rent"] { display: none !important; }
+.tenure { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 12px; font-size: 13px; font-weight: 600; }
+.tenure div { display: inline-flex; overflow: hidden; border: 1.5px solid currentColor; border-radius: 20px; }
+.tenure button { min-width: 6rem; min-height: 38px; padding: 0 18px; font: inherit; font-size: 15px; font-weight: 700; color: inherit; background: none; border: 0; cursor: pointer; }
+/* Drawn from the page's own state, so a `?for=rent` link is right before the script loads. */
+.page:not([data-tenure="rent"]) .tenure button:first-child, .page[data-tenure="rent"] .tenure button:last-child { color: var(--hero-kind); background: var(--poster-tone-8); }
+.tenure button:focus-visible { outline: 3px solid currentColor; outline-offset: -5px; }
+@media print { .tenure { display: none; } }
+
+/* Colour with a job: each act has one accent, saying which question you are in. Its lead
+   exhibit is tinted with it, and the supporting exhibits are separate neutral cards. */
+.act[data-accent="price"] { --act: var(--kind-tax); }
+.act[data-accent="cost"] { --act: var(--cost-accent); }
+.act[data-accent="homes"] { --act: var(--explore-accent); }
+.act[data-accent="life"] { --act: var(--place-accent); }
+.page .actHead { border-top-color: var(--act); }
+.page .actHead b { display: inline-grid; place-items: center; width: 26px; height: 26px; font-size: 14px; color: var(--surface-1); background: var(--act); border-radius: 50%; align-self: center; }
+.page .sheet { display: grid; gap: 10px; overflow: visible; background: none; border-radius: 0; }
+.page .sheet > [data-for] { display: grid; gap: 10px; min-width: 0; }
+.page .lead { min-width: 0; background: var(--surface-card); border: 0; border-radius: 16px; }
+.page :is(.sheet, .sheet > [data-for]) > .lead:first-child { background: color-mix(in srgb, var(--act) 24%, var(--surface-card)); box-shadow: inset 0 3px 0 var(--act); }
+.page .tiles { gap: 10px; border-top: 0; }
+.page .tile { margin: 0; background: var(--surface-card); border: 0; border-radius: 16px; }
+.page .foot { padding: 6px 4px 0; border-top: 0; }
+.page .next a:first-child { color: var(--surface-1) !important; background: var(--act); border-color: var(--act); }
+@media (max-width: 720px) { .page .more { background: var(--surface-card); border: 0; border-radius: 16px; } }
+/* Dark surfaces swallow a light tint, so the lead exhibit takes more of its accent there.
+   Its small print lightens with it: at 34% the usual secondary text fell to 3.9:1. */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .page :is(.sheet, .sheet > [data-for]) > .lead:first-child { background: color-mix(in srgb, var(--act) 34%, var(--surface-card)); --text-secondary: color-mix(in srgb, var(--text-primary) 80%, var(--act)); } }
+:root[data-theme="dark"] .page :is(.sheet, .sheet > [data-for]) > .lead:first-child { background: color-mix(in srgb, var(--act) 34%, var(--surface-card)); --text-secondary: color-mix(in srgb, var(--text-primary) 80%, var(--act)); }
+/* A figure's yardstick, under what it counts. */
+.said dt small { display: block; font-size: 12px; color: var(--text-secondary); }
+.thin { grid-column: 1 / -1; max-width: 46rem; margin: 14px 0 0; font-size: 14px; line-height: 1.45; }
+.thin a { color: inherit !important; }
+.tenure { scroll-margin-top: 64px; }
+.ends + :global(ul) { margin-top: 10px; }
+/* County and state pages: the same numbered acts over their own rows of neutral panels. */
+.page .act > .sheet + .sheet { margin-top: 10px; }
+/* On that stronger tint the renters' segment is darkened, not lightened: a lighter one left its label at 4.46:1 (axe, 2026-11-10). */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .page .lead:first-child .split i:nth-child(2) { background: rgb(0 0 0 / .28); } }
+:root[data-theme="dark"] .page .lead:first-child .split i:nth-child(2) { background: rgb(0 0 0 / .28); }
