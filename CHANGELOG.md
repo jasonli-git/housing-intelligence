@@ -54,6 +54,12 @@ are not yet recorded here.
 
 ### Changed
 
+- **Definitions and small print are readable** (2026-11-09): a definition opened from an
+  underlined word is set at 15px rather than 12px, in a wider box (384px, the screen's
+  width less a margin on a phone); notes and source lines everywhere go from 12px to
+  13px. On the housing map, the measure's definition and notes are 14px, the legend's
+  lines 12.5px (from 10px), and the catalogue defines the measure pointed at or focused
+  in a line above its tiles, on screens with a pointer.
 - **The housing atlas is a full-screen map** (2026-11-09, ARCHITECTURE #479): no site bar
   and no title block; a slim bar of its own runs across the top, with the map below it. Each card can be put away
   to a chip, and "Map only" clears every panel. On a phone the controls wait behind a chip

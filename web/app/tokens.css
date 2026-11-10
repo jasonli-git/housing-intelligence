@@ -33,7 +33,11 @@
 
   --text-body: 16px;
   --text-small: 13px;
-  --text-note: 12px;
+  /* Source lines and notes: 12px was too small to read (owner, 2026-11-09). */
+  --text-note: 13px;
+  /* A term's definition is read as a sentence or three, not glanced at like a note:
+     12px grey was too small to read on a desktop (owner, 2026-11-09). */
+  --text-tip: 15px;
   --text-label: 11px;
   --text-h1: clamp(40px, 32px + 1.8vw, 56px);
   --text-h2: 19px;

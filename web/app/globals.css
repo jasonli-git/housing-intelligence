@@ -767,11 +767,11 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
    container's overflow, and one at a table's right edge gave every ledger a horizontal
    scrollbar. */
 .tip {
-  position: absolute; left: 0; top: calc(100% + 6px); z-index: 10; width: min(18rem, 80vw);
-  padding: 0.55rem 0.7rem; border: 1px solid var(--border); border-radius: 8px;
+  position: absolute; left: 0; top: calc(100% + 6px); z-index: 10; width: min(24rem, 86vw);
+  padding: 0.7rem 0.85rem; border: 1px solid var(--border); border-radius: 8px;
   background: var(--surface-1); color: var(--text-secondary);
   box-shadow: 0 6px 20px rgb(0 0 0 / 0.1);
-  font: 400 var(--text-note)/1.5 var(--font-text); letter-spacing: 0; text-transform: none;
+  font: 400 var(--text-tip)/1.55 var(--font-text); letter-spacing: 0; text-transform: none;
   white-space: normal; text-align: left; display: none;
 }
 .tip strong { color: var(--text-primary); font-weight: 600; }
@@ -783,10 +783,10 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
    a horizontal scroll container clips every descendant, regardless of z-index. */
 .floating-tip {
   position: fixed; z-index: 1000; display: block; max-height: calc(100vh - 2rem);
-  overflow: auto; padding: 0.55rem 0.7rem; border: 1px solid var(--border);
+  overflow: auto; padding: 0.7rem 0.85rem; border: 1px solid var(--border);
   border-radius: 8px; background: var(--surface-1); color: var(--text-secondary);
   box-shadow: 0 8px 28px rgb(0 0 0 / 0.2);
-  font: 400 var(--text-note)/1.5 var(--font-text); letter-spacing: 0;
+  font: 400 var(--text-tip)/1.55 var(--font-text); letter-spacing: 0;
   text-transform: none; white-space: normal; text-align: left;
 }
 .floating-tip strong { color: var(--text-primary); font-weight: 600; }
