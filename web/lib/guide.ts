@@ -109,8 +109,8 @@ export const BAND_TEXT: Record<Band, string> = {
 
 export type GuidePrice = HomePrice | { basis: "reader"; value: number; asOf: string };
 export type GuideHome = Partial<Pick<Inputs, "price" | "taxYear" | "hoaMonth" | "floodYear" | "movingCost" | "repairsCost">>;
-function guidePrice(data: GuideData, home: GuideHome = {}, now?: string): GuidePrice | null {
-  return home.price !== undefined && home.price > 0 ? {basis: "reader", value: home.price, asOf: "Your input"} : homePrice(data.levels, now);
+function guidePrice(data: GuideData, home: GuideHome = {}, now?: string, prefer?: "index" | "transactions"): GuidePrice | null {
+  return home.price !== undefined && home.price > 0 ? {basis: "reader", value: home.price, asOf: "Your input"} : homePrice(data.levels, now, prefer);
 }
 export type AffordAnswer = {
   price: GuidePrice;
@@ -149,9 +149,9 @@ function priceLevel(data: GuideData, price: GuidePrice): PacketLevel | null {
 
 export function affordAnswer(
   data: GuideData,
-  input: { income: number; size: number; ratePct: number; personal: Personal; home?: GuideHome; now?: string },
+  input: { income: number; size: number; ratePct: number; personal: Personal; home?: GuideHome; now?: string; prefer?: "index" | "transactions" },
 ): AffordAnswer | null {
-  const price = guidePrice(data, input.home, input.now);
+  const price = guidePrice(data, input.home, input.now, input.prefer);
   if (!price || input.income <= 0) return null;
   const scenario = inputsFor(data, price, input.ratePct, input.personal, input.home);
   const month = eachMonth(scenario, {tax: input.home?.taxYear !== undefined ? "reader" : "source", insurance: input.personal.insuranceYear !== undefined ? "reader" : "source", upkeep: input.personal.upkeepPct !== undefined ? "reader" : "thumb"});
@@ -214,9 +214,9 @@ export function breakEvenYear(input: Inputs, maxYears = MAX_YEARS): number | nul
 
 export function rentOrBuy(
   data: GuideData,
-  input: { ratePct: number; personal: Personal; home?: GuideHome; rent?: number | null; now?: string },
+  input: { ratePct: number; personal: Personal; home?: GuideHome; rent?: number | null; now?: string; prefer?: "index" | "transactions" },
 ): RentOrBuy | null {
-  const price = guidePrice(data, input.home, input.now);
+  const price = guidePrice(data, input.home, input.now, input.prefer);
   const published = find(data.levels, "zori_all");
   const rent = input.rent ?? published?.value ?? null;
   if (!price || rent === null || rent <= 0) return null;

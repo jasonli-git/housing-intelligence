@@ -98,6 +98,14 @@ Each is registered only once its file lands (a manual source with no file fails
   the filter is accepted; the open card covers part of the map on a narrow desktop window.
 - **Visual alignment of the tools** with the place pages (review step 3): the serif titles
   are gone with the title blocks, but each tool keeps its own coloured glow. Owner's call.
+- **Inputs off place pages (#499):** remove the "your own numbers" inputs and the cost
+  card's household and assumption fields from county, town and ZIP pages, leaving the
+  published figures and a link to the Cost calculator. Owner decision 2026-11-11; not
+  started. The Cost calculator itself is a mock at `/calculator`; `/guide/numbers`
+  retires into it once accepted.
+- **One price basis for monthly cost (#500):** the guide and the calculator price from
+  the sale median; place pages' cost cards, Compare and `/guide/numbers` still use
+  Zillow's estimate first. Decide whether they follow.
 - **#492 to #498 were checked in the browser, by type check and by the web tests only.** The full
   static build and `make check-accessibility` have not been run on it.
 - **Tax lookup stall, not reproduced.** On 2026-11-10 one search with a town pre-selected

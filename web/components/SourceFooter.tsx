@@ -87,6 +87,8 @@ export async function SourceFooter() {
           <p className="site-foot-links">
             {HOME_TOOLS.map((tool) => <Link key={tool.href} href={tool.href} prefetch={false}>{tool.title}</Link>)}
             {/* The records lookup (#497) has no home-page card, so it is listed here by hand. */}
+            {/* The Cost calculator (#499) has no home-page card yet either. */}
+            <Link href="/calculator" prefetch={false}>Cost calculator</Link>
             <Link href="/affordable-housing" prefetch={false}>Affordable housing records</Link>
             <Link href="/stories" prefetch={false}>Visual stories</Link>
           </p>

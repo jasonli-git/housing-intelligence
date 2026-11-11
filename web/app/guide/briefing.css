@@ -148,3 +148,16 @@ body:has(.bf-page) main.bf-page {
 .bf-deck[data-full="true"] .bf-nav { opacity: .35; transition: opacity .2s; }
 .bf-deck[data-full="true"] .bf-nav:hover, .bf-deck[data-full="true"] .bf-nav:focus-within { opacity: 1; }
 .bf-deck[data-full="true"] { position: fixed; inset: 0; z-index: 1000; overflow: auto; }
+/* The monthly cost: an unlabelled bar of parts in shades of the ink, listed beneath. */
+.bf-slide .bf-stack { height: 2.4cqw; gap: .2cqw; border-radius: 0; }
+.bf-slide .bf-stack span, .bf-parts i { background: color-mix(in srgb, var(--slide-ink) 85%, transparent); }
+.bf-slide :is(.bf-stack span, .bf-parts i)[data-part="1"] { background: color-mix(in srgb, var(--slide-ink) 62%, transparent); }
+.bf-slide :is(.bf-stack span, .bf-parts i)[data-part="2"] { background: color-mix(in srgb, var(--slide-ink) 42%, transparent); }
+.bf-slide :is(.bf-stack span, .bf-parts i)[data-part="3"] { background: color-mix(in srgb, var(--slide-ink) 26%, transparent); }
+.bf-slide :is(.bf-stack span, .bf-parts i)[data-part="4"] { background: color-mix(in srgb, var(--slide-ink) 14%, transparent); }
+.bf-slide :is(.bf-stack span, .bf-parts i)[data-part="5"] { background: color-mix(in srgb, var(--slide-ink) 8%, transparent); }
+.bf-parts { list-style: none; margin: 0; padding: 0; display: grid; }
+.bf-parts li { display: grid; grid-template-columns: 1.2cqw 1fr auto 4cqw; align-items: center; gap: 1cqw; padding: .5cqw 0; border-top: 1px solid var(--slide-rule); }
+.bf-parts i { width: 1.2cqw; height: 1.2cqw; }
+.bf-parts b { font-weight: 500; font-variant-numeric: tabular-nums; }
+.bf-parts small { color: var(--slide-muted); text-align: right; font-variant-numeric: tabular-nums; }

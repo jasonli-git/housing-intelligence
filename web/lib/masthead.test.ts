@@ -14,12 +14,12 @@ describe("the bar's destinations", () => {
     const html = renderToStaticMarkup(createElement(Masthead, { affordability: { kind: "route" } }));
     for (const href of ["/atlas", "/compare", "/stories", "/guide", "/tax", "/affordable-housing", "/help"]) expect(html).toContain(`href="${href}"`);
     expect(html).not.toContain('href="/afford"');
-    expect(html).not.toContain("Tools");
+    expect(html).not.toMatch(/<summary>[^]*?Tools[^]*?<\/summary>/);
     expect(html.match(/<summary/g)).toHaveLength(1);
   });
-  it("carries a tool page's name as the page heading, in place of the inline links", () => {
+  it("keeps the same bar on a tool page and gives its name a heading below it", () => {
     const html = renderToStaticMarkup(createElement(Masthead, { affordability: { kind: "route" }, title: "Compare places" }));
-    expect(html).toContain('<h1 class="bar-title">Compare places</h1>');
-    expect(html).not.toContain("bar-desktop-tools");
+    expect(html).toContain('<header class="tool-head"><h1>Compare places</h1></header>');
+    expect(html).toContain("bar-desktop-tools");
   });
 });

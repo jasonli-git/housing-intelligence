@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { HoverMenu } from "@/components/HoverMenu";
 import { BarSearchReveal } from "@/components/BarSearchReveal";
 import { PlaceSearch } from "@/components/PlaceSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -24,6 +25,7 @@ export function Masthead({
   guideActive = false,
   helpActive = false,
   recordsActive = false,
+  calculatorActive = false,
   affordability,
   title,
   search = true,
@@ -35,6 +37,7 @@ export function Masthead({
   guideActive?: boolean;
   helpActive?: boolean;
   recordsActive?: boolean;
+  calculatorActive?: boolean;
   atlasActive?: boolean;
   /** On the compare page. */
   compareActive?: boolean;
@@ -51,32 +54,45 @@ export function Masthead({
     <Link className="bar-link" href="/stories">Stories</Link>
   </>;
   const current = (on: boolean) => (on ? "page" as const : undefined);
+  // MOCK (2026-11-11): the Menu as a grouped panel.
+  const item = (href: string, name: string, on = false) => <Link className="bar-link bar-menu-item" href={href} aria-current={current(on)}><b>{name}</b></Link>;
   const toolLinks = <>
-    <Link className="bar-link" href="/guide" aria-current={current(guideActive)}>Buyer’s guide</Link>
-    <Link className="bar-link" href="/tax" aria-current={current(taxActive)}>Property tax lookup</Link>
-    <Link className="bar-link" href="/affordable-housing" aria-current={current(recordsActive)}>Affordable housing records</Link>
-    <Link className="bar-link" href="/help" aria-current={current(helpActive)}>Housing help</Link>
+    <span className="bar-menu-group">Tools</span>
+    {item("/guide", "Buyer’s guide", guideActive)}
+    {item("/calculator", "Cost calculator", calculatorActive)}
+    {item("/tax", "Property tax lookup", taxActive)}
+    {item("/affordable-housing", "Affordable housing records", recordsActive)}
+    {item("/help", "Housing help", helpActive)}
+  </>;
+  const menuMain = <>
+    <span className="bar-menu-group">Explore</span>
+    {item("/atlas", "Map", atlasActive)}
+    {item("/compare", "Compare", compareActive)}
+    {item("/stories", "Stories")}
   </>;
   return (
-    <nav className="bar print-hide" aria-label="Sites" data-titled={title ? "" : undefined}>
+    <>
+    <nav className="bar print-hide" aria-label="Sites">
       <div className="bar-inner">
         <div className="bar-trail">
           <Link className="wordmark" href="/">
             <img className="housing-mark" src="/icon.svg" width="24" height="24" alt="" />
             <span className="wordmark-text">Housing</span>
           </Link>
-          {title && <><span className="bar-sep" aria-hidden="true">/</span><h1 className="bar-title">{title}</h1></>}
         </div>
-        {!title && <div className="bar-controls bar-desktop-tools">{primaryLinks}</div>}
-        <details className="bar-tool-menu">
-          <summary>Menu <span aria-hidden="true">⌄</span></summary>
-          <div className="bar-controls"><span className="bar-menu-main">{primaryLinks}</span>{toolLinks}</div>
-        </details>
+        <div className="bar-controls bar-desktop-tools">{primaryLinks}</div>
+        <HoverMenu className="bar-tool-menu">
+          <summary><span className="bar-menu-icon" aria-hidden="true"><i /><i /></span>Menu</summary>
+          <div className="bar-controls"><span className="bar-menu-main">{menuMain}</span>{toolLinks}</div>
+        </HoverMenu>
         {search === true ? <PlaceSearch /> : search ? <BarSearchReveal target={search.after}><PlaceSearch /></BarSearchReveal> : null}
         {/* The non-commercial terms (#128) ride in the bar now, still on every page. */}
         <LicenceLine />
         <ThemeToggle />
       </div>
     </nav>
+    {/* MOCK (2026-11-11): one bar on every page; a tool's name is the page's heading. */}
+    {title && <header className="tool-head"><h1>{title}</h1></header>}
+    </>
   );
 }

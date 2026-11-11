@@ -106,7 +106,7 @@ function slidesFor(data: GuideData, rate: number, nj: Medians): Slide[] {
   const tax = lv("modiv_median_tax_bill"), turnover = lv("sr1a_turnover_per_1000"), sales = lv("sr1a_sales_count");
   const flood = lv("fema_flood_homes_share"), built = lv("modiv_median_year_built") ?? lv("acs_median_year_built");
   const commute = lv("acs_mean_commute_minutes"), income = lv("acs_median_hh_income");
-  const month = affordAnswer(data, { income: 1, size: 3, ratePct: rate, personal: { downPct: 20 }, home: {} });
+  const month = affordAnswer(data, { income: 1, size: 3, ratePct: rate, personal: { downPct: 20 }, home: {}, prefer: "transactions" });
   const flagged = checks.filter((c) => c.flag);
   const riskKeys = ["flood", "claims", "sites", "water", "noise"];
   const risks = flagged.filter((c) => riskKeys.includes(c.key));
@@ -142,9 +142,16 @@ function slidesFor(data: GuideData, rate: number, nj: Medians): Slide[] {
       body: <><Strip level={price} low="Least expensive" high="Most expensive" />{sale && zhvi && <p className="bf-note">Zillow’s estimate for the typical home is {usd(zhvi.value)}. Sales count only homes that changed hands.</p>}</> },
     { key: "month", notes: month ? <><p>{month.month.lines.filter((l) => (l.value ?? 0) > 0).map((l) => `${l.label} ${usd(l.value!)}`).join("; ")}.</p><p>A 30-year fixed loan at {rate.toFixed(2)}%, the national average, with 20% down on the price shown. Upkeep is a rule of thumb. {month.month.optional.length ? `Not counted unless they apply: ${month.month.optional.join(", ")}.` : ""} {month.month.missing.length ? `No figure for: ${month.month.missing.join(", ")}.` : ""} The income line uses HUD’s 30% cost-burden line; it is a comparison, not what a lender will approve.</p><p>To use your own income, down payment or a listing’s price, or to weigh renting against buying: <a href={`/guide/numbers?place=${data.region.region_id}`}>your own numbers</a>.</p></> : undefined, section: "Cost", kicker: "What it costs each month", source: `Worked out from published price, tax and insurance figures, at ${rate.toFixed(2)}%`,
       headline: month ? `Owning the typical home takes about ${usd(month.month.total)} a month` : "No monthly cost can be worked out here",
-      figure: month ? { value: usd(month.month.total), label: "a month, 20% down", versus: `Income to keep it at 30%: about ${usd(Math.ceil(incomeFor(month.month.total) / 1000) * 1000)} a year` } : undefined,
+      figure: month ? { value: usd(month.month.total), label: `a month, 20% down on ${month.price.basis === "index" ? "Zillow’s typical home value" : "the median sale price"}, ${usd(month.price.value)}`, versus: `Income to keep it at 30%: about ${usd(Math.ceil(incomeFor(month.month.total) / 1000) * 1000)} a year` } : undefined,
       why: "This is the number your budget has to carry, before any other spending.",
-      body: month ? <><div className="bf-stack">{month.month.lines.filter((l) => (l.value ?? 0) > 0).map((l) => <span key={l.key} style={{ flex: l.value! }}><b>{l.label}</b><small>{usd(l.value!)}</small></span>)}</div><p className="bf-note">Not loan approval. HOA fees and flood insurance not included.</p></> : null },
+      body: month ? (() => {
+        // The bar carries no text, so a thin part never truncates; the parts are listed below it.
+        const parts = month.month.lines.filter((l) => (l.value ?? 0) > 0);
+        const short = (l: { key: string; label: string }) => ({ mortgage: "Mortgage", principal_interest: "Mortgage", tax: "Property tax", insurance: "Insurance", utilities: "Utilities", upkeep: "Upkeep", mi: "Mortgage insurance", hoa: "HOA fees", flood: "Flood insurance" } as Record<string, string>)[l.key] ?? l.label.split(",")[0];
+        return <><div className="bf-stack" role="img" aria-label={parts.map((l) => `${short(l)} ${usd(l.value!)}`).join(", ")}>{parts.map((l, n) => <span key={l.key} data-part={n} style={{ flex: l.value! }} />)}</div>
+          <ul className="bf-parts">{parts.map((l, n) => <li key={l.key}><i data-part={n} aria-hidden="true" /><span>{short(l)}</span><b>{usd(l.value!)}</b><small>{Math.round((l.value! / month.month.total) * 100)}%</small></li>)}</ul>
+          <p className="bf-note">Not loan approval. HOA fees and flood insurance not included.</p></>;
+      })() : null },
     { key: "tax", notes: noteOf(check("tax")), section: "Cost", kicker: "Property taxes", standing: standing(tax), source: sourceOf(tax), flagged: Boolean(check("tax")?.flag),
       headline: tax ? (highest(tax) <= 50 ? `Taxes here are the ${ordinal(highest(tax))} highest of ${tax.of} NJ towns` : `Taxes here are ${share(tax, "higher than", "lower than")}`) : "No tax bill is published here",
       figure: tax ? { value: usd(tax.value), label: "typical tax bill a year", versus: versus(nj.modiv_median_tax_bill, usd) } : undefined,
