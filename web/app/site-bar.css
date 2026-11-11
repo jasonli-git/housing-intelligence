@@ -141,7 +141,7 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
 }
 
 /* MOCK (2026-11-11): a tool page's name, under the one bar. */
-.tool-head { max-width: var(--page-max, 1200px); margin: 0 auto; padding: 28px 24px 4px; }
+.tool-head { box-sizing: border-box; width: 100%; max-width: var(--shell); margin: 0 auto; padding: 28px var(--gutter) 4px; }
 .tool-head h1 { margin: 0; font: var(--weight-display) clamp(26px, 4vw, 36px)/1.1 var(--font-display); letter-spacing: var(--track-display); color: var(--text-primary); }
 @media (max-width: 640px) { .tool-head { padding: 20px 16px 0; } }
 

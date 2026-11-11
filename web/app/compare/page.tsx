@@ -7,7 +7,6 @@ import { artifactUrl, nationalMortgageRate } from "@/lib/api";
 import { pageMetadata } from "@/lib/meta";
 import { periodLabel } from "@/lib/periods";
 import "../tool-pages.css";
-import "../horizon-theme.css";
 import "./compare.css";
 
 export const metadata: Metadata = pageMetadata({
@@ -25,12 +24,7 @@ export default async function ComparePage() {
   return (
     <>
       <Masthead affordability={{ kind: "route" }} compareActive title="Compare places" />
-      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool compare-page horizon-page" data-region-level="compare">
-        <header className="page-head" data-kind="tool">
-          <div>
-            <p className="meta">Up to four places side by side, each figure dated and sourced as on its own page.</p>
-          </div>
-        </header>
+      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool compare-page compare-ledger" data-region-level="compare">
         {rate ? (
           <ComparePlaces
             artifactUrl={process.env.GUIDE_PREVIEW_ARTIFACT_URL ?? artifactUrl}
