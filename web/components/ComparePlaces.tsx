@@ -86,6 +86,38 @@ function ownMonth(packet: Packet, ratePct: number): { value: number; partial: bo
   return { value: month.total, partial: month.missing.length > 0 };
 }
 
+/** MOCK (2026-11-11): pairings to start from, so the empty page is never a blank field. */
+const PAIRINGS: { ids: number[]; names: string[]; note: string }[] = [
+  { ids: [224, 241], names: ["Princeton", "West Windsor"], note: "Neighbours in Mercer County" },
+  { ids: [344, 141], names: ["Hoboken", "Jersey City"], note: "The Hudson waterfront" },
+  { ids: [394, 393], names: ["Montclair", "Maplewood"], note: "Essex County suburbs" },
+  { ids: [85, 507], names: ["Cherry Hill", "Haddonfield"], note: "Camden County, side by side" },
+  { ids: [176, 244], names: ["Red Bank", "Asbury Park"], note: "Monmouth shore towns" },
+  { ids: [8, 7, 4], names: ["Bergen", "Essex", "Hudson"], note: "Three counties by New York" },
+];
+
+function CompareEmpty({ onPick, rows }: { onPick: (ids: number[]) => void; rows: string[] }) {
+  return <div className="compare-empty">
+    <section aria-labelledby="compare-pairs">
+      <h2 className="compare-empty-label" id="compare-pairs">Or start with a pairing</h2>
+      <ul className="compare-pairs">{PAIRINGS.map((pair) => <li key={pair.ids.join("-")}>
+        <button type="button" aria-label={`Compare ${pair.names.join(", ")}`} onClick={() => onPick(pair.ids)}>
+          <span className="compare-pair-names">{pair.names.map((name, n) => <span key={name}>{n > 0 && <i aria-hidden="true">vs</i>}{name}</span>)}</span>
+          <small>{pair.note}</small>
+        </button>
+      </li>)}</ul>
+    </section>
+    <section className="compare-preview" aria-labelledby="compare-preview-label">
+      <h2 className="compare-empty-label" id="compare-preview-label">What you’ll see</h2>
+      <div className="compare-ghost" aria-hidden="true">
+        <div className="compare-ghost-head"><span />{[1, 2, 3, 4].map((n) => <b key={n}>Place {n}</b>)}</div>
+        {rows.map((row) => <div key={row} className="compare-ghost-row"><span>{row}</span>{[1, 2, 3, 4].map((n) => <i key={n} />)}</div>)}
+      </div>
+      <p className="compare-share">Each figure dated and sourced as on its own page, with the difference from the first place. Switch to renting, or to any topic, once places are in.</p>
+    </section>
+  </div>;
+}
+
 export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate: { value: number; asOf: string } }) {
   const [ids, setIds] = useState<number[]>([]);
   const [places, setPlaces] = useState<Loaded[]>([]);
@@ -173,7 +205,7 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
         </p>
       </div>
 
-      {ids.length === 0 && <p className="meta">Pick up to four counties, towns or ZIP codes to set side by side.</p>}
+      {ids.length === 0 && <CompareEmpty onPick={update} rows={OVERVIEW.buy.map((key) => key === "own" ? "Monthly cost to own" : OVERVIEW_LABELS[key])} />}
 
       {ids.length > shown.length && <p role="status">Loading selected places…</p>}
       {shown.length > 0 && <>

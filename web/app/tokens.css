@@ -25,6 +25,10 @@
   --slide-paper: #ffffff; --slide-ink: #16181c; --slide-muted: #5d6169; --slide-rule: #d9dbe0;
   --slide-flag: #b7791f; --slide-flag-text: #8a5a12; --slide-link: #1f5fa8;
   --slide-stage: light-dark(#ffffff, #000000); --slide-grid: light-dark(#0000000f, #ffffff14);
+  /* The compare page's ledger (mock, 2026-11-11): cool paper ruled in columns. */
+  --ledger-paper: light-dark(#eef1f4, #0d1117); --ledger-card: light-dark(#ffffff, #161b22);
+  --ledger-ink: light-dark(#14202b, #e6edf3); --ledger-muted: light-dark(#56636f, #8b98a5);
+  --ledger-rule: light-dark(#14202b1a, #e6edf31a); --ledger-accent: light-dark(#1f5fa8, #79b4f2);
   --slide-shadow: 0 1px 2px rgb(0 0 0 / .25), 0 18px 50px rgb(0 0 0 / .35);
   color-scheme: light;
 
