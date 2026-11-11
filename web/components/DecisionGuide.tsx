@@ -50,7 +50,7 @@ async function getJson<T>(url: string): Promise<T | null> {
   }
 }
 
-async function loadPlace(artifactUrl: string, id: number, newest: Record<string, string | null>): Promise<GuideData | null> {
+export async function loadPlace(artifactUrl: string, id: number, newest: Record<string, string | null>): Promise<GuideData | null> {
   const base = `${artifactUrl}/regions/${id}`;
   const [packet, metrics, incomeLimits, water, community, utilities] = await Promise.all([
     getJson<Packet>(`${base}/packet/5y.json`),
