@@ -3,6 +3,11 @@
   :global(#main-content.guide-page .page-head) .title { font-size:clamp(34px,4vw,56px) !important; line-height:1.1 !important; }
   :global(.guide-page) .workspace.workspace { display:grid !important; grid-template-columns:minmax(260px,320px) minmax(0,1fr); max-width:none; gap:1.5rem 2rem; align-items:start; }
   .setup,.results { min-width:0; }
+  .wide { grid-column:1/-1; min-width:0; }
+  .wide :global(.guide-place) { max-width:34rem; }
+  .wide :global(.guide-tiles) { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+  @media(max-width:960px) { .wide :global(.guide-tiles) { grid-template-columns:repeat(2,minmax(0,1fr)) !important; } }
+  @media(max-width:520px) { .wide :global(.guide-tiles) { grid-template-columns:minmax(0,1fr) !important; } }
   .workspace.workspace :global(.guide-fineprint) { grid-column:1/-1; }
   .workspace.workspace :global(.wca-step-label) { margin:.8rem 0 .6rem; }
   .workspace.workspace :global(.wca-step-first) { margin-top:0; }

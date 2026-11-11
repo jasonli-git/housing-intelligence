@@ -68,6 +68,7 @@ async function loadPlace(artifactUrl: string, id: number, newest: Record<string,
       ? null
       : (incomeLimits?.county_id ?? (packet.region.parent?.level === "county" ? packet.region.parent.region_id : null));
   const county = countyId ? await getJson<Packet>(`${artifactUrl}/regions/${countyId}/packet/5y.json`) : null;
+  const series = (metric: string) => (metrics?.observations ?? []).filter((o) => o.metric_id === metric).sort((a, b) => a.period_start.localeCompare(b.period_start));
   return {
     region: packet.region,
     levels: packet.levels,
@@ -81,6 +82,8 @@ async function loadPlace(artifactUrl: string, id: number, newest: Record<string,
     community,
     utilities,
     newest,
+    floodClaims: series("fema_flood_claims"),
+    noise: { over55: series("noise_homes_share_55db").at(-1) ?? null, over65: series("noise_homes_share_65db").at(-1) ?? null },
   };
 }
 
@@ -127,7 +130,7 @@ function Check({ item }: { item: CheckItem }) {
         </summary>
         <Steps steps={item.steps} />
         <div className="guide-check-evidence">
-          <Strength judged={item.evidence} />
+          {!item.unjudged && <Strength judged={item.evidence} />}
           <p className="guide-limit">{item.limitation}</p>
           {item.source && <small className="src">Source: {item.source}</small>}
           {item.inquiry && <InquiryNote inquiry={item.inquiry} headline="NJDEP is building a new, town-level radon map" />}
@@ -218,6 +221,25 @@ export function DecisionGuide({
   const taxHref = data?.region.level === "municipality" ? `/tax?town=${data.region.geoid}` : "/tax";
   const afford = data && yearly ? affordAnswer(data, { income: yearly, size, ratePct, personal: { ...personal, downPct }, home }) : null;
   const choice = data ? rentOrBuy(data, { ratePct, personal: { ...personal, downPct, years }, home, rent: parseAmount(rent) }) : null;
+  // Cost is one check among the rest (#494): the typical home's month at the national rate,
+  // before any of the reader's numbers, handing on to the calculator below.
+  const typicalCost = data ? affordAnswer(data, { income: 1, size, ratePct: rate.value, personal: { downPct: 20 }, home: {} }) : null;
+  const costCheck: CheckItem | null = data ? {
+    key: "cost",
+    title: "What it costs each month",
+    finding: typicalCost
+      ? `About ${usd(typicalCost.month.total)} a month to own ${typicalCost.price.basis === "index" ? "the typical home here" : "a home at the median sale price here"}, ${usd(typicalCost.price.value)}, with 20% down at ${rate.value.toFixed(2)}%. Upfront cash: ${usd(typicalCost.upfront.low)}–${usd(typicalCost.upfront.high)}.`
+      : "No usable home price is published here, so no monthly cost can be worked out without a listing price.",
+    limitation: "A comparison estimate for a typical home, not loan approval or a quote. HOA fees and flood insurance are not included.",
+    source: typicalCost ? `Worked out on this site from the price, tax and insurance figures published for ${data.region.name}` : null,
+    evidence: null,
+    unjudged: true,
+    steps: [{ label: "Use your own income, down payment or a listing’s price", href: "#guide-numbers" }, { label: `Published figures for ${data.region.name}`, href: placeHref }],
+  } : null;
+  // Marked checks first, in their usual order; cost always opens the list.
+  const listed = data ? checklist(data, { place: placeHref, tax: taxHref }) : [];
+  const checks = [...(costCheck ? [costCheck] : []), ...listed.filter((item) => item.flag), ...listed.filter((item) => !item.flag)];
+  const flagged = listed.filter((item) => item.flag).length;
   // A deep link to an answer or a check (`#guide-check-flood`) lands once the place loads.
   useEffect(() => {
     const hash = window.location.hash.slice(1);
@@ -229,7 +251,7 @@ export function DecisionGuide({
 
   return (
     <div className={`decision-guide guide-steps-layout ${styles.workspace}`} data-ready={Boolean(data)} data-has-income={Boolean(yearly)}>
-      <div className={styles.setup} id="guide-inputs">
+      <div className={styles.wide}>
       <div className="wca-step-label wca-step-first"><span>1</span>Pick a place{!data && <em>Start here</em>}</div>
       <section className="guide-place guide-first" aria-labelledby="guide-place-heading">
         <h2 id="guide-place-heading" className={data ? undefined : "visually-hidden"}>{data ? data.region.label : "Choose a place"}</h2>
@@ -251,7 +273,30 @@ export function DecisionGuide({
         {data && <Link className="guide-place-link" href={placeHref}>{data.region.name}’s full page <span aria-hidden="true">→</span></Link>}
       </section>
 
-      <div className="wca-step-label"><span>2</span>Your household</div>
+      {data && <nav className={styles.navigation} aria-label="On this page">
+        <a href="#guide-checks-heading">What to check</a>
+        <a href="#guide-numbers">Your own numbers</a>
+        <a href="#guide-rent-heading">Rent or buy</a>
+      </nav>}
+      </div>
+
+      {/* The checks lead (#494): what a buyer should be considering, with no inputs asked. */}
+      <div className={styles.wide}>
+      <div className="wca-step-label"><span>2</span>What to check</div>
+      {!data ? <p className="wca-placeholder">Choose a place to see what to check before buying there: flood, water, radon, taxes, commute and more, then buying costs and rent versus buy.</p> : <section className="guide-answer guide-answer-checks" aria-labelledby="guide-checks-heading">
+        <div className="guide-answer-head">
+          <h2 id="guide-checks-heading" tabIndex={-1}>What to check before buying in {data.region.name}</h2>
+        </div>
+        <p className="guide-sub">{flagged > 0 ? <><b>{flagged} of {checks.length}</b> {flagged === 1 ? "is" : "are"} marked for a closer look here, and {flagged === 1 ? "comes" : "come"} first. </> : <>None of the {checks.length} is marked for a closer look here. </>}A mark means this place’s figure passes a stated line: a reason to look, not a verdict. Open any check for what to do next and its source.</p>
+        <ul className="guide-checks guide-tiles">{checks.map(item => <Check key={item.key} item={item} />)}</ul>
+      </section>}
+      </div>
+
+      <div className={styles.wide} id="guide-numbers">
+      <div className="wca-step-label"><span>3</span>Your own numbers</div>
+      {data && <p className="guide-sub">The checks above use {data.region.name}’s published figures. These two answers use yours.</p>}
+      </div>
+      <div className={styles.setup} id="guide-inputs">
       <section className="guide-household" aria-labelledby="guide-household-heading">
         <h2 id="guide-household-heading" className="visually-hidden">Your household</h2>
         <div className="guide-fields guide-fields-main">
@@ -320,25 +365,17 @@ export function DecisionGuide({
         </details>
         <p className="guide-saved">Saved only in this browser, and shared with the site’s other cost tools.</p>
       </section>
-
       </div>
       <div className={styles.results}>
-      {data && <nav className={styles.navigation} aria-label="Guide answers">
-        <a href="#guide-afford-heading">Buying costs</a>
-        <a href="#guide-rent-heading">Rent or buy</a>
-        <a href="#guide-checks-heading">Before an offer</a>
-        <a href="#guide-inputs">Edit inputs ↑</a>
-      </nav>}
-      <div className="wca-step-label"><span>3</span>The answers</div>
-      {!data ? <p className="wca-placeholder">Choose a place to explore buying costs, rent versus buy, and checks before an offer.</p> : <div className="guide-answers">
+      {data && <div className="guide-answers">
 
         <section className="guide-answer" aria-labelledby="guide-afford-heading">
           <div className="guide-answer-head">
-            <h2 id="guide-afford-heading" tabIndex={-1}><small>01</small>Can I afford it?</h2>
+            <h2 id="guide-afford-heading" tabIndex={-1}>Can I afford it?</h2>
             {afford && <Strength judged={afford.evidence} />}
           </div>
-          {!yearly && <p className="guide-verdict-empty">Add your income in step 2 to see this answer.</p>}
-          {yearly && !afford && <p>No usable home price is published here. Enter a listing price under “Adjust…” in step 2 to estimate buying costs.</p>}
+          {!yearly && <p className="guide-verdict-empty">Add your income to see this answer.</p>}
+          {yearly && !afford && <p>No usable home price is published here. Enter a listing price under “Adjust…” beside this to estimate buying costs.</p>}
           {afford && <>
             <p className="guide-verdict" data-band={afford.band}>{AFFORD_VERDICT[afford.band]}</p>
             <p className="guide-figure"><b>{usd(afford.month.total)}</b> a month to own · <b>{Math.round(afford.share * 100)}%</b> of your income</p>
@@ -362,7 +399,7 @@ export function DecisionGuide({
               {afford.fha?.over && <p className="guide-limit">This loan is over FHA’s {afford.fha.year} limit for the county ({usd(afford.fha.limit)}), so FHA would not insure it.</p>}
               {afford.buyers && <p>Buyers here who borrowed to buy reported a median income of {afford.buyers.estimated ? "about " : ""}{usd(afford.buyers.income)} in {afford.buyers.year}.</p>}
               {afford.limits && <p>{afford.limits}</p>}
-              <p className="guide-limit">HUD’s 30% and 50% lines are thresholds, not advice: lenders, savings and other debts all change what is right for you. Upkeep defaults to 1% of the price a year. Add HOA fees and flood insurance in step 2 if they apply.</p>
+              <p className="guide-limit">HUD’s 30% and 50% lines are thresholds, not advice: lenders, savings and other debts all change what is right for you. Upkeep defaults to 1% of the price a year. Add HOA fees and flood insurance beside this if they apply.</p>
               {Object.keys(home).length > 0 && <p className="guide-limit">Your entered home figures are not independently verified. Evidence labels describe the published inputs only.</p>}
               <small className="src">
                 Inputs: {[afford.price.basis === "reader" ? "purchase price: your input" : citation(data, data.levels.find((l) => l.metric_id === (afford.price.basis === "index" ? "zhvi_sfr" : "sr1a_median_sale_price")) ?? null),
@@ -382,7 +419,7 @@ export function DecisionGuide({
 
         <section className="guide-answer" aria-labelledby="guide-rent-heading">
           <div className="guide-answer-head">
-            <h2 id="guide-rent-heading" tabIndex={-1}><small>02</small>Rent or buy?</h2>
+            <h2 id="guide-rent-heading" tabIndex={-1}>Rent or buy?</h2>
             {choice && <Strength judged={choice.evidence} />}
           </div>
           {!choice && <p>No home price or typical rent is published for this place. Enter the rent you would pay below to compare.</p>}
@@ -430,14 +467,6 @@ export function DecisionGuide({
               could earn instead is not counted.
             </p>
           </details>}
-        </section>
-
-        <section className="guide-answer guide-answer-checks" aria-labelledby="guide-checks-heading">
-          <div className="guide-answer-head">
-            <h2 id="guide-checks-heading" tabIndex={-1}><small>03</small>Before an offer</h2>
-          </div>
-          <p className="guide-sub">Ten things to check on the actual home. Tap one for its links and sources. A highlighted check is one where this place’s figures pass a stated line — worth a closer look, not a verdict.</p>
-          <ul className="guide-checks guide-tiles">{checklist(data, {place: placeHref, tax: taxHref}).map(item => <Check key={item.key} item={item} />)}</ul>
         </section>
       </div>}
 

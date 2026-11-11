@@ -60,6 +60,10 @@ are not yet recorded here.
 
 ### Changed
 
+- **Buyer's guide leads with what to check** (2026-11-10, ARCHITECTURE #494): pick a place
+  and fifteen checks appear with no inputs asked, cost first, then those marked for a
+  closer look; four are new (past flood claims, age of the homes, internet service,
+  traffic noise). Your own numbers, affordability and rent-or-buy follow.
 - **Budget explorer: price homes by Zillow's estimate or by recorded sales** (2026-11-10,
   ARCHITECTURE #493): a switch, never a mix, which lists 540 towns on recorded sales
   against 388 on Zillow's estimate.

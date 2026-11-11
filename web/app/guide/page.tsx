@@ -33,7 +33,7 @@ export default async function GuidePage() {
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool guide-page horizon-page" data-region-level="guide">
         <header className="page-head" data-kind="tool">
           <div>
-            <p className="meta">Explore buying costs, compare renting, and check a home before an offer.</p>
+            <p className="meta">What to check before you buy in a New Jersey place, then the costs with your own numbers.</p>
 
           </div>
         </header>
