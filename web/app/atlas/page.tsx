@@ -5,6 +5,7 @@ import { HousingAtlas } from "@/components/HousingAtlas";
 import { api, artifactUrl, type Region, type MetricEntry, type SourceEntry } from "@/lib/api";
 import { GROUPS } from "@/lib/groups";
 import { pageMetadata } from "@/lib/meta";
+import { affordData } from "@/lib/affordData";
 import { WINDOWS } from "@/lib/windows";
 import { mapDefinitionOf } from "@/lib/mapDefinitions";
 import type { AtlasEntry, AtlasLevel, AtlasMeasure } from "@/lib/housingAtlas";
@@ -76,11 +77,11 @@ async function loadEntries(catalog:MetricEntry[],sources:SourceEntry[]):Promise<
 }
 export default async function AtlasPage() {
   const [catalog,regions,stateRegions,sources]=await Promise.all([api.metrics(),api.regions("level=county&state=NJ&limit=100"),api.regions("level=state&limit=100"),api.sources()]);
-  const [entries,stateMeasures]=await Promise.all([loadEntries(catalog??[],sources??[]),loadMeasures("state",stateRegions?.items??[],catalog??[],sources??[])]);
+  const [entries,stateMeasures,afford]=await Promise.all([loadEntries(catalog??[],sources??[]),loadMeasures("state",stateRegions?.items??[],catalog??[],sources??[]),affordData()]);
   return <>
     {/* The atlas is a full-screen map with a bar of its own (AtlasBar), not the site bar. */}
     <main id="main-content" tabIndex={-1} className="housing-atlas-page horizon-page atlas-app" data-region-level="atlas">
-      {entries.length && stateMeasures.length && regions?.items.length ? <HousingAtlas bar={<AtlasBar />} entries={entries} artifactUrl={artifactUrl} stateMeasures={stateMeasures} states={(stateRegions?.items??[]).map(r=>({id:r.region_id,name:r.name,code:r.state_code}))} counties={regions.items.map(r=>({id:r.region_id,name:`${r.name.replace(/ County$/,"")} County`}))} /> : <><AtlasBar /><p className="atlas-unavailable">Figures are unavailable in this build. <Link href="/states/new-jersey">Explore New Jersey instead.</Link></p></>}
+      {entries.length && stateMeasures.length && regions?.items.length ? <HousingAtlas budgetData={afford??undefined} bar={<AtlasBar />} entries={entries} artifactUrl={artifactUrl} stateMeasures={stateMeasures} states={(stateRegions?.items??[]).map(r=>({id:r.region_id,name:r.name,code:r.state_code}))} counties={regions.items.map(r=>({id:r.region_id,name:`${r.name.replace(/ County$/,"")} County`}))} /> : <><AtlasBar /><p className="atlas-unavailable">Figures are unavailable in this build. <Link href="/states/new-jersey">Explore New Jersey instead.</Link></p></>}
     </main>
   </>;
 }

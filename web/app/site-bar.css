@@ -41,8 +41,14 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
 .bar .bar-budget:disabled { opacity: 0.5; cursor: not-allowed; }
 .bar :is(a, button, summary):focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
 
-/* The Menu button exists only for the narrow bar, where the destinations fold into it. */
-.bar-tool-menu { position: relative; display: none; }
+/* One Menu at every width (#492). Wide, an untitled page shows the three main destinations
+   inline, so the Menu lists only the tools there; narrower, or on a titled tool page, it
+   lists all seven. */
+.bar-tool-menu { position: relative; display: block; }
+.bar-menu-main { display: none; }
+.bar[data-titled] .bar-menu-main { display: contents; }
+.bar-sep { color: var(--text-muted); }
+.bar-title { margin: 0; font: var(--weight-display) 16px/1 var(--font-display); letter-spacing: var(--track-display); color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bar-tool-menu > summary { list-style: none; gap: 0.3rem; }
 .bar-tool-menu > summary::-webkit-details-marker { display: none; }
 .bar-tool-menu[open] > summary { color: var(--text-primary); }
@@ -66,8 +72,11 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
 .bar .place-search input { min-height: 36px; padding: 0.35rem 0.7rem; font-size: 14px; border-radius: 8px; }
 
 /* The non-commercial terms as a pill; opened, the terms drop below it. */
-/* The terms sit in the middle of the bar (2026-11-03), clear of the links either side. */
-.bar .licence { position: absolute; left: 50%; transform: translateX(-50%); flex: none; }
+/* The terms sat centred over the bar (2026-11-03) and ran into the links at laptop widths;
+   they now sit in the flow beside the wordmark (2026-11-11). */
+.bar .licence { position: relative; flex: none; order: 1; margin-inline-end: auto; }
+.bar-trail { order: 0; margin-inline-end: 0; }
+.bar-inner > :not(.bar-trail, .licence) { order: 2; }
 .bar .licence-box > summary {
   display: inline-flex; align-items: center; min-height: 32px; padding: 0 0.7rem;
   font-size: 12px; color: var(--notice-text); list-style: none; cursor: pointer;
@@ -89,7 +98,7 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
 /* Narrower: the three destinations fold under Menu. */
 @media (max-width: 1100px) {
   .bar-desktop-tools { display: none; }
-  .bar-tool-menu { display: block; }
+  .bar-menu-main { display: contents; }
 }
 /* Phones: brand, terms and theme on the first row; search and Menu on the second. */
 @media (max-width: 760px) {
@@ -99,6 +108,16 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
   }
   .bar-inner:not(:has(.place-search)) { grid-template-areas: "trail licence theme" "menu menu menu"; }
   .bar-trail { grid-area: trail; min-width: 0; }
+  /* A titled bar has no room for the wordmark beside the page's name: the mark stands for it. */
+  .bar[data-titled] :is(.wordmark-text, .bar-sep) { display: none; }
+  .bar[data-titled] .bar-trail { overflow: hidden; }
+  .bar-title { min-width: 0; }
+  /* Nor for the terms beside it: they take a slim row of their own, still on every page (#128). */
+  .bar[data-titled] .bar-inner { grid-template-areas: "trail trail theme" "search search menu" "licence licence licence"; }
+  .bar[data-titled] .licence { justify-self: start; }
+  .bar[data-titled] .licence-box > summary { min-height: 24px; }
+  /* Three rows held at the top would cost a phone a sixth of its screen, so this bar scrolls away. */
+  .bar[data-titled] { position: relative; }
   /* A phone has no room to centre it beside the wordmark; it sits by the theme button. */
   .bar .licence { grid-area: licence; left: auto; transform: none; }
   .bar .theme-toggle { grid-area: theme; }
@@ -120,3 +139,26 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
   .bar .licence-box::details-content { content-visibility: visible; display: block; }
   .bar .licence-text { position: static; width: auto; padding: 0; border: 0; box-shadow: none; color: black; }
 }
+
+/* MOCK (2026-11-11): a tool page's name, under the one bar. */
+.tool-head { max-width: var(--page-max, 1200px); margin: 0 auto; padding: 28px 24px 4px; }
+.tool-head h1 { margin: 0; font: var(--weight-display) clamp(26px, 4vw, 36px)/1.1 var(--font-display); letter-spacing: var(--track-display); color: var(--text-primary); }
+@media (max-width: 640px) { .tool-head { padding: 20px 16px 0; } }
+
+/* MOCK (2026-11-11): the Menu redesigned. Two lines that close into a cross, no arrow;
+   a wider panel in two labelled groups. */
+.bar-tool-menu > summary { gap: 0.5rem; }
+.bar-menu-icon { position: relative; display: inline-block; width: 14px; height: 10px; }
+.bar-menu-icon i { position: absolute; left: 0; right: 0; height: 1.5px; border-radius: 1px; background: currentColor; transition: transform 160ms ease, top 160ms ease; }
+.bar-menu-icon i:first-child { top: 2px; }
+.bar-menu-icon i:last-child { top: 7px; }
+details[open] .bar-menu-icon i:first-child { top: 4.25px; transform: rotate(45deg); }
+details[open] .bar-menu-icon i:last-child { top: 4.25px; transform: rotate(-45deg); }
+.bar-tool-menu > .bar-controls { min-width: 300px; padding: 0.5rem; gap: 1px; border-radius: 14px; }
+.bar-menu-group { display: block; padding: 0.7rem 0.75rem 0.3rem; font: 600 11px/1 var(--font-text); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.bar-menu-group:first-child { padding-top: 0.4rem; }
+.bar-tool-menu .bar-controls .bar-menu-item { flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; min-height: 44px; padding: 0 0.75rem; text-decoration: none; }
+.bar-menu-item b { font: 500 14px/1.2 var(--font-text); color: var(--text-primary); }
+.bar-menu-item[aria-current="page"] { background: color-mix(in srgb, var(--text-primary) 8%, transparent); }
+.bar-menu-item[aria-current="page"] b::after { content: " · You’re here"; font-weight: 400; color: var(--text-muted); }
+@media (prefers-reduced-motion: reduce) { .bar-menu-icon i { transition: none; } }

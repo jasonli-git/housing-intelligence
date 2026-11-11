@@ -40,17 +40,20 @@ it("keeps towns without indexed prices or rents selectable without substituting 
   vi.mocked(api.rankings).mockResolvedValue({ items: [] } as never);
   const data = await affordData();
   expect(data?.towns).toHaveLength(95);
-  expect(data?.towns[0]).toMatchObject({ home: null, rent: null });
+  expect(data?.towns[0]).toMatchObject({ home: null, rent: null, sale: null });
 });
 
-it("prices every place from one source, Zillow's index, never mixing in recorded sales (#359)", async () => {
-  // The comparison ranks towns against each other, so every price must be the same
-  // measure: Zillow's typical home value. A town priced from its recorded sales (#187)
-  // would be a different measure on the same scale. Any metric added here fails this
-  // test until someone decides the comparison can hold it.
-  await affordData();
+it("keeps Zillow's index and recorded sales as two separate prices, never one filling in for the other (#359, #493)", async () => {
+  // The comparison ranks towns against each other, so every price in one ranking must be
+  // the same measure. Recorded sales joined on 2026-11-10 (owner) as a second basis the
+  // reader switches to, in a field of its own. Any metric added here fails this test
+  // until someone decides the comparison can hold it.
+  vi.mocked(api.rankings).mockImplementation(async (metric) => ({ items: metric === "sr1a_median_sale_price" ? [{ region_id: 2, value: 777 }] : metric === "zhvi_sfr" ? [{ region_id: 3, value: 555 }] : [] }) as never);
+  const data = await affordData();
+  expect(data?.towns.find((town) => town.id === 2)).toMatchObject({ home: null, sale: 777 });
+  expect(data?.towns.find((town) => town.id === 3)).toMatchObject({ home: 555, sale: null });
   const read = new Set(vi.mocked(api.rankings).mock.calls.map(([metric]) => metric));
-  expect([...read].sort()).toEqual(["modiv_median_tax_bill", "zhvi_sfr", "zori_all"]);
+  expect([...read].sort()).toEqual(["modiv_median_tax_bill", "sr1a_median_sale_price", "zhvi_sfr", "zori_all"]);
   for (const [metric] of vi.mocked(api.costObservations).mock.calls) {
     expect(metric).toMatch(/^acs_median_(home_insurance|electricity|gas|water_sewer)$/);
   }

@@ -52,6 +52,10 @@ export type GuideData = {
   community: CommunityContext | null;
   utilities: Utilities | null;
   housingHelp?: AffordableHousing | null;
+  /** Insured flood claims by year, oldest first, and the newest traffic-noise shares: read
+   *  from the place's full series, which the packet's levels do not carry (#494). */
+  floodClaims?: Observation[];
+  noise?: { over55: Observation | null; over65: Observation | null };
   /** The newest period each metric has anywhere, from the catalog. */
   newest: Record<string, string | null>;
 };
@@ -105,8 +109,8 @@ export const BAND_TEXT: Record<Band, string> = {
 
 export type GuidePrice = HomePrice | { basis: "reader"; value: number; asOf: string };
 export type GuideHome = Partial<Pick<Inputs, "price" | "taxYear" | "hoaMonth" | "floodYear" | "movingCost" | "repairsCost">>;
-function guidePrice(data: GuideData, home: GuideHome = {}, now?: string): GuidePrice | null {
-  return home.price !== undefined && home.price > 0 ? {basis: "reader", value: home.price, asOf: "Your input"} : homePrice(data.levels, now);
+function guidePrice(data: GuideData, home: GuideHome = {}, now?: string, prefer?: "index" | "transactions"): GuidePrice | null {
+  return home.price !== undefined && home.price > 0 ? {basis: "reader", value: home.price, asOf: "Your input"} : homePrice(data.levels, now, prefer);
 }
 export type AffordAnswer = {
   price: GuidePrice;
@@ -145,9 +149,9 @@ function priceLevel(data: GuideData, price: GuidePrice): PacketLevel | null {
 
 export function affordAnswer(
   data: GuideData,
-  input: { income: number; size: number; ratePct: number; personal: Personal; home?: GuideHome; now?: string },
+  input: { income: number; size: number; ratePct: number; personal: Personal; home?: GuideHome; now?: string; prefer?: "index" | "transactions" },
 ): AffordAnswer | null {
-  const price = guidePrice(data, input.home, input.now);
+  const price = guidePrice(data, input.home, input.now, input.prefer);
   if (!price || input.income <= 0) return null;
   const scenario = inputsFor(data, price, input.ratePct, input.personal, input.home);
   const month = eachMonth(scenario, {tax: input.home?.taxYear !== undefined ? "reader" : "source", insurance: input.personal.insuranceYear !== undefined ? "reader" : "source", upkeep: input.personal.upkeepPct !== undefined ? "reader" : "thumb"});
@@ -210,9 +214,9 @@ export function breakEvenYear(input: Inputs, maxYears = MAX_YEARS): number | nul
 
 export function rentOrBuy(
   data: GuideData,
-  input: { ratePct: number; personal: Personal; home?: GuideHome; rent?: number | null; now?: string },
+  input: { ratePct: number; personal: Personal; home?: GuideHome; rent?: number | null; now?: string; prefer?: "index" | "transactions" },
 ): RentOrBuy | null {
-  const price = guidePrice(data, input.home, input.now);
+  const price = guidePrice(data, input.home, input.now, input.prefer);
   const published = find(data.levels, "zori_all");
   const rent = input.rent ?? published?.value ?? null;
   if (!price || rent === null || rent <= 0) return null;
@@ -276,6 +280,8 @@ export type CheckItem = {
   inquiry?: Inquiry;
   /** A short factual note when the place's figure passes a stated line (FLAG_LINES). */
   flag?: string;
+  /** No evidence label is shown: the figure is not one the strength rules can read. */
+  unjudged?: true;
 };
 
 /**
@@ -283,9 +289,11 @@ export type CheckItem = {
  * #376). Each is a published figure crossing a plain threshold, never a judgement of the
  * place: a tenth of homes in FEMA's high-risk zone; any home in a tidal-risk area; a
  * health-based violation at the largest water system; a twentieth of homes off public
- * water; ten or more open contaminated sites; assessments below the state's 85% line.
+ * water; ten or more open contaminated sites; assessments below the state's 85% line; a
+ * typical home built before 1978, the year lead paint was banned in homes; a quarter of
+ * homes in traffic noise of 55 decibels or more (#494).
  */
-export const FLAG_LINES = { floodShare: 0.1, offPublicWater: 0.05, openSites: 10, directorRatio: 85 } as const;
+export const FLAG_LINES = { floodShare: 0.1, offPublicWater: 0.05, openSites: 10, directorRatio: 85, leadPaintYear: 1978, noiseShare: 0.25 } as const;
 
 export const LINKS = {
   femaMap: { label: "Look up the address on FEMA’s flood map", href: "https://msc.fema.gov/portal/search" },
@@ -300,6 +308,10 @@ export const LINKS = {
   fhaLimits: { label: "HUD’s FHA loan limit lookup", href: "https://entp.hud.gov/idapp/html/hicostlook.cfm" },
   reliability: { label: "NJ BPU: utility reliability", href: "https://www.nj.gov/bpu/about/divisions/reliability/" },
   radon: { label: "NJDEP’s radon program: testing and certified testers", href: "https://dep.nj.gov/rpp/radon/" },
+  leadPaint: { label: "EPA: lead paint disclosure when buying a home", href: "https://www.epa.gov/lead/real-estate-disclosures-about-potential-lead-hazards" },
+  floodHistory: { label: "FEMA: ask for a property’s flood insurance claim history", href: "https://www.floodsmart.gov/" },
+  noiseMap: { label: "The National Transportation Noise Map", href: "https://www.bts.gov/geospatial/national-transportation-noise-map" },
+  broadbandMap: { label: "Look up the address on the FCC’s broadband map", href: "https://broadbandmap.fcc.gov/" },
   radonMap: { label: "NJDEP’s radon potential map and municipal tiers", href: "https://dep.nj.gov/rpp/radon/radon_map/" },
 } satisfies Record<string, Step>;
 
@@ -553,17 +565,98 @@ export const RADON: CheckItem = {
   inquiry: RADON_MAP_INQUIRY,
 };
 
+function ageItem(data: GuideData): CheckItem {
+  const year = find(data.levels, "modiv_median_year_built") ?? find(data.levels, "acs_median_year_built");
+  const old = find(data.levels, "acs_share_built_pre_1940");
+  const built = year ? Math.round(year.value) : null;
+  const parts: string[] = [];
+  if (built) parts.push(`The typical home here was built in ${built}`);
+  if (old) parts.push(`${pct(old.value)} of homes date from before 1940`);
+  return {
+    key: "age",
+    title: "Age of the homes",
+    finding: parts.length ? `${parts.join("; ")}.` : "No year-built figure is published for this place.",
+    limitation: "A town’s typical year says nothing about one house’s wiring, plumbing, roof or oil tank: that is the inspection’s job. Homes built before 1978 may contain lead paint, and a seller must disclose what they know.",
+    source: citation(data, year ?? old),
+    evidence: judged(data, ["year built", year ?? old]),
+    steps: [LINKS.leadPaint],
+    ...(built !== null && built < FLAG_LINES.leadPaintYear ? { flag: "Most homes predate the 1978 lead paint ban" } : {}),
+  };
+}
+
+function claimsItem(data: GuideData): CheckItem {
+  const claims = data.floodClaims ?? [];
+  const newest = claims.at(-1);
+  let finding = "No insured flood claim is on record for this place.";
+  if (newest) {
+    const end = Number(newest.period_end.slice(0, 4));
+    const recent = claims.filter((o) => Number(o.period_end.slice(0, 4)) > end - 20);
+    const total = Math.round(recent.reduce((sum, o) => sum + o.value, 0));
+    const peak = [...recent].sort((a, b) => b.value - a.value)[0];
+    finding = total > 0
+      ? `${total.toLocaleString("en-US")} flood insurance claims were filed here from ${end - 19} to ${end}; the most in one year was ${Math.round(peak.value).toLocaleString("en-US")}, in ${peak.period_end.slice(0, 4)}.`
+      : `No flood insurance claim was filed here from ${end - 19} to ${end}.`;
+  }
+  return {
+    key: "claims",
+    title: "Past flood claims",
+    finding,
+    limitation: "Claims count only insured homes, and the newest year is still filling. A home outside a mapped flood zone can still have flooded: ask the seller, who must disclose it in New Jersey.",
+    source: newest ? `FEMA National Flood Insurance Program claims, through ${newest.period_end.slice(0, 4)}` : null,
+    evidence: null,
+    unjudged: true,
+    steps: [LINKS.floodDisclosure, LINKS.floodHistory],
+  };
+}
+
+function noiseItem(data: GuideData): CheckItem {
+  const over55 = data.noise?.over55 ?? null;
+  const over65 = data.noise?.over65 ?? null;
+  return {
+    key: "noise",
+    title: "Traffic noise",
+    finding: over55
+      ? `${pct(over55.value)} of homes here sit in road, rail or aircraft noise of 55 decibels or more${over65 ? `, and ${pct(over65.value)} in 65 or more` : ""}.`
+      : "No traffic noise figure is published for this place.",
+    limitation: "A modelled day-long average, not a measurement at any house: visit at rush hour and at night, with the windows open.",
+    source: over55 ? `This site, from the National Transportation Noise Map, ${over55.period_end.slice(0, 4)}` : null,
+    evidence: null,
+    unjudged: true,
+    steps: [LINKS.noiseMap],
+    ...(over55 && over55.value >= FLAG_LINES.noiseShare ? { flag: `${pct(over55.value)} of homes in traffic noise` } : {}),
+  };
+}
+
+function broadbandItem(data: GuideData): CheckItem {
+  const place = data.community?.broadband_place?.payload;
+  const share = place && place.locations > 0 ? place.fiber / place.locations : null;
+  return {
+    key: "broadband",
+    title: "Internet service",
+    finding: share !== null ? `Fiber internet is offered at ${pct(share)} of homes and businesses here.` : "No broadband figure is published for this place.",
+    limitation: "What providers report they could serve, not what any one address can order today: check the address itself.",
+    source: place ? `FCC National Broadband Map, as of ${place.as_of.slice(0, 7)}` : null,
+    evidence: null,
+    unjudged: true,
+    steps: [LINKS.broadbandMap],
+  };
+}
+
 /** The before-an-offer checklist, in the order a buyer meets them. */
 export function checklist(data: GuideData, hrefs: { place: string; tax: string }): CheckItem[] {
   return [
     floodItem(data),
+    claimsItem(data),
     waterItem(data),
     sitesItem(data),
     RADON,
+    ageItem(data),
     utilitiesItem(data),
+    broadbandItem(data),
     taxItem(data, hrefs.tax),
     schoolItem(data),
     commuteItem(data),
+    noiseItem(data),
     turnoverItem(data, hrefs.place),
     mortgageItem(data),
   ];

@@ -101,3 +101,20 @@ describe("one calculation for the profile and budget finder", () => {
     expect(utilityTotal(100, null, null)).toBe(100);
   });
 });
+
+it("prices every place on one basis, never filling a gap from the other (#359, #493)", async () => {
+  const { priceBy } = await import("./afford");
+  const base = { level: "municipality" as const, state: "NJ", detail: null, tax: 9000, rent: null };
+  const places = [{ ...base, id: 1, name: "Both", home: 500000, sale: 450000 }, { ...base, id: 2, name: "Zillow only", home: 400000, sale: null }, { ...base, id: 3, name: "Sales only", home: null, sale: 300000 }];
+  expect(priceBy(places, "zillow").map((p) => p.home)).toEqual([500000, 400000, null]);
+  expect(priceBy(places, "sales").map((p) => p.home)).toEqual([450000, null, 300000]);
+});
+
+it("shades a town within budget, just over it, or over it, and never as fitting with a cost missing (#495)", async () => {
+  const { budgetFit } = await import("./afford");
+  const row = (monthly: number, within: boolean, missing: string[] = []) => ({ monthly, within, missing }) as never;
+  expect(budgetFit(row(2900, true), 3000)).toBe("within");
+  expect(budgetFit(row(3400, false), 3000)).toBe("near");
+  expect(budgetFit(row(3500, false), 3000)).toBe("over");
+  expect(budgetFit(row(2000, false, ["Insurance"]), 3000)).toBe("none");
+});

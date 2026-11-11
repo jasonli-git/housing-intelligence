@@ -19,7 +19,7 @@
   .horizon-page .housing-atlas { background: transparent !important; border: 0 !important; }
   .horizon-page .atlas-map-stage { background: transparent !important; }
   .horizon-page .atlas-ocean { fill: transparent !important; }
-  .horizon-page :is(.atlas-controls, .atlas-results, .atlas-legend, .atlas-measure-picker) {
+  .horizon-page :is(.atlas-controls, .atlas-results, .atlas-legend, .atlas-measure-picker, .atlas-budget-card) {
     background: var(--glass) !important; border: 1px solid var(--glass-edge) !important; border-radius: 24px !important;
     -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 24px 50px -36px #000c !important;
   }
@@ -76,7 +76,7 @@
 @media screen { .horizon-page.housing-atlas-page .atlas-title::before, .horizon-page.housing-atlas-page .atlas-title h1::before, .horizon-page.housing-atlas-page .atlas-title > div::before { display: none !important; content: none !important; } }
 @media screen {
   /* Over the map the glass has to stay readable: mostly paper, lightly frosted. */
-  .horizon-page :is(.atlas-controls, .atlas-results, .atlas-legend, .atlas-measure-picker) { background: color-mix(in srgb, var(--plate-paper) 86%, transparent) !important; -webkit-backdrop-filter: blur(20px) saturate(120%); backdrop-filter: blur(20px) saturate(120%); }
+  .horizon-page :is(.atlas-controls, .atlas-results, .atlas-legend, .atlas-measure-picker, .atlas-budget-card) { background: color-mix(in srgb, var(--plate-paper) 86%, transparent) !important; -webkit-backdrop-filter: blur(20px) saturate(120%); backdrop-filter: blur(20px) saturate(120%); }
   @media (min-width: 901px) { .horizon-page .atlas-controls { top: 20px !important; } }
 }
 @media screen {
@@ -94,7 +94,7 @@
 @media screen { .horizon-page .atlas-legend .atlas-missing-key { background: repeating-linear-gradient(135deg,#8f939c 0 3px,#d5d8de 3px 5px) !important; } }
 @media screen {
   /* Frosted glass: translucent, strongly blurred, a hairline edge and a soft top highlight. */
-  .horizon-page :is(.atlas-controls, .atlas-results, .atlas-legend, .atlas-measure-picker) {
+  .horizon-page :is(.atlas-controls, .atlas-results, .atlas-legend, .atlas-measure-picker, .atlas-budget-card) {
     background: light-dark(#ffffff9e, #16181cb3) !important;
     -webkit-backdrop-filter: blur(28px) saturate(150%) !important; backdrop-filter: blur(28px) saturate(150%) !important;
     border: 1px solid var(--glass-edge) !important;

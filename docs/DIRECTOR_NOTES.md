@@ -1217,3 +1217,39 @@ catalogue and downloads in point 2. Both mostly expose work already done.
   the existing source pages.
 - **Point 8 and the second state.** Point 8 is close to ROADMAP's current position: the
   second state is on hold until TODO and the open Director Notes are cleared.
+
+## Buyer's guide as a briefing
+
+**Status:** Possible direction (owner, 2026-11-11). Not approved for implementation. A
+local mock exists at `/guide/briefing` to judge it by feel; the Buyer's guide itself is
+unchanged.
+
+The Buyer's guide causes decision fatigue: it shows the depth of what Housing
+Intelligence tracks and leaves the reader to weigh it. A checklist does not fix that.
+
+The idea is to brief a prospective buyer the way advisors brief an executive or a
+president: the site does the sorting and the reader takes in a complete, predictable
+presentation. The model is a long but comprehensive slideshow, like a college lecture.
+
+- One input: a town. No other choices before the briefing starts.
+- A fixed deck: the same slides in the same order for every town, so briefings are
+  comparable.
+- The bottom line comes first, and detail follows.
+- Every slide has the same anatomy: a headline finding, one chart, the town's standing
+  against New Jersey, and why it matters to a buyer.
+- Unusual findings get emphasis; typical ones get a line.
+- Personal numbers are optional, and come at the end.
+
+**Open questions**
+
+- How far the "advisor" voice goes, given the site's practice of figures and next steps
+  rather than verdicts.
+- How the briefing differs from place pages: those are for exploring, while the briefing
+  is linear, complete and tells you what to notice.
+
+## Decision: the briefing replaces the Buyer's guide
+
+**Status:** Approved direction (owner, 2026-11-11). Decides "Buyer's guide as a briefing"
+above: the briefing is now the Buyer's guide at `/guide`, and the calculator moved to
+`/guide/numbers`. Recorded in ARCHITECTURE #498. The open question on the advisor voice
+is settled for now at standing and things to check, never a verdict.

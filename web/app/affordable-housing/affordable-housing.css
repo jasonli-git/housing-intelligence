@@ -1,0 +1,45 @@
+/* #497: the affordable housing records lookup, in the Property tax lookup's manner. */
+.ah-lookup { --ah: var(--kind-help); display: grid; gap: 14px; max-width: 680px; margin: 8px auto 0; }
+.ah-search-wrap { position: relative; }
+.ah-search { display: flex; align-items: center; gap: 10px; padding: 0 16px; border-radius: 14px; border: 1.5px solid color-mix(in srgb, var(--ah) 60%, transparent); background: var(--glass); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ah) 10%, transparent); color: var(--text-muted); }
+.ah-search:focus-within { border-color: var(--ah); }
+.ah-search input { flex: 1; min-width: 0; font: inherit; font-size: 1.1rem; padding: 14px 0; border: 0; background: transparent; color: var(--text-primary); outline: none; }
+.ah-suggest { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 6px); margin: 0; padding: 6px; list-style: none; border-radius: 14px; border: 1px solid var(--plate-strong-rule); background: var(--surface-card); }
+.ah-suggest button { width: 100%; display: flex; justify-content: space-between; gap: 12px; padding: 9px 12px; border: 0; border-radius: 10px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ah-suggest button:hover { background: color-mix(in srgb, var(--ah) 14%, transparent); }
+.ah-suggest small { opacity: .6; }
+.ah-hint, .ah-fine, .ah-empty { margin: 0; font-size: .78rem; color: var(--text-muted); }
+.ah-card { margin-top: 10px; padding: 22px 24px; border-radius: 24px; border: 1px solid var(--glass-edge, var(--plate-strong-rule)); background: var(--glass); display: grid; gap: 16px; }
+.ah-card-head { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px; }
+.ah-card-head h2 { margin: 0; font-size: 1.8rem; }
+.ah-card-head small { color: var(--text-muted); }
+.ah-stats { display: flex; gap: 22px; margin: 0; }
+.ah-stats dt { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); }
+.ah-stats dd { margin: 0; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.ah-filters { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.ah-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ah-chips button, .ah-soon { font: inherit; font-size: .8rem; padding: 5px 12px; border-radius: 99px; border: 1px solid var(--plate-strong-rule); background: transparent; color: inherit; cursor: pointer; }
+.ah-chips button[aria-checked="true"], .ah-soon[aria-pressed="true"] { border-color: var(--ah); background: color-mix(in srgb, var(--ah) 16%, transparent); }
+.ah-chips button:disabled { opacity: .35; cursor: default; }
+.ah-chips small { opacity: .65; margin-left: 3px; }
+.ah-rows { list-style: none; margin: 0; padding: 0; }
+.ah-row { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid var(--plate-strong-rule); }
+.ah-row-main { display: grid; gap: 3px; min-width: 0; }
+.ah-tag { font-size: .66rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ah); }
+.ah-row strong { font-size: 1rem; }
+.ah-addr, .ah-facts { font-size: .8rem; color: var(--text-muted); }
+.ah-warn { font-size: .76rem; color: var(--notice-text, var(--text-muted)); }
+.ah-row-side { display: grid; justify-items: end; align-content: start; gap: 2px; text-align: right; flex: none; }
+.ah-row-side b { font-size: 1.35rem; font-variant-numeric: tabular-nums; line-height: 1; }
+.ah-row-side small { font-size: .68rem; color: var(--text-muted); }
+.ah-links { display: flex; gap: 10px; margin-top: 6px; font-size: .76rem; }
+.ah-more-button { justify-self: start; font: inherit; font-size: .82rem; padding: 6px 14px; border-radius: 99px; border: 1px solid var(--plate-strong-rule); background: transparent; color: inherit; cursor: pointer; }
+.ah-rule { border: 0; border-top: 1px solid var(--plate-strong-rule); margin: 10px 0 0; width: 100%; }
+.ah-fold summary { display: flex; justify-content: space-between; cursor: pointer; list-style: none; font-size: .85rem; padding: 6px 0; }
+.ah-fold summary::-webkit-details-marker { display: none; }
+.ah-limits { font-size: .78rem; color: var(--text-muted); padding-left: 18px; }
+.ah-routes { max-width: 760px; margin-block: 12px; }
+.ah-note { margin: 0; font-size: .9rem; opacity: .75; }
+@media (max-width: 600px) { .ah-card { padding: 16px; border-radius: 18px; } .ah-stats { gap: 14px; } .ah-stats dd { font-size: 1.2rem; } }
+.ah-intro { max-width: 680px; margin: 0 auto; font-size: 1.15rem !important; }
+.ah-tags { display: flex; gap: 8px; flex-wrap: wrap; }

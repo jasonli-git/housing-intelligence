@@ -12,15 +12,15 @@ and not a chatbot: pages, maps, tools, reports and an API are the product, and a
 optional AI layer only explains figures that were already computed.
 
 > **Status — <!-- fill:version -->v0.50.0 (2026-10-08)<!-- /fill -->, updated
-> 2026-11-10.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
+> 2026-11-11.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
 > published in full: the state, <!-- fill:counties -->21<!-- /fill --> counties,
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** The home page's US market figures are one indicators table, and
-> `hip datacommons-discover` lists which of our measures Google Data Commons also has.
-> Before that, the housing map became a full-screen map of its own, and survey rankings
-> began using only the newest Census survey.
+> **Latest.** The Budget explorer became a filter on the housing map: enter an income and
+> the towns out of reach fade, while the chosen layer stays on the rest. Town and ZIP
+> pages became a poster and four acts, and the tools now take their figures. Before that,
+> the home page's US market figures became one indicators table.
 >
 > **Next.** Clearing TODO and the open Director Notes; then the rest of the work for a
 > second state, on hold until they are cleared. See [ROADMAP.md](docs/ROADMAP.md) and

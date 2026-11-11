@@ -137,7 +137,7 @@ describe("what should I check before an offer?", () => {
 
   it("covers every item the milestone names, radon always with its test advice", () => {
     expect(items.map((i) => i.key)).toEqual([
-      "flood", "water", "sites", "radon", "utilities", "tax", "school", "commute", "turnover", "mortgage",
+      "flood", "claims", "water", "sites", "radon", "age", "utilities", "broadband", "tax", "school", "commute", "noise", "turnover", "mortgage",
     ]);
     expect(items.find((i) => i.key === "radon")).toBe(RADON);
     expect(RADON.finding).toContain("recommends testing every home");
@@ -179,5 +179,21 @@ describe("checks worth a closer look", () => {
       level("njdep_sites_open", 3), level("nj_director_ratio", 95), level("water_homes_share_public", 1),
     ]), { place: "/", tax: "/tax" });
     expect(quiet.filter((item) => item.flag)).toHaveLength(0);
+  });
+
+  it("flags a typical home older than the lead paint ban, and a quarter of homes in traffic noise (#494)", () => {
+    const obs = (value: number) => ({ metric_id: "noise_homes_share_55db", period_start: "2020-01-01", period_end: "2020-12-31", value }) as never;
+    const old = checklist({ ...place([level("modiv_median_year_built", 1955)]), noise: { over55: obs(0.31), over65: null } }, { place: "/", tax: "/tax" });
+    expect(old.find((item) => item.key === "age")?.flag).toBe("Most homes predate the 1978 lead paint ban");
+    expect(old.find((item) => item.key === "noise")?.flag).toBe("31% of homes in traffic noise");
+    const newer = checklist({ ...place([level("modiv_median_year_built", 1994)]), noise: { over55: obs(0.08), over65: null } }, { place: "/", tax: "/tax" });
+    expect(newer.find((item) => item.key === "age")?.flag).toBeUndefined();
+    expect(newer.find((item) => item.key === "noise")?.flag).toBeUndefined();
+  });
+
+  it("totals twenty years of flood claims and names the worst year (#494)", () => {
+    const claim = (year: number, value: number) => ({ metric_id: "fema_flood_claims", period_start: `${year}-01-01`, period_end: `${year}-12-31`, value }) as never;
+    const items = checklist({ ...place([]), floodClaims: [claim(1999, 50), claim(2012, 40), claim(2021, 12), claim(2025, 1)] }, { place: "/", tax: "/tax" });
+    expect(items.find((item) => item.key === "claims")!.finding).toBe("53 flood insurance claims were filed here from 2006 to 2025; the most in one year was 40, in 2012.");
   });
 });

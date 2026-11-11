@@ -24,13 +24,10 @@ export default async function ComparePage() {
   const rate = await nationalMortgageRate();
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} compareActive />
+      <Masthead affordability={{ kind: "route" }} compareActive title="Compare places" />
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool compare-page horizon-page" data-region-level="compare">
         <header className="page-head" data-kind="tool">
           <div>
-            <Crumbs trail={[{ href: "/", label: "Home" }]} here="Compare places" />
-            <Kind kind="tool" />
-            <h1 className="page-title">Compare places</h1>
             <p className="meta">Up to four places side by side, each figure dated and sourced as on its own page.</p>
           </div>
         </header>

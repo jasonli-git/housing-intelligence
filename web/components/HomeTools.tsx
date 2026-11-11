@@ -2,8 +2,8 @@ import Link from "next/link";
 import { ThemedShot } from "./ThemedShot";
 
 export const HOME_TOOLS = [
-  { href: "/afford", shot: "budget-explorer", title: "Budget explorer", text: "Find places within your budget." },
-  { href: "/guide", shot: "buyers-guide", title: "Buyer’s guide", text: "Plan costs and pre-offer checks." },
+  { href: "/atlas?level=municipality&measure=sr1a_median_sale_price&view=latest&budget=1", shot: "budget-explorer", title: "Within your budget", text: "Fade towns beyond your budget." },
+  { href: "/guide", shot: "buyers-guide", title: "Buyer’s guide", text: "A briefing on any town." },
   { href: "/tax", shot: "tax-lookup", title: "Property tax lookup", text: "Check assessments and tax bills." },
   { href: "/compare", shot: "compare", title: "Compare places", text: "Costs and incomes, side by side." },
   { href: "/help", shot: "housing-help", title: "Housing help", text: "Affordable homes, vouchers and local help." },

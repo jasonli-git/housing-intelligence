@@ -60,6 +60,36 @@ are not yet recorded here.
 
 ### Changed
 
+- **The Buyer's guide is a briefing** (2026-11-11, ARCHITECTURE #498): pick a town and
+  get the same twelve slides every time, bottom line first, each with one figure set
+  against the median New Jersey town, its source, and speaker notes with the detail.
+  Press F to present. The calculator moved to `/guide/numbers`.
+- **Housing help splits in two** (2026-11-11, ARCHITECTURE #497): `/help` is the three
+  official routes under "What do you need?", and the new **Affordable housing records**
+  lookup (`/affordable-housing`) finds a town's affordable buildings, each shown once
+  even when several lists name it. Both are in the Menu and the footer.
+- **The Budget explorer is now a filter on the housing map** (2026-11-11, ARCHITECTURE
+  #496): "Exclude what's out of reach" fades the towns or counties a budget can't reach
+  and keeps the chosen layer's shading on the rest, so a reader can ask which affordable
+  towns flood, commute well or sell for less. The list gains a monthly-cost column and
+  sort; the budget is kept in the address and in "Share view"; `/afford` opens the map.
+- **Budget explorer draws its answer on a map** (2026-11-11, ARCHITECTURE #495): every
+  town shaded within budget, just over, or over, from the same rows as the list; point
+  at or tap a town for its monthly cost and a link to its page.
+- **Buyer's guide leads with what to check** (2026-11-10, ARCHITECTURE #494): pick a place
+  and fifteen checks appear with no inputs asked, cost first, then those marked for a
+  closer look; four are new (past flood claims, age of the homes, internet service,
+  traffic noise). Your own numbers, affordability and rent-or-buy follow.
+- **Budget explorer: price homes by Zillow's estimate or by recorded sales** (2026-11-10,
+  ARCHITECTURE #493): a switch, never a mix, which lists 540 towns on recorded sales
+  against 388 on Zillow's estimate.
+- **The tools join the place pages** (2026-11-10, ARCHITECTURE #492): the site bar shows a
+  tool's name and one Menu listing every destination; Compare leads with the place
+  pages' figures, has a Buying / Renting switch and labels each figure's kind; the map
+  opens on recorded sale prices (24 towns without a figure, was 176) and lists every
+  tool in its menu; place pages carry the renting view and the town into the tools;
+  seventeen stories link to the tool behind their chart; the map and Budget explorer
+  link to each other.
 - **County and state pages join the act system; eight place-page refinements** (2026-11-10,
   ARCHITECTURE #491): county pages get numbered acts, accents and the Buy / Rent switch;
   the New Jersey page gets the acts and shows the effective tax rate in place of a bill

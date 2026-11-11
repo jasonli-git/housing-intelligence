@@ -1,3 +1,4 @@
+import { budgetMapHref } from "@/lib/budgetLink";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
@@ -258,6 +259,8 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const groups = similar ? similarGroups(similar) : [];
   const priceRow = similar ? groups.flatMap((g) => g.rows).find((r) => r.metric_id === similar.price) : undefined;
   const taxHref = `/tax?town=${region.geoid}`;
+  // Housing help opens on this town's records; a ZIP code or county has no town to search by.
+  const helpHref = region.level === "municipality" ? `/affordable-housing?town=${encodeURIComponent(region.name)}` : "/help";
   // Measures outside the packet, read directly and set among every town's value.
   const latest = async (id: string) => (await api.observations(regionId, id))?.observations.at(-1) ?? null;
   const placed = async (id: string, label: string, show: (v: number) => string) => {
@@ -672,7 +675,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       </section>}
     </MoreTiles>}
     <div className={acts.foot}>
-      <p className={acts.next}><Link href={compareHref}>Compare {name} side by side</Link><Link href="/atlas">See prices on the map</Link></p>
+      <p className={acts.next}><Link href={compareHref}>Compare {name} side by side</Link><Link href={`/atlas?level=${isZip ? "zip" : "municipality"}&measure=sr1a_median_sale_price&view=latest&place=${regionId}`}>See prices on the map</Link></p>
       {tales(["market", "sales"])}
     </div>
   </> : null;
@@ -736,7 +739,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       {pressureTile}
     </MoreTiles>}
     <div className={acts.foot}>
-      <p className={acts.next}><Link href={`/guide?place=${regionId}`}>Work it out with your own numbers</Link>{!isZip && <Link href={`/afford?place=${regionId}&county=${county?.region_id ?? "all"}`}>Places within my budget</Link>}{taxBill && <Link href={taxHref}>Look up a property’s tax bill</Link>}<Link href="/help">Housing help</Link></p>
+      <p className={acts.next}><Link href={`/guide/numbers?place=${regionId}`}>Work it out with your own numbers</Link>{!isZip && <Link href={budgetMapHref({ place: regionId, county: county?.region_id ?? "all" })}>Places within my budget</Link>}{taxBill && <Link href={taxHref}>Look up a property’s tax bill</Link>}<Link href={helpHref}>Housing help</Link></p>
     </div>
   </> : null;
 
@@ -772,7 +775,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     </div>
     {rentGrowthTile && <MoreTiles names={["rent, prices and income since " + growthStart!.slice(0, 4)]}>{rentGrowthTile}</MoreTiles>}
     <div className={acts.foot}>
-      <p className={acts.next}><Link href={compareHref}>Compare {name} side by side</Link><Link href="/atlas">See rents on the map</Link></p>
+      <p className={acts.next}><Link href={`${compareHref}&for=rent`}>Compare {name} side by side</Link><Link href="/atlas?level=municipality&measure=zori_all&view=latest">See rents on the map</Link></p>
       {tales(["market"])}
     </div>
   </> : null;
@@ -801,7 +804,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       {billsTile}
     </MoreTiles>}
     <div className={acts.foot}>
-      <p className={acts.next}><Link href="/help">Find housing help</Link>{!isZip && <Link href={`/afford?place=${regionId}&county=${county?.region_id ?? "all"}`}>Places within my budget</Link>}<Link href={compareHref}>Compare rents side by side</Link></p>
+      <p className={acts.next}><Link href={helpHref}>Find housing help</Link>{!isZip && <Link href={budgetMapHref({ place: regionId, county: county?.region_id ?? "all", rent: true })}>Places within my budget</Link>}<Link href={`${compareHref}&for=rent`}>Compare rents side by side</Link></p>
     </div>
   </> : null;
 
@@ -847,7 +850,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       </section>}
     </MoreTiles>}
     <div className={acts.foot}>
-      <p className={acts.next}><Link href={reportHref}>Every housing figure in the full report</Link><Link href="/help">Find affordable housing</Link></p>
+      <p className={acts.next}><Link href={reportHref}>Every housing figure in the full report</Link><Link href={helpHref}>Find affordable housing</Link></p>
     </div>
   </> : null;
 
@@ -985,9 +988,9 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <p className={styles.caption}>An estimate, with 20% down at {cost!.rate.value.toFixed(2)}%.</p>
           <details className={styles.tool}>
             <summary>Use your own numbers</summary>
-            <OwnNumbers income={income} guideHref={`/guide?place=${regionId}`} source={{ state: region.state_code, price: cost!.home.value, ratePct: cost!.rate.value, taxYear: cost!.tax?.value ?? null, insuranceYear: cost!.insurance?.value ?? null, utilitiesMonth: cost!.utilities?.month ?? null, rentMonth: cost!.rent?.value ?? null }} />
+            <OwnNumbers income={income} guideHref={`/guide/numbers?place=${regionId}`} source={{ state: region.state_code, price: cost!.home.value, ratePct: cost!.rate.value, taxYear: cost!.tax?.value ?? null, insuranceYear: cost!.insurance?.value ?? null, utilitiesMonth: cost!.utilities?.month ?? null, rentMonth: cost!.rent?.value ?? null }} />
           </details>
-          <p className={styles.actions}><Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link><Link href={`/afford?place=${regionId}&county=${regionId}`}>Places within my budget</Link><Link href="/help">Housing help</Link></p>
+          <p className={styles.actions}><Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link><Link href={budgetMapHref({ county: regionId })}>Places within my budget</Link><Link href={helpHref}>Housing help</Link></p>
         </section>}
         {taxBill && <section id="tax" className={`${styles.panel} ${styles.tax}`}>
           <h2>Property tax adds {dollars(taxBill.value / 12)} a month</h2>

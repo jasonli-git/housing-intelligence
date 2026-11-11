@@ -34,10 +34,17 @@ describe("compare places", () => {
     vi.stubGlobal("fetch", vi.fn(async (url: string) => url === "/search.json" ? new Response("[]") : new Response(JSON.stringify(packet(Number(url.match(/regions\/(\d+)/)?.[1]), url.includes("/1/") ? "Alpha" : "Beta")))));
     render(<ComparePlaces artifactUrl="https://data.test" rate={{ value: 6.5, asOf: "Oct 2026" }} />);
     await screen.findByRole("link", { name: "Beta" });
-    expect(screen.queryByText("Median sale price")).toBeNull();
+    // The overview leads with the place pages' own figures (#492).
+    expect(screen.getByText("Median home sale price")).toBeTruthy();
+    expect(screen.queryByText("Typical asking rent")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Renting" }));
+    expect(screen.getByText("Typical asking rent")).toBeTruthy();
+    expect(screen.queryByText("Median home sale price")).toBeNull();
+    expect(window.location.search).toBe("?places=1,2&for=rent");
+    fireEvent.click(screen.getByRole("button", { name: "Buying" }));
     fireEvent.change(screen.getByLabelText("Show"), { target: { value: "How homes sell" } });
     expect(screen.getByText("Median sale price")).toBeTruthy();
-    expect(screen.queryByText("Typical home value")).toBeNull();
+    expect(screen.queryByText("Median home sale price")).toBeNull();
     expect(window.location.search).toBe("?places=1,2");
   });
   it("withholds differences for mismatched observation periods", async () => {

@@ -74,6 +74,45 @@ Each is registered only once its file lands (a manual source with no file fails
 - **Theme CSS consolidation.** Guide and support-tool modules override cross-page theme rules
   with scoped selectors; folding those rules together is separate work.
 
+### Tools after #492
+
+- **Budget explorer renting still lists only towns with Zillow's asking rent** (238). A
+  second basis, the Census survey's median rent, would follow #493's pattern. Not built.
+- **Recorded sale prices in the Budget explorer carry no age limit.** The place pages drop
+  a sale median older than 18 months (`MAX_SALE_AGE_MONTHS`); #493 reads the ranking as
+  published.
+- **Buyer's guide briefing after #498:** the bottom line is a rule and can pick a minor
+  figure over an important one; headlines are templates; no trend charts; checked on
+  Princeton only (not phone width, not towns with thin data); true full screen untested
+  outside the app's browser; renting has no briefing. The BTS noise map and FCC
+  broadband links (from #494) answered 403 to a script and have not been opened in a
+  browser.
+- **Affordable housing records after #497:** the building rule has no test of its own;
+  "Griggs Farm I, II, III" (town) and "Griggs Farm" (tax credit) stay apart; place pages'
+  "Programmes, reported homes" panel is unchanged; `/help` and the lookup are unchecked
+  at phone width.
+- **Budget filter on the map after #496:** no budget at ZIP level; "up to 15% over" is a
+  line chosen here, not a published one; the key's swatches show fade strength in one
+  blue, not the layer's colours; the old explorer component
+  (`AffordExplorer`, `BudgetMap`) is no longer used by any page and can be removed once
+  the filter is accepted; the open card covers part of the map on a narrow desktop window.
+- **Visual alignment of the tools** with the place pages (review step 3): the serif titles
+  are gone with the title blocks, but each tool keeps its own coloured glow. Owner's call.
+- **Inputs off place pages (#499):** remove the "your own numbers" inputs and the cost
+  card's household and assumption fields from county, town and ZIP pages, leaving the
+  published figures and a link to the Cost calculator. Owner decision 2026-11-11; not
+  started. The Cost calculator itself is a mock at `/calculator`; `/guide/numbers`
+  retires into it once accepted.
+- **One price basis for monthly cost (#500):** the guide and the calculator price from
+  the sale median; place pages' cost cards, Compare and `/guide/numbers` still use
+  Zillow's estimate first. Decide whether they follow.
+- **#492 to #498 were checked in the browser, by type check and by the web tests only.** The full
+  static build and `make check-accessibility` have not been run on it.
+- **Tax lookup stall, not reproduced.** On 2026-11-10 one search with a town pre-selected
+  sat on "Loading the town's property records…" for 14 seconds on the live site; two
+  later attempts with the same steps returned at once. No timeout or retry exists if a
+  town's file never arrives.
+
 ### Place pages after #489 (poster and four acts)
 
 - **Reader testing.** Five task-based conversations on the new town and ZIP pages (find
