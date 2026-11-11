@@ -60,6 +60,9 @@ are not yet recorded here.
 
 ### Changed
 
+- **Budget explorer draws its answer on a map** (2026-11-11, ARCHITECTURE #495): every
+  town shaded within budget, just over, or over, from the same rows as the list; point
+  at or tap a town for its monthly cost and a link to its page.
 - **Buyer's guide leads with what to check** (2026-11-10, ARCHITECTURE #494): pick a place
   and fifteen checks appear with no inputs asked, cost first, then those marked for a
   closer look; four are new (past flood claims, age of the homes, internet service,

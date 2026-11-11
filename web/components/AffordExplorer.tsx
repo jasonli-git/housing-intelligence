@@ -5,6 +5,7 @@ import styles from "./AffordExplorer.module.css";
 import { Gloss } from "@/components/Gloss";
 import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
+import { BudgetMap } from "@/components/BudgetMap";
 import { type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
 
 import {
@@ -179,6 +180,7 @@ export function AffordExplorer({
   const stripRows = scope && !stripOpen ? stripAll.slice(0, STRIP_TOWNS) : stripAll;
   const stripMax = Math.max(budget, ...stripRows.map((row) => row.monthly)) * 1.04;
   const verb = mode === "own" ? "buy" : "rent";
+  const scopeIds = useMemo(() => new Set(scope ? towns.filter((town) => town.parentId === scope.countyId).map((town) => town.id) : []), [towns, scope?.countyId]);
   const situation = (
     <>
         <label className="control wca-income" htmlFor={`${id}-income`}>
@@ -326,6 +328,7 @@ export function AffordExplorer({
 
         {workspace && resultCaveats}
         <div className="wca-results">
+          {workspace && income > 0 && <BudgetMap rows={allTownRows} budget={budget} scope={scope ? scopeIds : undefined} verb={verb} />}
           {townsWithin.length > 0 && <section className="budget-town-results wca-list" aria-labelledby={`${id}-towns`}>
             <h2 id={`${id}-towns`}>Within your budget</h2>
             <ol>

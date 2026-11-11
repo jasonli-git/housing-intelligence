@@ -87,11 +87,15 @@ Each is registered only once its file lands (a manual source with no file fails
   picker. Of the four links added with the new checks, the EPA and FEMA ones answered
   200 on 2026-11-10; the BTS noise map and FCC broadband map answered 403 to a script,
   which may be bot blocking, and have not been opened in a browser.
-- **Budget explorer as a view of the map, and Housing help split into a short routes page
-  and a records lookup:** agreed in direction with the owner on 2026-11-10. Not started.
+- **Housing help split into a short routes page and a records lookup:** agreed in
+  direction with the owner on 2026-11-10. Not started.
+- **Budget map after #495:** towns only, so a ZIP code or a county-level view has no map;
+  no zoom, so small towns in Bergen and Hudson are hard to tap on a phone; "up to 15%
+  over" is a line chosen here, not a published one; the county strip chart below the list
+  now repeats what the map shows and may be cut.
 - **Visual alignment of the tools** with the place pages (review step 3): the serif titles
   are gone with the title blocks, but each tool keeps its own coloured glow. Owner's call.
-- **#492, #493 and #494 were checked in the browser, by type check and by the web tests only.** The full
+- **#492 to #495 were checked in the browser, by type check and by the web tests only.** The full
   static build and `make check-accessibility` have not been run on it.
 - **Tax lookup stall, not reproduced.** On 2026-11-10 one search with a town pre-selected
   sat on "Loading the town's property records…" for 14 seconds on the live site; two

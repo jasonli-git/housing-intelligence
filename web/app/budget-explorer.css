@@ -172,3 +172,15 @@
 @media screen { .wca-strip li a.wca-strip-row { color: var(--text-primary) !important; } }
 /* The other price's coverage, offered in the small print as a plain link-style button (#493). */
 .wca-basis-switch { padding: 0; font: inherit; color: var(--text-primary); text-decoration: underline; text-underline-offset: 3px; background: none; border: 0; cursor: pointer; }
+/* The budget as a map (#495): towns shaded by fit, drawn from the list's own rows. */
+.budget-map { margin: 0; min-width: 0; }
+.budget-map canvas { display: block; width: 100%; max-width: 460px; height: auto; margin-inline: auto; color: var(--text-primary); cursor: pointer; }
+.budget-map-readout { min-height: 2.6em; margin: .5rem 0; font-size: 14px; }
+.budget-map-readout a { color: inherit; font-weight: 600; }
+.budget-map-key { display: flex; flex-wrap: wrap; gap: .3rem 1rem; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--text-secondary); }
+.budget-map-key li { display: inline-flex; align-items: center; gap: .4rem; }
+.budget-map-key i { width: 12px; height: 12px; border-radius: 3px; background: color-mix(in srgb, var(--text-secondary) 14%, transparent); }
+.budget-map-key [data-fit="within"] i { background: var(--good); }
+.budget-map-key [data-fit="near"] i { background: var(--notice); }
+.budget-map-key [data-fit="over"] i { background: color-mix(in srgb, var(--text-secondary) 62%, transparent); }
+@media print { .budget-map-readout { display: none; } }

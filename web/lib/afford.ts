@@ -60,6 +60,16 @@ export type Reached = {
   upfront: { low: number; high: number } | null;
 };
 
+/** How a place sits against a budget on the map (#495): within, up to 15% over, or over. */
+export type BudgetFit = "within" | "near" | "over" | "none";
+export const NEAR_BUDGET = 1.15;
+
+/** A row's shade. A place missing a cost it needs is never shown as fitting, as in the list. */
+export function budgetFit(row: Reached, budget: number): BudgetFit {
+  if (row.missing.length > 0) return "none";
+  return row.within ? "within" : row.monthly <= budget * NEAR_BUDGET ? "near" : "over";
+}
+
 /** The most a month's housing may cost at this income and stay within reach. */
 export function monthlyBudget(income: number): number {
   return (income / 12) * BURDEN_SHARE;
