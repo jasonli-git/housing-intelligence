@@ -1246,3 +1246,10 @@ presentation. The model is a long but comprehensive slideshow, like a college le
   rather than verdicts.
 - How the briefing differs from place pages: those are for exploring, while the briefing
   is linear, complete and tells you what to notice.
+
+## Decision: the briefing replaces the Buyer's guide
+
+**Status:** Approved direction (owner, 2026-11-11). Decides "Buyer's guide as a briefing"
+above: the briefing is now the Buyer's guide at `/guide`, and the calculator moved to
+`/guide/numbers`. Recorded in ARCHITECTURE #498. The open question on the advisor voice
+is settled for now at standing and things to check, never a verdict.

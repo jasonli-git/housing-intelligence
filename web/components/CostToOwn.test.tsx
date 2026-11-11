@@ -77,7 +77,7 @@ describe("local monthly budget", () => {
     expect(screen.getByRole('link',{name:'Find your fit →'}).getAttribute('href')).toContain('income=100000');
     fireEvent.change(screen.getByLabelText('Purchase price'),{target:{value:'600000'}});
     const link=screen.getByRole('link',{name:'Check upfront cash & rent vs. buy →'});
-    expect(link.getAttribute('href')).toBe('/guide?place=224');
+    expect(link.getAttribute('href')).toBe('/guide/numbers?place=224');
     fireEvent.click(link);
     expect(JSON.parse(sessionStorage.getItem('hip.guide.home.v1')??'{}').home.price).toBe(600000);
   });

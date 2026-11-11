@@ -81,12 +81,12 @@ Each is registered only once its file lands (a manual source with no file fails
 - **Recorded sale prices in the Budget explorer carry no age limit.** The place pages drop
   a sale median older than 18 months (`MAX_SALE_AGE_MONTHS`); #493 reads the ranking as
   published.
-- **Buyer's guide after #494:** rent-or-buy still sits beside the affordability answer
-  rather than as a closing section of its own; the guide has no renting counterpart and
-  ignores `for=rent`; on a phone the first check starts a screen down, below the place
-  picker. Of the four links added with the new checks, the EPA and FEMA ones answered
-  200 on 2026-11-10; the BTS noise map and FCC broadband map answered 403 to a script,
-  which may be bot blocking, and have not been opened in a browser.
+- **Buyer's guide briefing after #498:** the bottom line is a rule and can pick a minor
+  figure over an important one; headlines are templates; no trend charts; checked on
+  Princeton only (not phone width, not towns with thin data); true full screen untested
+  outside the app's browser; renting has no briefing. The BTS noise map and FCC
+  broadband links (from #494) answered 403 to a script and have not been opened in a
+  browser.
 - **Affordable housing records after #497:** the building rule has no test of its own;
   "Griggs Farm I, II, III" (town) and "Griggs Farm" (tax credit) stay apart; place pages'
   "Programmes, reported homes" panel is unchanged; `/help` and the lookup are unchecked
@@ -98,7 +98,7 @@ Each is registered only once its file lands (a manual source with no file fails
   the filter is accepted; the open card covers part of the map on a narrow desktop window.
 - **Visual alignment of the tools** with the place pages (review step 3): the serif titles
   are gone with the title blocks, but each tool keeps its own coloured glow. Owner's call.
-- **#492 to #497 were checked in the browser, by type check and by the web tests only.** The full
+- **#492 to #498 were checked in the browser, by type check and by the web tests only.** The full
   static build and `make check-accessibility` have not been run on it.
 - **Tax lookup stall, not reproduced.** On 2026-11-10 one search with a town pre-selected
   sat on "Loading the town's property records…" for 14 seconds on the live site; two

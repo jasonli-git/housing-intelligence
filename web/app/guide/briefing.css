@@ -1,4 +1,4 @@
-/* MOCK 2026-11-11: the buyer's briefing deck. */
+/* #498: the Buyer's guide briefing deck. */
 .bf-page { --bf: var(--kind-guide, var(--text-primary)); max-width: 980px; margin: 0 auto; padding-block: 24px 56px; }
 .bf-start { text-align: center; display: grid; gap: 10px; justify-items: center; padding-top: 6vh; }
 .bf-start h2 { margin: 0; font-size: clamp(2rem, 5vw, 3rem); font-weight: 400; }

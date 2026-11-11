@@ -129,7 +129,7 @@ export function PropertyDetails({
               <>
                 {" "}
                 <a
-                  href={`/guide?place=${placeId}`}
+                  href={`/guide/numbers?place=${placeId}`}
                   onClick={() => writeGuideTransfer(placeId, { price: likelyValue!, taxYear: parcel.tax ?? undefined }, asking?.value ?? null)}
                 >
                   Fine-tune in the buyer’s guide →

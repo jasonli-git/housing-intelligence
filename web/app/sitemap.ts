@@ -14,6 +14,7 @@ const PAGES = [
   "/atlas",
   "/compare",
   "/guide",
+  "/guide/numbers",
   "/help",
   "/tax",
   "/freshness",

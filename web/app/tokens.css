@@ -21,7 +21,7 @@
  */
 
 :root {
-  /* The buyer's briefing slide: white paper in either theme, like a presentation (mock). */
+  /* The Buyer's guide slide (#498): white paper in either theme, like a presentation. */
   --slide-paper: #ffffff; --slide-ink: #16181c; --slide-muted: #5d6169; --slide-rule: #d9dbe0;
   --slide-flag: #b7791f; --slide-flag-text: #8a5a12; --slide-link: #1f5fa8;
   --slide-stage: light-dark(#ffffff, #000000); --slide-grid: light-dark(#0000000f, #ffffff14);

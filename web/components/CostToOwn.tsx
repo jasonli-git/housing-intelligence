@@ -728,7 +728,7 @@ export function CostToOwn({
           <p className="cost-budget-result" aria-live="polite">{household.income && household.income>0 ? `Estimated payment uses ${Math.round(month.total/(household.income/12)*100)}% of your income before tax.` : "Add your income to compare it with the payment above."}{partial && ` Included costs only; missing: ${listed(month.missing)}.`}</p>
           {fineTune}
           <nav className="cost-planning-links" aria-label="Plan beyond this estimate">
-            {guidePlaceId!==undefined && <a href={`/guide?place=${guidePlaceId}`} onClick={transferToGuide}>Check upfront cash & rent vs. buy →</a>}
+            {guidePlaceId!==undefined && <a href={`/guide/numbers?place=${guidePlaceId}`} onClick={transferToGuide}>Check upfront cash & rent vs. buy →</a>}
             {comparePlaceId!==undefined && <a href={budgetMapHref({ county: "all", place: comparePlaceId, income: household.income })}>Find your fit →</a>}
           </nav>
           </div>
@@ -1018,7 +1018,7 @@ export function CostToOwn({
       </QuietDisclosure>
       {householdTools}
       </div>
-      {guidePlaceId !== undefined && <p className="household-next"><a href={`/guide?place=${guidePlaceId}`} onClick={() => {
+      {guidePlaceId !== undefined && <p className="household-next"><a href={`/guide/numbers?place=${guidePlaceId}`} onClick={() => {
         const home = Object.fromEntries([
           ["price", typedPrice], ["taxYear", typedTax], ["hoaMonth", parseAmount(fields.hoa)],
           ["floodYear", parseAmount(fields.flood)], ["movingCost", parseAmount(fields.moving)], ["repairsCost", parseAmount(fields.repairs)],

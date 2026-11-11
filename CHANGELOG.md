@@ -60,6 +60,10 @@ are not yet recorded here.
 
 ### Changed
 
+- **The Buyer's guide is a briefing** (2026-11-11, ARCHITECTURE #498): pick a town and
+  get the same twelve slides every time, bottom line first, each with one figure set
+  against the median New Jersey town, its source, and speaker notes with the detail.
+  Press F to present. The calculator moved to `/guide/numbers`.
 - **Housing help splits in two** (2026-11-11, ARCHITECTURE #497): `/help` is the three
   official routes under "What do you need?", and the new **Affordable housing records**
   lookup (`/affordable-housing`) finds a town's affordable buildings, each shown once

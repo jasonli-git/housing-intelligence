@@ -739,7 +739,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       {pressureTile}
     </MoreTiles>}
     <div className={acts.foot}>
-      <p className={acts.next}><Link href={`/guide?place=${regionId}`}>Work it out with your own numbers</Link>{!isZip && <Link href={budgetMapHref({ place: regionId, county: county?.region_id ?? "all" })}>Places within my budget</Link>}{taxBill && <Link href={taxHref}>Look up a property’s tax bill</Link>}<Link href={helpHref}>Housing help</Link></p>
+      <p className={acts.next}><Link href={`/guide/numbers?place=${regionId}`}>Work it out with your own numbers</Link>{!isZip && <Link href={budgetMapHref({ place: regionId, county: county?.region_id ?? "all" })}>Places within my budget</Link>}{taxBill && <Link href={taxHref}>Look up a property’s tax bill</Link>}<Link href={helpHref}>Housing help</Link></p>
     </div>
   </> : null;
 
@@ -988,7 +988,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <p className={styles.caption}>An estimate, with 20% down at {cost!.rate.value.toFixed(2)}%.</p>
           <details className={styles.tool}>
             <summary>Use your own numbers</summary>
-            <OwnNumbers income={income} guideHref={`/guide?place=${regionId}`} source={{ state: region.state_code, price: cost!.home.value, ratePct: cost!.rate.value, taxYear: cost!.tax?.value ?? null, insuranceYear: cost!.insurance?.value ?? null, utilitiesMonth: cost!.utilities?.month ?? null, rentMonth: cost!.rent?.value ?? null }} />
+            <OwnNumbers income={income} guideHref={`/guide/numbers?place=${regionId}`} source={{ state: region.state_code, price: cost!.home.value, ratePct: cost!.rate.value, taxYear: cost!.tax?.value ?? null, insuranceYear: cost!.insurance?.value ?? null, utilitiesMonth: cost!.utilities?.month ?? null, rentMonth: cost!.rent?.value ?? null }} />
           </details>
           <p className={styles.actions}><Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link><Link href={budgetMapHref({ county: regionId })}>Places within my budget</Link><Link href={helpHref}>Housing help</Link></p>
         </section>}

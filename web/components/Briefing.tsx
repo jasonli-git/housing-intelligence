@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * MOCK (2026-11-11): the Buyer's guide as a briefing (Director Note proposed, not yet
- * approved). One town in; the same twelve slides, in the same order, for every town.
+ * The Buyer's guide as a briefing (#498; Director Note "Buyer's guide as a briefing",
+ * decided 2026-11-11). One town in; the same twelve slides, in the same order, for every town.
  *
  * Every slide follows one layout: a running section header; an action title that states
  * the slide's conclusion, so the titles alone tell the story; one key figure set large
@@ -140,7 +140,7 @@ function slidesFor(data: GuideData, rate: number, nj: Medians): Slide[] {
       figure: price ? { value: usd(price.value), label: sale ? "median recorded sale price" : "Zillow’s typical home value", versus: versus(nj.sr1a_median_sale_price, usd) } : undefined,
       why: "Price sets the loan, the down payment and much of the tax bill.",
       body: <><Strip level={price} low="Least expensive" high="Most expensive" />{sale && zhvi && <p className="bf-note">Zillow’s estimate for the typical home is {usd(zhvi.value)}. Sales count only homes that changed hands.</p>}</> },
-    { key: "month", notes: month ? <><p>{month.month.lines.filter((l) => (l.value ?? 0) > 0).map((l) => `${l.label} ${usd(l.value!)}`).join("; ")}.</p><p>A 30-year fixed loan at {rate.toFixed(2)}%, the national average, with 20% down on the price shown. Upkeep is a rule of thumb. {month.month.optional.length ? `Not counted unless they apply: ${month.month.optional.join(", ")}.` : ""} {month.month.missing.length ? `No figure for: ${month.month.missing.join(", ")}.` : ""} The income line uses HUD’s 30% cost-burden line; it is a comparison, not what a lender will approve.</p></> : undefined, section: "Cost", kicker: "What it costs each month", source: `Worked out from published price, tax and insurance figures, at ${rate.toFixed(2)}%`,
+    { key: "month", notes: month ? <><p>{month.month.lines.filter((l) => (l.value ?? 0) > 0).map((l) => `${l.label} ${usd(l.value!)}`).join("; ")}.</p><p>A 30-year fixed loan at {rate.toFixed(2)}%, the national average, with 20% down on the price shown. Upkeep is a rule of thumb. {month.month.optional.length ? `Not counted unless they apply: ${month.month.optional.join(", ")}.` : ""} {month.month.missing.length ? `No figure for: ${month.month.missing.join(", ")}.` : ""} The income line uses HUD’s 30% cost-burden line; it is a comparison, not what a lender will approve.</p><p>To use your own income, down payment or a listing’s price, or to weigh renting against buying: <a href={`/guide/numbers?place=${data.region.region_id}`}>your own numbers</a>.</p></> : undefined, section: "Cost", kicker: "What it costs each month", source: `Worked out from published price, tax and insurance figures, at ${rate.toFixed(2)}%`,
       headline: month ? `Owning the typical home takes about ${usd(month.month.total)} a month` : "No monthly cost can be worked out here",
       figure: month ? { value: usd(month.month.total), label: "a month, 20% down", versus: `Income to keep it at 30%: about ${usd(Math.ceil(incomeFor(month.month.total) / 1000) * 1000)} a year` } : undefined,
       why: "This is the number your budget has to carry, before any other spending.",
@@ -178,7 +178,7 @@ function slidesFor(data: GuideData, rate: number, nj: Medians): Slide[] {
       body: <div className="bf-summary"><div className="bf-tiles bf-tiles-small">{top.map((t) => <div key={t.label} className="bf-tile"><b>{t.value(t.l!)}</b><span>{t.label}</span></div>)}</div><p><b>Monthly cost:</b> {month ? `about ${usd(month.month.total)}` : "not available"}. <b>Worth checking:</b> {flagged.length ? flagged.map((c) => c.title.toLowerCase()).join(", ") : "nothing past our lines"}.</p><p className="bf-note">{bottomLine.join(" · ")}</p></div> },
     { key: "sources", notes: <ul>{data.sources.map((x) => <li key={x.source_id}>{x.name} — {x.publisher}. {x.license}.</li>)}</ul>, section: "Next steps", kicker: "Sources", plain: true,
       headline: "Where every figure came from",
-      body: <><p className="bf-note">{income ? `For scale: the median household here earns ${usd(income.value)} a year. ` : ""}All figures and dates are on <Link href={regionPath(data.region.region_id)}>{name}’s page</Link>; your own income or a listing’s price go in the <Link href={`/guide?place=${data.region.region_id}`}>calculator</Link>. Computed by fixed rules from public data; not written by AI.</p>
+      body: <><p className="bf-note">{income ? `For scale: the median household here earns ${usd(income.value)} a year. ` : ""}All figures and dates are on <Link href={regionPath(data.region.region_id)}>{name}’s page</Link>; your own income or a listing’s price go in the <Link href={`/guide/numbers?place=${data.region.region_id}`}>calculator</Link>. Computed by fixed rules from public data; not written by AI.</p>
         <ul className="bf-sources">{[...new Set(data.sources.map((s) => s.publisher ?? s.name))].slice(0, 18).map((n) => <li key={n}>{n}</li>)}</ul></> },
   ];
 }
