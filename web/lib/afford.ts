@@ -26,6 +26,9 @@ export type Place = {
   /** What tells a municipality apart in a list — "Township in Morris County". */
   detail: string | null;
   home: number | null;
+  /** The median recorded sale price: a second way to price the place, never mixed into
+   *  `home` (#359). `priceBy` swaps it in for every place at once. */
+  sale?: number | null;
   tax: number | null;
   rent: number | null;
   insurance?: number | null;
@@ -33,6 +36,18 @@ export type Place = {
 };
 
 export type Mode = "own" | "rent";
+
+/** Which price a comparison is run on: Zillow's estimate, or what homes sold for. */
+export type PriceBasis = "zillow" | "sales";
+
+/**
+ * The same places priced on one basis. A ranking compares towns with each other, so every
+ * price in it is the same measure (#359): on "sales" a town with no recorded median has
+ * no price, even where Zillow has one, and the reverse.
+ */
+export function priceBy(places: Place[], basis: PriceBasis): Place[] {
+  return basis === "zillow" ? places : places.map((place) => ({ ...place, home: place.sale ?? null }));
+}
 
 export type Reached = {
   place: Place;

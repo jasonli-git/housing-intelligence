@@ -60,6 +60,9 @@ are not yet recorded here.
 
 ### Changed
 
+- **Budget explorer: price homes by Zillow's estimate or by recorded sales** (2026-11-10,
+  ARCHITECTURE #493): a switch, never a mix, which lists 540 towns on recorded sales
+  against 388 on Zillow's estimate.
 - **The tools join the place pages** (2026-11-10, ARCHITECTURE #492): the site bar shows a
   tool's name and one Menu listing every destination; Compare leads with the place
   pages' figures, has a Buying / Renting switch and labels each figure's kind; the map

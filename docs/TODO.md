@@ -76,15 +76,16 @@ Each is registered only once its file lands (a manual source with no file fails
 
 ### Tools after #492
 
-- **Budget explorer coverage is the owner's decision.** It lists 388 of 564 towns because
-  every price is Zillow's (#359, guarded by `affordData.test.ts`), so towns are ranked on
-  one measure. A source switch like the map's (recorded sales, or Zillow), never mixing
-  the two in one ranking, would keep that rule and add about 150 towns. Not built.
+- **Budget explorer renting still lists only towns with Zillow's asking rent** (238). A
+  second basis, the Census survey's median rent, would follow #493's pattern. Not built.
+- **Recorded sale prices in the Budget explorer carry no age limit.** The place pages drop
+  a sale median older than 18 months (`MAX_SALE_AGE_MONTHS`); #493 reads the ranking as
+  published.
 - **Buyer's guide restructure** (review step 2): answer above the inputs, the split from
   the Budget explorer made explicit, a renting counterpart. Not started.
 - **Visual alignment of the tools** with the place pages (review step 3): the serif titles
   are gone with the title blocks, but each tool keeps its own coloured glow. Owner's call.
-- **#492 was checked in the browser, by type check and by the web tests only.** The full
+- **#492 and #493 were checked in the browser, by type check and by the web tests only.** The full
   static build and `make check-accessibility` have not been run on it.
 - **Tax lookup stall, not reproduced.** On 2026-11-10 one search with a town pre-selected
   sat on "Loading the town's property records…" for 14 seconds on the live site; two

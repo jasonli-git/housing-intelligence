@@ -11,6 +11,8 @@ import {
   type Mode,
   monthlyBudget,
   type Place,
+  type PriceBasis,
+  priceBy,
   reach,
 } from "@/lib/afford";
 import { DEFAULT_DOWN, DOWN_PAYMENTS, incomeFor } from "@/lib/cost";
@@ -58,13 +60,16 @@ export function AffordExplorer({
   counties: Place[];
   towns: Place[];
   rate: { value: number; asOf: string };
-  asOf: { home: string; rent: string; tax: string; insurance?: string; utilities?: string };
+  asOf: { home: string; rent: string; tax: string; sale?: string; insurance?: string; utilities?: string };
   appearance?: "classic" | "atlas";
   workspace?: boolean;
   scope?: { countyId: number; countyName: string };
 }) {
   const [incomeText, setIncomeText] = useState(DEFAULT_INCOME);
   const [mode, setMode] = useState<Mode>("own");
+  // Which price buying is worked out from. One basis for every place, never a mix (#359, #493).
+  const [basis, setBasis] = useState<PriceBasis>("zillow");
+  const hasSales = useMemo(() => towns.some((town) => town.sale != null), [towns]);
   const [down, setDown] = useState<number>(DEFAULT_DOWN);
   const { personal, household, savePersonal, saveHousehold } = useBudgetScenario();
   useEffect(() => { setDown(personal.downPct ?? DEFAULT_DOWN); }, [personal.downPct]);
@@ -97,6 +102,7 @@ export function AffordExplorer({
       // `for=rent` is the place pages' own word for the renting view (#490).
       setMode(params.get("mode") === "rent" || (!params.has("mode") && params.get("for") === "rent") ? "rent" : "own");
       setAllTowns(params.get("show") === "all");
+      setBasis(params.get("price") === "sales" ? "sales" : "zillow");
     }
     setAddressRead(true);
   }, [places]);
@@ -117,6 +123,7 @@ export function AffordExplorer({
     if (!workspace || !addressRead) return;
     const url = new URL(window.location.href);
     url.searchParams.set("mode", mode);
+    if (basis === "sales" && mode === "own") url.searchParams.set("price", "sales"); else url.searchParams.delete("price");
     if (allTowns) url.searchParams.set("show", "all"); else url.searchParams.delete("show");
     // Update an explicitly supplied income without adding household income to new URLs.
     if (url.searchParams.has("income")) {
@@ -125,12 +132,14 @@ export function AffordExplorer({
       else url.searchParams.delete("income");
     }
     window.history.replaceState(window.history.state, "", url);
-  }, [workspace, addressRead, mode, allTowns, incomeText]);
+  }, [workspace, addressRead, mode, basis, allTowns, incomeText]);
 
   const income = Number(incomeText.replace(/[^0-9.]/g, "")) || 0;
   const options = { mode, income, downPct: down, ratePct: personal.ratePct ?? rate.value, personal };
-  const countyRows = income > 0 ? reach(counties, options) : [];
-  const allTownRows = income > 0 ? reach(towns, options) : [];
+  const pricedCounties = useMemo(() => priceBy(counties, basis), [counties, basis]);
+  const pricedTowns = useMemo(() => priceBy(towns, basis), [towns, basis]);
+  const countyRows = income > 0 ? reach(pricedCounties, options) : [];
+  const allTownRows = income > 0 ? reach(pricedTowns, options) : [];
   const townRows = scope ? allTownRows.filter((row) => row.place.parentId === scope.countyId) : allTownRows;
   const townsWithin = townRows.filter((row) => row.within);
   const firstTowns = workspace ? 10 : FIRST_TOWNS;
@@ -153,7 +162,10 @@ export function AffordExplorer({
   // more places the other mode or the largest down payment would open up.
   const budget = income > 0 ? monthlyBudget(income) : 0;
   const nearMisses = townRows.filter((row) => !row.within && row.missing.length === 0).slice(0, 4);
-  const scopedTowns = scope ? towns.filter((town) => town.parentId === scope.countyId) : towns;
+  const scopedTowns = scope ? pricedTowns.filter((town) => town.parentId === scope.countyId) : pricedTowns;
+  // How many towns the other price would list, so the reader can see what the switch opens up.
+  const otherBasis: PriceBasis = basis === "zillow" ? "sales" : "zillow";
+  const otherBasisListed = income > 0 && mode === "own" && hasSales ? reach(priceBy(scope ? towns.filter((town) => town.parentId === scope.countyId) : towns, otherBasis), options).length : 0;
   const otherMode: Mode = mode === "own" ? "rent" : "own";
   const otherModeFits = income > 0 ? reach(scopedTowns, { ...options, mode: otherMode }).filter((row) => row.within).length : 0;
   const maxDown = DOWN_PAYMENTS[DOWN_PAYMENTS.length - 1];
@@ -210,6 +222,19 @@ export function AffordExplorer({
             ))}
           </div>
         </div>
+        {mode === "own" && hasSales && workspace && (
+          <div className="control">
+            <span className="control-label" id={`${id}-basis`}>Price homes by</span>
+            <div className="seg" role="radiogroup" aria-labelledby={`${id}-basis`} onKeyDown={(event) => {
+              if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+              event.preventDefault();
+              setBasis(basis === "zillow" ? "sales" : "zillow");
+              (event.currentTarget.querySelector<HTMLButtonElement>('[aria-checked="false"]'))?.focus();
+            }}>
+              {(["zillow", "sales"] as const).map((key) => <button key={key} type="button" role="radio" aria-checked={basis === key} tabIndex={basis === key ? 0 : -1} onClick={() => setBasis(key)}>{key === "zillow" ? "Zillow’s estimate" : "Recorded sales"}</button>)}
+            </div>
+          </div>
+        )}
         {mode === "own" && (
           <label className="control" htmlFor={`${id}-down`}>
             <span className="control-label">Down payment</span>
@@ -232,7 +257,8 @@ export function AffordExplorer({
   const resultCaveats = (
         <p className="wca-fineprint">
           Typical costs from published figures, not listings or loan approval{mode === "own" ? " — HOA fees and flood insurance aren’t included" : " — rent only, no utilities"}.
-          {unlisted > 0 && <> {unlisted} towns without {mode === "own" ? "a home value or tax bill" : "a rent figure"} aren’t listed; that doesn’t make them unaffordable.</>}
+          {unlisted > 0 && <> {unlisted} towns without {mode === "own" ? (basis === "sales" ? "a recorded sale price or tax bill" : "a home value or tax bill") : "a rent figure"} aren’t listed; that doesn’t make them unaffordable.</>}
+          {workspace && otherBasisListed > townRows.length && <> <button type="button" className="wca-basis-switch" onClick={() => setBasis(otherBasis)}>Price by {otherBasis === "sales" ? "recorded sales" : "Zillow’s estimate"} instead: {otherBasisListed} towns listed</button></>}
         </p>
   );
 
@@ -359,11 +385,11 @@ export function AffordExplorer({
       </>}
 
 
-      {workspace && <p className="budget-map-link"><Link href={`/atlas?level=municipality&measure=${mode === "own" ? "zhvi_sfr" : "zori_all"}&view=latest`}>See {mode === "own" ? "home values" : "asking rents"} for every town on the map <span aria-hidden="true">→</span></Link></p>}
+      {workspace && <p className="budget-map-link"><Link href={`/atlas?level=municipality&measure=${mode === "own" ? (basis === "sales" ? "sr1a_median_sale_price" : "zhvi_sfr") : "zori_all"}&view=latest`}>See {mode === "own" ? (basis === "sales" ? "sale prices" : "home values") : "asking rents"} for every town on the map <span aria-hidden="true">→</span></Link></p>}
       <details className="afford-notes"><summary>How we estimate</summary><p className="table-note"><Gloss>
         {mode === "own" ? (
           <>
-            Owning: Zillow’s typical home value, houses and condos ({asOf.home}), a
+            Owning: {basis === "sales" ? <>the median price homes sold for, from New Jersey’s deed records ({asOf.sale ?? "latest"}), which counts only homes that changed hands</> : <>Zillow’s typical home value, houses and condos ({asOf.home})</>}, a
             30-year fixed loan at {options.ratePct.toFixed(2)}% ({personal.ratePct === undefined ? `national average, ${rate.asOf}` : "your quoted rate"}) with {down}% down, and the typical property
             tax bill from New Jersey’s assessment records ({asOf.tax}).
             Included: homeowners insurance ({personal.insuranceYear === undefined ? `Census, ${asOf.insurance ?? "area figure"}` : "your annual quote"}) and utilities (electricity vintage {asOf.utilities ?? "area figure"}, gas and water where supplied), mortgage insurance when applicable, and upkeep ({personal.upkeepPct ?? UPKEEP_PCT}% of price a year, {personal.upkeepPct === undefined ? "a rule of thumb" : "your assumption"}), using the same calculation and saved assumptions as the profile cost cards. Missing required costs mean an incomplete estimate, never a fit. Places without a Zillow value or a

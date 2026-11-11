@@ -10,7 +10,7 @@ export type AffordData = {
   counties: Place[];
   towns: Place[];
   rate: { value: number; asOf: string };
-  asOf: { home: string; rent: string; tax: string; insurance?: string; utilities?: string };
+  asOf: { home: string; rent: string; tax: string; sale?: string; insurance?: string; utilities?: string };
 };
 
 async function latest(metricId: string, level: string): Promise<Map<number, RankedRegion>> {
@@ -39,10 +39,12 @@ export async function affordData(): Promise<AffordData | null> {
     latest("zhvi_sfr", "municipality"),
     latest("modiv_median_tax_bill", "municipality"),
     latest("zori_all", "municipality"),
+    latest("sr1a_median_sale_price", "county"),
+    latest("sr1a_median_sale_price", "municipality"),
   ]);
   if (!counties || !towns || !rate) return null;
 
-  const [homeC, taxC, rentC, homeM, taxM, rentM] = series;
+  const [homeC, taxC, rentC, homeM, taxM, rentM, saleC, saleM] = series;
   // These ACS inputs are deliberately unranked. Read their annual survey series via
   // the existing comparison endpoint rather than inventing ranks or one request per town.
   // Each ACS survey has a fixed five-year span, so latest start is also latest end.
@@ -62,14 +64,14 @@ export async function affordData(): Promise<AffordData | null> {
   const details = new Map(searchEntries([...counties.items, ...towns.items]).map((entry) => [entry.id, entry.detail]));
   const countyPlaces: Place[] = counties.items.map((county) => ({
     id: county.region_id, name: displayName(county), level: "county", parentId: null, detail: null, state: county.state_code,
-    home: value(homeC, county.region_id), tax: value(taxC, county.region_id), rent: value(rentC, county.region_id),
+    home: value(homeC, county.region_id), sale: value(saleC, county.region_id), tax: value(taxC, county.region_id), rent: value(rentC, county.region_id),
     insurance: costValue(insurance, county.region_id), utilities: utilityTotal(costValue(electric, county.region_id), costValue(gas, county.region_id), costValue(water, county.region_id)),
   }));
   const townPlaces: Place[] = towns.items.map((town): Place => ({
     id: town.region_id, name: town.name, level: "municipality", parentId: town.parent_id, detail: details.get(town.region_id) ?? null, state: town.state_code,
-    home: value(homeM, town.region_id), tax: value(taxM, town.region_id), rent: value(rentM, town.region_id),
+    home: value(homeM, town.region_id), sale: value(saleM, town.region_id), tax: value(taxM, town.region_id), rent: value(rentM, town.region_id),
     insurance: costValue(insurance, town.region_id), utilities: utilityTotal(costValue(electric, town.region_id), costValue(gas, town.region_id), costValue(water, town.region_id)),
-  })); // Keep missing-data towns selectable; never substitute transaction prices in rankings.
+  })); // Keep missing-data towns selectable. Sale prices ride beside Zillow's, never in its place (#359, #493).
   const lastPeriod = (metricId: string) => {
     const period = catalog?.find((metric) => metric.metric_id === metricId)?.last_period;
     return period ? periodLabel(period, metricId) : "latest";
@@ -79,7 +81,7 @@ export async function affordData(): Promise<AffordData | null> {
     towns: townPlaces,
     rate: { value: rate.value, asOf: periodLabel(rate.period_start) },
     asOf: {
-      home: lastPeriod("zhvi_sfr"), rent: lastPeriod("zori_all"), tax: lastPeriod("modiv_median_tax_bill"),
+      home: lastPeriod("zhvi_sfr"), sale: lastPeriod("sr1a_median_sale_price"), rent: lastPeriod("zori_all"), tax: lastPeriod("modiv_median_tax_bill"),
       insurance: lastPeriod("acs_median_home_insurance"), utilities: lastPeriod("acs_median_electricity"),
     },
   };
