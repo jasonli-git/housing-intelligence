@@ -3,7 +3,7 @@ import styles from "@/components/AffordExplorer.module.css";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { AffordExplorer } from "@/components/AffordExplorer";
+import { AffordRedirect } from "@/components/AffordRedirect";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
 import { affordData } from "@/lib/affordData";
@@ -28,43 +28,7 @@ export const metadata: Metadata = pageMetadata({
  * held at municipal level and painted in three states rather than by quantile — the
  * carry the ROADMAP planned and #144 deferred to Milestone 16.
  */
-export default async function AffordPage() {
-  // No geometry fetched here any more: the map asks for `map.json` itself (#163).
-  const data = await affordData();
-  if (!data) {
-    return (
-      <>
-        <Masthead affordability={{ kind: "route", active: true }} />
-        <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool">
-          <h1 className="page-title">Where can I afford?</h1>
-          <p className="meta">
-            The API is unreachable, so there is nothing to show.{" "}
-            <Link href="/states/new-jersey">Back to New Jersey</Link>.
-          </p>
-        </main>
-      </>
-    );
-  }
-
-  return (
-    <>
-      <Masthead affordability={{ kind: "route", active: true }} title="Where can I afford?" />
-      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-tool budget-page horizon-page ${styles.page}`} data-region-level="tool">
-      <header className="page-head" data-kind="tool">
-        <div>
-          <div className="tool-head-tools">
-            <p className="meta">
-              Enter your income. See the New Jersey towns where a typical home fits your budget.
-            </p>
-          </div>
-        </div>
-      </header>
-      <AffordExplorer
-        {...data}
-        appearance="atlas"
-        workspace
-      />
-      </main>
-    </>
-  );
+export default function AffordPage() {
+  // (#496) the Budget explorer lives on the housing map now.
+  return <main id="main-content" tabIndex={-1} className="shell"><AffordRedirect /></main>;
 }

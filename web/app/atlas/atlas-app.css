@@ -330,3 +330,94 @@
 }
 @keyframes atlas-chip-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 @media print { main.atlas-app { height: auto; overflow: visible; } main.atlas-app :is(.atlas-bar-slot, .atlas-chips, .atlas-card-hide, .atlas-map-only) { display: none !important; } }
+
+/* #496: budget as a filter on the map (components/AtlasBudget.tsx). */
+main.atlas-app path[data-budget="over"] { opacity: .14; }
+/* No figure to price the budget: the map's own "no figure" hatching, so unknown never reads as out of reach. */
+main.atlas-app path[data-budget="none"] { fill: url(#atlas-unpriced); }
+main.atlas-app .atlas-unpriced-ground { fill: var(--surface-card); }
+main.atlas-app .atlas-unpriced-dot { fill: var(--text-muted); }
+main.atlas-app path[data-budget="near"] { opacity: .5; }
+main.atlas-app .atlas-budget { border: 1px solid var(--plate-strong-rule); border-radius: 12px; padding: 12px; margin: 8px 0; display: grid; gap: 10px; max-height: 50vh; overflow: auto; }
+main.atlas-app .atlas-budget legend { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; opacity: .7; padding: 0 4px; }
+main.atlas-app .atlas-budget-income { display: flex; align-items: baseline; gap: 4px; border-bottom: 1px solid var(--plate-strong-rule); padding-bottom: 4px; font-size: 1.35rem; }
+main.atlas-app .atlas-budget-income input { flex: 1; min-width: 0; font: inherit; border: 0; background: transparent; color: inherit; padding: 0; outline-offset: 4px; }
+main.atlas-app .atlas-budget-income small { font-size: .8rem; opacity: .6; }
+main.atlas-app .atlas-budget-row { display: flex; gap: 6px; flex-wrap: wrap; }
+main.atlas-app .atlas-seg { display: inline-flex; border: 1px solid var(--plate-strong-rule); border-radius: 99px; padding: 2px; }
+main.atlas-app .atlas-seg [role="radio"] { font: inherit; font-size: .82rem; padding: 4px 12px; border: 0; border-radius: 99px; background: transparent; color: inherit; cursor: pointer; }
+main.atlas-app .atlas-seg [role="radio"][aria-checked="true"] { background: var(--good); color: var(--bg); }
+main.atlas-app .atlas-seg-small { justify-self: start; }
+main.atlas-app .atlas-seg-small [role="radio"] { font-size: .76rem; padding: 3px 10px; }
+main.atlas-app .atlas-controls select.atlas-budget-select { width: auto !important; min-width: 0; max-width: none; min-height: 0; font: inherit; font-size: .82rem; padding: 4px 26px 4px 12px; border-radius: 99px !important; border: 1px solid var(--plate-strong-rule) !important; background-color: transparent !important; color: inherit; }
+main.atlas-app .atlas-budget-hint { margin: 0; font-size: .82rem; opacity: .75; }
+main.atlas-app .atlas-budget-answer { display: grid; gap: 8px; }
+main.atlas-app .atlas-budget-count { margin: 0; display: flex; align-items: baseline; gap: 8px; }
+main.atlas-app .atlas-budget-count strong { font-size: 2rem; line-height: 1; }
+main.atlas-app .atlas-budget-count span { font-size: .85rem; opacity: .85; }
+main.atlas-app .atlas-budget-key { list-style: none; margin: 0; padding: 0; display: flex; gap: 12px; font-size: .74rem; opacity: .85; }
+main.atlas-app .atlas-budget-key li::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; background: var(--series-1, currentColor); }
+main.atlas-app .atlas-budget-key li[data-fit="near"]::before { opacity: .5; }
+main.atlas-app .atlas-budget-key li[data-fit="over"]::before { opacity: .14; outline: 1px solid var(--plate-strong-rule); }
+main.atlas-app .atlas-budget-tips { display: flex; flex-wrap: wrap; gap: 6px; }
+main.atlas-app .atlas-budget-tips button { font: inherit; font-size: .76rem; padding: 3px 9px; border-radius: 99px; border: 1px dashed var(--plate-strong-rule); background: transparent; color: inherit; cursor: pointer; }
+main.atlas-app .atlas-budget-tips button::before { content: "+ "; }
+main.atlas-app .atlas-budget-more summary { cursor: pointer; font-size: .8rem; opacity: .8; }
+main.atlas-app .atlas-budget-more[open] { display: grid; gap: 8px; font-size: .8rem; }
+main.atlas-app .atlas-budget-more p, main.atlas-app .atlas-budget-more ol { margin: 0; }
+main.atlas-app .atlas-budget-more h4 { margin: 0; font-size: .8rem; }
+main.atlas-app .atlas-budget-more ol { padding-left: 18px; }
+main.atlas-app .atlas-budget-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+main.atlas-app .atlas-budget-inputs label { display: grid; gap: 2px; font-size: .74rem; }
+main.atlas-app .atlas-budget-inputs input { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--plate-strong-rule); background: transparent; color: inherit; }
+main.atlas-app .atlas-budget-fine { opacity: .7; font-size: .74rem; }
+main.atlas-app .atlas-budget-cost small { display: block; opacity: .75; }
+main.atlas-app .atlas-budget-line { display: block; font-size: .85rem; margin-top: 4px; }
+
+main.atlas-app .atlas-budget-card { position: absolute; z-index: 4; left: var(--atlas-edge); top: calc(var(--atlas-top) + var(--controls-h)); width: min(440px, calc(100% - var(--atlas-panel-width, 370px) - 3 * var(--atlas-edge))); border: 1px solid var(--plate-strong-rule); border-radius: 22px; background: var(--surface-card); box-shadow: 0 12px 40px color-mix(in srgb, var(--text-primary) 18%, transparent); overflow: hidden; }
+main.atlas-app .atlas-budget-card header { display: flex; align-items: center; }
+main.atlas-app .atlas-budget-toggle { flex: 1; display: flex; align-items: baseline; gap: 10px; padding: 12px 16px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+main.atlas-app .atlas-budget-title { font-family: var(--font-display, inherit); font-size: 1.05rem; }
+main.atlas-app .atlas-budget-summary { flex: 1; font-size: .8rem; opacity: .75; }
+main.atlas-app .atlas-budget-chevron { font-size: 1.1rem; opacity: .7; }
+main.atlas-app .atlas-budget-remove { border: 0; background: transparent; color: inherit; font-size: 1.1rem; padding: 0 14px 0 4px; opacity: .6; cursor: pointer; }
+main.atlas-app .atlas-budget-card .atlas-budget { border: 0; border-top: 1px solid var(--plate-strong-rule); border-radius: 0; margin: 0; padding: 12px 16px 14px; max-height: 52vh; }
+main.atlas-app .atlas-budget-card .atlas-budget legend { display: none; }
+main.atlas-app .atlas-budget-card[data-open="true"] .atlas-budget-summary { visibility: hidden; }
+main.atlas-app .atlas-budget-key li[data-fit="none"]::before { background: radial-gradient(circle, var(--text-muted) 1px, transparent 1.4px) 0 0 / 4px 4px; opacity: 1; }
+main.atlas-app .atlas-budget-more[open] { gap: 12px; }
+main.atlas-app .atlas-budget-more section { display: grid; gap: 6px; }
+main.atlas-app .atlas-budget-more h4 { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; opacity: .6; font-weight: 500; }
+main.atlas-app .atlas-budget-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; }
+main.atlas-app .atlas-budget-sum div { border: 1px solid var(--plate-strong-rule); border-radius: 10px; padding: 6px 10px; }
+main.atlas-app .atlas-budget-sum dt { font-size: .68rem; opacity: .6; }
+main.atlas-app .atlas-budget-sum dd { margin: 0; font-size: .82rem; }
+main.atlas-app .atlas-budget-sum dd span { display: block; font-size: .7rem; opacity: .6; }
+main.atlas-app .atlas-budget-near { width: 100%; border-collapse: collapse; font-size: .76rem; }
+main.atlas-app .atlas-budget-near th { text-align: left; font-weight: 500; }
+main.atlas-app .atlas-budget-near td { text-align: right; opacity: .8; padding-left: 8px; white-space: nowrap; }
+main.atlas-app .atlas-budget-near tr + tr :is(th, td) { border-top: 1px solid var(--plate-strong-rule); }
+main.atlas-app .atlas-budget-near :is(th, td) { padding-block: 4px; }
+main.atlas-app .atlas-budget-inputs { grid-template-columns: repeat(4, 1fr); }
+main.atlas-app .atlas-budget-inputs input { width: 100%; min-width: 0; }
+main.atlas-app .atlas-budget-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+main.atlas-app .atlas-budget-chips li { font-size: .72rem; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--plate-strong-rule); }
+main.atlas-app .atlas-budget-chips[data-off] li { text-decoration: line-through; opacity: .55; border-style: dashed; }
+@media screen and (max-width: 900px) {
+  /* A phone: the card runs the width of the map beside the right-hand buttons. */
+  main.atlas-app .atlas-budget-card { left: var(--atlas-edge); right: calc(var(--atlas-edge) + 64px); width: auto; border-radius: 16px; }
+  main.atlas-app .atlas-budget-toggle { padding: 10px 12px; gap: 8px; flex-wrap: wrap; }
+  main.atlas-app .atlas-budget-title { font-size: .95rem; }
+  main.atlas-app .atlas-budget-card[data-open="true"] .atlas-budget-summary { display: none; }
+  main.atlas-app .atlas-budget-card .atlas-budget { max-height: calc(100dvh - var(--atlas-top) - 220px); padding: 10px 12px 12px; }
+  main.atlas-app .atlas-budget-inputs { grid-template-columns: 1fr 1fr; }
+  main.atlas-app .atlas-budget-income input { font-size: 16px; }
+  main.atlas-app .atlas-budget-key { flex-wrap: wrap; gap: 4px 10px; }
+}
+@media screen and (max-width: 900px) {
+  /* Open on a phone, the card becomes a bottom sheet so the map above it shows the result. */
+  main.atlas-app .atlas-budget-card[data-open="true"] { position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 12; max-height: 58dvh; display: flex; flex-direction: column; border-radius: 20px 20px 0 0; border-bottom: 0; padding-bottom: env(safe-area-inset-bottom); }
+  main.atlas-app .atlas-budget-card[data-open="true"] header { position: relative; padding-top: 8px; }
+  main.atlas-app .atlas-budget-card[data-open="true"] header::before { content: ""; position: absolute; top: 6px; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 99px; background: var(--plate-strong-rule); }
+  main.atlas-app .atlas-budget-card[data-open="true"] .atlas-budget { max-height: none; flex: 1; overflow: auto; }
+}

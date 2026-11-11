@@ -60,6 +60,11 @@ are not yet recorded here.
 
 ### Changed
 
+- **The Budget explorer is now a filter on the housing map** (2026-11-11, ARCHITECTURE
+  #496): "Exclude what's out of reach" fades the towns or counties a budget can't reach
+  and keeps the chosen layer's shading on the rest, so a reader can ask which affordable
+  towns flood, commute well or sell for less. The list gains a monthly-cost column and
+  sort; the budget is kept in the address and in "Share view"; `/afford` opens the map.
 - **Budget explorer draws its answer on a map** (2026-11-11, ARCHITECTURE #495): every
   town shaded within budget, just over, or over, from the same rows as the list; point
   at or tap a town for its monthly cost and a link to its page.
