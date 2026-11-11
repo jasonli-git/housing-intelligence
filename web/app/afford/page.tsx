@@ -48,16 +48,10 @@ export default async function AffordPage() {
 
   return (
     <>
-      <Masthead affordability={{ kind: "route", active: true }} />
+      <Masthead affordability={{ kind: "route", active: true }} title="Where can I afford?" />
       <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-tool budget-page horizon-page ${styles.page}`} data-region-level="tool">
       <header className="page-head" data-kind="tool">
         <div>
-          <Crumbs
-            trail={[{ href: "/", label: "Home" }, { href: "/states/new-jersey", label: "New Jersey" }]}
-            here="Budget explorer"
-          />
-          <Kind kind="tool" />
-          <h1 className="page-title">Where can I afford?</h1>
           <div className="tool-head-tools">
             <p className="meta">
               Enter your income. See the New Jersey towns where a typical home fits your budget.

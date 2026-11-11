@@ -29,16 +29,10 @@ export default async function GuidePage() {
 
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} guideActive />
+      <Masthead affordability={{ kind: "route" }} guideActive title="Buyer’s guide" />
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool guide-page horizon-page" data-region-level="guide">
         <header className="page-head" data-kind="tool">
           <div>
-            <Crumbs
-              trail={[{ href: "/", label: "Home" }, { href: "/states/new-jersey", label: "New Jersey" }]}
-              here="Buyer’s guide"
-            />
-            <Kind kind="tool" />
-            <h1 className={`page-title ${styles.title}`}>Buyer’s guide</h1>
             <p className="meta">Explore buying costs, compare renting, and check a home before an offer.</p>
 
           </div>

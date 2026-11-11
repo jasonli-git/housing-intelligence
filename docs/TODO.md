@@ -74,6 +74,24 @@ Each is registered only once its file lands (a manual source with no file fails
 - **Theme CSS consolidation.** Guide and support-tool modules override cross-page theme rules
   with scoped selectors; folding those rules together is separate work.
 
+### Tools after #492
+
+- **Budget explorer coverage is the owner's decision.** It lists 388 of 564 towns because
+  every price is Zillow's (#359, guarded by `affordData.test.ts`), so towns are ranked on
+  one measure. A source switch like the map's (recorded sales, or Zillow), never mixing
+  the two in one ranking, would keep that rule and add about 150 towns. Not built.
+- **Buyer's guide restructure** (review step 2): answer above the inputs, the split from
+  the Budget explorer made explicit, a renting counterpart. Not started.
+- **Visual alignment of the tools** with the place pages (review step 3): the serif titles
+  are gone with the title blocks, but each tool keeps its own coloured glow. Owner's call.
+- **#492 was checked in the browser, by type check and by the web tests only.** The full
+  static build and `make check-accessibility` have not been run on it.
+- **Tax lookup stall, not reproduced.** On 2026-11-10 one search with a town pre-selected
+  sat on "Loading the town's property records…" for 14 seconds on the live site; two
+  later attempts with the same steps returned at once. No timeout or retry exists if a
+  town's file never arrives.
+- **The Buyer's guide ignores `for=rent`;** it is a buying tool until step 2.
+
 ### Place pages after #489 (poster and four acts)
 
 - **Reader testing.** Five task-based conversations on the new town and ZIP pages (find

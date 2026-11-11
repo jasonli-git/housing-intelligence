@@ -83,6 +83,11 @@ export function AffordableHousing({data, hideRoutes = false, tool = false, inven
       setInventory(body);
     } catch { setError(true); } finally {setLoading(false); inFlight.current = false;}
   }, [data, inventory, inventoryHref]);
+  // A place page hands its town on as `?q=`, so the records open on that town (#492).
+  useEffect(() => {
+    const asked = tool ? new URLSearchParams(window.location.search).get("q") : null;
+    if (asked) setQuery(asked.slice(0, 80));
+  }, [tool]);
   useEffect(() => {
     if (programmeOpen || tool) void fetchInventory();
     // Fetch on the outer panel's opening, not for hidden pre-expanded children.

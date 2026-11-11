@@ -94,7 +94,8 @@ export function AffordExplorer({
       setCountyId(context.countyId);
     }
     if (workspace) {
-      setMode(params.get("mode") === "rent" ? "rent" : "own");
+      // `for=rent` is the place pages' own word for the renting view (#490).
+      setMode(params.get("mode") === "rent" || (!params.has("mode") && params.get("for") === "rent") ? "rent" : "own");
       setAllTowns(params.get("show") === "all");
     }
     setAddressRead(true);
@@ -358,6 +359,7 @@ export function AffordExplorer({
       </>}
 
 
+      {workspace && <p className="budget-map-link"><Link href={`/atlas?level=municipality&measure=${mode === "own" ? "zhvi_sfr" : "zori_all"}&view=latest`}>See {mode === "own" ? "home values" : "asking rents"} for every town on the map <span aria-hidden="true">→</span></Link></p>}
       <details className="afford-notes"><summary>How we estimate</summary><p className="table-note"><Gloss>
         {mode === "own" ? (
           <>

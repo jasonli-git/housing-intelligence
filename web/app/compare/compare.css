@@ -42,3 +42,13 @@
   .compare-remove { display: block; margin: .35rem 0 0; }
 }
 @media print { .compare-picker, .compare-remove, .compare-mobile-picker, .compare-topic-picker { display: none; } }
+/* What kind of figure it is, as on the place pages (#489): solid outline for records and
+   official figures, dashed for survey, calculated and modelled estimates. */
+.compare-table td small.compare-kind { display: inline-block; margin-top: .35rem; padding: 0 7px; font-size: 11px; font-weight: 600; line-height: 1.6; white-space: nowrap; color: var(--text-secondary); border: 1px solid currentColor; border-radius: 10px; }
+.compare-kind:is([data-kind="modelled"], [data-kind="survey"], [data-kind="calculated"]) { border-style: dashed; }
+.compare-topic-picker { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.25rem; }
+.compare-tenure { display: inline-flex; overflow: hidden; border: 1.5px solid var(--text-primary); border-radius: 22px; }
+.compare-tenure button { min-width: 6rem; min-height: 44px; padding: 0 18px; font: inherit; font-size: 15px; font-weight: 700; color: var(--text-primary); background: none; border: 0; cursor: pointer; }
+.compare-tenure button[aria-pressed="true"] { color: var(--surface-card); background: var(--text-primary); }
+.compare-tenure button:focus-visible { outline: 3px solid currentColor; outline-offset: -5px; }
+@media print { .compare-tenure { display: none; } }

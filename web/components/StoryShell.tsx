@@ -10,6 +10,7 @@ import { StoryShortcuts } from "@/components/StoryShortcuts";
 import { ThemedShot } from "@/components/ThemedShot";
 import { COLLECTIONS, storySlug } from "@/lib/storyLibrary";
 import { STORIES } from "@/lib/stories";
+import { STORY_TOOLS } from "@/lib/storyTools";
 
 const JERSEY = new Set<string>(COLLECTIONS.find((c) => c.id === "jersey")!.stories);
 
@@ -47,6 +48,8 @@ export function StoryShell({ title, lede, takeaway, note, children, focus }: { t
         {focus}
         {focus && <><h2 className="story-h" id="story-statewide">Across New Jersey</h2><p className="story-lede">{lede}</p></>}
         <div data-story-shot>{children}</div>
+        {/* From every town at once to the reader's own: the tool behind the chart (#492). */}
+        {story && STORY_TOOLS[storySlug(story)] && <p className="story-link story-tool print-hide"><Link href={STORY_TOOLS[storySlug(story)].href}><span>Tool</span> {STORY_TOOLS[storySlug(story)].label} →</Link></p>}
         <p className="story-sources" id="story-sources"><b>Sources</b> {note}</p>
         {/* The story's end: share it, or go on to the next one, side by side; then the way
             back to every story. */}

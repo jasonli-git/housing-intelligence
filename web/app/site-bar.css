@@ -41,8 +41,14 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
 .bar .bar-budget:disabled { opacity: 0.5; cursor: not-allowed; }
 .bar :is(a, button, summary):focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
 
-/* The Menu button exists only for the narrow bar, where the destinations fold into it. */
-.bar-tool-menu { position: relative; display: none; }
+/* One Menu at every width (#492). Wide, an untitled page shows the three main destinations
+   inline, so the Menu lists only the tools there; narrower, or on a titled tool page, it
+   lists all seven. */
+.bar-tool-menu { position: relative; display: block; }
+.bar-menu-main { display: none; }
+.bar[data-titled] .bar-menu-main { display: contents; }
+.bar-sep { color: var(--text-muted); }
+.bar-title { margin: 0; font: var(--weight-display) 16px/1 var(--font-display); letter-spacing: var(--track-display); color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bar-tool-menu > summary { list-style: none; gap: 0.3rem; }
 .bar-tool-menu > summary::-webkit-details-marker { display: none; }
 .bar-tool-menu[open] > summary { color: var(--text-primary); }
@@ -89,7 +95,7 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
 /* Narrower: the three destinations fold under Menu. */
 @media (max-width: 1100px) {
   .bar-desktop-tools { display: none; }
-  .bar-tool-menu { display: block; }
+  .bar-menu-main { display: contents; }
 }
 /* Phones: brand, terms and theme on the first row; search and Menu on the second. */
 @media (max-width: 760px) {
@@ -99,6 +105,16 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
   }
   .bar-inner:not(:has(.place-search)) { grid-template-areas: "trail licence theme" "menu menu menu"; }
   .bar-trail { grid-area: trail; min-width: 0; }
+  /* A titled bar has no room for the wordmark beside the page's name: the mark stands for it. */
+  .bar[data-titled] :is(.wordmark-text, .bar-sep) { display: none; }
+  .bar[data-titled] .bar-trail { overflow: hidden; }
+  .bar-title { min-width: 0; }
+  /* Nor for the terms beside it: they take a slim row of their own, still on every page (#128). */
+  .bar[data-titled] .bar-inner { grid-template-areas: "trail trail theme" "search search menu" "licence licence licence"; }
+  .bar[data-titled] .licence { justify-self: start; }
+  .bar[data-titled] .licence-box > summary { min-height: 24px; }
+  /* Three rows held at the top would cost a phone a sixth of its screen, so this bar scrolls away. */
+  .bar[data-titled] { position: relative; }
   /* A phone has no room to centre it beside the wordmark; it sits by the theme button. */
   .bar .licence { grid-area: licence; left: auto; transform: none; }
   .bar .theme-toggle { grid-area: theme; }

@@ -20,7 +20,9 @@ export type VariantSet = { name: string; members: Variant[] };
 export const VARIANTS: VariantSet[] = [
   // Zillow's is current but covers 388 of New Jersey's 564 towns, the Census survey's
   // covers 560 but is owners' own estimates over five years (owner, 2026-11-09).
-  { name: "Whose home value", members: [{ id: "zhvi_sfr", label: "Zillow", note: "current" }, { id: "acs_median_home_value", label: "Census", note: "every town" }] },
+  // Recorded sale prices lead (#492): they cover the most towns after the survey, and
+  // are the figure the place pages open with. The three are never mixed on one map.
+  { name: "Which home price", members: [{ id: "sr1a_median_sale_price", label: "Sales", note: "recorded sale prices" }, { id: "zhvi_sfr", label: "Zillow", note: "current estimate" }, { id: "acs_median_home_value", label: "Census", note: "every town" }] },
   {
     name: "Size of home",
     members: [
@@ -92,7 +94,7 @@ export function catalogueIds(published: string[]): string[] {
  * the layer has it. A tile stands for its measure's whole variant set.
  */
 export const SUGGESTED: { id: string; label: string }[] = [
-  { id: "zhvi_sfr", label: "Home prices" },
+  { id: "sr1a_median_sale_price", label: "Home prices" },
   { id: "acs_median_gross_rent", label: "Rent" },
   { id: "modiv_median_tax_bill", label: "Property taxes" },
   { id: "price_to_income", label: "Affordability" },

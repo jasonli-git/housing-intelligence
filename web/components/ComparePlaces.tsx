@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { PlacePicker } from "@/components/PlacePicker";
 import { Term } from "@/components/Term";
 import type { Packet, PacketLevel } from "@/lib/api";
+import { formatChange } from "@/lib/format";
+import { KIND_LABELS, KIND_MEANINGS, kindOf, type RecordType } from "@/lib/kinds";
 import { ownershipInputs, utilityTotal } from "@/lib/budgetScenario";
 import { COMPARE_SECTIONS, levelOf, MAX_PLACES, parsePlaces, placesQuery } from "@/lib/compare";
 import { formatMetric, formatValue, SHARE_METRICS } from "@/lib/format";
@@ -36,6 +38,7 @@ async function loadPacket(artifactUrl: string, id: number): Promise<Packet | nul
 function Figure({ level, baseline, baselineName }: { level: PacketLevel | null; baseline?: PacketLevel | null; baselineName?: string }) {
   if (!level) return <span className="compare-missing">Not published</span>;
   const margin = level.survey ? marginLabel(level.value, level.margin_of_error ?? null, level.unit, level.metric_id) : null;
+  const kind = (level.record_type as RecordType | null | undefined) ?? kindOf(level.metric_id);
   return (
     <>
       <strong>{formatMetric(level.value, level.unit, level.metric_id)}</strong>
@@ -43,12 +46,25 @@ function Figure({ level, baseline, baselineName }: { level: PacketLevel | null; 
         {periodLabel(level.period_end, level.metric_id)}
         {margin ? ` · ${margin}` : ""}
       </small>
+      {kind && <Kind kind={kind} />}
       {baseline && baselineName && (baseline.period_start === level.period_start && baseline.period_end === level.period_end && baseline.unit === level.unit ?
         <small className="compare-difference">{level.value === baseline.value ? "Same as" : `${level.value > baseline.value ? "+" : "−"}${(level.unit === "percent" || SHARE_METRICS.has(level.metric_id) ? `${(Math.abs(level.value - baseline.value) * (level.unit === "ratio" ? 100 : 1)).toFixed(1)} percentage points` : formatMetric(Math.abs(level.value - baseline.value), level.unit, level.metric_id))} vs`} {baselineName}</small> :
         <small className="compare-difference">Different periods or units · no difference calculated</small>)}
     </>
   );
 }
+
+/** What kind of figure it is, as on the place pages: solid for records, dashed for estimates. */
+function Kind({ kind }: { kind: RecordType }) {
+  return <small className="compare-kind" data-kind={kind} title={KIND_MEANINGS[kind]}>{KIND_LABELS[kind]}</small>;
+}
+
+/** The overview leads with the place pages' own four figures, for a buyer or a renter (#492). */
+const OVERVIEW: Record<"buy" | "rent", readonly string[]> = {
+  buy: ["sr1a_median_sale_price", "zhvi_sfr", "own", "modiv_median_tax_bill", "change:zhvi_sfr", "acs_median_hh_income", "acs_mean_commute_minutes"],
+  rent: ["zori_all", "acs_median_gross_rent", "change:zori_all", "acs_renter_cost_burden", "acs_median_hh_income", "acs_mean_commute_minutes"],
+};
+const OVERVIEW_LABELS: Record<string, string> = { sr1a_median_sale_price: "Median home sale price", zhvi_sfr: "Typical home value, Zillow’s estimate", modiv_median_tax_bill: "Median yearly property tax", zori_all: "Typical asking rent", acs_median_gross_rent: "Median rent tenants pay, with utilities", acs_renter_cost_burden: "Renters paying over 30% of income", acs_median_hh_income: "Household income", acs_mean_commute_minutes: "Average commute", "change:zhvi_sfr": "Home value, five-year change", "change:zori_all": "Asking rent, five-year change" };
 
 /** The month to own the typical home at the national rate, 20% down, as the place page works it out. */
 function ownMonth(packet: Packet, ratePct: number): { value: number; partial: boolean } | null {
@@ -83,11 +99,14 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
     return () => query.removeEventListener("change", update);
   }, []);
   const [topic, setTopic] = useState("Overview");
+  // Buying or renting rides in the address, as on the place pages (`?for=rent`, #490).
+  const [tenure, setTenure] = useState<"buy" | "rent">("buy");
   const [mobileOther, setMobileOther] = useState<number | null>(null);
   const [entries, setEntries] = useState<SearchEntry[] | null>(null);
 
   useEffect(() => {
     setIds(parsePlaces(window.location.search));
+    if (new URLSearchParams(window.location.search).get("for") === "rent") setTenure("rent");
     fetch("/search.json")
       .then((r) => (r.ok ? r.json() : null))
       .then((list: SearchEntry[] | null) => setEntries((list ?? []).filter((e) => e.level !== "state")))
@@ -107,7 +126,14 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
   const update = (next: number[]) => {
     setIds(next);
     const url = new URL(window.location.href);
-    url.search = placesQuery(next);
+    const renting = url.searchParams.get("for") === "rent";
+    url.search = `${placesQuery(next)}${renting ? `${next.length ? "&" : "?"}for=rent` : ""}`;
+    window.history.replaceState(null, "", url);
+  };
+  const choose = (next: "buy" | "rent") => {
+    setTenure(next);
+    const url = new URL(window.location.href);
+    url.search = `${placesQuery(ids)}${next === "rent" ? `${ids.length ? "&" : "?"}for=rent` : ""}`;
     window.history.replaceState(null, "", url);
   };
   const add = (entry: SearchEntry) => {
@@ -120,8 +146,9 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
   const secondId = ids.includes(mobileOther ?? -1) && mobileOther !== ids[0] ? mobileOther : ids[1];
   const mobileVisible = (id: number) => id === ids[0] || id === secondId;
   const columns = mobile ? shown.filter(place => mobileVisible(place.id)) : shown;
-  const overviewMetrics = new Set(["zhvi_sfr", "zori_all", "acs_median_hh_income", "acs_mean_commute_minutes"]);
-  const sections = topic === "Overview" ? COMPARE_SECTIONS.map(section => ({...section, rows: section.rows.filter(row => "cost" in row || overviewMetrics.has(row.metric))})).filter(section => section.rows.length) : COMPARE_SECTIONS.filter(section => topic === "All figures" || section.title === topic);
+  type Row = { metric: string; label?: string } | { cost: "own" } | { change: string; label: string };
+  const overviewRows: Row[] = OVERVIEW[tenure].map((key) => key === "own" ? { cost: "own" as const } : key.startsWith("change:") ? { change: key.slice(7), label: OVERVIEW_LABELS[key] } : { metric: key, label: OVERVIEW_LABELS[key] });
+  const sections: { title: string; rows: Row[] }[] = topic === "Overview" ? [{ title: tenure === "rent" ? "For a renter" : "For a buyer", rows: overviewRows }] : COMPARE_SECTIONS.filter(section => topic === "All figures" || section.title === topic);
 
   return (
     <div className="compare-places" data-count={shown.length}>
@@ -150,7 +177,7 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
 
       {ids.length > shown.length && <p role="status">Loading selected places…</p>}
       {shown.length > 0 && <>
-        <div className="compare-topic-picker"><label>Show <select value={topic} onChange={event => setTopic(event.target.value)}>{["Overview", ...COMPARE_SECTIONS.map(section => section.title), "All figures"].map(title => <option key={title}>{title}</option>)}</select></label></div>
+        <div className="compare-topic-picker">{topic === "Overview" && <div className="compare-tenure" role="group" aria-label="Show figures for"><button type="button" aria-pressed={tenure === "buy"} onClick={() => choose("buy")}>Buying</button><button type="button" aria-pressed={tenure === "rent"} onClick={() => choose("rent")}>Renting</button></div>}<label>Show <select value={topic} onChange={event => setTopic(event.target.value)}>{["Overview", ...COMPARE_SECTIONS.map(section => section.title), "All figures"].map(title => <option key={title}>{title}</option>)}</select></label></div>
         {baseline && <details className="compare-reading"><summary>Differences from {baseline.region.label}</summary><p>Differences use matching periods, units and geographic levels. Survey differences are arithmetic, not a test of significance; read them with the margins shown. Counties, towns and ZIP codes describe different geographic areas.</p></details>}
         {ids.length > 2 && <label className="compare-mobile-picker">Compare the starting place with <select value={secondId ?? ""} onChange={event => setMobileOther(Number(event.target.value))}>{shown.slice(1).map(place => <option key={place.id} value={place.id}>{place.packet?.region.label ?? `Place ${place.id}`}</option>)}</select></label>}
       </>}
@@ -191,12 +218,25 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
                                 <>
                                   <strong>{formatValue(own.value, "usd")}</strong>
                                   <small>{own.partial ? "partial: some costs unpublished" : `at ${rate.value.toFixed(2)}%, 20% down`}</small>
+                                  <Kind kind="calculated" />
                                 </>
                               ) : (
                                 <span className="compare-missing">No home price</span>
                               )}
                             </td>
                           );
+                        })}
+                      </tr>
+                    );
+                  }
+                  if ("change" in row) {
+                    return (
+                      <tr key={`change-${row.change}`}>
+                        <th scope="row">{row.label}</th>
+                        {columns.map(({ id, packet }) => {
+                          const m = packet?.metrics.find((metric) => metric.metric_id === row.change);
+                          const kind = kindOf(row.change);
+                          return <td key={id} data-mobile-visible={mobileVisible(id)}>{m ? <><strong>{formatChange(m.pct_change)}</strong><small>{m.window_start.slice(0, 4)} to {m.window_end.slice(0, 4)}{m.rank && m.of ? ` · ${m.rank} of ${m.of}` : ""}</small>{kind && <Kind kind={kind} />}</> : <span className="compare-missing">{packet ? "Not published" : "Could not load"}</span>}</td>;
                         })}
                       </tr>
                     );

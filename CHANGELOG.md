@@ -60,6 +60,13 @@ are not yet recorded here.
 
 ### Changed
 
+- **The tools join the place pages** (2026-11-10, ARCHITECTURE #492): the site bar shows a
+  tool's name and one Menu listing every destination; Compare leads with the place
+  pages' figures, has a Buying / Renting switch and labels each figure's kind; the map
+  opens on recorded sale prices (24 towns without a figure, was 176) and lists every
+  tool in its menu; place pages carry the renting view and the town into the tools;
+  seventeen stories link to the tool behind their chart; the map and Budget explorer
+  link to each other.
 - **County and state pages join the act system; eight place-page refinements** (2026-11-10,
   ARCHITECTURE #491): county pages get numbered acts, accents and the Buy / Rent switch;
   the New Jersey page gets the acts and shows the effective tax rate in place of a bill
