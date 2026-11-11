@@ -23,6 +23,7 @@ export function Masthead({
   taxActive = false,
   guideActive = false,
   helpActive = false,
+  recordsActive = false,
   affordability,
   title,
   search = true,
@@ -33,6 +34,7 @@ export function Masthead({
   /** On the buyer's guide itself. */
   guideActive?: boolean;
   helpActive?: boolean;
+  recordsActive?: boolean;
   atlasActive?: boolean;
   /** On the compare page. */
   compareActive?: boolean;
@@ -50,9 +52,9 @@ export function Masthead({
   </>;
   const current = (on: boolean) => (on ? "page" as const : undefined);
   const toolLinks = <>
-    <Link className="bar-link" href="/afford" aria-current={current(affordability.kind === "route" && !!affordability.active)}>Budget explorer</Link>
     <Link className="bar-link" href="/guide" aria-current={current(guideActive)}>Buyer’s guide</Link>
     <Link className="bar-link" href="/tax" aria-current={current(taxActive)}>Property tax lookup</Link>
+    <Link className="bar-link" href="/affordable-housing" aria-current={current(recordsActive)}>Affordable housing records</Link>
     <Link className="bar-link" href="/help" aria-current={current(helpActive)}>Housing help</Link>
   </>;
   return (

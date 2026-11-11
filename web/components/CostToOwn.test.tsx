@@ -142,11 +142,11 @@ describe("local monthly budget", () => {
     fireEvent.change(screen.getByLabelText("Yearly household income before tax"), { target: { value: "100000" } });
     expect(budget.textContent).toContain("Missing:");
     expect(budget.textContent).toContain("Rent alone uses 24%");
-    expect(container.querySelector('.cost-budget-fit a[href^="/afford"]')).toBeNull();
+    expect(container.querySelector('.cost-budget-fit a[href*="budget=1"]')).toBeNull();
   });
   it("keeps supported county comparison links", () => {
     const { container } = render(createElement(CostToOwn, { ...inputs, comparePlaceId: 12, quiet: true, showHelp: false }));
-    expect(container.querySelector('.cost-budget-fit a')?.getAttribute("href")).toBe("/afford?county=all&place=12");
+    expect(container.querySelector('.cost-budget-fit a')?.getAttribute("href")).toBe("/atlas?level=municipality&measure=sr1a_median_sale_price&view=latest&budget=1&place=12&county=all");
   });
   it("does not render an empty budget disclosure in non-interactive reports", () => {
     const { container } = render(createElement(CostToOwn, { ...inputs, control: false, quiet: true, showHelp: false }));

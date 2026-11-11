@@ -31,9 +31,9 @@ export function AtlasBar() {
           <Link href="/">Home</Link>
           <Link href="/compare">Compare places</Link>
           <Link href="/stories">Stories</Link>
-          <Link href="/afford">Budget explorer</Link>
           <Link href="/guide">Buyer’s guide</Link>
           <Link href="/tax">Property tax lookup</Link>
+          <Link href="/affordable-housing">Affordable housing records</Link>
           <Link href="/help">Housing help</Link>
           <a href="#site-foot">Sources &amp; notices</a>
           <div className="atlas-bar-menu-licence"><LicenceLine /></div>

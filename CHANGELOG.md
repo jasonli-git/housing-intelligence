@@ -60,6 +60,10 @@ are not yet recorded here.
 
 ### Changed
 
+- **Housing help splits in two** (2026-11-11, ARCHITECTURE #497): `/help` is the three
+  official routes under "What do you need?", and the new **Affordable housing records**
+  lookup (`/affordable-housing`) finds a town's affordable buildings, each shown once
+  even when several lists name it. Both are in the Menu and the footer.
 - **The Budget explorer is now a filter on the housing map** (2026-11-11, ARCHITECTURE
   #496): "Exclude what's out of reach" fades the towns or counties a budget can't reach
   and keeps the chosen layer's shading on the rest, so a reader can ask which affordable

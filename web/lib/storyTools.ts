@@ -6,7 +6,7 @@
 export type StoryTool = { href: string; label: string };
 
 const TAX: StoryTool = { href: "/tax", label: "Look up a property’s tax bill" };
-const BUDGET: StoryTool = { href: "/afford", label: "See the towns within your budget" };
+const BUDGET: StoryTool = { href: "/atlas?level=municipality&measure=sr1a_median_sale_price&view=latest&budget=1", label: "See the towns within your budget" };
 const GUIDE: StoryTool = { href: "/guide", label: "Work out the cost of buying with your own numbers" };
 const CHECKS: StoryTool = { href: "/guide", label: "Check a place before an offer" };
 const COMPARE: StoryTool = { href: "/compare", label: "Compare towns side by side" };

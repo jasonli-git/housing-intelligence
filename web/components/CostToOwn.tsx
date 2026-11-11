@@ -1,5 +1,6 @@
 "use client";
 
+import { budgetMapHref } from "@/lib/budgetLink";
 import { Gloss } from "@/components/Gloss";
 import { type ReactNode, useId, useState } from "react";
 
@@ -521,7 +522,7 @@ export function CostToOwn({
           {rentMonth !== null && ` Rent alone uses ${Math.round(rentMonth / (household.income / 12) * 100)}% of your income.`}
         </p>}
         <p>Buying upfront: {money(up.low)}–{money(up.high)} · {cashFit(household.cash, up.low, up.high)}.</p>
-        {comparePlaceId !== undefined && <a href={`/afford?county=all&place=${comparePlaceId}${household.income ? `&income=${household.income}` : ""}`}>Compare typical homes across {stateLabel} →</a>}
+        {comparePlaceId !== undefined && <a href={budgetMapHref({ county: "all", place: comparePlaceId, income: household.income })}>Compare typical homes across {stateLabel} →</a>}
         {Object.values(fields).some(Boolean) && <small>Your home’s price, tax and fees stay here; comparisons use each area’s figures.</small>}
         {home.basis === "transactions" && <small>This sale-price scenario is not included in cross-place ownership rankings.</small>}
       </aside>
@@ -728,7 +729,7 @@ export function CostToOwn({
           {fineTune}
           <nav className="cost-planning-links" aria-label="Plan beyond this estimate">
             {guidePlaceId!==undefined && <a href={`/guide?place=${guidePlaceId}`} onClick={transferToGuide}>Check upfront cash & rent vs. buy →</a>}
-            {comparePlaceId!==undefined && <a href={`/afford?county=all&place=${comparePlaceId}${household.income ? `&income=${household.income}`:""}`}>Find your fit →</a>}
+            {comparePlaceId!==undefined && <a href={budgetMapHref({ county: "all", place: comparePlaceId, income: household.income })}>Find your fit →</a>}
           </nav>
           </div>
         </details>}

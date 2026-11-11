@@ -10,7 +10,7 @@ export const dynamic = "force-static";
 const PAGES = [
   "/",
   "/states/new-jersey",
-  "/afford",
+  "/affordable-housing",
   "/atlas",
   "/compare",
   "/guide",

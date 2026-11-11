@@ -162,7 +162,7 @@ export function AffordableHousing({data, hideRoutes = false, tool = false, inven
   </section>;
 }
 
-function Property({row: r, records, plain = false}: {row: HousingRecord; records: HousingRecord[]; plain?: boolean}) {
+export function Property({row: r, records, plain = false}: {row: HousingRecord; records: HousingRecord[]; plain?: boolean}) {
   const contracts = r.kind === "hud_property" ? contractsFor(r, records) : [];
   const p = r.payload;
   const beds = Object.entries(p.bedrooms ?? {}).filter(([, v]) => v !== null && v > 0);

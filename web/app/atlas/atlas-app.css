@@ -346,7 +346,7 @@ main.atlas-app .atlas-budget-income small { font-size: .8rem; opacity: .6; }
 main.atlas-app .atlas-budget-row { display: flex; gap: 6px; flex-wrap: wrap; }
 main.atlas-app .atlas-seg { display: inline-flex; border: 1px solid var(--plate-strong-rule); border-radius: 99px; padding: 2px; }
 main.atlas-app .atlas-seg [role="radio"] { font: inherit; font-size: .82rem; padding: 4px 12px; border: 0; border-radius: 99px; background: transparent; color: inherit; cursor: pointer; }
-main.atlas-app .atlas-seg [role="radio"][aria-checked="true"] { background: var(--good); color: var(--bg); }
+main.atlas-app .atlas-seg [role="radio"][aria-checked="true"] { background: var(--good); color: var(--on-action); }
 main.atlas-app .atlas-seg-small { justify-self: start; }
 main.atlas-app .atlas-seg-small [role="radio"] { font-size: .76rem; padding: 3px 10px; }
 main.atlas-app .atlas-controls select.atlas-budget-select { width: auto !important; min-width: 0; max-width: none; min-height: 0; font: inherit; font-size: .82rem; padding: 4px 26px 4px 12px; border-radius: 99px !important; border: 1px solid var(--plate-strong-rule) !important; background-color: transparent !important; color: inherit; }
