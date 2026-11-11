@@ -81,3 +81,57 @@
 }
 .state { --kind: var(--kind-state); }
 @media (max-width: 1000px) and (min-width: 861px) { .places { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* MOCK (2026-11-11): the market's compact view — two tinted panels, harder and easier, of
+   the figures that moved, each a tile with its value, change and line. A two-way switch,
+   radios styled as one pill, swaps in the full table. */
+.viewSwitch { justify-self: start; display: inline-flex; padding: 3px; margin: 2px 0 10px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 7%, transparent); }
+.viewSwitch label { position: relative; cursor: pointer; }
+.viewSwitch input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.viewSwitch span { display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--text-secondary); transition: background 150ms, color 150ms; }
+.viewSwitch input:checked + span { color: var(--text-primary); background: var(--surface-card); box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 18%, transparent); }
+.viewSwitch input:focus-visible + span { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+.full { display: none; }
+.section:has(input[value="all"]:checked) .full { display: block; }
+.section:has(input[value="all"]:checked) .compact { display: none; }
+
+.compact { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.compactCol { min-width: 0; padding: 18px 18px 8px; border-radius: 18px; background: color-mix(in srgb, var(--edge) 9%, transparent); border: 1px solid color-mix(in srgb, var(--edge) 22%, transparent); }
+.compactCol h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; font-size: 19px; font-weight: 800; letter-spacing: -.015em; color: color-mix(in srgb, var(--edge) 70%, var(--text-primary)); }
+.compactCol h3 i { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font-style: normal; font-size: 16px; color: var(--surface-card); background: var(--edge); }
+.compactCol h3 span { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); }
+.compactCol ul { margin: 0; padding: 0; list-style: none; }
+.compactCol li { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name spark" "value spark" "change spark"; column-gap: 16px; align-items: center; padding: 14px 0; border-top: 1px solid color-mix(in srgb, var(--edge) 18%, transparent); }
+.compactName { grid-area: name; font-size: 13.5px; font-weight: 600; color: var(--text-secondary); }
+.compactCol li > b { grid-area: value; margin-top: 2px; font-size: 26px; line-height: 1.1; font-weight: 800; letter-spacing: -.02em; color: var(--text-primary); }
+.compactCol li > em { grid-area: change; justify-self: start; display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; padding: 3px 9px; border-radius: 999px; font-style: normal; font-size: 12.5px; font-weight: 700; color: color-mix(in srgb, var(--edge) 70%, var(--text-primary)); background: color-mix(in srgb, var(--edge) 16%, transparent); }
+.compactCol li > em span { font-size: 9px; }
+.compactCol li > em small { font-weight: 500; color: var(--text-secondary); }
+.compactSpark { grid-area: spark; width: 120px; color: color-mix(in srgb, var(--edge) 60%, var(--text-secondary)); }
+.compactSpark svg { display: block; width: 100%; height: 44px; }
+.compactCol p { margin: 12px 0; font-size: 14px; color: var(--text-secondary); }
+@media (max-width: 700px) {
+  .compact { grid-template-columns: 1fr; }
+  .compactSpark { width: 90px; }
+  .compactCol li > b { font-size: 22px; }
+}
+
+/* The compact view's layout: harder and easier side by side, the mixed panel under the
+   shorter side or full width (`mixedAt` in page.tsx). */
+
+.compact, .compact[data-mixed="harder"] { grid-template-areas: "harder easier" "mixed easier"; }
+.compact[data-mixed="easier"] { grid-template-areas: "harder easier" "harder mixed"; }
+.compact[data-mixed="wide"] { grid-template-areas: "harder easier" "mixed mixed"; }
+.compact[data-mixed="wide"] .compactMixed ul { columns: 2; column-gap: 32px; }
+.compact[data-mixed="wide"] .compactMixed li { break-inside: avoid; }
+.compact > [data-tone="harder"] { grid-area: harder; }
+.compact > [data-tone="easier"] { grid-area: easier; }
+.compactMixed { grid-area: mixed; background: color-mix(in srgb, var(--text-primary) 4%, transparent); border-color: var(--border); }
+.compactMixed h3 { font-size: 16px; color: var(--text-secondary); }
+.compactMixed h3 i { width: 24px; height: 24px; font-size: 13px; background: color-mix(in srgb, var(--text-secondary) 70%, transparent); }
+.compactMixed li { display: grid; grid-template-areas: none; grid-template-columns: minmax(0, 1fr) auto 5rem; column-gap: 12px; padding: 9px 0; border-top-color: var(--border); }
+.compactMixed li > .compactName { grid-area: auto; font-size: 13.5px; color: var(--text-primary); }
+.compactMixed li > b { grid-area: auto; margin: 0; font-size: 14.5px; text-align: right; }
+.compactMixed li > em { grid-area: auto; justify-self: end; margin: 0; padding: 0; background: none; font-size: 12.5px; color: var(--text-secondary); }
+
+@media (max-width: 700px) { .compact[data-mixed] { grid-template-areas: "harder" "easier" "mixed"; } .compact[data-mixed="wide"] .compactMixed ul { columns: 1; } }

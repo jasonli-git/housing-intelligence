@@ -242,7 +242,7 @@ export function scoreboard(series: ScoreSeries): ScoreTile[] {
 
   percentChange({ id: "rent", metricId: "cpi_rent_primary_residence", label: "Rent inflation", unit: "percent", easier: "down", source: { name: "BLS", href: FRED("CUSR0000SEHA") } }, series.rentCpi);
 
-  level({ id: "starts", metricId: "housing_starts_saar", label: "Housing starts", unit: "count", easier: "up", source: { name: "Census", href: FRED("HOUST") } },
+  level({ id: "starts", metricId: "housing_starts_saar", label: "New homes started", unit: "count", easier: "up", source: { name: "Census", href: FRED("HOUST") } },
     series.starts, (n) => `${compact(n)}/yr`, pct);
   level({ id: "supply", metricId: "new_home_months_supply", label: "New-home supply", unit: "months", easier: "up", source: { name: "Census", href: FRED("MSACSR") } },
     series.newHomeSupply, (n) => `${n.toFixed(1)} mo`, (now, then) => ({ text: `${signed(now - then, 1)} mo`, n: now - then, flatBelow: 0.05 }));

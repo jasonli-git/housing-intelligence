@@ -94,6 +94,15 @@ export default async function HousingLandingPage() {
   // A glossary word in a figure's name is defined once, at its first row.
   const defined = new Set<string>();
   const reading = (t: ScoreTile) => (t.id === "prices" ? "mixed" : t.tone === "neutral" ? "context" : t.tone);
+  // MOCK (2026-11-11): where the compact view's mixed panel goes. A moved figure is a tile about
+  // twice a mixed row's height; each panel's heading counts as one more. The mixed panel goes
+  // under the shorter side; if that still leaves the sides more than two tiles apart, and
+  // setting it full width below both would leave them closer, it goes there instead.
+  const count = (tone: string) => tiles.filter((t) => reading(t) === tone).length;
+  const hard = count("harder") * 2 + 1, easy = count("easier") * 2 + 1, mixedRows = tiles.length - count("harder") - count("easier");
+  const under = hard <= easy ? "harder" : "easier";
+  const gapUnder = Math.abs(Math.min(hard, easy) + mixedRows + 1 - Math.max(hard, easy));
+  const mixedAt = mixedRows === 0 ? "none" : gapUnder > 4 && Math.abs(hard - easy) < gapUnder ? "wide" : under;
   const newest = tiles.map((t) => t.trend.at(-1)?.date ?? "").sort().at(-1);
 
   return <div className={`search-first-home ${original.home}`}>
@@ -114,12 +123,32 @@ export default async function HousingLandingPage() {
 
       {tiles.length > 0 && <section id="us-market" className={home.section}>
         <div className={home.head}><h2>The US housing market</h2>{newest && <span>Latest through {monthLabel(newest)}, against a year earlier</span>}</div>
-        {/* The whole market in a line, which doubles as the key to the table's colours. */}
-        {told.length > 0 && <p className={home.glance}>
-          {said("harder").length > 0 && <span className={home.harder}><b>Harder</b> {said("harder").join(", ")}</span>}
-          {said("easier").length > 0 && <span className={home.easier}><b>Easier</b> {said("easier").join(", ")}</span>}
-          {others > 0 && <span className={home.mixed}><b>Mixed or little changed</b> {others === told.length ? "all" : "the other"} {others}</span>}
-        </p>}
+        {/* MOCK (2026-11-11): the compact view by default — only the figures that moved for a
+            buyer, harder beside easier, each with its latest and its change. The full table
+            opens below as the expanded view. */}
+        {/* A switch between the two views, as radios so it needs no script: what moved by
+            default, every figure in the full table on demand. */}
+        <div className={home.viewSwitch} role="radiogroup" aria-label="Figures shown">
+          <label><input type="radio" name="market-view" value="moved" defaultChecked /><span>What moved</span></label>
+          <label><input type="radio" name="market-view" value="all" /><span>All {tiles.length} figures</span></label>
+        </div>
+        <div className={home.compact} data-mixed={mixedAt}>
+          {(["harder", "easier"] as const).map((tone) => { const rows = tiles.filter((t) => reading(t) === tone); return <section key={tone} className={`${home.compactCol} ${home[tone]}`} data-tone={tone} aria-labelledby={`market-${tone}`}>
+            <h3 id={`market-${tone}`}><i aria-hidden="true">{tone === "harder" ? "↗" : "↘"}</i>Getting {tone} <span>{rows.length} of {tiles.length}</span></h3>
+            {rows.length ? <ul>{rows.map((t) => { const up = (t.change ?? "").trim().startsWith("+"); return <li key={t.id}>
+              <span className={home.compactName}>{t.label}</span>
+              <b>{t.value}</b>
+              <em><span aria-hidden="true">{up ? "▲" : "▼"}</span>{(t.change ?? "—").replace(/^[+−-]/, "")}<small> in a year</small></em>
+              <span className={home.compactSpark}><Spark tile={t} /></span>
+            </li>; })}</ul> : <p>Nothing this year.</p>}
+          </section>; })}
+          {/* The figures that did not move, as a muted third panel placed by `mixedAt`. */}
+          {(() => { const rest = tiles.filter((t) => !["harder", "easier"].includes(reading(t))); return rest.length ? <section className={`${home.compactCol} ${home.compactMixed} ${home.mixed}`} aria-labelledby="market-mixed">
+            <h3 id="market-mixed"><i aria-hidden="true">→</i>Mixed or little changed <span>{rest.length} of {tiles.length}</span></h3>
+            <ul>{rest.map((t) => <li key={t.id}><span className={home.compactName}>{t.label}</span><b>{t.value}</b><em>{t.change ?? "—"}</em></li>)}</ul>
+          </section> : null; })()}
+        </div>
+        <div className={home.full}>
         {/* Every figure in one table, as an indicators page prints them: the latest, a year
             earlier, the change, two years of it, how it reads, and where it comes from.
             A phone keeps the name, the latest, the change and the line, and moves the
@@ -142,6 +171,7 @@ export default async function HousingLandingPage() {
           </tbody>)}
         </table>
         <p className={home.key}>Change is against a year earlier. Each line is two years; the dashed rule is the level a year ago.</p>
+        </div>
       </section>}
 
       <div className={home.storiesCard}><HomeStories /></div>
