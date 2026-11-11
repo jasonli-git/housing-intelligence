@@ -87,7 +87,6 @@
   .compare-ghost-row:nth-child(odd) i:nth-of-type(2n) { width: 70%; }
   .compare-ghost-row:nth-child(even) i:nth-of-type(2n+1) { width: 55%; }
   .compare-preview .compare-share { margin-top: .7rem; max-width: 36rem; }
-  main.compare-ledger :is(.compare-scroll, .compare-table thead th, .compare-table tbody th[scope="row"]) { background: var(--ledger-card); }
 }
 @media screen and (max-width: 860px) {
   .compare-empty { grid-template-columns: 1fr; }
@@ -102,3 +101,92 @@
   .compare-pair-names i { font-size: 11px; }
   .compare-pairs small { font-size: 11.5px; } .compare-ghost > div { grid-template-columns: minmax(7rem, 1.6fr) repeat(2, 1fr); } .compare-ghost > div > :nth-child(n+4) { display: none; } }
 @media screen { body:has(.compare-ledger) .site-foot { background: var(--ledger-paper); } }
+
+/* MOCK (2026-11-11), after Apple's compare pages: a picker heading each column, a row of
+   names that sticks under the site bar, and a quiet table — no gridlines, centred columns,
+   large values, a dash where a figure is missing. */
+@media screen {
+  main.compare-ledger { --label-w: 13rem; }
+  .compare-slots {
+    position: sticky; top: var(--bar-h, 54px); z-index: 30;
+    display: grid; grid-template-columns: var(--label-w) repeat(var(--cols), minmax(0, 1fr)); gap: 0; align-items: stretch;
+    margin-inline: -1rem; padding: .9rem 1rem; background: color-mix(in srgb, var(--ledger-paper) 92%, transparent);
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    border-bottom: 1px solid transparent; transition: padding 160ms ease, border-color 160ms ease;
+  }
+  .compare-slots[data-stuck] { padding-block: .45rem; border-bottom-color: var(--ledger-rule); }
+  .compare-slots-lead { align-self: center; padding-right: 1rem; font: 600 11px/1.3 var(--font-mono, monospace); letter-spacing: .1em; text-transform: uppercase; color: var(--ledger-muted); }
+  .compare-slots-lead small { font: 400 12px/1.35 var(--font-text); letter-spacing: 0; text-transform: none; }
+  .compare-slots[data-stuck] .compare-slots-lead small { display: none; }
+  .compare-slot { display: grid; justify-items: center; align-content: center; gap: .35rem; min-width: 0; padding: 0 .6rem; text-align: center; border-left: 1px solid var(--ledger-rule); }
+  .compare-slot-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 clamp(20px, 2vw, 28px)/1.1 Georgia, serif; letter-spacing: -.02em; color: var(--ledger-ink); text-decoration: none; transition: font-size 160ms ease; }
+  .compare-slot-name:hover { color: var(--ledger-accent); }
+  .compare-slots[data-stuck] .compare-slot-name { font-size: 17px; }
+  .compare-slot-actions { display: flex; gap: .25rem; }
+  .compare-slot-actions button { min-height: 32px; padding: 0 .6rem; font: 500 12.5px/1 var(--font-text); color: var(--ledger-accent); background: none; border: 0; border-radius: 999px; cursor: pointer; }
+  .compare-slot-actions button:hover { background: color-mix(in srgb, var(--ledger-accent) 10%, transparent); }
+  .compare-slots[data-stuck] .compare-slot-actions { display: none; }
+  .compare-slot-n { font: 400 18px/1 Georgia, serif; color: var(--ledger-muted); }
+  .compare-slot .compare-picker-field { width: 100%; }
+  .compare-slot .compare-picker-field input { min-height: 44px; padding: .45rem .7rem; font-size: 15px; text-align: center; border-radius: 10px; background: var(--ledger-card); border: 1px dashed color-mix(in srgb, var(--ledger-ink) 30%, transparent); }
+  .compare-slot[data-empty] .compare-picker-field input:focus { border-style: solid; border-color: var(--ledger-accent); }
+  .compare-slots[data-stuck] .compare-slot[data-empty] { opacity: .5; }
+
+  /* The quiet table. The page scrolls, not a box, so the slots can stay in view. */
+  main.compare-ledger .compare-scroll { overflow: visible; max-height: none; background: transparent; border: 0; border-radius: 0; }
+  main.compare-ledger .compare-table { table-layout: fixed; }
+  main.compare-ledger .compare-col-label { width: var(--label-w); }
+  main.compare-ledger .compare-table :is(th, td) { padding: 1.1rem .9rem; border-bottom: 1px solid var(--ledger-rule); background: transparent; }
+  main.compare-ledger .compare-table td { text-align: center; min-width: 0; }
+  main.compare-ledger .compare-table tbody th[scope="row"] { position: static; min-width: 0; padding-left: 0; font: 500 14px/1.35 var(--font-text); color: var(--ledger-ink); }
+  main.compare-ledger .compare-table td strong { font-size: clamp(22px, 2.2vw, 30px); letter-spacing: -.02em; }
+  main.compare-ledger .compare-table td small { font-size: 12px; color: var(--ledger-muted); }
+  main.compare-ledger .compare-table td small.compare-kind { margin-top: .3rem; padding: 0; border: 0; font-weight: 500; font-size: 11px; color: var(--ledger-muted); }
+  main.compare-ledger .compare-table td small.compare-kind::before { content: "· "; }
+  main.compare-ledger .compare-table td small.compare-difference { color: var(--ledger-accent); }
+  main.compare-ledger .compare-missing { font: 400 26px/1 Georgia, serif; color: var(--ledger-muted); }
+  main.compare-ledger .compare-section th { padding: 2.2rem 0 .7rem !important; font: 400 clamp(24px, 2.4vw, 32px)/1.1 Georgia, serif !important; letter-spacing: -.02em !important; text-transform: none !important; color: var(--ledger-ink) !important; border-bottom: 1px solid var(--ledger-ink) !important; }
+}
+@media screen and (max-width: 600px) {
+  main.compare-ledger { --label-w: 7.5rem; }
+  .compare-slots { margin-inline: 0; padding-inline: 0; }
+  main.compare-ledger .compare-table td small.compare-kind { white-space: normal; }
+  .compare-slots-lead { font-size: 10px; padding-right: .5rem; }
+  .compare-slots-lead small { display: none; }
+  .compare-slot { padding: 0 .35rem; }
+  .compare-slot-actions { flex-wrap: wrap; justify-content: center; gap: 0; }
+  .compare-slot-actions button { padding: 0 .4rem; font-size: 12px; }
+  .compare-slot-name { max-width: 100%; overflow-wrap: anywhere; }
+  .compare-slot-name { font-size: 18px; white-space: normal; }
+  main.compare-ledger .compare-table :is(th, td) { padding: .85rem .4rem; }
+  main.compare-ledger .compare-table tbody th[scope="row"] { font-size: 12.5px; }
+  main.compare-ledger .compare-table td strong { font-size: 19px; }
+}
+/* With places in, the table's own columns take over from the page's ruled ones. */
+@media screen { body:has(.compare-places:not([data-count="0"])) { background-image: none; } }
+/* The column pickers head the table itself: the view controls sit above both. */
+@media screen { .compare-sheet { display: grid; gap: 0; } .compare-sheet .compare-slots { border-bottom: 1px solid var(--ledger-ink); } .compare-sheet .compare-section:first-child th { padding-top: 1.2rem !important; } }
+/* The column names are headings, not inline links: ink, not the site's link colours. */
+@media screen { main.compare-ledger .compare-slots a.compare-slot-name { color: var(--ledger-ink); text-decoration: none; } main.compare-ledger .compare-slots a.compare-slot-name:hover { color: var(--ledger-accent); } }
+/* The header row: no fill, the place names over a heavy ink rule, as a printed table's head
+   (owner's pick of five, 2026-11-11). The names are set large and bold in the sans. */
+@media screen {
+  main.compare-ledger .compare-sheet .compare-slots { margin-inline: 0; padding: 1rem 0 .9rem; border-bottom: 3px solid var(--ledger-ink); background: color-mix(in srgb, var(--ledger-paper) 92%, transparent); }
+  main.compare-ledger .compare-sheet .compare-slots[data-stuck] { padding-block: .5rem; }
+  main.compare-ledger .compare-slots a.compare-slot-name { font: 700 clamp(20px, 2.1vw, 30px)/1.1 var(--font-display); letter-spacing: -.025em; white-space: normal; overflow: visible; text-wrap: balance; }
+  main.compare-ledger .compare-slots[data-stuck] a.compare-slot-name { font-size: 18px; }
+}
+@media screen and (max-width: 600px) { main.compare-ledger .compare-slots a.compare-slot-name { font-size: 18px; } }
+@media screen { main.compare-ledger .compare-slot-n { font: 700 18px/1 var(--font-display); letter-spacing: -.02em; } }
+/* MOCK (2026-11-11): the title and the column names in one voice, bold sans in capitals; the
+   figures stay the only serif. The state suffix is lighter, so the place's own name leads. */
+@media screen {
+  body:has(.compare-ledger) .tool-head h1 { font: 400 clamp(36px, 4.6vw, 60px)/1 var(--font-display); letter-spacing: -.03em; }
+  main.compare-ledger .compare-slots a.compare-slot-name { font-weight: 800; letter-spacing: .02em; text-transform: uppercase; font-size: clamp(17px, 1.7vw, 24px); }
+  main.compare-ledger .compare-slots[data-stuck] a.compare-slot-name { font-size: 15px; }
+  main.compare-ledger .compare-slot-state { font-weight: 500; color: var(--ledger-muted); }
+  main.compare-ledger .compare-slot-n { font-weight: 800; letter-spacing: .02em; text-transform: uppercase; font-size: 15px; }
+}
+@media screen and (max-width: 600px) { main.compare-ledger .compare-slots a.compare-slot-name { font-size: 15px; } }
+@media screen { .compare-pair-names { font: 700 16px/1.2 var(--font-display); letter-spacing: -.01em; } .compare-pair-names i { font: 500 12px/1 var(--font-text); font-style: normal; } }
+@media screen { .compare-ghost-head b { font: 800 12px/1 var(--font-display); letter-spacing: .02em; text-transform: uppercase; } }

@@ -25,11 +25,6 @@ export default async function ComparePage() {
     <>
       <Masthead affordability={{ kind: "route" }} compareActive title="Compare places" />
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool compare-page compare-ledger" data-region-level="compare">
-        <header className="page-head" data-kind="tool">
-          <div>
-            <p className="meta">Up to four places side by side, each figure dated and sourced as on its own page.</p>
-          </div>
-        </header>
         {rate ? (
           <ComparePlaces
             artifactUrl={process.env.GUIDE_PREVIEW_ARTIFACT_URL ?? artifactUrl}

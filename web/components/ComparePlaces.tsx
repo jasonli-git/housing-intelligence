@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { PlacePicker } from "@/components/PlacePicker";
 import { Term } from "@/components/Term";
@@ -36,7 +36,7 @@ async function loadPacket(artifactUrl: string, id: number): Promise<Packet | nul
 }
 
 function Figure({ level, baseline, baselineName }: { level: PacketLevel | null; baseline?: PacketLevel | null; baselineName?: string }) {
-  if (!level) return <span className="compare-missing">Not published</span>;
+  if (!level) return <Missing why="Not published" />;
   const margin = level.survey ? marginLabel(level.value, level.margin_of_error ?? null, level.unit, level.metric_id) : null;
   const kind = (level.record_type as RecordType | null | undefined) ?? kindOf(level.metric_id);
   return (
@@ -52,6 +52,27 @@ function Figure({ level, baseline, baselineName }: { level: PacketLevel | null; 
         <small className="compare-difference">Different periods or units · no difference calculated</small>)}
     </>
   );
+}
+
+/** A figure that is not there, shown as a dash; its reason on hover and to screen readers. */
+function Missing({ why }: { why: string }) {
+  return <span className="compare-missing" title={why}><span aria-hidden="true">—</span><span className="visually-hidden">{why}</span></span>;
+}
+
+function Slot({ id, packet, entries, onPick, onRemove }: { id: number; packet: Packet | null; entries: SearchEntry[] | null; onPick: (entry: SearchEntry) => void; onRemove: () => void }) {
+  const [changing, setChanging] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (changing) box.current?.querySelector("input")?.focus(); }, [changing]);
+  const name = packet?.region.label ?? `Place ${id}`;
+  return <div className="compare-slot" ref={box} onKeyDown={(e) => { if (e.key === "Escape") setChanging(false); }}>
+    {changing
+      ? <PlacePicker entries={entries} onPick={(entry) => { setChanging(false); onPick(entry); }} label={`Change ${name}`} placeholder={`Instead of ${name}`} name={`compare-change-${id}`} className="compare-picker-field" />
+      : <Link className="compare-slot-name" href={regionPath(id)}>{(() => { const cut = name.lastIndexOf(", "); return cut > 0 ? <>{name.slice(0, cut)}<span className="compare-slot-state">{name.slice(cut)}</span></> : name; })()}</Link>}
+    <span className="compare-slot-actions">
+      <button type="button" onClick={() => setChanging(!changing)}>{changing ? "Cancel" : "Change"}</button>
+      <button type="button" onClick={onRemove} aria-label={`Remove ${name}`}>Remove</button>
+    </span>
+  </div>;
 }
 
 /** What kind of figure it is, as on the place pages: solid for records, dashed for estimates. */
@@ -135,6 +156,20 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
   const [tenure, setTenure] = useState<"buy" | "rent">("buy");
   const [mobileOther, setMobileOther] = useState<number | null>(null);
   const [entries, setEntries] = useState<SearchEntry[] | null>(null);
+  const slotsRef = useRef<HTMLDivElement>(null);
+  const [stuck, setStuck] = useState(false);
+  useEffect(() => {
+    // The slots stick just under the site bar, whose height changes with the width.
+    const bar = document.querySelector<HTMLElement>(".bar");
+    const setTop = () => document.documentElement.style.setProperty("--bar-h", `${bar?.offsetHeight ?? 0}px`);
+    setTop();
+    const ro = bar ? new ResizeObserver(setTop) : null;
+    if (bar) ro?.observe(bar);
+    const onScroll = () => { const el = slotsRef.current; if (el) setStuck(el.getBoundingClientRect().top <= (bar?.offsetHeight ?? 0) + 1 && window.scrollY > 0); };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { ro?.disconnect(); window.removeEventListener("scroll", onScroll); };
+  }, []);
 
   useEffect(() => {
     setIds(parsePlaces(window.location.search));
@@ -172,66 +207,65 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
     if (!ids.includes(entry.id) && ids.length < MAX_PLACES) update([...ids, entry.id]);
   };
   const remove = (id: number) => update(ids.filter((other) => other !== id));
+  const replace = (id: number, entry: SearchEntry) => { if (!ids.includes(entry.id)) update(ids.map((other) => (other === id ? entry.id : other))); };
   const shown = places.filter((place) => ids.includes(place.id));
 
   const baseline = shown[0]?.packet;
   const secondId = ids.includes(mobileOther ?? -1) && mobileOther !== ids[0] ? mobileOther : ids[1];
   const mobileVisible = (id: number) => id === ids[0] || id === secondId;
   const columns = mobile ? shown.filter(place => mobileVisible(place.id)) : shown;
+  // The columns as the slots show them: the chosen places, then one empty slot while there
+  // is room (a phone shows two at a time, so it offers one only below two).
+  const visibleIds = mobile ? ids.filter(mobileVisible) : ids;
+  const slotIds: (number | null)[] = [...visibleIds, ...((mobile ? ids.length < 2 : ids.length < MAX_PLACES) ? [null] : [])];
+  if (!ids.length) slotIds.push(null);
+  const slotCount = Math.max(slotIds.length, 2);
   type Row = { metric: string; label?: string } | { cost: "own" } | { change: string; label: string };
   const overviewRows: Row[] = OVERVIEW[tenure].map((key) => key === "own" ? { cost: "own" as const } : key.startsWith("change:") ? { change: key.slice(7), label: OVERVIEW_LABELS[key] } : { metric: key, label: OVERVIEW_LABELS[key] });
   const sections: { title: string; rows: Row[] }[] = topic === "Overview" ? [{ title: tenure === "rent" ? "For a renter" : "For a buyer", rows: overviewRows }] : COMPARE_SECTIONS.filter(section => topic === "All figures" || section.title === topic);
 
   return (
     <div className="compare-places" data-count={shown.length}>
-      <div className="compare-picker">
-        {ids.length < MAX_PLACES ? (
-          <>
-            <p className="compare-picker-label" aria-hidden="true">{ids.length ? `Add a place (${ids.length} of ${MAX_PLACES})` : "Choose a place to start"}</p>
-            <PlacePicker
-              entries={entries}
-              onPick={add}
-              label={ids.length ? "Add another place" : "Choose a place to start"}
-              placeholder="Search a county, town or ZIP code"
-              name="compare-place"
-              className="compare-picker-field"
-            />
-          </>
-        ) : (
-          <p className="meta">4 places selected. Remove one to add another.</p>
-        )}
-        <p className="compare-share">
-          Bookmark or share this address to keep your comparison.
-        </p>
-      </div>
-
-      {ids.length === 0 && <CompareEmpty onPick={update} rows={OVERVIEW.buy.map((key) => key === "own" ? "Monthly cost to own" : OVERVIEW_LABELS[key])} />}
-
       {ids.length > shown.length && <p role="status">Loading selected places…</p>}
       {shown.length > 0 && <>
         <div className="compare-topic-picker">{topic === "Overview" && <div className="compare-tenure" role="group" aria-label="Show figures for"><button type="button" aria-pressed={tenure === "buy"} onClick={() => choose("buy")}>Buying</button><button type="button" aria-pressed={tenure === "rent"} onClick={() => choose("rent")}>Renting</button></div>}<label>Show <select value={topic} onChange={event => setTopic(event.target.value)}>{["Overview", ...COMPARE_SECTIONS.map(section => section.title), "All figures"].map(title => <option key={title}>{title}</option>)}</select></label></div>
         {baseline && <details className="compare-reading"><summary>Differences from {baseline.region.label}</summary><p>Differences use matching periods, units and geographic levels. Survey differences are arithmetic, not a test of significance; read them with the margins shown. Counties, towns and ZIP codes describe different geographic areas.</p></details>}
         {ids.length > 2 && <label className="compare-mobile-picker">Compare the starting place with <select value={secondId ?? ""} onChange={event => setMobileOther(Number(event.target.value))}>{shown.slice(1).map(place => <option key={place.id} value={place.id}>{place.packet?.region.label ?? `Place ${place.id}`}</option>)}</select></label>}
       </>}
+      <div className="compare-sheet">
+      {/* MOCK (2026-11-11): one picker per column, as Apple's compare pages do. Each column
+          heads itself; a place is changed in place, and the next empty column adds one. The
+          row sticks under the site bar so the names stay in view down a long table. */}
+      <div className="compare-slots" ref={slotsRef} data-stuck={stuck ? "" : undefined} style={{ ["--cols" as string]: slotCount }}>
+        <span className="compare-slots-lead">{ids.length ? <>Comparing<br /><small>Bookmark or share this address to keep it.</small></> : "Choose places"}</span>
+        {slotIds.map((id, n) => id === null
+          ? <div key={`empty-${n}`} className="compare-slot" data-empty="">
+              <span className="compare-slot-n">Place {n + 1}</span>
+              <PlacePicker entries={entries} onPick={add} label={ids.length ? "Add another place" : "Choose a place to start"} placeholder={ids.length ? "Add a place" : "Town, county or ZIP"} name={`compare-slot-${n}`} className="compare-picker-field" />
+            </div>
+          : <Slot key={id} id={id} packet={places.find((p) => p.id === id)?.packet ?? null} entries={entries} onPick={(entry) => replace(id, entry)} onRemove={() => remove(id)} />)}
+      </div>
+
       {shown.length > 0 && (
         <div className="compare-scroll" role="region" aria-label="Places compared" tabIndex={0}>
-          <table className="compare-table">
+          <table className="compare-table" style={{ ["--cols" as string]: slotCount }}>
             <caption className="visually-hidden">The places you chose, figure by figure</caption>
-            <thead>
+            <colgroup><col className="compare-col-label" />{Array.from({ length: slotCount }, (_, n) => <col key={n} />)}</colgroup>
+            <thead className="visually-hidden">
               <tr>
                 <th scope="col"><span className="visually-hidden">Figure</span></th>
                 {columns.map(({ id, packet }) => (
                   <th scope="col" key={id} data-mobile-visible={mobileVisible(id)}>
-                    {packet ? <Link href={regionPath(id)}>{packet.region.label}</Link> : <span>Place {id}</span>}
-                    <button type="button" className="compare-remove" onClick={() => remove(id)} aria-label={`Remove ${packet?.region.label ?? `place ${id}`}`}>×</button>
+                    <span>{packet?.region.label ?? `Place ${id}`}</span>
                   </th>
                 ))}
               </tr>
             </thead>
             {sections.map((section) => (
               <tbody key={section.title}>
-                <tr className="compare-section">
-                  <th scope="rowgroup" colSpan={columns.length + 1}>{section.title}</th>
+                {/* On the Overview the Buying/Renting switch already names it; only topics get a heading. */}
+                <tr className="compare-section" hidden={topic === "Overview"}>
+                  <th scope="rowgroup" colSpan={slotCount + 1}>{section.title}</th>
                 </tr>
                 {section.rows.map((row) => {
                   if ("cost" in row) {
@@ -253,7 +287,7 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
                                   <Kind kind="calculated" />
                                 </>
                               ) : (
-                                <span className="compare-missing">No home price</span>
+                                <Missing why="No home price" />
                               )}
                             </td>
                           );
@@ -268,7 +302,7 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
                         {columns.map(({ id, packet }) => {
                           const m = packet?.metrics.find((metric) => metric.metric_id === row.change);
                           const kind = kindOf(row.change);
-                          return <td key={id} data-mobile-visible={mobileVisible(id)}>{m ? <><strong>{formatChange(m.pct_change)}</strong><small>{m.window_start.slice(0, 4)} to {m.window_end.slice(0, 4)}{m.rank && m.of ? ` · ${m.rank} of ${m.of}` : ""}</small>{kind && <Kind kind={kind} />}</> : <span className="compare-missing">{packet ? "Not published" : "Could not load"}</span>}</td>;
+                          return <td key={id} data-mobile-visible={mobileVisible(id)}>{m ? <><strong>{formatChange(m.pct_change)}</strong><small>{m.window_start.slice(0, 4)} to {m.window_end.slice(0, 4)}{m.rank && m.of ? ` · ${m.rank} of ${m.of}` : ""}</small>{kind && <Kind kind={kind} />}</> : <Missing why={packet ? "Not published" : "Could not load"} />}</td>;
                         })}
                       </tr>
                     );
@@ -278,7 +312,7 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
                     <tr key={row.metric}>
                       <th scope="row"><Term id={row.metric}>{label}</Term></th>
                       {columns.map(({ id, packet }) => (
-                        <td key={id} data-mobile-visible={mobileVisible(id)}>{packet ? <Figure level={levelOf(packet.levels, row.metric)} baseline={id !== shown[0]?.id && baseline && packet.region.level === baseline.region.level ? levelOf(baseline.levels, row.metric) : null} baselineName={baseline?.region.label} /> : <span className="compare-missing">Could not load</span>}</td>
+                        <td key={id} data-mobile-visible={mobileVisible(id)}>{packet ? <Figure level={levelOf(packet.levels, row.metric)} baseline={id !== shown[0]?.id && baseline && packet.region.level === baseline.region.level ? levelOf(baseline.levels, row.metric) : null} baselineName={baseline?.region.label} /> : <Missing why="Could not load" />}</td>
                       ))}
                     </tr>
                   );
@@ -288,6 +322,9 @@ export function ComparePlaces({ artifactUrl, rate }: { artifactUrl: string; rate
           </table>
         </div>
       )}
+      </div>
+      {ids.length === 0 && <CompareEmpty onPick={update} rows={OVERVIEW.buy.map((key) => key === "own" ? "Monthly cost to own" : OVERVIEW_LABELS[key])} />}
+
     </div>
   );
 }
