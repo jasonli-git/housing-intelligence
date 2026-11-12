@@ -103,6 +103,8 @@ export default async function HousingLandingPage() {
   const under = hard <= easy ? "harder" : "easier";
   const gapUnder = Math.abs(Math.min(hard, easy) + mixedRows + 1 - Math.max(hard, easy));
   const mixedAt = mixedRows === 0 ? "none" : gapUnder > 4 && Math.abs(hard - easy) < gapUnder ? "wide" : under;
+  // The compact view and the full table show one at a time, so each marks its own first uses.
+  const compactDefined = new Set<string>();
   const newest = tiles.map((t) => t.trend.at(-1)?.date ?? "").sort().at(-1);
 
   return <div className={`search-first-home ${original.home}`}>
@@ -136,7 +138,7 @@ export default async function HousingLandingPage() {
           {(["harder", "easier"] as const).map((tone) => { const rows = tiles.filter((t) => reading(t) === tone); return <section key={tone} className={`${home.compactCol} ${home[tone]}`} data-tone={tone} aria-labelledby={`market-${tone}`}>
             <h3 id={`market-${tone}`}><i aria-hidden="true">{tone === "harder" ? "↗" : "↘"}</i>Getting {tone} <span>{rows.length} of {tiles.length}</span></h3>
             {rows.length ? <ul>{rows.map((t) => { const up = (t.change ?? "").trim().startsWith("+"); return <li key={t.id}>
-              <span className={home.compactName}>{t.label}</span>
+              <span className={home.compactName}><Glossed text={t.label} defined={compactDefined} /></span>
               <b>{t.value}</b>
               <em><span aria-hidden="true">{up ? "▲" : "▼"}</span>{(t.change ?? "—").replace(/^[+−-]/, "")}<small> in a year</small></em>
               <span className={home.compactSpark}><Spark tile={t} /></span>
@@ -145,7 +147,7 @@ export default async function HousingLandingPage() {
           {/* The figures that did not move, as a muted third panel placed by `mixedAt`. */}
           {(() => { const rest = tiles.filter((t) => !["harder", "easier"].includes(reading(t))); return rest.length ? <section className={`${home.compactCol} ${home.compactMixed} ${home.mixed}`} aria-labelledby="market-mixed">
             <h3 id="market-mixed"><i aria-hidden="true">→</i>Mixed or little changed <span>{rest.length} of {tiles.length}</span></h3>
-            <ul>{rest.map((t) => <li key={t.id}><span className={home.compactName}>{t.label}</span><b>{t.value}</b><em>{t.change ?? "—"}</em></li>)}</ul>
+            <ul>{rest.map((t) => <li key={t.id}><span className={home.compactName}><Glossed text={t.label} defined={compactDefined} /></span><b>{t.value}</b><em>{t.change ?? "—"}</em></li>)}</ul>
           </section> : null; })()}
         </div>
         <div className={home.full}>
