@@ -29,14 +29,29 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — direction set (2026-11-12)
+## Now — Milestone 61, retiring the shopper tools (2026-11-12)
 
-The owner set a new direction on 2026-11-12: a platform for people who study places,
-data shared as bulk files only (SPEC v1.6, ARCHITECTURE #505–#512). Milestones 61–65 in
-[ROADMAP.md](ROADMAP.md) carry it out in order. Next: Milestone 61, retiring the shopper
-tools, once the owner starts it. Open items below that concern Housing help, the
-Affordable housing records page, the Cost calculator or `/guide/numbers` end with
-Milestone 61 rather than being done.
+On `milestone/m61-retire-shopper-tools` (ROADMAP 61; ARCHITECTURE #507, #508, #510).
+
+- [x] Remove the pages: `/help` (with `/help/inventory.json`), `/affordable-housing`,
+  `/calculator`, `/guide/numbers`, and the components only they use.
+- [x] Remove every link to them: Menu (site bar and map bar), footer, sitemap, home tool
+  tiles, story tool links, place pages, the report's cost card, the tax lookup's
+  property card, the briefing, the decision guide, kind colours for `/help`.
+- [x] Scripts: the terms check's pages, the README and tool-preview screenshots.
+- [x] Keep the records: `regions/<id>/affordable-housing.json` stays published; no page
+  reads it now.
+- [x] Tests, type check, lint, a clean build, and the deploy's checks against a fresh
+  `dist/`.
+- [x] Audit of leftover buyer and renter framing, listed for the owner.
+- [x] Audit item 1: the place pages' Buying / Renting switch is gone; owning and renting
+  show together (ARCHITECTURE #514, option A of two mocked).
+- [x] Audit item 2: county pages' "Use your own numbers" is gone (ARCHITECTURE #515).
+- [x] Audit item 4: the tax lookup's property card loses owning and renting; its town
+  links are fixed (ARCHITECTURE #516).
+- [x] Audit item 5: place pages no longer link to the budget tool (ARCHITECTURE #517).
+- [x] Audit item 7: the "Buyer's guide" name stays until Milestone 62 renames the
+  briefing (owner, 2026-11-12). Items 3 and 6 are parked with the report (below).
 
 ## Open
 
@@ -363,6 +378,14 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ## Parked / needs user input
 
+- [ ] **The report's cost card, and the report itself — parked by the owner 2026-11-12.**
+      Audit items 3 and 6 of Milestone 61. The owner is thinking of overhauling the
+      report to be simpler and more standardized, easier to maintain and to scale, and
+      will decide then. Undecided: whether the cost card ("What it costs to own and to
+      rent", `CostToOwn.tsx`, shown with `control={false}`) and its "Relief and help"
+      links (`HousingHelp.tsx`) stay. Noted for that decision: the card's input-box half is
+      used by no page, and two lines are worded for a shopper ("add yours if it
+      applies", "money a renter could invest instead").
 - [ ] **Measure load speed — parked by the owner 2026-10-09.** From the launch
       checklist: the site's load speed has never been measured. When un-parked, run
       Lighthouse on one page of each kind (home, county, town, ZIP, `/afford`, `/guide`)

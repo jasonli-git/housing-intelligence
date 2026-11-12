@@ -10,9 +10,10 @@ vi.mock("@/components/LicenceLine", () => ({ LicenceLine: () => null }));
 describe("the bar's destinations", () => {
   // The Tools button left the bar on 2026-11-03. On 2026-11-10 the owner approved one Menu,
   // at every width, that lists every destination, with no separate Tools button (#492).
-  it("links the three destinations and, in its one Menu, the four tools (the budget is on the map, #496)", () => {
+  it("links the three destinations and, in its one Menu, the two tools; the shopper tools are retired (#507)", () => {
     const html = renderToStaticMarkup(createElement(Masthead, { affordability: { kind: "route" } }));
-    for (const href of ["/atlas", "/compare", "/stories", "/guide", "/tax", "/affordable-housing", "/help"]) expect(html).toContain(`href="${href}"`);
+    for (const href of ["/atlas", "/compare", "/stories", "/guide", "/tax"]) expect(html).toContain(`href="${href}"`);
+    for (const href of ["/affordable-housing", "/help", "/calculator"]) expect(html).not.toContain(`href="${href}"`);
     expect(html).not.toContain('href="/afford"');
     expect(html).not.toMatch(/<summary>[^]*?Tools[^]*?<\/summary>/);
     expect(html.match(/<summary/g)).toHaveLength(1);

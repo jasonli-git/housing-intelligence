@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 
 const origin = process.env.TERMS_ORIGIN ?? 'http://localhost:3002';
-const pages = (process.env.TERMS_PAGES ?? '/,/states/new-jersey,/nj/mercer-county,/nj/princeton,/nj/zip-08540,/nj/mercer-county/report,/afford,/guide,/tax,/help,/atlas,/freshness,/changes,/sources').split(',');
+const pages = (process.env.TERMS_PAGES ?? '/,/states/new-jersey,/nj/mercer-county,/nj/princeton,/nj/zip-08540,/nj/mercer-county/report,/afford,/guide,/tax,/atlas,/freshness,/changes,/sources').split(',');
 
 // The glossary words and their phrases, read from the dictionary's source.
 const source = readFileSync(new URL('../lib/terms.ts', import.meta.url), 'utf8');

@@ -33,10 +33,10 @@ it("preserves the complete code/data notice and every policy destination", async
   expect(notice.children[1].className).toBe("site-foot-intro");
 });
 
-it("links every tool, the home page's list and the stories", async () => {
+it("links every tool but the budget tool (#518), and the stories", async () => {
   render(await SourceFooter());
   const tools = screen.getByRole("navigation", { name: "Tools" });
-  expect(within(tools).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/atlas?level=municipality&measure=sr1a_median_sale_price&view=latest&budget=1", "/guide", "/tax", "/compare", "/help", "/atlas", "/calculator", "/affordable-housing", "/stories"]);
+  expect(within(tools).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/guide", "/tax", "/compare", "/atlas", "/stories"]);
 });
 
 it("keeps the publisher notice and names every institution, with no disclosure", async () => {

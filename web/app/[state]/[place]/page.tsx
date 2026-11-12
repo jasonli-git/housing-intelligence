@@ -1,12 +1,9 @@
-import { budgetMapHref } from "@/lib/budgetLink";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { glossTree } from "../../_poster/glossTree";
 import { MoreTiles } from "../../_poster/MoreTiles";
-import { TENURE_SCRIPT, TenureSwitch } from "../../_poster/TenureSwitch";
-import { OwnNumbers } from "../../_poster/OwnNumbers";
 import { CountyAtlas, type AtlasTown as AtlasTownRow } from "../../_poster/CountyAtlas";
 import { PosterNav } from "../../_poster/PosterNav";
 import { StoryBars } from "../../_poster/StoryBars";
@@ -17,7 +14,6 @@ import acts from "../../_poster/acts.module.css";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { Crumbs } from "@/components/Crumbs";
 import { Glossed } from "@/components/Glossed";
-import { InlineScript } from "@/components/InlineScript";
 import { ConsumerReading } from "@/components/ExplanationPanel";
 import { Masthead } from "@/components/Masthead";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
@@ -259,8 +255,6 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const groups = similar ? similarGroups(similar) : [];
   const priceRow = similar ? groups.flatMap((g) => g.rows).find((r) => r.metric_id === similar.price) : undefined;
   const taxHref = `/tax?town=${region.geoid}`;
-  // Housing help opens on this town's records; a ZIP code or county has no town to search by.
-  const helpHref = region.level === "municipality" ? `/affordable-housing?town=${encodeURIComponent(region.name)}` : "/help";
   // Measures outside the packet, read directly and set among every town's value.
   const latest = async (id: string) => (await api.observations(regionId, id))?.observations.at(-1) ?? null;
   const placed = async (id: string, label: string, show: (v: number) => string) => {
@@ -526,13 +520,14 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       text: changePosition === null ? null : changePosition >= 0.5 ? `A bigger change than ${Math.min(Math.round(changePosition * 100), 99)}% of ${change.of} ${unitPlural}` : `A smaller change than ${Math.min(100 - Math.round(changePosition * 100), 99)}% of ${change.of} ${unitPlural}`, fine: "Zillow" },
   ].flatMap((figure) => (figure ? [figure] : []));
   type Figure = { label: string; value: string; kind: RecordType | null | undefined; position: number | null; text: string | null; fine: string };
-  const band = (items: Figure[], who?: "buy" | "rent") => items.length > 0 && <dl className={acts.figures} data-for={who} aria-label={`${name} at a glance${who === "rent" ? ", renting" : who === "buy" ? ", buying" : ""}`}>{items.map((f) => <div key={f.label}>
+  const band = (items: Figure[]) => items.length > 0 && <dl className={acts.figures} aria-label={`${name} at a glance`}>{items.map((f) => <div key={f.label}>
     <dt><Glossed text={f.label} /></dt>
     <dd className={acts.value}>{f.value}</dd>
     {f.text && <dd className={acts.peer}>{f.position !== null && <span className={acts.tick} aria-hidden="true"><i style={{ left: `${f.position * 100}%` }} /></span>}{f.text}</dd>}
     <dd className={acts.fine}>{f.kind && <Chip kind={f.kind} />}{f.fine}</dd>
   </div>)}</dl>;
-  const figureBand = band(figures);
+  // Owning and renting side by side (#514): price, monthly cost to own, rent, tax. Where
+  // no rent is published the band keeps the five-year change, as before.
   // The renting reader's four: asking rent, what tenants pay, five-year change, cost burden.
   const rentChange = packet.metrics.find((m) => m.metric_id === "zori_all");
   const rentChangePosition = rentChange?.rank && rentChange.of && rentChange.of > 1 ? 1 - (rentChange.rank - 1) / (rentChange.of - 1) : null;
@@ -544,6 +539,8 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       text: rentChangePosition === null ? null : rentChangePosition >= 0.5 ? `A bigger change than ${Math.min(Math.round(rentChangePosition * 100), 99)}% of ${rentChange.of} ${unitPlural}` : `A smaller change than ${Math.min(100 - Math.round(rentChangePosition * 100), 99)}% of ${rentChange.of} ${unitPlural}`, fine: "Zillow" },
     burdenRow && { label: "Renters paying over 30% of income", value: `${(burdenRow.value * 100).toFixed(0)}%`, kind: kind("acs_renter_cost_burden"), ...standing("acs_renter_cost_burden"), fine: `${burdenRow.period_end.slice(0, 4)} · Census ACS` },
   ].flatMap((figure) => (figure ? [figure] : []));
+  const byLabel = (...labels: string[]) => figures.find((f) => labels.includes(f.label));
+  const figureBand = band(rentFigures.length === 0 ? figures : [byLabel("Median home sale price", "Typical home value"), byLabel("Monthly cost to own"), rentFigures[0], byLabel("Median yearly property tax", "Typical monthly rent")].flatMap((f) => (f ? [f] : [])));
 
   // A place with few figures says so, and names what no source publishes for it.
   const absent = [!medianSale && "recorded home sales", !homeRow && "a Zillow home value", !taxBill && "a median property tax bill", !askRow && !paidRow && "rents"].flatMap((item) => (item ? [item] : []));
@@ -738,9 +735,9 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       </section>}
       {pressureTile}
     </MoreTiles>}
-    <div className={acts.foot}>
-      <p className={acts.next}><Link href={`/guide/numbers?place=${regionId}`}>Work it out with your own numbers</Link>{!isZip && <Link href={budgetMapHref({ place: regionId, county: county?.region_id ?? "all" })}>Places within my budget</Link>}{taxBill && <Link href={taxHref}>Look up a property’s tax bill</Link>}<Link href={helpHref}>Housing help</Link></p>
-    </div>
+    {taxBill && <div className={acts.foot}>
+      <p className={acts.next}><Link href={taxHref}>Look up a property’s tax bill</Link></p>
+    </div>}
   </> : null;
 
   // The renting reader's first act: asking rent, then what tenants pay, each labelled.
@@ -750,7 +747,6 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const rentRecent = rentEnd ? rentObs.filter((o) => o.period_end >= `${Number(rentEnd.slice(0, 4)) - 10}${rentEnd.slice(4)}`) : [];
   const lower = (text: string | null) => (text ? `, ${text.charAt(0).toLowerCase()}${text.slice(1)}` : "");
   const rentFind = askRow ? `Asking rent is ${dollars(askRow.value)} a month${lower(standing("zori_all").text)}` : paidRow ? `Tenants here pay a median of ${dollars(paidRow.value)} a month${lower(standing("acs_median_gross_rent").text)}` : "";
-  const none = (what: string) => <div className={acts.lead}><p className={acts.note}>No {what} is published for {name}. <Link href={reportHref}>Every figure that is, in the full report</Link>.</p></div>;
   const rentAct = (askRow || paidRow) ? <>
     <div className={acts.lead}>
       <h3 className={acts.find}>{rentFind}</h3>
@@ -775,8 +771,9 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     </div>
     {rentGrowthTile && <MoreTiles names={["rent, prices and income since " + growthStart!.slice(0, 4)]}>{rentGrowthTile}</MoreTiles>}
     <div className={acts.foot}>
-      <p className={acts.next}><Link href={`${compareHref}&for=rent`}>Compare {name} side by side</Link><Link href="/atlas?level=municipality&measure=zori_all&view=latest">See rents on the map</Link></p>
-      {tales(["market"])}
+      {/* Rents follow prices in one act (#514): its compare link and stories are the price act's. */}
+      <p className={acts.next}>{!priceAct && <Link href={compareHref}>Compare {name} side by side</Link>}<Link href="/atlas?level=municipality&measure=zori_all&view=latest">See rents on the map</Link></p>
+      {!priceAct && tales(["market"])}
     </div>
   </> : null;
 
@@ -803,9 +800,9 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       {pressureTile}
       {billsTile}
     </MoreTiles>}
-    <div className={acts.foot}>
-      <p className={acts.next}><Link href={helpHref}>Find housing help</Link>{!isZip && <Link href={budgetMapHref({ place: regionId, county: county?.region_id ?? "all", rent: true })}>Places within my budget</Link>}<Link href={`${compareHref}&for=rent`}>Compare rents side by side</Link></p>
-    </div>
+    {!costAct && <div className={acts.foot}>
+      <p className={acts.next}><Link href={compareHref}>Compare rents side by side</Link></p>
+    </div>}
   </> : null;
 
 
@@ -850,7 +847,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       </section>}
     </MoreTiles>}
     <div className={acts.foot}>
-      <p className={acts.next}><Link href={reportHref}>Every housing figure in the full report</Link><Link href={helpHref}>Find affordable housing</Link></p>
+      <p className={acts.next}><Link href={reportHref}>Every housing figure in the full report</Link></p>
     </div>
   </> : null;
 
@@ -916,7 +913,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   </> : null;
 
   const rentBox = boxes.find((b) => b.id !== "zhvi_sfr");
-  const placeChart = (box: typeof homeBox, what: string, who: "buy" | "rent") => box && <figure className={acts.place} data-for={who} role="img" aria-label={`${what}: ${name} ${dollars(box.own)}, median ${dollars(box.box.median)} of ${box.count} ${peers}.`}>
+  const placeChart = (box: typeof homeBox, what: string) => box && <figure className={acts.place} role="img" aria-label={`${what}: ${name} ${dollars(box.own)}, median ${dollars(box.box.median)} of ${box.count} ${peers}.`}>
     <figcaption><span>Where {name} sits by {what}, among the {box.count} {peers} with a figure for the same period</span><span>{dollars(box.own)}</span></figcaption>
     <div className={acts.track}><hr /><u style={{ left: `${box.x(box.box.q1)}%`, width: `${box.x(box.box.q3) - box.x(box.box.q1)}%` }} /><b style={{ left: `${box.x(box.box.median)}%` }} /><i style={{ left: `${box.x(box.own)}%` }} /></div>
     <p className={acts.scale}><span>Lowest {dollars(box.box.min)}</span><span>Middle half boxed · median {dollars(box.box.median)}</span><span>Highest {dollars(box.box.max)}</span></p>
@@ -937,24 +934,22 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
     return glossTree(<>
       <Masthead affordability={{ kind: "route" }} />
       <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact} ${styles.plain} ${acts.page}`} suppressHydrationWarning>
-        <InlineScript html={TENURE_SCRIPT} />
         <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code)]} here={name} />
-        <PosterNav links={countyLinks} view={hasRent} />
+        <PosterNav links={countyLinks} />
 
         <header className={`${styles.panel} ${styles.hero} ${acts.hero}`} data-kind="county">
           {region.state_code === "NJ" && <GardenStateArtwork header />}
           <div>
             <p className={styles.kicker}>{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""} · {townRows.length} towns</p>
             <h1>{name}</h1>
-            {hasRent && rentHeadline ? <>{headline && <p className={acts.thesis} data-for="buy">{headline}</p>}<p className={acts.thesis} data-for="rent">{rentHeadline}</p></> : headline && <p className={acts.thesis}>{headline}</p>}
+            {headline ? <p className={acts.thesis}>{headline}</p> : hasRent && rentHeadline && <p className={acts.thesis}>{rentHeadline}</p>}
             <ComputedBadge />
           </div>
           {frame && town && <svg viewBox={`0 0 ${frame.width} ${frame.height}`} role="img" aria-label={`${name} on a map of ${scopeName(region.state_code)}`}>
             {counties.map((c) => <path key={c.id} d={c.d} fill="currentColor" fillOpacity={c.id === regionId ? 1 : 0.2} />)}
           </svg>}
           <PlacePhoto geoid={region.geoid} />
-          {hasRent && <TenureSwitch />}
-          {hasRent ? <>{band(figures, "buy")}{band(rentFigures, "rent")}</> : figureBand}
+          {figureBand}
           {standStrip}
         </header>
 
@@ -967,9 +962,8 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         </section>}
 
         {(hasCosts || hasRent) && <section id="costs" className={acts.act} data-accent="cost">
-          {hasRent ? head(<><h2 data-for="buy">Cost to buy and own</h2><h2 data-for="rent">Cost to rent</h2></>, <><p data-for="buy">What does a home cost here?</p><p data-for="rent">What does renting cost here?</p></>) : head(<h2>Cost to buy and own</h2>, <p>What does a home cost here?</p>)}
-          {hasRent && <><div className={acts.sheet} data-for="rent">{rentAct ?? none("rent")}</div>{rentCostAct && <div className={acts.sheet} data-for="rent">{rentCostAct}</div>}</>}
-          <div className={styles.chapterGrid} data-for={hasRent ? "buy" : undefined}>
+          {hasCosts && hasRent ? head(<h2>Prices and rents</h2>, <p>What do homes cost to buy and to rent?</p>) : hasRent ? head(<h2>Cost to rent</h2>, <p>What does renting cost here?</p>) : head(<h2>Cost to buy and own</h2>, <p>What does a home cost here?</p>)}
+          <div className={styles.chapterGrid}>
         {homeRow && <section id="price" className={`${styles.panel} ${styles.price}`}>
           <h2><Glossed text={priceFind} /></h2>
           {salesFigure}
@@ -986,11 +980,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           </div>
           <ul className={styles.key}>{parts.map((p) => <li key={p.label}><i style={{ background: p.color }} />{p.label} {dollars(p.value)}</li>)}</ul>
           <p className={styles.caption}>An estimate, with 20% down at {cost!.rate.value.toFixed(2)}%.</p>
-          <details className={styles.tool}>
-            <summary>Use your own numbers</summary>
-            <OwnNumbers income={income} guideHref={`/guide/numbers?place=${regionId}`} source={{ state: region.state_code, price: cost!.home.value, ratePct: cost!.rate.value, taxYear: cost!.tax?.value ?? null, insuranceYear: cost!.insurance?.value ?? null, utilitiesMonth: cost!.utilities?.month ?? null, rentMonth: cost!.rent?.value ?? null }} />
-          </details>
-          <p className={styles.actions}><Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link><Link href={budgetMapHref({ county: regionId })}>Places within my budget</Link><Link href={helpHref}>Housing help</Link></p>
+          <p className={styles.actions}><Link href={`/guide?place=${regionId}`}>Buyer’s guide</Link></p>
         </section>}
         {taxBill && <section id="tax" className={`${styles.panel} ${styles.tax}`}>
           <h2>Property tax adds {dollars(taxBill.value / 12)} a month</h2>
@@ -1005,6 +995,9 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           </div>}
         </section>}
           </div>
+          {/* Rents follow the cost of owning in the same act (#514). */}
+          {rentAct && <div className={acts.sheet}>{rentAct}</div>}
+          {rentCostAct && <div className={acts.sheet}>{rentCostAct}</div>}
         </section>}
 
         {hasMarket && <section id="market" className={acts.act} data-accent="price">
@@ -1059,8 +1052,9 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   }
 
   const actList = ([
-    { id: "values", accent: "price", nav: "Prices and rents", title: "Home prices", question: "What do homes cost here?", body: priceAct, rent: { title: "Rents", question: "What does renting cost here?", body: rentAct } },
-    { id: "owning", accent: "cost", nav: "Monthly cost", title: "Monthly cost", question: "What would it cost me each month?", body: costAct, rent: { title: "Monthly cost", question: "What would rent take each month?", body: rentCostAct } },
+    // Owning and renting in the same acts, owning first (#514): no switch between them.
+    { id: "values", accent: "price", nav: "Prices and rents", title: priceAct && rentAct ? "Prices and rents" : priceAct ? "Home prices" : "Rents", question: priceAct && rentAct ? "What do homes cost to buy and to rent?" : priceAct ? "What do homes cost here?" : "What does renting cost here?", body: priceAct, rent: { body: rentAct } },
+    { id: "owning", accent: "cost", nav: "Monthly cost", title: "Monthly cost", question: costAct && rentCostAct ? "What does housing cost each month?" : costAct ? "What does owning cost each month?" : "What does rent take each month?", body: costAct, rent: { body: rentCostAct } },
     { id: "housing", accent: "homes", nav: "Homes and people", title: "Homes and people", question: "What kind of housing is here?", body: homesAct, rent: null },
     { id: "area", accent: "life", nav: "Living here", title: "Living here", question: "What is daily life like?", body: livingAct, rent: null },
   ]).filter((act) => act.body !== null || !!act.rent?.body);
@@ -1068,36 +1062,33 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   return glossTree(<>
     <Masthead affordability={{ kind: "route" }} />
     <main id="main-content" tabIndex={-1} className={`${styles.poster} ${styles.compact} ${acts.page}`} suppressHydrationWarning>
-      <InlineScript html={TENURE_SCRIPT} />
       <Crumbs trail={[{ href: "/", label: "Home" }, ...stateCrumbs(region.state_code), ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : [])]} here={name} />
-      <PosterNav links={actList.map(({ id, nav }) => ({ id, label: nav }))} view />
+      <PosterNav links={actList.map(({ id, nav }) => ({ id, label: nav }))} />
 
       <header className={`${styles.panel} ${styles.hero} ${acts.hero}`} data-kind={isZip ? "zip" : "town"}>
         {region.state_code === "NJ" && <GardenStateArtwork header />}
         <div>
           <p className={styles.kicker}>{county ? `${displayName(county)}, ` : ""}{scopeName(region.state_code)}{level("acs_population") ? ` · ${formatMetric(level("acs_population")!.value, "count", "acs_population")} residents` : ""}</p>
           <h1>{name}</h1>
-          {rentHeadline ? <>{headline && <p className={acts.thesis} data-for="buy">{headline}</p>}<p className={acts.thesis} data-for="rent">{rentHeadline}</p></> : headline && <p className={acts.thesis}>{headline}</p>}
+          {headline ? <p className={acts.thesis}>{headline}</p> : rentHeadline && <p className={acts.thesis}>{rentHeadline}</p>}
           <ComputedBadge />
         </div>
         {frame && town && <svg viewBox={`0 0 ${frame.width} ${frame.height}`} role="img" aria-label={`${name} on a map of ${scopeName(region.state_code)}`}>
           {counties.map((c) => <path key={c.id} d={c.d} fill="currentColor" fillOpacity={c.id === county?.region_id ? 0.55 : 0.2} />)}
           <circle cx={town.centre[0]} cy={town.centre[1]} r="8" fill="var(--here)" stroke="var(--hero-kind)" strokeWidth="2" />
         </svg>}
-        <TenureSwitch />
-        {placeChart(saleBox ?? homeBox, saleBox ? "median sale price" : "typical home value", "buy")}
-        {placeChart(rentBox, "typical asking rent", "rent")}
-        {band(figures, "buy")}
-        {band(rentFigures, "rent")}
+        {placeChart(saleBox ?? homeBox, saleBox ? "median sale price" : "typical home value")}
+        {placeChart(rentBox, "typical asking rent")}
+        {figureBand}
         {thinLine}
         {standStrip}
       </header>
 
       {actList.map(({ id, accent, title, question, body, rent: renting }, i) => <section key={id} id={id} className={acts.act} data-accent={accent}>
         <div className={acts.actHead}><b>{i + 1}</b>
-          {renting ? <><h2 data-for="buy">{title}</h2><h2 data-for="rent">{renting.title}</h2><p data-for="buy">{question}</p><p data-for="rent">{renting.question}</p></> : <><h2>{title}</h2><p>{question}</p></>}
+          <h2>{title}</h2><p>{question}</p>
         </div>
-        <div className={acts.sheet}>{renting ? <><div data-for="buy">{body ?? none("sale price or home value")}</div><div data-for="rent">{renting.body ?? none("rent")}</div></> : body}</div>
+        <div className={acts.sheet}>{body}{renting?.body && <div className={acts.rents}>{renting.body}</div>}</div>
         {id === "area" && <>
       {county && contextFacts.length > 0 && <details id="county-context" className={`${styles.panel} ${styles.context} ${acts.context}`}>
         <summary><span><strong>{`${displayName(county)} context`}</strong><small>{`The wider market, published by county, not ${name} alone`}</small></span><span className={styles.contextFacts}>{contextFacts.map((fact) => <span key={fact}>{fact}</span>)}</span></summary>

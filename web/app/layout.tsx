@@ -14,7 +14,6 @@ import "./kinds.css";
 import "./globals.css";
 import "./atlas-pages.css";
 import "./quiet-county.css";
-import "./affordable-housing.css";
 import "./budget-explorer.css";
 import "./accessibility.css";
 import "./artful-data.css";

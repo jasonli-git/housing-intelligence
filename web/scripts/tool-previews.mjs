@@ -17,7 +17,6 @@ export const TOOL_PREVIEWS = [
   { name: 'buyers-guide', path: '/guide?place=224', ready: '.bf-frame >> text=Buying in Princeton' },
   { name: 'tax-lookup', path: '/tax', ready: '.tax-search-field input:not(:disabled)' },
   { name: 'compare', path: '/compare?places=224,394,85', ready: '.compare-table tbody tr:not(.compare-section) td strong' },
-  { name: 'housing-help', path: '/help', ready: '.hh-routes' },
   { name: 'atlas', path: '/atlas?level=county', ready: '.atlas-county-map path[data-county]' },
 ];
 
