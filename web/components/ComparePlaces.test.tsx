@@ -29,23 +29,15 @@ describe("compare places", () => {
     expect(screen.queryByRole("link", { name: "Town 2" })).toBeNull();
     expect(window.location.search).toBe("?places=1,2,3,4");
   });
-  it("starts with an overview and reveals supporting measures by topic", async () => {
+  it("shows every topic on one page, with no Show menu and no Buying/Renting switch", async () => {
     window.history.replaceState(null, "", "/compare?places=1,2");
     vi.stubGlobal("fetch", vi.fn(async (url: string) => url === "/search.json" ? new Response("[]") : new Response(JSON.stringify(packet(Number(url.match(/regions\/(\d+)/)?.[1]), url.includes("/1/") ? "Alpha" : "Beta")))));
     render(<ComparePlaces artifactUrl="https://data.test" rate={{ value: 6.5, asOf: "Oct 2026" }} />);
     await screen.findByRole("link", { name: "Beta" });
-    // The overview leads with the place pages' own figures (#492).
-    expect(screen.getByText("Median home sale price")).toBeTruthy();
-    expect(screen.queryByText("Typical asking rent")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Renting" }));
-    expect(screen.getByText("Typical asking rent")).toBeTruthy();
-    expect(screen.queryByText("Median home sale price")).toBeNull();
-    expect(window.location.search).toBe("?places=1,2&for=rent");
-    fireEvent.click(screen.getByRole("button", { name: "Buying" }));
-    fireEvent.change(screen.getByLabelText("Show"), { target: { value: "How homes sell" } });
-    expect(screen.getByText("Median sale price")).toBeTruthy();
-    expect(screen.queryByText("Median home sale price")).toBeNull();
-    expect(window.location.search).toBe("?places=1,2");
+    for (const topic of ["What it costs", "How homes sell", "Risks"]) expect(screen.getAllByText(topic).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Median sale price").length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText("Show")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Renting" })).toBeNull();
   });
   it("withholds differences for mismatched observation periods", async () => {
     window.history.replaceState(null, "", "/compare?places=1,2");

@@ -21,12 +21,12 @@ import type { SearchEntry } from "@/lib/search";
 import { incomeFor } from "@/lib/cost";
 import { formatValue } from "@/lib/format";
 import { regionPath } from "@/lib/placeRoutes";
+import { highest, ordinal, share, sizePct, standing, type Standing } from "@/lib/takeaways";
 
 const usd = (v: number) => formatValue(v, "usd");
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 /** A slide has room for one sentence per item: the first, without its trailing clauses. */
 const first = (t: string) => (t.match(/^.*?[.;](\s|$)/)?.[0] ?? t).replace(/[;]\s*$/, ".").trim();
-const ordinal = (n: number) => `${n}${[11, 12, 13].includes(n % 100) ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th"}`;
 const year = (d: string) => d.slice(0, 4);
 
 /** The measures whose NJ median the slides set beside the town's figure. */
@@ -47,26 +47,6 @@ async function njMedians(artifactUrl: string): Promise<Medians> {
 
 /** A figure's percentile on its own scale (higher = larger value). Ranks on measures
  *  where lower is better run the other way, so their percentile is flipped back. */
-const sizePct = (l: PacketLevel) => (l.direction === "lower_is_better" ? 100 - l.percentile! : l.percentile!);
-const highest = (l: PacketLevel) => (l.direction === "lower_is_better" && l.rank != null && l.of != null ? l.of - l.rank + 1 : l.rank ?? 0);
-
-type Standing = { mark: "typical" | "high" | "low" | "very-high" | "very-low"; words: string };
-function standing(level: PacketLevel | undefined): Standing | null {
-  if (!level || level.percentile == null) return null;
-  const p = sizePct(level);
-  const of = `${ordinal(highest(level))} highest of ${level.of}`;
-  if (p >= 90) return { mark: "very-high", words: `Top tenth in NJ · ${of}` };
-  if (p >= 70) return { mark: "high", words: `Above most of NJ · ${of}` };
-  if (p <= 10) return { mark: "very-low", words: `Bottom tenth in NJ · ${of}` };
-  if (p <= 30) return { mark: "low", words: `Below most of NJ · ${of}` };
-  return { mark: "typical", words: `Typical for NJ · ${of}` };
-}
-/** "more than in 94% of NJ towns" / "less than in 70%": a percentile in words. */
-const share = (l: PacketLevel, more: string, less: string) => {
-  const p = Math.round(sizePct(l));
-  return p >= 50 ? `${more} in ${p}% of NJ towns` : `${less} in ${100 - p}% of NJ towns`;
-};
-
 /** New Jersey's towns as a line, this town as a dot, the median town as a tick. */
 function Strip({ level, low, high }: { level?: PacketLevel; low: string; high: string }) {
   if (!level || level.percentile == null) return null;
