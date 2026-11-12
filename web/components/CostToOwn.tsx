@@ -30,7 +30,6 @@ import { useBudgetScenario } from "@/components/useBudgetScenario";
 import { QuietDisclosure, QuietToolGroup } from "@/components/QuietCounty";
 import { StepIcon } from "@/components/StepIcon";
 import {DifferenceBridge,sentenceCostLabel} from "@/components/DifferenceBridge";
-import { writeGuideTransfer } from "@/lib/guideTransfer";
 import { MonthlyBill } from "@/components/MonthlyBill";
 
 /** A figure and when it is from, already labelled for a reader: "Jul 2026". */
@@ -185,10 +184,9 @@ export function CostToOwn({
   quiet = false,
   householdTools,
   planning = true,
-  guidePlaceId,
   compactOverview = false,
   overviewContext,
-}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number; quiet?: boolean; householdTools?: ReactNode; planning?: boolean; guidePlaceId?: number; compactOverview?: boolean; overviewContext?: ReactNode }) {
+}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number; quiet?: boolean; householdTools?: ReactNode; planning?: boolean; compactOverview?: boolean; overviewContext?: ReactNode }) {
   const id = useId();
   const { personal: rememberedPersonal, household, savePersonal, saveHousehold } = useBudgetScenario(control && planning);
   const personal = planning ? rememberedPersonal : {};
@@ -205,14 +203,6 @@ export function CostToOwn({
     savePersonal(next);
   };
   const setField = (key: keyof HomeFields, text: string) => setFields({ ...fields, [key]: text });
-  const transferToGuide = () => {
-    if (guidePlaceId === undefined) return;
-    const home = Object.fromEntries([
-      ["price", parseAmount(fields.price)], ["taxYear", parseAmount(fields.tax)], ["hoaMonth", parseAmount(fields.hoa)],
-      ["floodYear", parseAmount(fields.flood)], ["movingCost", parseAmount(fields.moving)], ["repairsCost", parseAmount(fields.repairs)],
-    ].filter(([,value]) => value !== null));
-    writeGuideTransfer(guidePlaceId, home, parseAmount(fields.rent));
-  };
 
   const typedPrice = parseAmount(fields.price);
   const typedTax = parseAmount(fields.tax);
@@ -728,7 +718,6 @@ export function CostToOwn({
           <p className="cost-budget-result" aria-live="polite">{household.income && household.income>0 ? `Estimated payment uses ${Math.round(month.total/(household.income/12)*100)}% of your income before tax.` : "Add your income to compare it with the payment above."}{partial && ` Included costs only; missing: ${listed(month.missing)}.`}</p>
           {fineTune}
           <nav className="cost-planning-links" aria-label="Plan beyond this estimate">
-            {guidePlaceId!==undefined && <a href={`/guide/numbers?place=${guidePlaceId}`} onClick={transferToGuide}>Check upfront cash & rent vs. buy →</a>}
             {comparePlaceId!==undefined && <a href={budgetMapHref({ county: "all", place: comparePlaceId, income: household.income })}>Find your fit →</a>}
           </nav>
           </div>
@@ -1018,13 +1007,6 @@ export function CostToOwn({
       </QuietDisclosure>
       {householdTools}
       </div>
-      {guidePlaceId !== undefined && <p className="household-next"><a href={`/guide/numbers?place=${guidePlaceId}`} onClick={() => {
-        const home = Object.fromEntries([
-          ["price", typedPrice], ["taxYear", typedTax], ["hoaMonth", parseAmount(fields.hoa)],
-          ["floodYear", parseAmount(fields.flood)], ["movingCost", parseAmount(fields.moving)], ["repairsCost", parseAmount(fields.repairs)],
-        ].filter(([,value]) => value !== null));
-        writeGuideTransfer(guidePlaceId, home, typedRent);
-      }}>Continue in the buyer’s guide →</a><span>Bring these home figures into a complete buying plan.</span></p>}
       </QuietToolGroup>}
 
       {showHelp && <HousingHelp state={state} />}

@@ -100,7 +100,8 @@ export function AffordExplorer({
       setCountyId(context.countyId);
     }
     if (workspace) {
-      // `for=rent` is the place pages' own word for the renting view (#490).
+      // `for=rent` was the place pages' word for the renting view (#490, retired in #514);
+      // older links still carry it.
       setMode(params.get("mode") === "rent" || (!params.has("mode") && params.get("for") === "rent") ? "rent" : "own");
       setAllTowns(params.get("show") === "all");
       setBasis(params.get("price") === "sales" ? "sales" : "zillow");

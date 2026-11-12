@@ -22,9 +22,6 @@ export function Masthead({
   atlasActive = false,
   taxActive = false,
   guideActive = false,
-  helpActive = false,
-  recordsActive = false,
-  calculatorActive = false,
   affordability,
   search = true,
 }: {
@@ -33,9 +30,6 @@ export function Masthead({
   taxActive?: boolean;
   /** On the buyer's guide itself. */
   guideActive?: boolean;
-  helpActive?: boolean;
-  recordsActive?: boolean;
-  calculatorActive?: boolean;
   atlasActive?: boolean;
   /** On the compare page. */
   compareActive?: boolean;
@@ -55,10 +49,7 @@ export function Masthead({
   const toolLinks = <>
     <span className="bar-menu-group">Tools</span>
     {item("/guide", "Buyer’s guide", guideActive)}
-    {item("/calculator", "Cost calculator", calculatorActive)}
     {item("/tax", "Property tax lookup", taxActive)}
-    {item("/affordable-housing", "Affordable housing records", recordsActive)}
-    {item("/help", "Housing help", helpActive)}
   </>;
   const menuMain = <>
     <span className="bar-menu-group">Explore</span>

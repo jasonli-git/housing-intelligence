@@ -5,8 +5,7 @@ import { Crumbs, Kind } from "@/components/Crumbs";
 import { InquiryNote } from "@/components/InquiryNote";
 import { Masthead } from "@/components/Masthead";
 import { type Town, TaxLookup } from "@/components/TaxLookup";
-import { api, artifactUrl, nationalMortgageRate } from "@/lib/api";
-import { periodLabel } from "@/lib/periods";
+import { api, artifactUrl } from "@/lib/api";
 import { pageMetadata } from "@/lib/meta";
 import "../horizon-theme.css";
 import "../tax-horizon.css";
@@ -27,16 +26,11 @@ export const metadata: Metadata = pageMetadata({
  * host's file cap 154 times over (ARCHITECTURE #289, #294).
  */
 export default async function TaxPage() {
-  const [municipalities, counties, freshness, latestRate] = await Promise.all([
+  const [municipalities, counties, freshness] = await Promise.all([
     api.regions("level=municipality&state=NJ&limit=1000"),
     api.regions("level=county&state=NJ&limit=100"),
     api.freshness(),
-    nationalMortgageRate(),
   ]);
-  // The week's rate, for the property's cost of owning (#427), dated as the cost card does.
-  const rate = latestRate
-    ? { value: latestRate.value, asOf: periodLabel(latestRate.period_start, latestRate.metric_id) }
-    : null;
   // MOD-IV's next statewide update, as NJOGIS told the project (#370); none is published.
   const modivInquiry = freshness?.sources.find((s) => s.source_id === "nj_modiv")?.inquiries?.at(-1);
   const countyName = new Map((counties?.items ?? []).map((c) => [c.region_id, c.name]));
@@ -59,7 +53,7 @@ export default async function TaxPage() {
             {modivInquiry && <InquiryNote inquiry={modivInquiry} />}
           </div>
         </header>
-        <TaxLookup towns={towns} artifactUrl={artifactUrl} rate={rate} />
+        <TaxLookup towns={towns} artifactUrl={artifactUrl} />
         <StoryLink href="/stories/same-house-different-tax-bill" />
       </main>
     </>

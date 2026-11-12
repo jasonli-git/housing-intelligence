@@ -1,5 +1,4 @@
 {
-  "app/_poster/OwnNumbers.tsx": 1,
   "app/accessibility.css": 8,
   "app/afford-horizon.css": 27,
   "app/artful-data.css": 24,
@@ -11,9 +10,7 @@
   "app/data-horizon.css": 39,
   "app/data-scale.css": 4,
   "app/globals.css": 50,
-  "app/guide-horizon.css": 39,
   "app/guide.css": 1,
-  "app/help-horizon.css": 24,
   "app/horizon-theme.css": 187,
   "app/housing-entry.css": 32,
   "app/housing-mosaic.css": 6,

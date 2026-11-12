@@ -50,6 +50,30 @@ are not yet recorded here.
 
 ### Removed
 
+- **"Places within my budget" links on place pages** (2026-11-12, ARCHITECTURE #517).
+  The budget tool on the map stays, reached from the home page and the footer.
+
+- **The tax lookup's "What owning it would cost" and "Renting nearby instead"**
+  (2026-11-12, ARCHITECTURE #516). The property card keeps the lot and the links to the
+  town page, which now open the right section instead of the top of the page.
+
+- **"Use your own numbers" on county pages** (2026-11-12, ARCHITECTURE #515): the
+  inputs inside the monthly cost card. The card keeps its typical-home estimate.
+
+- **The Buying / Renting switch on place pages** (2026-11-12, ARCHITECTURE #514): town,
+  ZIP and county pages now show owning and renting together. The header keeps one
+  opening sentence and gives one row of price, monthly cost to own, rent and tax; the first act is
+  "Prices and rents", with the rent exhibits after the owning ones.
+
+- **The shopper tools are retired** (2026-11-12, Milestone 61, ARCHITECTURE #507, #513):
+  Housing help (`/help` and `/help/inventory.json`), the Affordable housing records page
+  (`/affordable-housing`), the Cost calculator (`/calculator`) and the full decision
+  guide (`/guide/numbers`), with every link to them from the menus, footer, sitemap, home
+  tool tiles, story tool links, place pages, the tax lookup's property card and the
+  briefing. Their addresses now show the "not found" page; there are no redirects (#510).
+  The affordable-housing records are still published per region
+  (`regions/<id>/affordable-housing.json`, #508), though no page reads them now.
+
 - **The old page layouts' leftover code** (2026-11-04, ARCHITECTURE #474): 36 components
   and their tests, six helpers, nine stylesheets, 114 dead CSS rules and 45 stale one-off browser
   check scripts. Nothing readers see changes.

@@ -26,7 +26,6 @@ const PAGES = [
   { name: 'tax-lookup', path: '/tax' },
   { name: 'atlas', path: '/atlas' },
   { name: 'compare', path: '/compare?places=224,394,85' },
-  { name: 'housing-help', path: '/help' },
   { name: 'visual-stories', path: '/stories' },
 ];
 const VIEWPORTS = [

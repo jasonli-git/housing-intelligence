@@ -6,7 +6,7 @@ import styles from "./poster.module.css";
 
 /** Every part of the page by what it answers, held at the top of the screen once the site
  *  bar scrolls away (#462), and marking the one being read. */
-export function PosterNav({ links, view }: { links: { id: string; label: string }[]; view?: boolean }) {
+export function PosterNav({ links }: { links: { id: string; label: string }[] }) {
   const [active, setActive] = useState(links[0]?.id);
   const bar = useRef<HTMLElement>(null);
   const heldUntil = useRef(0);
@@ -29,8 +29,6 @@ export function PosterNav({ links, view }: { links: { id: string; label: string 
     if (el && link) el.scrollTo({ left: link.offsetLeft - (el.clientWidth - link.offsetWidth) / 2, behavior: "smooth" });
   }, [active]);
   return <nav ref={bar} className={`${styles.topics} shortcut-bar`} aria-label="On this page">
-    {/* Which reader the figures answer, once the switch has scrolled away. CSS shows one. */}
-    {view && <a href="#view" className={styles.view}><span data-for="buy"><span className="visually-hidden">Showing figures for </span>Buying</span><span data-for="rent"><span className="visually-hidden">Showing figures for </span>Renting</span><span className="visually-hidden">. Change</span></a>}
     {links.map(({ id, label }) => <a key={id} href={`#${id}`} aria-current={active === id ? "location" : undefined} onClick={() => { heldUntil.current = Date.now() + 900; setActive(id); }}>{label}</a>)}
   </nav>;
 }

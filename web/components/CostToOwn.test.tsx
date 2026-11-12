@@ -59,7 +59,7 @@ describe("local monthly budget", () => {
     expect(container.querySelectorAll(".cost-ownership-breakdown .gone-kept").length).toBe(1);
   });
   it("collapses compact controls by default and sends deeper planning to the tools",()=>{
-    const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,compactOverview:true,guidePlaceId:224,comparePlaceId:224}));
+    const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,compactOverview:true,comparePlaceId:224}));
     const disclosure=container.querySelector('.cost-use-numbers') as HTMLDetailsElement;
     expect(disclosure.open).toBe(false);
     expect(disclosure.parentElement?.firstElementChild).toBe(disclosure);
@@ -76,10 +76,8 @@ describe("local monthly budget", () => {
     expect(container.querySelector('.cost-budget-result')?.textContent).toContain('missing:');
     expect(screen.getByRole('link',{name:'Find your fit →'}).getAttribute('href')).toContain('income=100000');
     fireEvent.change(screen.getByLabelText('Purchase price'),{target:{value:'600000'}});
-    const link=screen.getByRole('link',{name:'Check upfront cash & rent vs. buy →'});
-    expect(link.getAttribute('href')).toBe('/guide/numbers?place=224');
-    fireEvent.click(link);
-    expect(JSON.parse(sessionStorage.getItem('hip.guide.home.v1')??'{}').home.price).toBe(600000);
+    // The cost calculator's numbers page is retired (#507); nothing links to it.
+    expect(container.querySelector('a[href^="/guide/numbers"]')).toBeNull();
   });
   it("updates monthly layers from existing inputs without changing the starting estimate", () => {
     const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,showHelp:false}));

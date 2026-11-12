@@ -37,10 +37,7 @@ export function AtlasBar() {
           {item("/stories", "Stories")}
           <span className="bar-menu-group">Tools</span>
           {item("/guide", "Buyer’s guide")}
-          {item("/calculator", "Cost calculator")}
           {item("/tax", "Property tax lookup")}
-          {item("/affordable-housing", "Affordable housing records")}
-          {item("/help", "Housing help")}
           <span className="bar-menu-group">About this data</span>
           <a className="bar-menu-item" href="#site-foot"><b>Sources &amp; notices</b></a>
           <div className="atlas-bar-menu-licence"><LicenceLine /></div>

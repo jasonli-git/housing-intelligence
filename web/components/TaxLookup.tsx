@@ -77,11 +77,9 @@ type Found = { file: ParcelFile; parcels: Parcel[]; parcel: Parcel };
 export function TaxLookup({
   towns,
   artifactUrl,
-  rate = null,
 }: {
   towns: Town[];
   artifactUrl: string;
-  rate?: { value: number; asOf: string } | null;
 }) {
   const [query, setQuery] = useState("");
   const [townQuery, setTownQuery] = useState("");
@@ -314,7 +312,6 @@ export function TaxLookup({
           parcels={chosen.parcels}
           parcel={chosen.parcel}
           countyRecords={countyLookup(chosen.file.county ?? "", meta?.towns[chosen.file.geoid]?.[2] ?? "")}
-          rate={rate}
           artifactUrl={artifactUrl}
         />
       )}
@@ -335,14 +332,12 @@ function ParcelCard({
   parcels,
   parcel,
   countyRecords,
-  rate,
   artifactUrl,
 }: {
   file: ParcelFile;
   parcels: Parcel[];
   parcel: Parcel;
   countyRecords: string | null;
-  rate: { value: number; asOf: string } | null;
   artifactUrl: string;
 }) {
   const town = file.municipality ?? "this town";
@@ -444,13 +439,11 @@ function ParcelCard({
       </ul>
       </div>
       <details className={styles.propertyDetail}>
-        <summary>Ownership costs, lot details & nearby context</summary>
+        <summary>Lot details and the town around it</summary>
       <PropertyDetails
         parcel={parcel}
         geoid={file.geoid}
         town={town}
-        likelyValue={implied !== null && file.assessment_ratio ? Math.round(implied / 1000) * 1000 : null}
-        rate={rate}
         artifactUrl={artifactUrl}
       />
 

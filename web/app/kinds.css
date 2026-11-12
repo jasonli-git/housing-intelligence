@@ -27,4 +27,3 @@
 :is(a[href^="/afford"], [data-kind="budget"]) { --kind: var(--kind-budget); }
 :is(a[href^="/guide"], [data-kind="guide"]) { --kind: var(--kind-guide); }
 :is(a[href^="/tax"], [data-kind="tax"]) { --kind: var(--kind-tax); }
-:is(a[href^="/help"], [data-kind="help"]) { --kind: var(--kind-help); }

@@ -9,7 +9,7 @@ it("keeps all six tools directly linked with real text and paired theme previews
   render(<HomeTools />);
   const tools = screen.getByRole("region", { name: "Tools" });
   const links = within(tools).getAllByRole("link");
-  expect(links.map((a) => a.getAttribute("href"))).toEqual(["/atlas?level=municipality&measure=sr1a_median_sale_price&view=latest&budget=1", "/guide", "/tax", "/compare", "/help", "/atlas"]);
+  expect(links.map((a) => a.getAttribute("href"))).toEqual(["/atlas?level=municipality&measure=sr1a_median_sale_price&view=latest&budget=1", "/guide", "/tax", "/compare", "/atlas"]);
   for (const [i, link] of links.entries()) {
     // The name is a tag on the screenshot, hidden from screen readers there, and read
     // once from the link's hidden text.
