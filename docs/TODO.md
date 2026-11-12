@@ -29,12 +29,14 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — between milestones (2026-11-03)
+## Now — direction set (2026-11-12)
 
-Milestone 60 is live, and the Starbucks index's list has been revisited on
-`story/starbucks-index-shops` (ARCHITECTURE #471): chains and other kinds of place, at
-least 25 towns a bubble; the Wawa line moved to Overture on the same branch (#472). Next:
-the owner's review of that PR.
+The owner set a new direction on 2026-11-12: a platform for people who study places,
+data shared as bulk files only (SPEC v1.6, ARCHITECTURE #505–#512). Milestones 61–65 in
+[ROADMAP.md](ROADMAP.md) carry it out in order. Next: Milestone 61, retiring the shopper
+tools, once the owner starts it. Open items below that concern Housing help, the
+Affordable housing records page, the Cost calculator or `/guide/numbers` end with
+Milestone 61 rather than being done.
 
 ## Open
 
