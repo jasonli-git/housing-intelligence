@@ -51,7 +51,8 @@ are not yet recorded here.
 ### Removed
 
 - **"Places within my budget" links on place pages** (2026-11-12, ARCHITECTURE #517).
-  The budget tool on the map stays, reached from the home page and the footer.
+  The budget tool on the map stays, reached from the home page's tool tiles; the
+  footer's Tools list leaves it out too (#518).
 
 - **The tax lookup's "What owning it would cost" and "Renting nearby instead"**
   (2026-11-12, ARCHITECTURE #516). The property card keeps the lot and the links to the

@@ -85,7 +85,8 @@ export async function SourceFooter() {
         <nav className="site-foot-band" aria-labelledby="tools-heading">
           <h2 className="site-foot-label" id="tools-heading">Tools</h2>
           <p className="site-foot-links">
-            {HOME_TOOLS.map((tool) => <Link key={tool.href} href={tool.href} prefetch={false}>{tool.title}</Link>)}
+            {/* The budget tool asks for the reader's income, so the footer leaves it out (#518). */}
+            {HOME_TOOLS.filter((tool) => tool.shot !== "budget-explorer").map((tool) => <Link key={tool.href} href={tool.href} prefetch={false}>{tool.title}</Link>)}
             <Link href="/stories" prefetch={false}>Visual stories</Link>
           </p>
         </nav>
