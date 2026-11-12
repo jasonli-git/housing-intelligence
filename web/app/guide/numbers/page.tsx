@@ -30,8 +30,9 @@ export default async function GuideNumbersPage() {
 
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} guideActive title="Your own numbers" />
+      <Masthead affordability={{ kind: "route" }} guideActive />
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool guide-page horizon-page" data-region-level="guide">
+        <header className="tool-head"><h1>Your own numbers</h1></header>
         <header className="page-head" data-kind="tool">
           <div>
             <p className="meta">Your income, down payment or a listing’s price, against a place’s published costs: can you afford it, and should you rent or buy? <a href="/guide">Back to the briefing</a>.</p>

@@ -23,8 +23,9 @@ export default async function ComparePage() {
   const rate = await nationalMortgageRate();
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} compareActive title="Compare places" />
+      <Masthead affordability={{ kind: "route" }} compareActive />
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool compare-page compare-ledger" data-region-level="compare">
+        <header className="tool-head"><h1>Compare places</h1></header>
         {rate ? (
           <ComparePlaces
             artifactUrl={process.env.GUIDE_PREVIEW_ARTIFACT_URL ?? artifactUrl}

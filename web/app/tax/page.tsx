@@ -50,8 +50,9 @@ export default async function TaxPage() {
 
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} taxActive title="Property tax lookup" />
+      <Masthead affordability={{ kind: "route" }} taxActive />
       <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-tool quiet-county quiet-tax horizon-page ${styles.taxPage}`} data-region-level="tax">
+        <header className="tool-head"><h1>Property tax lookup</h1></header>
         <header className="page-head" data-kind="tool">
           <div>
             <p className="meta tax-intro">Find the recorded tax bill, assessment, and town context for a New Jersey property.</p>

@@ -14,9 +14,8 @@ import { LicenceLine } from "@/components/LicenceLine";
  * lives in `app/site-bar.css`.
  *
  * One Menu, at every width, lists every destination: the three main ones and the four
- * tools the bar dropped on 2026-11-03 (#492). A tool page passes `title`, and the bar then
- * carries the page's name as its heading, as the housing map's own bar does (#479), in
- * place of the three inline links and of a title block above the tool.
+ * tools the bar dropped on 2026-11-03 (#492). A tool page's name is its own `h1`, the
+ * first thing in `<main>` (`.tool-head`, #501), so the bar is the same on every page.
  */
 export function Masthead({
   compareActive = false,
@@ -27,7 +26,6 @@ export function Masthead({
   recordsActive = false,
   calculatorActive = false,
   affordability,
-  title,
   search = true,
 }: {
   affordability: AffordabilityControl;
@@ -41,8 +39,6 @@ export function Masthead({
   atlasActive?: boolean;
   /** On the compare page. */
   compareActive?: boolean;
-  /** A tool page's name, shown in the bar as the page's `h1`. */
-  title?: string;
   /** On the home page, a selector for its own large search: the bar's appears only once
    *  the reader has scrolled past it. False leaves the bar without one. */
   search?: boolean | { after: string };
@@ -91,8 +87,6 @@ export function Masthead({
         <ThemeToggle />
       </div>
     </nav>
-    {/* MOCK (2026-11-11): one bar on every page; a tool's name is the page's heading. */}
-    {title && <header className="tool-head"><h1>{title}</h1></header>}
     </>
   );
 }
