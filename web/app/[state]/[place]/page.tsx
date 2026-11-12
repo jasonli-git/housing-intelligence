@@ -527,7 +527,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   ].flatMap((figure) => (figure ? [figure] : []));
   type Figure = { label: string; value: string; kind: RecordType | null | undefined; position: number | null; text: string | null; fine: string };
   const band = (items: Figure[], who?: "buy" | "rent") => items.length > 0 && <dl className={acts.figures} data-for={who} aria-label={`${name} at a glance${who === "rent" ? ", renting" : who === "buy" ? ", buying" : ""}`}>{items.map((f) => <div key={f.label}>
-    <dt>{f.label}</dt>
+    <dt><Glossed text={f.label} /></dt>
     <dd className={acts.value}>{f.value}</dd>
     {f.text && <dd className={acts.peer}>{f.position !== null && <span className={acts.tick} aria-hidden="true"><i style={{ left: `${f.position * 100}%` }} /></span>}{f.text}</dd>}
     <dd className={acts.fine}>{f.kind && <Chip kind={f.kind} />}{f.fine}</dd>
@@ -621,7 +621,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         </svg>
         <p className={acts.ends}><span>{growthStart!.slice(0, 4)} · <b>0%</b></span><span>{new Date(Math.max(...growthTimes)).getUTCFullYear()}</span></p>
         <ul className={styles.key}>{growthSeries.map((g) => { const last = g.points.at(-1)!; return <li key={g.label}><i style={{ background: g.color }} />{g.label} <b>{last.index >= 100 ? "+" : "−"}{Math.abs(last.index - 100).toFixed(0)}%</b></li>; })}</ul>
-        <Prov kind="modelled">Each line starts at 0% in {growthStart!.slice(0, 4)}, the faint rule, in dollars not adjusted for inflation. Zillow; income is the Census ACS five-year survey, so it moves slowly.</Prov>
+        <Prov kind="modelled"><Glossed text={`Each line starts at 0% in ${growthStart!.slice(0, 4)}, the faint rule, in dollars not adjusted for inflation. Zillow; income is the Census ACS five-year survey, so it moves slowly.`} /></Prov>
       </section> : null;
   const rentLine = growthSeries.find((g) => g.label === "Rent");
   const growthTile = growthSeries.length > 1 ? growthTileFor(`${growthLeader.label} grew fastest: up ${(growthLeader.points.at(-1)!.index - 100).toFixed(0)}% since ${growthStart!.slice(0, 4)}`) : null;
@@ -634,7 +634,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
   const pressureTile = pressureStory ? <section className={`${acts.tile} ${acts.wide} ${styles.pressure}`}>
         <h3 className={acts.find}>{pressureStory.headline}</h3>
         <StoryBars rows={pressureStory.rows} />
-        <Prov kind="survey">{pressureStory.source}, {pressureStory.period} · {storyLink("pressure")}</Prov>
+        <Prov kind="survey"><span data-terms="off">{pressureStory.source}</span>, {pressureStory.period} · {storyLink("pressure")}</Prov>
       </section> : null;
   const paceTile = domNow && domUsual !== null && county ? <section id="pace" className={`${acts.tile} ${acts.wide}`}>
         <h3 className={acts.find}>Homes in {displayName(county)} sit about {Math.round(domNow.value)} days, {Math.abs(domGap) < 3 ? "close to usual" : domGap < 0 ? `${Math.round(-domGap)} faster than usual` : `${Math.round(domGap)} slower than usual`}</h3>
@@ -646,11 +646,11 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           <circle cx={dx(domSeries.length - 1)} cy={dy(domNow.value)} r="5" fill="var(--series-2)" />
           {domYears.map(({ year, i }) => <text key={year} x={dx(i)} y={DH - 6} textAnchor="middle">{year}</text>)}
         </svg>
-        <Prov kind={kindOf("realtor_median_days_on_market")}>Median days on market, by month{domYearAgo ? ` · ${Math.round(domYearAgo.value)} days a year earlier` : ""}{domRank && countyWaits.length ? ` · ${ordinal(domRank)} quickest of ${countyWaits.length} NJ counties` : ""}. County figures, not this town alone, and they rise and fall with the seasons. Realtor.com via FRED, {asOf(domNow)}.</Prov>
+        <Prov kind={kindOf("realtor_median_days_on_market")}><Glossed text={`Median days on market, by month${domYearAgo ? ` · ${Math.round(domYearAgo.value)} days a year earlier` : ""}${domRank && countyWaits.length ? ` · ${ordinal(domRank)} quickest of ${countyWaits.length} NJ counties` : ""}. County figures, not this town alone, and they rise and fall with the seasons.`} /> Realtor.com via FRED, {asOf(domNow)}.</Prov>
       </section> : null;
   const priceAct = (salesFigure || estimateFigure) ? <>
     <div className={acts.lead}>
-      <h3 className={acts.find}>{priceFind}</h3>
+      <h3 className={acts.find}><Glossed text={priceFind} /></h3>
       <div className={acts.cols}>{salesFigure}{estimateFigure}</div>
       {priceNote}
     </div>
@@ -734,7 +734,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         <h3 className={acts.find}>{lendingStory.headline}</h3>
         <StoryBars rows={lendingStory.rows} />
         {said([level("hmda_denial_rate") && { value: pct("hmda_denial_rate")!, label: "of applications denied" }, level("hmda_median_rate") && { value: `${level("hmda_median_rate")!.value.toFixed(2)}%`, label: "median mortgage rate" }, level("hmda_median_ltv") && { value: `${level("hmda_median_ltv")!.value.toFixed(0)}%`, label: "median loan-to-value" }].flatMap((fact) => (fact ? [fact] : [])))}
-        <Prov kind="calculated">{lendingStory.source}, {lendingStory.period} · {storyLink("lending")}</Prov>
+        <Prov kind="calculated"><span data-terms="off">{lendingStory.source}</span>, {lendingStory.period} · {storyLink("lending")}</Prov>
       </section>}
       {pressureTile}
     </MoreTiles>}
@@ -840,7 +840,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
       {buildingStory && <section className={acts.tile}>
         <h3 className={acts.find}>{buildingStory.headline}</h3>
         <StoryBars rows={buildingStory.rows} />
-        <Prov kind="administrative">{buildingStory.source}, {buildingStory.period} · {storyLink("building")}</Prov>
+        <Prov kind="administrative"><span data-terms="off">{buildingStory.source}</span>, {buildingStory.period} · {storyLink("building")}</Prov>
       </section>}
       {seasonalHomes >= 0.1 && <section id="seasonal" className={acts.tile}>
         <h3 className={acts.find}>{(seasonalHomes * 100).toFixed(0)}% of homes here are kept for seasonal use</h3>
@@ -971,7 +971,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
           {hasRent && <><div className={acts.sheet} data-for="rent">{rentAct ?? none("rent")}</div>{rentCostAct && <div className={acts.sheet} data-for="rent">{rentCostAct}</div>}</>}
           <div className={styles.chapterGrid} data-for={hasRent ? "buy" : undefined}>
         {homeRow && <section id="price" className={`${styles.panel} ${styles.price}`}>
-          <h2>{priceFind}</h2>
+          <h2><Glossed text={priceFind} /></h2>
           {salesFigure}
           {estimateFigure && <div className={salesFigure ? styles.building : undefined}>{estimateFigure}</div>}
           {priceNote}
@@ -1021,7 +1021,7 @@ export default async function PlacePoster({ params }: { params: Promise<{ state:
         {pressureStory && <section id="affordability" className={`${styles.panel} ${styles.pressure}`}>
           <h2>{pressureStory.headline}</h2>
           <StoryBars rows={pressureStory.rows} />
-          <p className={styles.caption}>{pressureStory.source}, {pressureStory.period} · {storyLink("pressure")}</p>
+          <p className={styles.caption}><span data-terms="off">{pressureStory.source}</span>, {pressureStory.period} · {storyLink("pressure")}</p>
         </section>}
           {domNow && domUsual !== null && <section className={`${styles.panel} ${styles.pace}`}><h2>Homes sit {Math.round(domNow.value)} days, {Math.abs(domGap) < 3 ? "close to usual" : domGap < 0 ? `${Math.round(-domGap)} faster than usual` : `${Math.round(domGap)} slower than usual`}</h2><MiniLine values={domSeries.map((o) => o.value)} base={domUsual} /><p className={styles.caption}>{domRank ? `${ordinal(domRank)} quickest of ${countyWaits.length} counties. ` : ""}Realtor.com via FRED, {asOf(domNow)}</p></section>}
           {persistence && <section className={`${styles.panel} ${styles.unusual}`}><h2>Prices against incomes: {againstUsual(persistence.vs_median!)} usual</h2><MiniBars values={persistence.series.map((p) => p.vs_median)} /><p className={styles.caption}>{persistence.first_year}–{persistence.last_year}. FHFA and Census</p></section>}
