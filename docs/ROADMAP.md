@@ -24,6 +24,9 @@ does not hold the version open. **Version 4 is optional research**, not a condit
 platform being finished: 53–55 are built only if the owner chooses one. Work after
 Version 3 is polish and reliability, tracked in [TODO.md](TODO.md).
 
+**Version 5 was set on 2026-11-12:** a narrower platform for people who study places,
+with data shared as bulk files, then a second state. Milestones 61–65 are below.
+
 Two milestones ran out of numeric order. Milestone 9 was built before Milestone 5,
 because it corrects numbers the dashboard displays and fixing them afterwards would have
 meant re-checking every chart. Milestone 8 closed last, on 2026-08-14: eight local models
@@ -545,6 +548,21 @@ the owner returned Milestones 14 and 15 to unscheduled.
 | 54 | ⬜ planned | **Local price model study** — ends in a **go or no-go**. Whether SR1A can support a home-value index of the platform's own, repeat-sales or hedonic: the first answer to *what homes here are worth*, rather than *what sold*, that does not depend on Zillow. Needs stable property matching, enough repeat sales, a treatment of renovations, and out-of-sample testing. A no is a complete answer |
 | 55 | ⬜ planned | **Affordability forecasting**, behind the four conditions already recorded: it beats a no-change and a straight-line baseline on held-out history or it does not publish; its confidence is an interval whose coverage the backtest measured, never a label, because a model reading "confidence: high" will say it more strongly than it should; it states the lag it inherits, since ACS 5-year estimates overlap by four years and a projection compounds that; and "temporary or persistent" is computed by the module, never concluded by a model. It produces evidence — direction, magnitude, horizon, interval, assumptions — for the interpretation layer to read beside Milestone 52's history. **Needs its own accuracy evaluation**, the way the interpretation layer got one. Backtests run on the figures as they stood at each forecast date, not as since revised — which `fact_revision` (Milestone 29) makes possible — broken down by geography and horizon, with a rule for withholding a forecast where the evidence is weak, and scenarios (*what if rates rise a point?*) before predictions. *(Old 34.)* |
 
+## Version 5 Milestones (a narrower platform, then a second state)
+
+**Direction set by the owner on 2026-11-12** (SPEC v1.6; ARCHITECTURE #505–#512). The
+platform is for people who study places, not people shopping for a home, and shares its
+data as bulk files only. These milestones carry that out in order; each waits for the one
+before it. Decision 7 (the briefing and Compare share takeaways) is already built (#308).
+
+| M | Status | Deliverable |
+|---|--------|-------------|
+| 61 | ⬜ planned | **Retire the shopper tools** (ARCHITECTURE #507, #508, #510). Remove Housing help, the Affordable housing records page, the Cost calculator and `/guide/numbers`, and every link to them: the menus, the footer, glossary entries, the stories register, the sitemap, and the screenshot and accessibility scripts. No redirects. First task: find what else reads the affordable-housing records, which stay. Also an audit of leftover buyer or renter framing elsewhere (the place pages' `?for=rent` switch, #490; home page copy), listed for the owner to decide item by item |
+| 62 | ⬜ planned | **The briefing, general and short** (#511). Mock first. Drop the buyer framing, cut the deck to the few takeaways about a place from `lib/takeaways.ts` (#512), and decide whether the monthly-cost slide stays |
+| 63 | ⬜ planned | **A second state.** The first step of Milestone 14's chain, below in *Still unscheduled*: which state is chosen at the start. It comes before downloads so their format is settled across two states, not one |
+| 64 | ⬜ planned | **Bulk downloads** (#509). A versioned bundle per state with a data dictionary. Each source's terms read first; Zillow left out until its developer program answers |
+| 65 | ⬜ planned | **County briefings** (#511). The briefing for counties, reusing their published readings |
+
 ## The completeness standing check
 
 **Why this exists.** A platform can look more complete by filling cells — a neighbouring
@@ -673,7 +691,8 @@ display rules rather than by cost.
 
 **Expansion past New Jersey**, returned here by the owner on 2026-09-18 after briefly
 sitting in Version 5. It was deferred on 2026-09-07 for reasons that have not changed,
-and the three entries below are one chain: nothing after the first can start before it.
+and the three entries below are one chain: nothing after the first can start before it. On 2026-11-12 the owner scheduled
+its first step, a single second state, as Milestone 63.
 
 - **Milestone 14 — Northeast expansion.** CT, MA, ME, NH, NY, PA, RI and VT at all five
   levels: the first run of the pipeline at roughly seven times current volume, and a

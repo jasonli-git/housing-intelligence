@@ -1,5 +1,5 @@
 # Housing Intelligence Platform Specifications
-## Product Specification v1.5
+## Product Specification v1.6
 
 ### Vision
 
@@ -7,7 +7,7 @@ Build a modular Housing Intelligence Platform that functions as a structured ana
 
 The purpose of the application is not to become a generic real estate dashboard or an AI chatbot. Instead, it exists to collect, clean, connect, analyze, and explain public housing, property, demographic, and economic data.
 
-The system should transform fragmented public datasets—including NJ parcel data, MOD-IV property records, Zillow research data, Census data, FHFA indexes, building permits, FRED, BLS, IRS migration, and future sources—into a consistent analytical warehouse that can support dashboards, maps, reports, rankings, APIs, and optional AI-generated explanations.
+The system should transform fragmented public datasets—including NJ parcel data, MOD-IV property records, Zillow research data, Census data, FHFA indexes, building permits, FRED, BLS, IRS migration, and future sources—into a consistent analytical warehouse that can support dashboards, maps, reports, rankings, bulk data downloads, and optional AI-generated explanations.
 
 The platform should prioritize trustworthy housing intelligence rather than raw data display.
 
@@ -216,6 +216,13 @@ This refines principle 11 for the observed figures it leaves most room to misrea
 ---
 
 ### User Experience
+
+The platform is for people who want to understand housing in a place: journalists,
+advocates, planners, housing counsellors and researchers. It does not try to be a
+home-search or home-buying tool for first-time buyers and renters; they already have
+listing sites and search engines, and the platform does not compete with them. What it
+offers that they do not is town-level data joined across sources, each figure dated and
+sourced.
 
 The application should feel less like “chat with housing data” and more like a housing intelligence workspace.
 
@@ -542,7 +549,7 @@ Examples of future capabilities include:
 * climate and flood-risk overlays
 * migration-driven demand analysis
 * automated monthly housing reports
-* public analytics API
+* bulk data downloads, one bundle per state with a data dictionary
 * model-comparison dashboard
 * optional AI report generation
 
@@ -564,7 +571,8 @@ Version 1 should not attempt to:
 * require cloud data warehousing
 * predict home prices perfectly
 * support every state-specific dataset
-* become a consumer home-buying app
+* become a consumer home-buying or renting app
+* run a hosted public API or AI connector
 
 Instead, Version 1 should focus on building a robust NJ-first housing data foundation with strong analytics, clear source provenance, and an optional evaluated AI explanation layer.
 
@@ -784,3 +792,43 @@ largest county packet in its window. The hosted list spans three providers in tw
 regulatory regimes (Anthropic, Google, DeepSeek), so one vendor decision no longer
 removes every tier, and a stale reading is a better failure than one from a model the
 current benchmark has not measured.
+
+---
+
+### Amendments in v1.6
+
+Recorded 2026-11-12. The sections above are the current specification; this section
+says what changed and why, as the earlier amendment sections do.
+
+#### 1. The audience is people who study places, not people shopping for a home
+
+**Previous idea:** The User Experience section named analytical exploration and
+portfolio demonstration as its two uses and did not name an audience. In practice the
+site grew tools for first-time buyers and renters: a buyer's guide, a cost calculator, a
+directory of housing help and a finder for affordable units.
+
+**Current version:** The platform is for journalists, advocates, planners, housing
+counsellors and researchers. Tools built for a buyer or renter shopping for a home are
+out of scope; a tool stays only if it is generated from the warehouse, so that it carries
+to another state without hand upkeep.
+
+**Reason:** Decided by the owner on 2026-11-12. Buyers and renters use listing sites and
+search engines, which the platform cannot match, and serving them and researchers at once
+was not sustainable with more states to come. Its distinct asset is town-level data
+joined across sources and dated, which is what people studying a place need.
+
+#### 2. Data is distributed as bulk files only
+
+**Previous idea:** The vision listed APIs among what the warehouse supports, and the
+long-term direction listed a public analytics API.
+
+**Current version:** The platform publishes its data as downloadable files: a few large,
+versioned files per state with a data dictionary. It does not run a hosted public API or
+an AI connector. The per-place files the site reads stay public but undocumented and
+unversioned, and are not a supported interface.
+
+**Reason:** Decided by the owner on 2026-11-12. Static files cost almost nothing to serve,
+while an API or connector would cost more as traffic grew and would need upkeep in every
+new state. Sources whose terms do not allow redistribution, Zillow's among them until
+its developer program answers, are left out of the files.
+
