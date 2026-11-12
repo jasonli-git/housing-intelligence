@@ -161,3 +161,5 @@ body:has(.bf-page) main.bf-page {
 .bf-parts i { width: 1.2cqw; height: 1.2cqw; }
 .bf-parts b { font-weight: 500; font-variant-numeric: tabular-nums; }
 .bf-parts small { color: var(--slide-muted); text-align: right; font-variant-numeric: tabular-nums; }
+/* The page's heading lines up with the deck, which is centred at its own width. */
+body:has(.bf-page) main.bf-page > .tool-head { width: min(96vw, calc((100vh - 230px) * 16 / 9), 1800px); margin: 0 auto; box-sizing: border-box; }
