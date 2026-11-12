@@ -11,11 +11,13 @@ const ARTIFACTS = 'https://housing-data.jasonli.app';
 // UI samples, not property listings or publisher screenshots. Use only our own
 // rendered interfaces and public aggregate figures; never capture a parcel address.
 export const TOOL_PREVIEWS = [
-  { name: 'budget-explorer', path: '/afford?income=110000', ready: '.budget-headline strong' },
-  { name: 'buyers-guide', path: '/guide?place=224', ready: '.decision-guide[data-ready="true"]', income: true },
+  // The Budget explorer is the map's budget card now (#496); the card ships under the old name.
+  { name: 'budget-explorer', path: '/atlas?level=municipality&measure=sr1a_median_sale_price&view=latest&budget=1&income=110000', ready: 'path[data-budget="within"]' },
+  // The guide is a briefing deck (#498): ready once its title slide names the place.
+  { name: 'buyers-guide', path: '/guide?place=224', ready: '.bf-frame >> text=Buying in Princeton' },
   { name: 'tax-lookup', path: '/tax', ready: '.tax-search-field input:not(:disabled)' },
-  { name: 'compare', path: '/compare?places=224,394,85', ready: '.compare-table tbody tr' },
-  { name: 'housing-help', path: '/help', ready: '.help-routes' },
+  { name: 'compare', path: '/compare?places=224,394,85', ready: '.compare-table tbody tr:not(.compare-section) td strong' },
+  { name: 'housing-help', path: '/help', ready: '.hh-routes' },
   { name: 'atlas', path: '/atlas?level=county', ready: '.atlas-county-map path[data-county]' },
 ];
 

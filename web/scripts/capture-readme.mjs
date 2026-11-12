@@ -21,7 +21,7 @@ const PAGES = [
   { name: 'new-jersey', path: '/states/new-jersey' },
   { name: 'county', path: '/nj/mercer-county' },
   { name: 'town', path: '/nj/princeton' },
-  { name: 'budget-explorer', path: '/afford?income=110000' },
+  { name: 'budget-explorer', path: '/atlas?level=municipality&measure=sr1a_median_sale_price&view=latest&budget=1&income=110000' },
   { name: 'buyers-guide', path: '/guide?place=224' },
   { name: 'tax-lookup', path: '/tax' },
   { name: 'atlas', path: '/atlas' },
