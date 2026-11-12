@@ -141,9 +141,9 @@ a.bar-icon svg { width: 16px; height: 16px; fill: currentColor; }
 }
 
 /* MOCK (2026-11-11): a tool page's name, under the one bar. */
-.tool-head { box-sizing: border-box; width: 100%; max-width: var(--shell); margin: 0 auto; padding: 28px var(--gutter) 4px; }
+.tool-head { padding: 28px 0 4px; }
 .tool-head h1 { margin: 0; font: var(--weight-display) clamp(26px, 4vw, 36px)/1.1 var(--font-display); letter-spacing: var(--track-display); color: var(--text-primary); }
-@media (max-width: 640px) { .tool-head { padding: 20px 16px 0; } }
+@media (max-width: 640px) { .tool-head { padding: 20px 0 0; } }
 
 /* MOCK (2026-11-11): the Menu redesigned. Two lines that close into a cross, no arrow;
    a wider panel in two labelled groups. */

@@ -21,8 +21,9 @@ export default async function AffordableHousingPage() {
   const list: LookupTown[] = (towns?.items ?? []).map((t) => ({ id: t.region_id, name: t.name, county: countyName.get(t.parent_id ?? -1) ?? "", countyId: t.parent_id ?? null }))
     .sort((a, b) => a.name.localeCompare(b.name));
   return <>
-    <Masthead affordability={{ kind: "route" }} recordsActive title="Affordable housing records" />
+    <Masthead affordability={{ kind: "route" }} recordsActive />
     <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-tool housing-help-page horizon-page ${styles.helpPage}`} data-region-level="help">
+      <header className="tool-head"><h1>Affordable housing records</h1></header>
       <header className="page-head" data-kind="tool"><div><p className="meta ah-intro">Find the affordable homes on record in a New Jersey town, and who to call about them.</p></div></header>
       <AffordableLookup towns={list} inventoryHref="/help/inventory.json" />
     </main>

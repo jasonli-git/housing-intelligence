@@ -17,9 +17,9 @@ describe("the bar's destinations", () => {
     expect(html).not.toMatch(/<summary>[^]*?Tools[^]*?<\/summary>/);
     expect(html.match(/<summary/g)).toHaveLength(1);
   });
-  it("keeps the same bar on a tool page and gives its name a heading below it", () => {
-    const html = renderToStaticMarkup(createElement(Masthead, { affordability: { kind: "route" }, title: "Compare places" }));
-    expect(html).toContain('<header class="tool-head"><h1>Compare places</h1></header>');
+  it("is the same bar on a tool page, with no heading of its own: the page's h1 is inside main", () => {
+    const html = renderToStaticMarkup(createElement(Masthead, { affordability: { kind: "route" }, compareActive: true }));
+    expect(html).not.toContain("<h1");
     expect(html).toContain("bar-desktop-tools");
   });
 });

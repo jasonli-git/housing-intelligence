@@ -18,8 +18,9 @@ export const metadata = pageMetadata({
 export default function HousingHelpPage() {
   return <>
     <HelpRedirect />
-    <Masthead affordability={{ kind: "route" }} helpActive title="Housing help" />
+    <Masthead affordability={{ kind: "route" }} helpActive />
     <main id="main-content" tabIndex={-1} className="shell horizon-page hh-page" data-region-level="help" data-kind="help">
+      <header className="tool-head"><h1>Housing help</h1></header>
       <header className="hh-head">
         <h2>What do you need?</h2>
         <p>Three official routes in New Jersey. Pick the one that sounds like you.</p>

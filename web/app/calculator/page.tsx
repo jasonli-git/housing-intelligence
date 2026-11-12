@@ -15,8 +15,9 @@ export default async function CalculatorPage() {
   const [rate, catalog] = await Promise.all([nationalMortgageRate(), api.metrics()]);
   const newest = Object.fromEntries((catalog ?? []).map((m) => [m.metric_id, m.last_period]));
   return <>
-    <Masthead affordability={{ kind: "route" }} calculatorActive title="Cost calculator" />
+    <Masthead affordability={{ kind: "route" }} calculatorActive />
     <main id="main-content" tabIndex={-1} className="shell horizon-page cc-page" data-kind="budget">
+      <header className="tool-head"><h1>Cost calculator</h1></header>
       <p className="meta cc-intro">What one place would cost you, with your own numbers.</p>
       {rate ? <CostCalculator artifactUrl={process.env.GUIDE_PREVIEW_ARTIFACT_URL ?? artifactUrl} rate={{ value: rate.value, asOf: periodLabel(rate.period_start, rate.metric_id) }} newest={newest} /> : <p>The mortgage rate is unavailable in this build.</p>}
     </main>
