@@ -143,7 +143,7 @@
   main.compare-ledger .compare-table td small { font-size: 12px; color: var(--ledger-muted); }
   main.compare-ledger .compare-table td small.compare-kind { margin-top: .3rem; padding: 0; border: 0; font-weight: 500; font-size: 11px; color: var(--ledger-muted); }
   main.compare-ledger .compare-table td small.compare-kind::before { content: "· "; }
-  main.compare-ledger .compare-table td small.compare-difference { color: var(--ledger-accent); }
+  main.compare-ledger .compare-table td small.compare-difference { color: var(--ledger-ink); font-weight: 500; }
   main.compare-ledger .compare-missing { font: 400 26px/1 Georgia, serif; color: var(--ledger-muted); }
   main.compare-ledger .compare-section th { padding: 2.2rem 0 .7rem !important; font: 400 clamp(24px, 2.4vw, 32px)/1.1 Georgia, serif !important; letter-spacing: -.02em !important; text-transform: none !important; color: var(--ledger-ink) !important; border-bottom: 1px solid var(--ledger-ink) !important; }
 }
@@ -190,3 +190,78 @@
 @media screen and (max-width: 600px) { main.compare-ledger .compare-slots a.compare-slot-name { font-size: 15px; } }
 @media screen { .compare-pair-names { font: 700 16px/1.2 var(--font-display); letter-spacing: -.01em; } .compare-pair-names i { font: 500 12px/1 var(--font-text); font-style: normal; } }
 @media screen { .compare-ghost-head b { font: 800 12px/1 var(--font-display); letter-spacing: .02em; text-transform: uppercase; } }
+
+/* MOCK (2026-11-12): the biggest differences, by statewide rank, and the briefing's
+   takeaways as the Overview's first row. Places are numbered dots, matching their columns. */
+@media screen {
+  .compare-dot { display: inline-grid; place-items: center; width: 20px; height: 20px; flex: none; font: 600 11px/1 var(--font-text); color: var(--ledger-card); background: var(--ledger-ink); border-radius: 50%; }
+  .compare-dot[data-easier] { background: var(--poster-tone-1); }
+  .compare-slot { position: relative; }
+  .compare-slot > .compare-dot { margin-bottom: -.1rem; }
+  .compare-slots[data-stuck] .compare-slot > .compare-dot { display: none; }
+
+  .compare-strip { position: relative; display: block; height: 20px; margin-top: .45rem; max-width: 11rem; }
+  .compare-strip-track { position: absolute; inset: 50% 0 auto; height: 2px; translate: 0 -50%; background: var(--ledger-rule); border-radius: 2px; }
+  .compare-strip .compare-dot { position: absolute; top: 0; translate: -50% 0; width: 18px; height: 18px; font-size: 10px; box-shadow: 0 0 0 2px var(--ledger-card); }
+
+  .compare-diffs { margin: 1.25rem 0 1.5rem; }
+  .compare-diffs h2 { margin: 0 0 .75rem; font: 600 11px/1.3 var(--font-mono, monospace); letter-spacing: .1em; text-transform: uppercase; color: var(--ledger-muted); }
+  .compare-diffs-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: .75rem; margin: 0; padding: 0; list-style: none; }
+  .compare-diffs-list > li { display: grid; align-content: start; gap: .35rem; padding: 1rem 1.1rem; background: var(--ledger-card); border: 1px solid var(--ledger-rule); border-radius: 14px; }
+  .compare-diffs-list h3 { margin: 0; font: 600 15px/1.25 var(--font-text); color: var(--ledger-ink); }
+  .compare-diffs-list .compare-strip { max-width: none; margin-top: .4rem; }
+  .compare-strip-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--ledger-muted); }
+  .compare-diffs-list ul { display: grid; gap: .3rem; margin: .4rem 0 0; padding: 0; list-style: none; }
+  .compare-diffs-list ul li { display: grid; grid-template-columns: auto 1fr auto; column-gap: .5rem; align-items: center; font-size: 13.5px; }
+  .compare-diffs-list ul li small { grid-column: 2 / -1; font-size: 11.5px; color: var(--ledger-muted); }
+  .compare-diffs-list ul li[data-easier] small { color: var(--poster-tone-1); }
+  .compare-diffs-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ledger-ink); }
+  .compare-diffs-gap { margin-top: .3rem; font-size: 11.5px; color: var(--ledger-muted); }
+  .compare-diffs-none, .compare-diffs-note { margin: .6rem 0 0; font-size: 13px; color: var(--ledger-muted); }
+
+  .compare-table tr[data-notable] > th { box-shadow: inset 3px 0 0 var(--ledger-accent); padding-left: .75rem; }
+  .compare-table td[data-easier] strong { color: var(--poster-tone-1); }
+
+  .compare-standout th small { display: block; margin-top: .2rem; font-size: 11.5px; font-weight: 400; color: var(--ledger-muted); }
+  .compare-standout ul { display: grid; gap: .3rem; margin: 0; padding: 0; list-style: none; }
+  .compare-standout li { display: grid; font-size: 13.5px; }
+  .compare-standout li b { font-weight: 600; }
+  .compare-standout li small { font-size: 11.5px; color: var(--ledger-muted); }
+  .compare-standout li[data-mark^="very"] small { color: var(--ledger-accent); font-weight: 600; }
+}
+
+/* MOCK (2026-11-12): the three placements, and the takeaways under each name. */
+@media screen {
+  .compare-slot-standout { max-width: 16rem; font-size: 12px; line-height: 1.35; color: var(--ledger-muted); }
+  .compare-slots[data-stuck] .compare-slot-standout { display: none; }
+  .compare-diffs-summary { margin: 1rem 0 .25rem; font-size: 14.5px; color: var(--ledger-ink); }
+  .compare-diffs-summary a { color: var(--ledger-accent); text-underline-offset: 3px; }
+  .compare-table tr[id] { scroll-margin-top: calc(var(--bar-h, 54px) + 5rem); }
+  .compare-table tr:target > * { background: color-mix(in srgb, var(--ledger-accent) 8%, transparent); }
+  .compare-table tbody:first-of-type .compare-section:not([hidden]) th, .compare-table .compare-section th { padding-top: 1.25rem; }
+  .compare-mock-switch { position: fixed; right: 16px; bottom: 16px; z-index: 50; display: flex; align-items: center; gap: .25rem; padding: .35rem; font-size: 12.5px; background: var(--ledger-card); border: 1px solid var(--ledger-rule); border-radius: 999px; box-shadow: 0 6px 24px color-mix(in srgb, var(--ledger-ink) 18%, transparent); }
+  .compare-mock-switch span { padding: 0 .5rem; font: 600 10.5px/1 var(--font-mono, monospace); letter-spacing: .1em; text-transform: uppercase; color: var(--ledger-muted); }
+  .compare-mock-switch button { min-height: 32px; padding: 0 .8rem; color: var(--ledger-ink); background: none; border: 0; border-radius: 999px; cursor: pointer; }
+  .compare-mock-switch button[aria-pressed="true"] { color: var(--ledger-card); background: var(--ledger-ink); }
+}
+
+/* MOCK (2026-11-12): every figure on one page — topic links under the names, and the
+   biggest differences as rows or as cards. */
+@media screen {
+  .compare-table tbody[id] { scroll-margin-top: calc(var(--bar-h, 54px) + 6.5rem); }
+  .compare-view-switch { display: inline-flex; margin-left: 1rem; padding: 2px; vertical-align: middle; border: 1px solid var(--ledger-rule); border-radius: 999px; }
+  .compare-view-switch button { min-height: 26px; padding: 0 .75rem; font: 500 12px/1 var(--font-text); letter-spacing: 0; text-transform: none; color: var(--ledger-muted); background: none; border: 0; border-radius: 999px; cursor: pointer; }
+  .compare-view-switch button[aria-pressed="true"] { color: var(--ledger-card); background: var(--ledger-ink); }
+  .compare-picture > td { padding: .25rem 0 1rem; text-align: left; }
+  .compare-picture .compare-diffs { margin: 0; }
+  .compare-picture .compare-diffs > h2 { display: none; }
+  .compare-picture .compare-diffs-list, .compare-picture .compare-diffs-list * { text-align: left; }
+  .compare-picture .compare-diffs-list ul li b { text-align: right; }
+}
+@media screen {
+  /* The biggest differences, shaded as their own block; the shade replaces the rows' blue edge. */
+  .compare-table tbody#differences > tr > * { background: color-mix(in srgb, var(--ledger-accent) 7%, var(--ledger-paper)); }
+  .compare-table tbody#differences > tr.compare-section > th { padding-inline: 1rem; }
+  .compare-table tbody#differences tr[data-notable] > th { box-shadow: none; padding-left: 1rem; }
+  .compare-table tbody#differences > tr:last-child > * { padding-bottom: 1.25rem; }
+}

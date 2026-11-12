@@ -443,6 +443,9 @@ export type PacketLevel = {
   margin_of_error?: number | null;
   // Packet 1.7: how many regions share `rank`, this one included.
   ties?: number | null;
+  // The rank range a survey figure's margin of error allows; equal to `rank` otherwise.
+  rank_best?: number | null;
+  rank_worst?: number | null;
 };
 
 export type Packet = {
