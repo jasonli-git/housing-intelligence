@@ -207,6 +207,7 @@ METRIC_SUBJECTS: dict[str, str] = {
     "acs_share_2_bedrooms": "stock",
     "acs_share_3_bedrooms": "stock",
     "acs_share_4plus_bedrooms": "stock",
+    "acs_share_3plus_bedrooms": "stock",
     "acs_overcrowded_share": "stock",
     "acs_lacking_plumbing_share": "stock",
     "acs_lacking_kitchen_share": "stock",

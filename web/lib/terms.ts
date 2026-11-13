@@ -322,6 +322,10 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     what: "The share of homes here with four or more bedrooms.",
     why: "Says how much there is here for large households.",
   },
+  acs_share_3plus_bedrooms: {
+    what: "The share of homes here with three or more bedrooms.",
+    why: "Says how much room there is here for families.",
+  },
   acs_overcrowded_share: {
     what: "The share of homes here with more people than rooms, counting every room but bathrooms, as the Census measures crowding.",
     why: "Crowding is often how households cope when homes cost more than they can pay.",

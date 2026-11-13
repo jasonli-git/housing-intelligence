@@ -81,6 +81,8 @@ unpivoted as (
     union all {{ acs_share('acs_share_2_bedrooms', ['B25041_004'], ['B25041_001'], relation='rooms_keyed') }}
     union all {{ acs_share('acs_share_3_bedrooms', ['B25041_005'], ['B25041_001'], relation='rooms_keyed') }}
     union all {{ acs_share('acs_share_4plus_bedrooms', ['B25041_006', 'B25041_007'], ['B25041_001'], relation='rooms_keyed') }}
+    -- Three bands added up, and ranked where the bands are not (ARCHITECTURE #519).
+    union all {{ acs_share('acs_share_3plus_bedrooms', ['B25041_005', 'B25041_006', 'B25041_007'], ['B25041_001'], relation='rooms_keyed') }}
     -- More than one occupant per room, owners and renters together: the Census's measure
     -- of crowding.
     union all {{ acs_share('acs_overcrowded_share',

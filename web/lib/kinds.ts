@@ -64,6 +64,7 @@ export const KINDS: Record<string, RecordType> = {
   acs_share_2_bedrooms: "survey",
   acs_share_3_bedrooms: "survey",
   acs_share_4plus_bedrooms: "survey",
+  acs_share_3plus_bedrooms: "survey",
   acs_overcrowded_share: "survey",
   acs_lacking_plumbing_share: "survey",
   acs_lacking_kitchen_share: "survey",
