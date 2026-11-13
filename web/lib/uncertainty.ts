@@ -148,6 +148,7 @@ export const SURVEY_METRICS = new Set([
   "acs_share_2_bedrooms",
   "acs_share_3_bedrooms",
   "acs_share_4plus_bedrooms",
+  "acs_share_3plus_bedrooms",
   "acs_overcrowded_share",
   "acs_lacking_plumbing_share",
   "acs_lacking_kitchen_share",

@@ -1255,6 +1255,19 @@ metrics:
     record_type: survey
     ranked: false
 
+  acs_share_3plus_bedrooms:
+    label: Three or more bedrooms
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Housing units with three or more bedrooms as a share of all units, ACS 5-year table
+      B25041. Ranked, unlike the single bands it adds up: room for a family is a figure
+      readers compare across places.
+    source_id: census_acs
+    record_type: survey
+    ranked: true
+
   acs_overcrowded_share:
     label: Crowded homes
     unit: ratio

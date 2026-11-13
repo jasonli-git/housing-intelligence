@@ -13,6 +13,8 @@ are not yet recorded here.
 
 ### Added
 
+- **Homes with three or more bedrooms, ranked** (ARCHITECTURE #519): a new Census figure, the share of homes with three or more bedrooms, with its margin, ranked among New Jersey's towns, ZIP codes and counties and listed under "The homes".
+
 - **`hip datacommons-discover`** (2026-11-10, ARCHITECTURE #487): asks Google Data
   Commons for each measure in `config/metrics.yml`, by name, and lists for each the
   variable it matched, how closely, its newest figure for the same place and ours. A
