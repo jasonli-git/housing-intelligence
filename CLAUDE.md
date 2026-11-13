@@ -330,7 +330,7 @@ unless the user explicitly makes that decision.
 ## Stories register
 
 `docs/STORIES.md` tracks the visual stories: every story, where it appears, whether it
-has a share image, and — for stories that have been reviewed — the sources it reads,
+has a share image, the order they are posted to social media (added 2026-11-12), and — for stories that have been reviewed — the sources it reads,
 how current and how complete they were, known issues and undecided ideas.
 
 It is a sanctioned addition alongside the canonical documents, approved by the user on

@@ -2,7 +2,8 @@
 
 <!-- Generated from web/lib/storyRegister.ts by `cd web && npm run stories:register`. Edit that file, not this one. -->
 
-Every visual story, where it appears and how its sources stood when last reviewed.
+Every visual story, where it appears, when it is posted to social media and how its
+sources stood when last reviewed.
 Decisions about how the stories are built are in [ARCHITECTURE.md](ARCHITECTURE.md);
 open work is in [TODO.md](TODO.md), and ideas here are not decided.
 
@@ -52,6 +53,23 @@ open work is in [TODO.md](TODO.md), and ideas here are not decided.
 | [The hottest counties](../web/app/stories/the-hottest-counties/page.tsx) | place pages | yes | not yet reviewed | — |
 | [The pizza–bagel line](../web/app/stories/the-pizza-bagel-line/page.tsx) | Only in New Jersey | yes | live | 2026-11-03 |
 | [Hometown famous](../web/app/stories/hometown-famous/page.tsx) | Only in New Jersey | yes | live | 2026-11-03 |
+
+## Posting order
+
+One story a week on X and Bluesky, Fridays at 9 AM Eastern; the plan is in
+[DIRECTOR_NOTES.md](DIRECTOR_NOTES.md) ("Social media lineup"). 2026-12-25 and 2027-01-01 are left free.
+
+| Date | Story | State |
+|---|---|---|
+| 2026-11-06 | [The Starbucks index](../web/app/stories/the-starbucks-index/page.tsx) | posted |
+| 2026-11-13 | [The Wawa line](../web/app/stories/the-wawa-line/page.tsx) | scheduled |
+| 2026-11-20 | [The flood claims calendar](../web/app/stories/the-flood-claims-calendar/page.tsx) | planned |
+| 2026-11-27 | [Hometown famous](../web/app/stories/hometown-famous/page.tsx) | planned |
+| 2026-12-04 | [When the town was built](../web/app/stories/when-the-town-was-built/page.tsx) | planned |
+| 2026-12-11 | [The pizza–bagel line](../web/app/stories/the-pizza-bagel-line/page.tsx) | planned |
+| 2026-12-18 | [Where you can see the stars](../web/app/stories/where-you-can-see-the-stars/page.tsx) | planned |
+| 2027-01-08 | [Boroughitis](../web/app/stories/boroughitis/page.tsx) | planned |
+| 2027-01-15 | [What goes with pricier towns](../web/app/stories/pricier-towns/page.tsx) | planned |
 
 ## Reviews
 

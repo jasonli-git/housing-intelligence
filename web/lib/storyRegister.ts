@@ -149,6 +149,24 @@ export const REVIEWS: Record<string, StoryReview> = {
   },
 };
 
+/** One week's social post (Director Notes, "Social media lineup"): Fridays at 9 AM ET on X
+ *  and Bluesky. "planned" is the owner's order, not yet written or scheduled. */
+export type Posting = { date: string; slug: string; state: "posted" | "scheduled" | "planned" };
+
+/** The posting order, approved by the owner on 2026-11-12. Christmas and New Year's Day
+ *  (2026-12-25, 2027-01-01) are left free. */
+export const POSTING_ORDER: Posting[] = [
+  { date: "2026-11-06", slug: "the-starbucks-index", state: "posted" },
+  { date: "2026-11-13", slug: "the-wawa-line", state: "scheduled" },
+  { date: "2026-11-20", slug: "the-flood-claims-calendar", state: "planned" },
+  { date: "2026-11-27", slug: "hometown-famous", state: "planned" },
+  { date: "2026-12-04", slug: "when-the-town-was-built", state: "planned" },
+  { date: "2026-12-11", slug: "the-pizza-bagel-line", state: "planned" },
+  { date: "2026-12-18", slug: "where-you-can-see-the-stars", state: "planned" },
+  { date: "2027-01-08", slug: "boroughitis", state: "planned" },
+  { date: "2027-01-15", slug: "pricier-towns", state: "planned" },
+];
+
 const where = (slug: string) => [
   slug === FEATURED_STORY && "featured",
   EDITOR_PICKS.includes(slug) && "editor's pick",
@@ -176,12 +194,21 @@ export function renderStoryRegister(): string {
   return [
     "# Stories register", "",
     "<!-- Generated from web/lib/storyRegister.ts by `cd web && npm run stories:register`. Edit that file, not this one. -->", "",
-    "Every visual story, where it appears and how its sources stood when last reviewed.",
+    "Every visual story, where it appears, when it is posted to social media and how its",
+    "sources stood when last reviewed.",
     "Decisions about how the stories are built are in [ARCHITECTURE.md](ARCHITECTURE.md);",
     "open work is in [TODO.md](TODO.md), and ideas here are not decided.", "",
     `## All stories (${STORIES.length})`, "",
     "| Story | Where it appears | Share image | Status | Reviewed |", "|---|---|---|---|---|",
     ...rows, "",
+    "## Posting order", "",
+    "One story a week on X and Bluesky, Fridays at 9 AM Eastern; the plan is in",
+    "[DIRECTOR_NOTES.md](DIRECTOR_NOTES.md) (\"Social media lineup\"). 2026-12-25 and 2027-01-01 are left free.", "",
+    "| Date | Story | State |", "|---|---|---|",
+    ...POSTING_ORDER.map((p) => {
+      const story = STORIES.find((s) => storySlug(s) === p.slug);
+      return `| ${p.date} | [${story?.title ?? p.slug}](../web/app/stories/${p.slug}/page.tsx) | ${p.state} |`;
+    }), "",
     "## Reviews", "",
     details.join("\n\n"), "",
   ].join("\n");
