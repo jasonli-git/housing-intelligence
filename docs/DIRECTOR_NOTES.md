@@ -1253,3 +1253,16 @@ presentation. The model is a long but comprehensive slideshow, like a college le
 above: the briefing is now the Buyer's guide at `/guide`, and the calculator moved to
 `/guide/numbers`. Recorded in ARCHITECTURE #498. The open question on the advisor voice
 is settled for now at standing and things to check, never a verdict.
+
+## Decision: social accounts are X and Bluesky only
+
+**Status:** Approved direction (owner, 2026-11-12). Changes "Social media lineup" above.
+
+The site posts only on X (`@HousingIntelHQ`) and Bluesky (`@housing.jasonli.app`) for
+now. Reddit is dropped from the plan, including r/newjersey and r/dataisbeautiful, and
+the separate Reddit account isn't needed.
+
+- The weekly Friday 9 AM ET schedule doesn't change.
+- Switching to `housingintelligence.app` no longer has a deadline. It can happen
+  whenever it suits.
+- This could be revisited later. It isn't ruled out for good.
