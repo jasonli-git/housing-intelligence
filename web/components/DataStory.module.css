@@ -1,0 +1,136 @@
+/* MOCK (2026-11-13): "How the data is built" as one page. Colours are the site's tokens. */
+.page { max-width: 1040px; margin: 1.5rem auto 0; font-size: 15px; }
+.hero { padding: 2rem 0 1rem; }
+.kicker { margin: 0; font: 600 12px/1.3 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-secondary); }
+.hero h1 { margin: .5rem 0 .75rem; max-width: 18ch; font: 600 clamp(2rem, 5vw, 3.4rem)/1.05 var(--font-text); letter-spacing: -.025em; }
+.lead { max-width: 62ch; margin: 0; font-size: 1.1rem; line-height: 1.55; color: var(--text-secondary); }
+.scale { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 2rem 0 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--border); }
+.scale div { display: grid; align-content: start; gap: .15rem; padding: 1rem 1.1rem; background: var(--surface-card); }
+.scale dt { order: 2; color: var(--text-secondary); font-size: 14px; }
+.scale dd { order: 1; margin: 0; font: 600 clamp(1.8rem, 4vw, 2.6rem)/1 var(--font-text); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.scale small { order: 3; color: var(--text-secondary); font-size: 12.5px; }
+.section { margin-top: 4.9rem; } /* 40% more than 3.5rem */
+.section h2 { margin: 0; font: 600 1.5rem/1.2 var(--font-text); letter-spacing: -.015em; }
+.sub { max-width: 64ch; margin: .4rem 0 1.25rem; color: var(--text-secondary); line-height: 1.5; }
+.publishers { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.publishers li { display: flex; justify-content: space-between; gap: .75rem; align-items: baseline; padding: .65rem .85rem; border: 1px solid var(--border); border-radius: 10px; }
+.publishers b { font-weight: 500; }
+.publishers span { flex: none; color: var(--text-secondary); font-size: 13px; font-variant-numeric: tabular-nums; }
+.stages { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .5rem; margin: 0; padding: 0; list-style: none; counter-reset: s; }
+.stages li { display: grid; align-content: start; gap: .4rem; padding: .9rem; border-top: 3px solid var(--text-primary); background: var(--surface-card); border-radius: 0 0 10px 10px; }
+.stages b { display: flex; align-items: center; gap: .45rem; font-size: 1rem; }
+.stages i { display: inline-grid; place-items: center; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--text-primary); color: var(--surface-card); font: 600 12px/1 var(--font-mono); font-style: normal; }
+.stages span { color: var(--text-secondary); font-size: 13.5px; line-height: 1.45; }
+.kinds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin: 0; padding: 0; list-style: none; }
+.kinds button { display: grid; gap: .35rem; width: 100%; height: 100%; padding: .9rem 1rem; border: 1px solid var(--border); border-radius: 12px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.kinds button:hover { background: color-mix(in srgb, var(--text-primary) 4%, transparent); }
+.kinds button[aria-pressed="true"] { border-color: var(--text-primary); box-shadow: inset 0 0 0 1px var(--text-primary); }
+.kinds span { color: var(--text-secondary); font-size: 13.5px; line-height: 1.45; }
+.kinds small { color: var(--text-primary); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.controls { display: flex; flex-wrap: wrap; gap: .75rem; }
+.controls label { display: grid; gap: .25rem; flex: 1 1 240px; max-width: 460px; font-size: 14px; color: var(--text-secondary); }
+.controls label:last-child { flex: 0 1 220px; }
+.controls input, .controls select { min-height: 42px; width: 100%; padding: 0 .8rem; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text-primary); font: 15px var(--font-text); }
+.count { margin: .75rem 0 .25rem; color: var(--text-secondary); font-size: 13px; }
+.entry { border-bottom: 1px solid var(--border); }
+.entry summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .1rem 1rem; align-items: center; min-height: 44px; padding: .35rem .4rem; cursor: pointer; }
+.entry summary:hover { background: color-mix(in srgb, var(--text-primary) 4%, transparent); }
+.entry summary strong { font-weight: 500; }
+.entry summary span { color: var(--text-secondary); font-size: 13px; }
+.body { padding: .25rem .4rem 1rem; }
+.body p { max-width: 70ch; margin: .25rem 0 .5rem; line-height: 1.5; }
+.why { color: var(--text-secondary); }
+.body dl { display: flex; flex-wrap: wrap; gap: .5rem 1.75rem; margin: .75rem 0; }
+.body dt { color: var(--text-secondary); font-size: 12.5px; }
+.body dd { margin: 0; font-variant-numeric: tabular-nums; }
+.path { display: grid; gap: .35rem; margin: .5rem 0 0; padding: .75rem .9rem; border-radius: 8px; background: color-mix(in srgb, var(--text-primary) 4%, transparent); list-style: none; font-size: 13.5px; }
+.path li { position: relative; padding-left: 1.1rem; }
+.path li::before { content: "↓"; position: absolute; left: 0; color: var(--text-secondary); }
+.path li:first-child::before { content: "•"; }
+.path b { font-weight: 500; }
+.path code { font: 12px var(--font-mono); overflow-wrap: anywhere; color: var(--text-secondary); }
+.more { min-height: 44px; margin-top: .5rem; border: 0; padding: 0; background: none; color: var(--text-primary); font: inherit; text-decoration: underline; cursor: pointer; }
+.dev { margin-top: 3rem; color: var(--text-secondary); font-size: 13px; }
+/* 1. Follow one number. */
+.follow { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.follow li { display: grid; align-content: start; gap: .45rem; padding: .9rem; border-top: 3px solid var(--text-primary); border-radius: 0 0 10px 10px; background: var(--surface-card); }
+.follow b { display: flex; align-items: center; gap: .45rem; font-size: 1rem; }
+.follow i { display: inline-grid; place-items: center; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--text-primary); color: var(--surface-card); font: 600 12px/1 var(--font-mono); font-style: normal; }
+.follow span { color: var(--text-secondary); font-size: 12.5px; line-height: 1.4; }
+.follow p { align-self: end; margin: .25rem 0 0; padding-top: .55rem; border-top: 1px dashed var(--border); font-size: 13.5px; line-height: 1.45; }
+.result { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem 1rem; margin: 1rem 0 0; padding: 1rem 1.2rem; border: 1px solid var(--border); border-radius: 12px; }
+.result small { flex-basis: 100%; color: var(--text-secondary); font: 500 12px/1.3 var(--font-mono); letter-spacing: .05em; text-transform: uppercase; }
+.result b { font: 600 2.2rem/1 var(--font-text); letter-spacing: -.02em; }
+.result span { color: var(--text-secondary); }
+.result code { margin-left: auto; color: var(--text-secondary); font: 12px var(--font-mono); }
+/* 2. The coverage map. */
+.mapWrap { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 1.5rem; align-items: center; }
+.map { width: 100%; max-height: 640px; color: var(--text-primary); }
+.map path { fill: currentColor; stroke: var(--surface-card); stroke-width: .4; }
+.map path:hover { fill-opacity: 1; }
+.mapHover { min-height: 3.2rem; margin: 0 0 1rem; display: grid; }
+.mapHover b { font-size: 1.1rem; }
+.mapHover span { color: var(--text-secondary); }
+.legend { display: grid; gap: .35rem; margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--text-secondary); }
+.legend i { display: inline-block; width: 14px; height: 14px; margin-right: .5rem; vertical-align: -2px; border-radius: 3px; background: var(--text-primary); }
+/* 3. The timeline. */
+.timeline { position: relative; }
+.axis { position: relative; height: 1.4rem; margin-left: 34%; border-bottom: 1px solid var(--border); font: 11px var(--font-mono); color: var(--text-secondary); }
+.axis span { position: absolute; transform: translateX(-50%); }
+.timeline ul { margin: 0; padding: 0; list-style: none; }
+.timeline li { display: grid; grid-template-columns: 34% 1fr; align-items: center; min-height: 26px; border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent); }
+.tlName { display: flex; justify-content: space-between; gap: .5rem; padding-right: .75rem; overflow: hidden; font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
+.tlName small { flex: none; color: var(--text-secondary); font: 11.5px var(--font-mono); }
+.tlTrack { position: relative; height: 10px; }
+.tlTrack i { position: absolute; top: 0; bottom: 0; border-radius: 5px; background: var(--text-primary); }
+/* 4. Latest updates. */
+.updates { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.updates li { display: grid; gap: .2rem; padding: .8rem .95rem; border: 1px solid var(--border); border-radius: 10px; }
+.updates time { color: var(--text-secondary); font: 500 12px var(--font-mono); }
+.updates b { font-weight: 500; line-height: 1.3; }
+.updates span, .updates small { color: var(--text-secondary); font-size: 13px; }
+/* 5. Questions. */
+.questions { display: flex; flex-wrap: wrap; gap: .45rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+.questions button { min-height: 40px; padding: 0 1rem; border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--text-primary); font: 500 14px var(--font-text); cursor: pointer; }
+.questions button:hover { background: color-mix(in srgb, var(--text-primary) 5%, transparent); }
+.questions button[aria-pressed="true"] { background: var(--text-primary); color: var(--surface-card); border-color: var(--text-primary); }
+.tiny { margin: .6rem 0 0; color: var(--text-secondary); font-size: 13px; }
+.follow strong { font: 600 clamp(1.4rem, 2.4vw, 1.9rem)/1.05 var(--font-text); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.bars { display: grid; gap: .35rem; margin: 0; padding: 0; list-style: none; }
+.bars li { display: grid; grid-template-columns: minmax(0, 16rem) 1fr 2.5rem; align-items: center; gap: .75rem; font-size: 13.5px; }
+.bars span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.bars i { height: 14px; border-radius: 0 4px 4px 0; background: var(--text-primary); }
+.bars b { font-weight: 500; font-variant-numeric: tabular-nums; }
+.stack { display: flex; gap: 2px; height: 28px; margin-bottom: .9rem; border-radius: 8px; overflow: hidden; }
+.stack i { background: var(--text-primary); transition: filter 150ms; }
+/* Estimated kinds are hatched, as the site's dashed labels are; counted or set ones solid. */
+.stack i[data-est="true"], .kinds i[data-est="true"] { background: repeating-linear-gradient(135deg, var(--text-primary) 0 3px, transparent 3px 7px); box-shadow: inset 0 0 0 1.5px var(--text-primary); }
+.stackKey { display: flex; gap: 2px; margin-bottom: .3rem; font: 500 11px/1.3 var(--font-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); }
+.stackKey span { flex-basis: 0; }
+.stack i[data-on="false"] { filter: brightness(.35); }
+.kinds i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--text-primary); }
+.kinds button { grid-template-columns: auto 1fr auto; align-items: center; column-gap: .5rem; }
+.kinds button span { grid-column: 1 / -1; }
+/* The original Data explorer, folded away at the foot of the page. */
+.developers { max-width: 1040px; margin: 4.9rem auto 4rem; border-top: 1px solid var(--border); }
+.developers > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem 1rem; padding: 1.25rem 0; cursor: pointer; list-style: none; }
+.developers > summary::-webkit-details-marker { display: none; }
+.developers > summary b { font: 600 1.5rem/1.2 var(--font-text); letter-spacing: -.015em; }
+.developers > summary b::after { content: " +"; color: var(--text-secondary); }
+.developers[open] > summary b::after { content: " −"; }
+.developers > summary span { color: var(--text-secondary); font-size: 14px; }
+@media (max-width: 760px) {
+  .bars li { grid-template-columns: minmax(0, 9rem) 1fr 2rem; gap: .5rem; }
+  .follow { grid-template-columns: 1fr; }
+  .follow li { border-top: 0; border-left: 3px solid var(--text-primary); border-radius: 0 10px 10px 0; }
+  .mapWrap { grid-template-columns: 1fr; }
+  .axis { margin-left: 0; }
+  .axis span:nth-child(even) { display: none; }
+  .timeline li { grid-template-columns: 1fr; gap: 3px; padding: 5px 0; }
+  .tlName { padding-right: 0; white-space: normal; }
+  .result code { margin-left: 0; }
+  .scale { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stages { grid-template-columns: 1fr; }
+  .stages li { grid-template-columns: 7.5rem 1fr; border-top: 0; border-left: 3px solid var(--text-primary); border-radius: 0 10px 10px 0; }
+  .kinds { grid-template-columns: 1fr; }
+}
