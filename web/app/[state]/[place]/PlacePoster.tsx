@@ -1019,7 +1019,7 @@ export async function PlacePoster({ regionId }: { regionId: number }) {
 
         {readingPanel && <div className={acts.reading}>{readingPanel}</div>}
 
-        <footer className={styles.close}>Dashed labels mark estimates; solid ones mark records and official figures. Sources: Zillow, Census Bureau, NJ Division of Taxation, FEMA, NOAA, FHFA and Realtor.com. <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <Link href={`/guide?place=${regionId}`}>Briefing</Link> · <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a></footer>
+        <footer className={styles.close}>Dashed labels mark estimates; solid ones mark records and official figures. <span data-terms="off">Sources: Zillow, Census Bureau, NJ Division of Taxation, FEMA, NOAA, FHFA and Realtor.com.</span> <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a></footer>
       </main>
     </>);
   }
@@ -1148,7 +1148,7 @@ export async function PlacePoster({ regionId }: { regionId: number }) {
 
       {readingPanel && <div className={acts.reading}>{readingPanel}</div>}
 
-      <footer className={styles.close}>Dashed labels mark estimates; solid ones mark records and official figures. Sources: Zillow, Census Bureau, FEMA, NJ Division of Taxation. <Link href={reportHref}>Every figure in the full report</Link> · <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a></footer>
+      <footer className={styles.close}>Dashed labels mark estimates; solid ones mark records and official figures. <span data-terms="off">Sources: Zillow, Census Bureau, FEMA, NJ Division of Taxation.</span> <Link href={reportHref}>Every figure in the full report</Link> · <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a></footer>
     </main>
   </>);
 }
