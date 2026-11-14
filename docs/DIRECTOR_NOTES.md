@@ -1266,3 +1266,53 @@ the separate Reddit account isn't needed.
 - Switching to `housingintelligence.app` no longer has a deadline. It can happen
   whenever it suits.
 - This could be revisited later. It isn't ruled out for good.
+
+## Visual stories beyond housing prices
+
+**Status:** Exploratory (owner, 2026-11-13).
+
+Consider widening visual stories to anything a person living in a place, or planning to,
+might want to know, not only home prices. Many recent stories already go beyond prices:
+the Wawa line, the pizza bagel line, dark skies, flood claims.
+
+**Possible topics**
+
+- Schools, crime, noise, air quality and broadband.
+- Commutes and transit, possibly tied to the distance-to-the-train-station idea.
+- Town budgets and what local services cost.
+- Political and civic data: possibly election maps, for example with population density
+  shown as height in 3D.
+
+**Open questions**
+
+- **Audience.** The spec (2026-11-12) names people who study places as the audience. Do
+  stories keep that audience, or may they reach a wider one than the tools?
+- **Politics.** Whether to cover it at all, and on what terms. The site's credibility rests
+  on neutral, sourced figures. Ideas raised, not decided:
+  - results only, with no commentary;
+  - turnout and change over time alongside who won;
+  - civic facts before party results;
+  - both parties shown the same way.
+- **Data.** Whether new topics must come from data the site holds, so that they carry over
+  to a second state.
+
+**New chart forms**
+
+Open the door to more unusual charts, including 3D and animated ones. Ideas raised for
+when they fit, not decided:
+
+- Animation for change over time.
+- 3D only where height is a real measure (density, building heights).
+- A flat or table view and a one-sentence finding beside every 3D or animated chart.
+- Reduced motion respected, a static share image, and the accessibility check still
+  passing.
+- Short video clips for X and Bluesky.
+
+**Possible first steps** (not approved)
+
+1. A 3D population-density spike map of New Jersey, with nothing political in it, to test
+   the technology, phone performance and share images.
+2. An animated version of an existing story, such as when the town was built.
+3. Elections only after the political rules are decided.
+
+Do not implement yet.
