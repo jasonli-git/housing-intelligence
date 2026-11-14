@@ -29,36 +29,35 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — Milestone 61, retiring the shopper tools (2026-11-12)
+## Now — Milestone 62, the briefing as a town's front page (2026-11-13)
 
-On `milestone/m61-retire-shopper-tools` (ROADMAP 61; ARCHITECTURE #507, #508, #510).
+On `milestone/m62-general-briefing` (ROADMAP 62; ARCHITECTURE #520, #521, #522). Milestone
+61 shipped; its record is in CHANGELOG and ARCHITECTURE #513–#518.
 
-- [x] Remove the pages: `/help` (with `/help/inventory.json`), `/affordable-housing`,
-  `/calculator`, `/guide/numbers`, and the components only they use.
-- [x] Remove every link to them: Menu (site bar and map bar), footer, sitemap, home tool
-  tiles, story tool links, place pages, the report's cost card, the tax lookup's
-  property card, the briefing, the decision guide, kind colours for `/help`.
-- [x] Scripts: the terms check's pages, the README and tool-preview screenshots.
-- [x] Keep the records: `regions/<id>/affordable-housing.json` stays published; no page
-  reads it now.
-- [x] Tests, type check, lint, a clean build, and the deploy's checks against a fresh
-  `dist/`.
-- [x] Audit of leftover buyer and renter framing, listed for the owner.
-- [x] Audit item 1: the place pages' Buying / Renting switch is gone; owning and renting
-  show together (ARCHITECTURE #514, option A of two mocked).
-- [x] Audit item 2: county pages' "Use your own numbers" is gone (ARCHITECTURE #515).
-- [x] Audit item 4: the tax lookup's property card loses owning and renting; its town
-  links are fixed (ARCHITECTURE #516).
-- [x] Audit item 5: place pages no longer link to the budget tool (ARCHITECTURE #517).
-- [x] Audit item 7: the "Buyer's guide" name stays until Milestone 62 renames the
-  briefing (owner, 2026-11-12). Items 3 and 6 are parked with the report (below).
+- [x] `/nj/<town>` is the briefing, `/nj/<town>/full` the full page, with a switch on
+  both; counties and ZIP codes unchanged; section anchors and `/guide?place=` links land
+  on the right page.
+- [x] The seven slides, final: title, At a glance, prices, taxes, flood risk, the homes
+  and the market, sources. No commute slide.
+- [x] The briefing rendered at build time from the API; the deck only moves between
+  slides.
+- [x] The phone layout: a portrait card, controls at the foot, a sideways swipe.
+- [x] The title slide's state map; the full page's hero keeps the garden motif, not the
+  map.
+- [x] `/guide` as a town search; the "Buyer's guide" name gone from the Menu, footer
+  and home tiles.
+- [x] The full page states each section's conclusion beside the state's median town.
+- [x] The poster moved out of the route module (`PlacePoster.tsx`); the briefing's
+  in-browser loading and town picker removed.
+- [x] Tests, type check and a clean production build.
+- [ ] Owner review of the pull request.
 
 ## Open
 
 - Look into promoting the Census County Business Patterns cross-check from a one-off review to a pipeline step that re-runs on refresh (owner, 2026-11-03). It compared Overture's county counts with NAICS 812310, 713910 and 713940 for 2023, using the `CENSUS_API_KEY` the ACS already uses; results are in docs/STORIES.md.
 - Look into giving every visual story the same kind of outside cross-check, not only the Starbucks index (owner, 2026-11-03).
 - Note: before planning a second state, revisit how artifacts are laid out in R2 (owner, 2026-11-04). R2 charges per file written: past 1M Class A operations a month, each started million costs $4.50, rounded up. The Oct 5 – Nov 4 cycle reached 1.03M and was billed $4.50. Each changed file costs about 2 operations: the upload, plus the `--backup-dir` copy (#359). A refresh across many states could reach millions. Options: bundle a state's artifacts into fewer files, back up less, batch refreshes into one deploy. Weigh at the same time whether to render place pages on demand: a Worker would fill a template from that place's R2 data and cache the page, instead of pre-building every page in the static export. That would shrink build and deploy size at many states, but not the data writes. It costs runtime reads and CPU, a slower first visit and a migration away from `output: export`. A possible middle path: pre-built pages for New Jersey and the stories, on-demand pages for other states. Avoid pages that build themselves in the browser, which would break share previews.
-- Point the shop counts on place pages at Overture: `web/app/[state]/[place]/page.tsx` still lists the `osm_*` counts the stories have left (#472).
+- Point the shop counts on place pages at Overture: `web/app/[state]/[place]/PlacePoster.tsx` still lists the `osm_*` counts the stories have left (#472).
 - Add a national rent figure to the home page's rent card; Zillow's Metro & U.S. file needs a hand download.
 - Add FEMA's National Risk Index as a source (owner, 2026-11-10): overall hazard risk beyond flooding, by county (FEMA also publishes it by tract). Found by the Data Commons survey (ARCHITECTURE #488); take it from FEMA, not Data Commons, whose copy is dated 2000. Check FEMA's current release and its terms first.
 - Add air quality as a source (owner, 2026-11-10): EPA's monitor readings (AQS), newest 2025 in the Data Commons survey (ARCHITECTURE #488). Take it from EPA. Monitors cover only some counties, so check New Jersey's coverage before choosing between monitor readings and a modelled county figure.
