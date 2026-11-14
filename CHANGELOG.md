@@ -88,7 +88,7 @@ are not yet recorded here.
 
 ### Changed
 
-- **The briefing replaces the Buyer's guide** (Milestone 62, ARCHITECTURE #520): the name is gone from the Menu, footer and home tiles; `/guide` is a search that opens a town's briefing; the monthly-cost slide is gone and flood risk has its own slide.
+- **The briefing replaces the Buyer's guide** (Milestone 62, ARCHITECTURE #520): the Menu no longer lists it, since a town's page is its briefing; the footer and home tiles call it Briefing; `/guide` is a search that opens a town's briefing; the monthly-cost slide is gone and flood risk has its own slide.
 - **The full page states each section's conclusion** (ARCHITECTURE #522), with the state's median town or ZIP code beneath it; supporting figures fold under More, and the hero's map moved to the briefing's title slide.
 - **The Buyer's guide is a briefing** (2026-11-11, ARCHITECTURE #498): pick a town and
   get the same twelve slides every time, bottom line first, each with one figure set

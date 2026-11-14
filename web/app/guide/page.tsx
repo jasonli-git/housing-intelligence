@@ -14,7 +14,7 @@ export const metadata: Metadata = pageMetadata({ title: "Briefing — Housing", 
  */
 export default function GuidePage() {
   return <>
-    <Masthead affordability={{ kind: "route" }} guideActive />
+    <Masthead affordability={{ kind: "route" }} />
     <main id="main-content" tabIndex={-1} className="shell horizon-page bf-page" data-kind="guide">
       <header className="tool-head"><h1>Briefing</h1></header>
       <section className="bf-start">
