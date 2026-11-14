@@ -48,7 +48,7 @@ export function Masthead({
   const item = (href: string, name: string, on = false) => <Link className="bar-link bar-menu-item" href={href} aria-current={current(on)}><b>{name}</b></Link>;
   const toolLinks = <>
     <span className="bar-menu-group">Tools</span>
-    {item("/guide", "Buyer’s guide", guideActive)}
+    {item("/guide", "Briefing", guideActive)}
     {item("/tax", "Property tax lookup", taxActive)}
   </>;
   const menuMain = <>

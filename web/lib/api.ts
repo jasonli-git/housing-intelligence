@@ -698,6 +698,9 @@ export const api = {
     tryGet<Ranking>(
       `/rankings?metric_id=${metricId}&level=${level}&limit=${limit}&basis=value`,
     ),
+  /** Every series a region has, at the endpoint's ceiling, as `hip publish` writes it. */
+  regionObservations: (id: number) =>
+    tryGet<{ total: number; observations: Observation[] }>(`/regions/${id}/metrics?limit=20000`),
   observations: (id: number, metricId: string) =>
     tryGet<{ total: number; observations: Observation[] }>(
       `/regions/${id}/metrics?metric_id=${metricId}`,

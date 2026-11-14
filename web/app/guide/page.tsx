@@ -1,23 +1,27 @@
 import type { Metadata } from "next";
-import { Briefing } from "@/components/Briefing";
+import { BriefingSearch } from "@/components/BriefingSearch";
 import { Masthead } from "@/components/Masthead";
-import { api, artifactUrl, nationalMortgageRate } from "@/lib/api";
 import { pageMetadata } from "@/lib/meta";
 import "../tool-pages.css";
 import "../horizon-theme.css";
 import "./briefing.css";
 
-export const metadata: Metadata = pageMetadata({ title: "Buyer’s guide — Housing", description: "A twelve-slide briefing on buying in any New Jersey town: the bottom line first, then cost, market, risk and daily life, with sources.", path: "/guide" });
+export const metadata: Metadata = pageMetadata({ title: "Briefing — Housing", description: "A seven-slide briefing on any New Jersey town: where it stands out first, then prices, taxes, flood risk and its homes, with sources.", path: "/guide" });
 
-/** The Buyer's guide as a briefing (#498): one town in, the same twelve slides out. */
-export default async function GuidePage() {
-  const [rate, catalog] = await Promise.all([nationalMortgageRate(), api.metrics()]);
-  const newest = Object.fromEntries((catalog ?? []).map((m) => [m.metric_id, m.last_period]));
+/**
+ * The briefing's own entry (#498, #511): a search. Every New Jersey town's address is its
+ * briefing since Milestone 62 (ARCHITECTURE #520), so picking a town opens that address.
+ */
+export default function GuidePage() {
   return <>
     <Masthead affordability={{ kind: "route" }} guideActive />
     <main id="main-content" tabIndex={-1} className="shell horizon-page bf-page" data-kind="guide">
-      <header className="tool-head"><h1>Buyer’s guide</h1></header>
-      {rate ? <Briefing artifactUrl={process.env.GUIDE_PREVIEW_ARTIFACT_URL ?? artifactUrl} rate={rate.value} newest={newest} /> : <p>The mortgage rate is unavailable in this build.</p>}
+      <header className="tool-head"><h1>Briefing</h1></header>
+      <section className="bf-start">
+        <h2>Get briefed on a town</h2>
+        <p>Seven slides, the same for every New Jersey town: where it stands out first, then prices, taxes, flood risk and its homes.</p>
+        <BriefingSearch />
+      </section>
     </main>
   </>;
 }

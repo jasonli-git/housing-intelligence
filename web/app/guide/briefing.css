@@ -1,18 +1,20 @@
-/* #498: the Buyer's guide briefing deck. */
+/* #498, #520: a town's briefing deck. */
 .bf-page { --bf: var(--kind-guide, var(--text-primary)); max-width: 980px; margin: 0 auto; padding-block: 24px 56px; }
 .bf-start { text-align: center; display: grid; gap: 10px; justify-items: center; padding-top: 6vh; }
 .bf-start h2 { margin: 0; font-size: clamp(2rem, 5vw, 3rem); font-weight: 400; }
 .bf-start p { margin: 0; color: var(--text-muted); }
-.bf-pick { position: relative; width: min(520px, 100%); margin-top: 14px; }
-.bf-pick input { width: 100%; box-sizing: border-box; font: inherit; font-size: 1.1rem; padding: 14px 18px; border-radius: 14px; border: 1.5px solid color-mix(in srgb, var(--bf) 55%, transparent); background: var(--glass); color: var(--text-primary); }
-.bf-pick ul { position: absolute; left: 0; right: 0; top: calc(100% + 6px); list-style: none; margin: 0; padding: 6px; border-radius: 14px; border: 1px solid var(--plate-strong-rule); background: var(--surface-card); z-index: 5; text-align: left; }
-.bf-pick button { width: 100%; display: flex; justify-content: space-between; padding: 9px 12px; border: 0; border-radius: 10px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
-.bf-pick button:hover { background: color-mix(in srgb, var(--bf) 12%, transparent); }
-.bf-pick small { opacity: .6; }
+.bf-start .bf-search { width: min(520px, 100%); margin-top: 14px; text-align: left; }
 .bf-deck { display: grid; gap: 14px; }
 .bf-top { display: flex; justify-content: space-between; align-items: baseline; font-size: .9rem; color: var(--text-muted); }
 .bf-top b { color: var(--text-primary); }
-.bf-change { font: inherit; font-size: .82rem; border: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; }
+.bf-views { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 999px; font-size: .85rem; }
+.bf-views > * { padding: 5px 13px; border-radius: 999px; }
+.bf-views [aria-current] { background: var(--text-primary); color: var(--surface-card); font-weight: 700; }
+.bf-views a { color: inherit; text-decoration: none; }
+.bf-views a:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.bf-views small { opacity: .65; margin-left: 4px; }
+.bf-views > * { white-space: nowrap; }
+.bf-views { flex: none; }
 .bf-progress { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
 .bf-progress button { display: block; width: 100%; height: 6px !important; min-height: 0 !important; border: 0; border-radius: 99px; background: var(--plate-strong-rule); cursor: pointer; padding: 0; }
 .bf-progress button[data-flag="true"] { background: color-mix(in srgb, var(--notice) 55%, transparent); }
@@ -163,3 +165,61 @@ body:has(.bf-page) main.bf-page {
 .bf-parts small { color: var(--slide-muted); text-align: right; font-variant-numeric: tabular-nums; }
 /* The page's heading lines up with the deck, which is centred at its own width. */
 body:has(.bf-page) main.bf-page > .tool-head { width: min(96vw, calc((100vh - 230px) * 16 / 9), 1800px); margin: 0 auto; box-sizing: border-box; }
+
+
+/* #520: the briefing on a phone. The 16:9 page gives way to a portrait card
+   that fills the screen, type set in pixels rather than slide widths, one column, and the
+   controls held at the foot of the screen. A swipe moves between slides (Briefing.tsx). */
+@media (max-width: 640px) {
+  body:has(.bf-page) main.bf-page { padding-inline: 12px; }
+  .bf-deck { width: 100%; }
+  .bf-slide { aspect-ratio: auto !important; min-height: calc(100svh - 320px) !important; padding: 16px 18px 10px !important; gap: 10px !important; font-size: 15px !important; border-radius: 16px !important; touch-action: pan-y; }
+  .bf-sections { gap: 12px; font-size: 10px; padding-bottom: 8px; overflow-x: auto; scrollbar-width: none; }
+  .bf-sections span[data-on="true"] { box-shadow: 0 9px 0 -1px var(--slide-ink); }
+  .bf-slide .bf-kicker { margin-top: 2px; font-size: 12px; }
+  .bf-slide .bf-headline { font-size: 23px !important; line-height: 1.18; max-width: none; }
+  .bf-slide[data-plain="true"][aria-label^="1 of"] .bf-headline { font-size: 46px !important; }
+  .bf-main { grid-template-columns: 1fr !important; gap: 12px; }
+  .bf-figure { min-width: 0; padding: 0 0 12px; border-right: 0; border-bottom: 1px solid var(--slide-rule); gap: 4px; }
+  .bf-figure b { font-size: 40px; }
+  .bf-figure .bf-standing { margin-top: 6px; }
+  .bf-slide .bf-body { overflow: visible; }
+  .bf-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 4px; }
+  .bf-tile { padding: 10px 8px; gap: 4px; border-top-width: 3px; align-content: start; }
+  .bf-tile b, .bf-tiles-small .bf-tile b { font-size: 19px; line-height: 1.1; overflow-wrap: anywhere; }
+  .bf-tile span { font-size: 12px; line-height: 1.3; }
+  .bf-tile small { font-size: 11px; line-height: 1.3; }
+  .bf-slide .bf-bottom { font-size: 14px; gap: 10px; }
+  .bf-slide .bf-stack { height: 14px; }
+  .bf-slide .bf-why { font-size: 14px; }
+  .bf-foot { font-size: 11px; padding-top: 8px; gap: 8px; }
+  .bf-title { font-size: 18px; gap: 6px; margin-top: 8px; }
+  .bf-title-date { margin-top: 20px !important; }
+  /* One line above the slide: the town and the switch; the breadcrumbs give way. */
+  main.bf-page { padding-block-start: 10px; }
+  .bf-page > .crumbs { display: none; }
+  .bf-deck { gap: 10px; }
+  .bf-top { flex-wrap: nowrap; align-items: center; gap: 8px; font-size: 1rem; }
+  .bf-top:has(.bf-views) .bf-word { display: none; }
+  .bf-top > span:first-child { min-width: 0; line-height: 1.2; }
+  .bf-nav { position: sticky; bottom: 0; z-index: 5; margin-inline: -12px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: var(--slide-stage); border-top: 1px solid var(--slide-grid); }
+  .bf-nav .bf-tools { display: none; }
+  .bf-nav button { padding: 12px 18px; }
+  .bf-swipe-hint { display: block; }
+}
+.bf-swipe-hint { display: none; margin: 6px 0 0; text-align: center; font-size: 12px; color: var(--text-muted); }
+
+/* #520: the title slide carries the place page's state map, the town marked,
+   filling the right of the slide; the garden motif stays on the full page. */
+.bf-slide { position: relative; }
+.bf-title-art { position: absolute; right: 5.5cqw; top: 6cqw; bottom: 8cqw; width: 40%; display: flex; justify-content: flex-end; pointer-events: none; color: var(--slide-ink); }
+.bf-title-map { height: 100%; width: auto; max-width: 100%; }
+@media (max-width: 640px) {
+  .bf-title-art { position: relative; inset: auto; width: 100%; height: 28svh; margin: -6px 0 2px; order: -1; justify-content: center; }
+  .bf-title { display: flex !important; flex-direction: column; }
+}
+/* The narrowest phones: the switch keeps one line by dropping its slide count. */
+@media (max-width: 360px) {
+  .bf-views small { display: none; }
+  .bf-views > * { padding: 5px 10px; }
+}

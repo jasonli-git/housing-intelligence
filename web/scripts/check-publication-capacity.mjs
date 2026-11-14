@@ -20,7 +20,9 @@ for(const place of report.byPlace){
  }
 }
 for(const file of files.filter(f=>f.path==='states/new-jersey.html'||f.path==='states/new-jersey.txt'||f.path.startsWith('states/new-jersey/'))){const key=file.path.replace('new-jersey','synthetic');assert(!keys.has(key));keys.add(key);added.push({...file,path:key});}
-assert.equal(added.filter(f=>f.path.endsWith('.html')).length,report.byPlace.length*2+1,'Every mirrored place retains HTML and report; state retained');
+// A place keeps its page and report; a town with a briefing also keeps its full page (ARCHITECTURE #520).
+const fulls=added.filter(f=>/\/full\.html$/.test(f.path)).length;
+assert.equal(added.filter(f=>f.path.endsWith('.html')).length,report.byPlace.length*2+fulls+1,'Every mirrored place retains HTML and report; state retained');
 const projected=files.length+added.length;
 // Workers static assets on Workers Paid (ARCHITECTURE #454); redirects are the
 // Worker's code, so there is no rule budget left to project.

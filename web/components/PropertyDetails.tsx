@@ -6,7 +6,7 @@ import type { Packet, PacketLevel } from "@/lib/api";
 import { formatValue } from "@/lib/format";
 import type { Parcel } from "@/lib/parcels";
 import { periodLabel } from "@/lib/periods";
-import { placeIdOf, regionPath } from "@/lib/placeRoutes";
+import { fullPath, placeIdOf, regionPath } from "@/lib/placeRoutes";
 
 /** One-to-four-family homes: the class whose lot size is checked for plausibility. */
 const HOMES = "2";
@@ -50,7 +50,8 @@ export function PropertyDetails({
   }, [placeId, artifactUrl]);
 
   const level = (id: string): PacketLevel | undefined => packet?.levels.find((l) => l.metric_id === id);
-  const page = placeId === null ? null : regionPath(placeId);
+  // Section anchors are on the full page, which a town's address no longer shows (#520).
+  const page = placeId === null ? null : fullPath(placeId);
 
   const typical = level("zhvi_sfr");
   const starter = level("zhvi_bottom_tier");

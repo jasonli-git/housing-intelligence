@@ -1,3 +1,5 @@
+import type { Region } from "@/lib/api";
+
 /**
  * How a region is named to a reader, and how its peers are counted.
  *
@@ -52,4 +54,15 @@ const STATE_NAMES: Record<string,string> = {
 /** The place a peer group spans, e.g. "New Jersey" for `NJ`. */
 export function scopeName(code: string): string {
   return STATE_NAMES[code] ?? code;
+}
+
+/** What kind of place this is, in the words a reader uses: "Township in Somerset County". */
+export function placeLine(region: Region & { ancestors: Region[] }): string {
+  const county = region.ancestors.find((a) => a.level === "county");
+  const state = scopeName(region.state_code);
+  if (region.level === "county") return `County in ${state}`;
+  if (region.level === "zip") return `ZIP code in ${state}`;
+  // TIGER's legal type is what `name_lsad` adds to the name: "Montgomery township".
+  const kind = region.name_lsad?.startsWith(`${region.name} `) ? region.name_lsad.slice(region.name.length + 1) : "municipality";
+  return `${kind.charAt(0).toUpperCase()}${kind.slice(1)} in ${county ? displayName(county) : state}`;
 }

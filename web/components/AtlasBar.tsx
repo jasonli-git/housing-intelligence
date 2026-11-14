@@ -36,7 +36,7 @@ export function AtlasBar() {
           {item("/compare", "Compare")}
           {item("/stories", "Stories")}
           <span className="bar-menu-group">Tools</span>
-          {item("/guide", "Buyer’s guide")}
+          {item("/guide", "Briefing")}
           {item("/tax", "Property tax lookup")}
           <span className="bar-menu-group">About this data</span>
           <a className="bar-menu-item" href="#site-foot"><b>Sources &amp; notices</b></a>

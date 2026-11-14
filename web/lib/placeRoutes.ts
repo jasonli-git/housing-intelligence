@@ -28,6 +28,21 @@ export function regionPath(id: number | string): string {
   return r ? `/${r.state}/${r.slug}` : `/regions/${n}`;
 }
 
+/**
+ * Whether a place's own address opens its briefing (ARCHITECTURE #520): New Jersey's
+ * towns do, and their full page moves to `/full`. Counties and ZIP codes have no briefing,
+ * so their address keeps the full page.
+ */
+export function hasBriefing(id: number | string): boolean {
+  const r = records[String(Number(id))];
+  return r?.level === "municipality" && r.state === "nj";
+}
+
+/** A place's full page: `/nj/hoboken/full` for a town with a briefing, else its address. */
+export function fullPath(id: number | string): string {
+  return hasBriefing(id) ? `${regionPath(id)}/full` : regionPath(id);
+}
+
 /** The region id of a place by its level and Census code, or null where it has no page. */
 const byGeoid = new Map(Object.entries(records).map(([id, r]) => [`${r.level}/${r.geoid}`, Number(id)]));
 export function placeIdOf(level: string, geoid: string): number | null {
