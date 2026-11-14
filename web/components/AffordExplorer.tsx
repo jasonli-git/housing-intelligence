@@ -3,7 +3,7 @@
 import styles from "./AffordExplorer.module.css";
 
 import { Gloss } from "@/components/Gloss";
-import { regionPath } from "@/lib/placeRoutes";
+import { fullPath, regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 import { BudgetMap } from "@/components/BudgetMap";
 import { type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
@@ -335,7 +335,7 @@ export function AffordExplorer({
             <ol>
               {shownTowns.map((row) => (
                 <li key={row.place.id}>
-                  <Link href={`${regionPath(row.place.id)}#quiet-cost`}>{row.place.name}</Link>
+                  <Link href={`${fullPath(row.place.id)}#quiet-cost`}>{row.place.name}</Link>
                   {row.place.detail && <span className="wca-detail">{row.place.detail}</span>}
                   <span className="wca-cost">{money(row.monthly)}<small>/mo</small></span>
                   <span className="wca-room">{money(budget - row.monthly)} to spare</span>
@@ -353,7 +353,7 @@ export function AffordExplorer({
             <ol>
               {nearMisses.map((row) => (
                 <li key={row.place.id}>
-                  <Link href={`${regionPath(row.place.id)}#quiet-cost`}>{row.place.name}</Link>
+                  <Link href={`${fullPath(row.place.id)}#quiet-cost`}>{row.place.name}</Link>
                   {row.place.detail && <span className="wca-detail">{row.place.detail}</span>}
                   <span className="wca-cost">{money(row.monthly)}<small>/mo</small></span>
                   <span className="wca-room">needs about {money(Math.ceil(incomeFor(row.monthly) / 1000) * 1000)} a year</span>
@@ -375,7 +375,7 @@ export function AffordExplorer({
               </>;
               return <li key={row.place.id} data-within={row.within}>
                 {scope
-                  ? <Link className="wca-strip-row" href={`${regionPath(row.place.id)}#quiet-cost`}>{bar}</Link>
+                  ? <Link className="wca-strip-row" href={`${fullPath(row.place.id)}#quiet-cost`}>{bar}</Link>
                   : <button type="button" className="wca-strip-row" onClick={() => { setCountyId(row.place.id); setAllTowns(false); setStripOpen(false); }}>{bar}</button>}
               </li>;
             })}

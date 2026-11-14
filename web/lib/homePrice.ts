@@ -42,8 +42,7 @@ function today(): string {
  */
 export function homePrice(levels: PacketLevel[], now: string = today(), prefer: "index" | "transactions" = "index"): HomePrice | null {
   const index = levels.find((l) => l.metric_id === "zhvi_sfr");
-  // The Buyer's guide and the Cost calculator price from recorded sales first, as the place
-  // pages' headers lead with them (#500); a place with no recent sale median falls back.
+  // Recorded sales come first, as the place pages' headers lead with them (#500); a place with no recent sale median falls back.
   if (prefer === "transactions") {
     const recent = levels.find((l) => l.metric_id === "sr1a_median_sale_price");
     if (recent && monthsBetween(recent.period_end, now) <= MAX_SALE_AGE_MONTHS) {

@@ -14,7 +14,7 @@ export const TOOL_PREVIEWS = [
   // The Budget explorer is the map's budget card now (#496); the card ships under the old name.
   { name: 'budget-explorer', path: '/atlas?level=municipality&measure=sr1a_median_sale_price&view=latest&budget=1&income=110000', ready: 'path[data-budget="within"]' },
   // The guide is a briefing deck (#498): ready once its title slide names the place.
-  { name: 'buyers-guide', path: '/guide?place=224', ready: '.bf-frame >> text=Buying in Princeton' },
+  { name: 'buyers-guide', path: '/nj/princeton', ready: '.bf-frame >> text=Princeton' },
   { name: 'tax-lookup', path: '/tax', ready: '.tax-search-field input:not(:disabled)' },
   { name: 'compare', path: '/compare?places=224,394,85', ready: '.compare-table tbody tr:not(.compare-section) td strong' },
   { name: 'atlas', path: '/atlas?level=county', ready: '.atlas-county-map path[data-county]' },

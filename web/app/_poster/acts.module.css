@@ -185,3 +185,31 @@
 /* On that stronger tint the renters' segment is darkened, not lightened: a lighter one left its label at 4.46:1 (axe, 2026-11-10). */
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .page .lead:first-child .split i:nth-child(2) { background: rgb(0 0 0 / .28); } }
 :root[data-theme="dark"] .page .lead:first-child .split i:nth-child(2) { background: rgb(0 0 0 / .28); }
+
+/* #522: an act titled by its conclusion, the briefing's one-conclusion discipline. */
+.page .actHead.concludes { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 4px 14px; }
+.page .actHead.concludes p { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.page .actHead.concludes h2 { grid-column: 1 / -1; max-width: 46rem; line-height: 1.15; }
+.page .act[data-conclusion] > .sheet > .lead:first-child > .find:first-child { display: none; }
+/* #522: the extra tiles fold away at every width, not only on phones. */
+@media screen {
+  .page .more { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; min-height: 48px; margin-top: 10px; padding: 10px 20px; font: inherit; font-size: 14px; font-weight: 600; text-align: left; color: inherit; background: var(--surface-card); border: 0; border-radius: 16px; cursor: pointer; }
+  .page .more span:last-child { font-size: 22px; line-height: 1; }
+  .page .tiles:not([data-open]) { display: none; }
+}
+/* #522: 40% less space between sections (was clamp(96px, 12vw, 160px), and 88px on phones). */
+.page .act { margin-top: clamp(58px, 7.2vw, 96px); }
+@media (max-width: 720px) { .page .act { margin-top: 53px; } }
+/* #522: the state's median town under each conclusion. */
+.page .actHead.concludes .versus { grid-column: 1 / -1; font-size: 15px; color: var(--text-secondary); }
+
+/* #520: the Full page | Briefing switch above the hero. */
+.views { display: inline-flex; margin: 0 0 12px; padding: 3px; gap: 2px; border: 1px solid var(--border-subtle, currentColor); border-radius: 999px; font-size: 14px; }
+.views > * { padding: 6px 14px; border-radius: 999px; }
+.views [aria-current] { background: var(--text-primary); color: var(--surface-card); font-weight: 700; }
+.views a { color: inherit !important; text-decoration: none; }
+.views a:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.views small { opacity: .65; margin-left: 4px; }
+
+/* #520: a town's hero without its map, which moved to the briefing. */
+.page.page .hero.hero[data-nomap] { grid-template-columns: minmax(0, 1fr); }

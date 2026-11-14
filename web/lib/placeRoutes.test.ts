@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Region } from "./api";
 import registry from "./placeRoutes.json";
 import { allocatePlaceSlugs } from "./placeSlugs";
-import { placeRouteParams, readablePlaceHref, regionPath, resolvePlace } from "./placeRoutes";
+import { fullPath, hasBriefing, placeRouteParams, readablePlaceHref, regionPath, resolvePlace } from "./placeRoutes";
 
 const town = (id: number, name: string, kind = "township", parent = 11): Region => ({
   region_id: id, name, name_lsad: `${name} ${kind}`, geoid: `34000${id}`, level: "municipality", state_code: "NJ", parent_id: parent,
@@ -73,5 +73,19 @@ describe("stable slug allocation", () => {
     const r = allocatePlaceSlugs([county, pa]);
     expect(r[11]).toBe("mercer-county");
     expect(r[50]).toBe("mercer-county");
+  });
+});
+
+describe("a town's briefing and full page (#520)", () => {
+  it("gives New Jersey's towns a briefing at their address and the full page at /full", () => {
+    expect(hasBriefing(344)).toBe(true);
+    expect(fullPath(344)).toBe("/nj/hoboken/full");
+  });
+
+  it("keeps the full page at the address of a county or ZIP code, which have no briefing", () => {
+    for (const id of [4, 3283, 1]) {
+      expect(hasBriefing(id)).toBe(false);
+      expect(fullPath(id)).toBe(regionPath(id));
+    }
   });
 });

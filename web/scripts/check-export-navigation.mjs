@@ -9,9 +9,14 @@ const variant=process.env.EXPORT_CHECK_VARIANT??'baseline';
 const browser=await chromium.launch();
 const payload=url=>/\.segments\/|\.txt(?:[?#]|$)/.test(url)&&!url.includes('/robots.txt');
 const cases=[
- {name:'place to parent county',from:'/nj/princeton',to:'/nj/mercer-county',title:'Mercer',
+ // A town's address is its briefing; its full page, with the county and report links, is at /full (#520).
+ {name:'briefing to full page',from:'/nj/princeton',to:'/nj/princeton/full',title:'Princeton',
+  act:page=>page.locator('.bf-views a[href="/nj/princeton/full"]').click()},
+ {name:'full page to briefing',from:'/nj/princeton/full',to:'/nj/princeton',title:'Princeton',
+  act:page=>page.locator('nav[aria-label="View"] a[href="/nj/princeton"]').click()},
+ {name:'place to parent county',from:'/nj/princeton/full',to:'/nj/mercer-county',title:'Mercer',
   act:page=>page.locator('a[href="/nj/mercer-county"]').first().click()},
- {name:'place to report',from:'/nj/princeton',to:'/nj/princeton/report',title:'Princeton',
+ {name:'place to report',from:'/nj/princeton/full',to:'/nj/princeton/report',title:'Princeton',
   act:page=>page.locator('a[href="/nj/princeton/report"]').first().click()},
  {name:'report to place',from:'/nj/princeton/report',to:'/nj/princeton',title:'Princeton',
   act:page=>page.locator('a[href="/nj/princeton"]').first().click()},

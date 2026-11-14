@@ -13,6 +13,7 @@ are not yet recorded here.
 
 ### Added
 
+- **A New Jersey town's address opens its briefing** (Milestone 62, ARCHITECTURE #520, #521): `/nj/hoboken` is seven slides — where the town stands out, then prices, taxes, flood risk, the homes and the market, and sources — and `/nj/hoboken/full` is the full page, with a switch on both. The slides are in the page's HTML, so search engines and link previews read them. On a phone the briefing is a portrait card with the controls at the foot and a sideways swipe. Older links to a section (`/nj/hoboken#tax`) open the full page there. Counties and ZIP codes are unchanged.
 - **Homes with three or more bedrooms, ranked** (ARCHITECTURE #519): a new Census figure, the share of homes with three or more bedrooms, with its margin, ranked among New Jersey's towns, ZIP codes and counties and listed under "The homes".
 
 - **`hip datacommons-discover`** (2026-11-10, ARCHITECTURE #487): asks Google Data
@@ -87,6 +88,8 @@ are not yet recorded here.
 
 ### Changed
 
+- **The briefing replaces the Buyer's guide** (Milestone 62, ARCHITECTURE #520): the Menu no longer lists it, since a town's page is its briefing; the footer and home tiles call it Briefing; `/guide` is a search that opens a town's briefing; the monthly-cost slide is gone and flood risk has its own slide.
+- **The full page states each section's conclusion** (ARCHITECTURE #522), with the state's median town or ZIP code beneath it; supporting figures fold under More, and the hero's map moved to the briefing's title slide.
 - **The Buyer's guide is a briefing** (2026-11-11, ARCHITECTURE #498): pick a town and
   get the same twelve slides every time, bottom line first, each with one figure set
   against the median New Jersey town, its source, and speaker notes with the detail.

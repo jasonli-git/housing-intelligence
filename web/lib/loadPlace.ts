@@ -1,30 +1,24 @@
-import type { CommunityContext, Observation, Packet, Utilities, WaterSystems } from "@/lib/api";
+import { api, type Observation } from "@/lib/api";
 import type { GuideData } from "@/lib/guide";
-import type { IncomeLimits } from "@/lib/household";
 
 /**
- * One place's published files, read in the browser, as the briefing needs them
- * (Milestone 49's guide loader; ARCHITECTURE #330). `?place=<region id>` names the place,
- * so one page serves every place instead of one file per place.
+ * One place's figures, as the briefing needs them (Milestone 49's guide loader, #330).
+ *
+ * Read from the API at build time since Milestone 62 (ARCHITECTURE #521): a town's
+ * briefing is its own page, rendered into the static export, so the slides are in the
+ * HTML a search engine or a link preview reads. Until then the browser read the same
+ * figures from the published artifacts after the page loaded. The build cannot read the
+ * artifact host instead: `make publish` uploads the artifacts after the pages are built,
+ * so the host still holds the previous publish while this runs.
  */
-async function getJson<T>(url: string): Promise<T | null> {
-  try {
-    const response = await fetch(url);
-    return response.ok ? ((await response.json()) as T) : null;
-  } catch {
-    return null;
-  }
-}
-
-export async function loadPlace(artifactUrl: string, id: number, newest: Record<string, string | null>): Promise<GuideData | null> {
-  const base = `${artifactUrl}/regions/${id}`;
+export async function loadPlace(id: number, newest: Record<string, string | null>): Promise<GuideData | null> {
   const [packet, metrics, incomeLimits, water, community, utilities] = await Promise.all([
-    getJson<Packet>(`${base}/packet/5y.json`),
-    getJson<{ total: number; observations: Observation[] }>(`${base}/metrics.json`),
-    getJson<IncomeLimits>(`${base}/income-limits.json`),
-    getJson<WaterSystems>(`${base}/water-systems.json`),
-    getJson<CommunityContext>(`${base}/community.json`),
-    getJson<Utilities>(`${base}/utilities.json`),
+    api.packet(id, "5y"),
+    api.regionObservations(id),
+    api.incomeLimits(id),
+    api.waterSystems(id),
+    api.community(id),
+    api.utilities(id),
   ]);
   if (!packet) return null;
   // FHA's limit and the county's turnover are the county's: a town or ZIP reads its
@@ -33,17 +27,16 @@ export async function loadPlace(artifactUrl: string, id: number, newest: Record<
     packet.region.level === "county"
       ? null
       : (incomeLimits?.county_id ?? (packet.region.parent?.level === "county" ? packet.region.parent.region_id : null));
-  const county = countyId ? await getJson<Packet>(`${artifactUrl}/regions/${countyId}/packet/5y.json`) : null;
-  const series = (metric: string) => (metrics?.observations ?? []).filter((o) => o.metric_id === metric).sort((a, b) => a.period_start.localeCompare(b.period_start));
+  const county = countyId ? await api.packet(countyId, "5y") : null;
+  const observations: Observation[] = metrics?.observations ?? [];
+  const series = (metric: string) => observations.filter((o) => o.metric_id === metric).sort((a, b) => a.period_start.localeCompare(b.period_start));
   return {
     region: packet.region,
     levels: packet.levels,
     countyLevels: county?.levels ?? [],
     sources: packet.sources,
     incomeLimits,
-    turnover: (metrics?.observations ?? [])
-      .filter((o) => o.metric_id === "sr1a_turnover_per_1000")
-      .sort((a, b) => a.period_start.localeCompare(b.period_start)),
+    turnover: series("sr1a_turnover_per_1000"),
     water,
     community,
     utilities,
