@@ -1,5 +1,5 @@
 # Data tiers — machine-local, rebuildable, never committed (ARCHITECTURE #10)
-data/
+/data/
 
 # reports/ is machine-local output too, with one published exception: the
 # model-evaluation report, small Markdown linked from the README and rebuilt by

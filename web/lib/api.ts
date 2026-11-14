@@ -698,6 +698,9 @@ export const api = {
     tryGet<Ranking>(
       `/rankings?metric_id=${metricId}&level=${level}&limit=${limit}&basis=value`,
     ),
+  /** MOCK (2026-11-13): how many values a region holds, read from one row's `total`. */
+  regionValueCount: (id: number) =>
+    tryGet<{ total: number }>(`/regions/${id}/metrics?limit=1`),
   /** Every series a region has, at the endpoint's ceiling, as `hip publish` writes it. */
   regionObservations: (id: number) =>
     tryGet<{ total: number; observations: Observation[] }>(`/regions/${id}/metrics?limit=20000`),
