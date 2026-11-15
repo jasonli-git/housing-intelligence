@@ -91,3 +91,30 @@ export function matchEntries(entries: SearchEntry[], query: string, limit = 8): 
     .slice(0, limit)
     .map(([, entry]) => entry);
 }
+
+/**
+ * MOCK (2026-11-15): the name a result shows when other places share it. New Jersey has
+ * five Franklins and six Washingtons, so a shared name carries its county,
+ * "Franklin (Somerset)"; where the county is shared too, as with a borough inside a
+ * township of the same name, the kind leads, "Chatham Borough (Morris)". A name no other
+ * place has is shown as it is.
+ */
+export function shownNames(entries: SearchEntry[]): Map<number, string> {
+  const parts = (e: SearchEntry) => {
+    const m = e.detail.match(/^(\w[\w ]*?) in (.+?) County\b/);
+    return m ? { kind: m[1], county: m[2] } : null;
+  };
+  const byName = new Map<string, SearchEntry[]>();
+  for (const e of entries) if (e.level === "municipality") byName.set(e.name, [...(byName.get(e.name) ?? []), e]);
+  const out = new Map<number, string>();
+  for (const [name, same] of byName) {
+    if (same.length < 2) continue;
+    for (const e of same) {
+      const p = parts(e);
+      if (!p) continue;
+      const shared = same.some((o) => o !== e && parts(o)?.county === p.county);
+      out.set(e.id, shared ? `${name} ${p.kind} (${p.county})` : `${name} (${p.county})`);
+    }
+  }
+  return out;
+}

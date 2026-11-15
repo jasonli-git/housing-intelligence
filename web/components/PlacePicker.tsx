@@ -1,8 +1,8 @@
 "use client";
 
-import { type KeyboardEvent, useId, useState } from "react";
+import { type KeyboardEvent, useId, useMemo, useState } from "react";
 
-import { matchEntries, type SearchEntry } from "@/lib/search";
+import { matchEntries, shownNames, type SearchEntry } from "@/lib/search";
 
 /**
  * A combobox over a list of places: type, arrow through the matches, Enter or a click to
@@ -53,10 +53,11 @@ export function PlacePicker({
 
   function pick(entry: SearchEntry) {
     setOpen(false);
-    setQuery(keepPicked ? entry.name : "");
+    setQuery(keepPicked ? (shown.get(entry.id) ?? entry.name) : "");
     onPick(entry);
   }
 
+  const shown = useMemo(() => shownNames(entries ?? []), [entries]);
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
@@ -120,7 +121,7 @@ export function PlacePicker({
               }}
               onMouseEnter={() => setActive(index)}
             >
-              <span className="result-name">{entry.name}</span>
+              <span className="result-name">{shown.get(entry.id) ?? entry.name}</span>
               <span className="result-detail">{entry.detail}</span>
             </li>
           ))}
