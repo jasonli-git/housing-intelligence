@@ -84,7 +84,7 @@ async function captureChart(browser, url) {
     const narrow = await context.newPage();
     await narrow.goto(url, { waitUntil: 'networkidle', timeout: 90_000 });
     await narrow.evaluate(() => document.fonts.ready);
-    await narrow.addStyleTag({ content: `*,*::before,*::after{animation:none!important;transition:none!important} nextjs-portal{display:none!important} ${PLAIN} [data-share-plain]:not(#_){background:none!important;box-shadow:none!important;border-color:transparent!important;backdrop-filter:none!important} [data-share-plain]:not(#_)::before,[data-share-plain]:not(#_)::after{display:none!important}` });
+    await narrow.addStyleTag({ content: `*,*::before,*::after{animation:none!important;transition:none!important} nextjs-portal{display:none!important} ${PLAIN} [data-share-whole] .story-h{margin-top:20px!important} [data-share-whole] figure{margin-bottom:0!important} [data-share-plain]:not(#_){background:none!important;box-shadow:none!important;border-color:transparent!important;backdrop-filter:none!important} [data-share-plain]:not(#_)::before,[data-share-plain]:not(#_)::after{display:none!important}` });
     // A chart the story marks with `data-share-chart`, leaving its controls behind; otherwise
     // the first block of the story tall enough to be a chart, in page order.
     const found = await narrow.evaluate(() => {
@@ -100,7 +100,8 @@ async function captureChart(browser, url) {
         for (const sibling of el.parentElement.children) if (sibling !== el) sibling.style.visibility = 'hidden';
         el.parentElement.setAttribute('data-share-plain', '');
       }
-      return { figure: target.matches('figure:not([data-share-cut])') };
+      // A figure, or a block marked `data-share-whole`, shrinks to fit rather than being cut.
+      return { figure: target.matches('figure:not([data-share-cut]), [data-share-whole]') };
     });
     if (!found) return null;
     const box = await narrow.locator('[data-share-target]').boundingBox();
@@ -108,8 +109,17 @@ async function captureChart(browser, url) {
     const tallest = Math.max(...Object.values(FORMATS).map((f) => f.chart.height / f.chart.width));
     const height = Math.min(box.height + pad * 2, Math.round(clipWidth * tallest * (found.figure ? SHRINK : 1)));
     const image = await narrow.screenshot({ type: 'jpeg', quality: 88, fullPage: true, clip: { x: box.x - pad, y: box.y - pad, width: clipWidth, height } });
+    // A whole block (`data-share-whole`) also offers its first figure alone, for a box too
+    // short to hold the block without cutting it.
+    let alone = null;
+    const first = narrow.locator('[data-share-whole] figure').first();
+    if (await first.count()) {
+      const fb = await first.boundingBox();
+      const w = fb.width + pad * 2;
+      alone = { image: await narrow.screenshot({ type: 'jpeg', quality: 88, fullPage: true, clip: { x: fb.x - pad, y: fb.y - pad, width: w, height: fb.height + pad * 2 } }), ratio: (fb.height + pad * 2) / w, figure: true };
+    }
     // How tall the whole chart is for its width, to tell which boxes cut it.
-    return { image, ratio: (box.height + pad * 2) / clipWidth, figure: found.figure };
+    return { image, ratio: (box.height + pad * 2) / clipWidth, figure: found.figure, alone };
   } finally {
     await context.close();
   }
@@ -120,8 +130,8 @@ async function captureChart(browser, url) {
  *  share box, and its link preview falls back to the site's own image. */
 export async function captureShareCard(browser, page, { slug, outDir }) {
   const story = await readStory(page);
-  const chart = await captureChart(browser, page.url());
-  if (!chart) return false;
+  const whole = await captureChart(browser, page.url());
+  if (!whole) return false;
   const credits = [...new Set(CREDITS.filter(([pattern]) => pattern.test(story.notes)).map(([, credit]) => credit))];
   // Zillow's notice is a sentence of its own, so it follows the list rather than joining it.
   const notice = credits.find((c) => c.startsWith('Data Provided'));
@@ -131,7 +141,10 @@ export async function captureShareCard(browser, page, { slug, outDir }) {
   const text = story.takeaway || escape(story.lede.split(/(?<=\.)\s/)[0] ?? '');
   await mkdir(resolve(outDir, 'share'), { recursive: true });
   for (const format of Object.values(FORMATS)) {
-    const cut = chart.ratio > (chart.figure ? SHRINK : 1) * format.chart.height / format.chart.width;
+    const fits = (c, most = c.figure ? SHRINK : 1) => c.ratio <= most * format.chart.height / format.chart.width;
+    // A box too short for a whole block, even shrunk, takes its first figure alone.
+    const chart = whole.alone && !fits(whole) ? whole.alone : whole;
+    const cut = !fits(chart);
     const short = format.short && chart.ratio < format.short.ratio * format.chart.height / format.chart.width;
     const t = short ? { ...format.type, ...format.short.type } : format.type;
     const html = `<!doctype html><meta charset="utf-8"><style>

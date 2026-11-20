@@ -55,6 +55,8 @@ export default async function FloodCalendarPage() {
       lede={<>Every row is a year, every sliver a day, and its brightness the flood insurance claims New Jersey&rsquo;s homes made for it. Most of the calendar is dark. Then a storm draws a bright stripe: Sandy&rsquo;s {sandy.toLocaleString("en-US")} claims on 29 October 2012 are more than most whole years. Ten days hold {Math.round(share * 100)}% of the {total.toLocaleString("en-US")} claims paid since {first}.</>}
       note={<>FEMA&rsquo;s National Flood Insurance Program redacted claims (OpenFEMA), every claim with anything paid, dated by its day of loss; a storm&rsquo;s claims can spread over the days after it. Only insured homes claim, and fewer homes were insured in the 1970s and 1980s than since, so early years run darker than their floods were. OpenFEMA&rsquo;s terms forbid trying to identify claimants; nothing here is below a statewide count.</>}
     >
+      {/* MOCK (2026-11-19): the calendar and its ten busiest days are one share image (data-share-whole). */}
+      <div data-share-chart data-share-whole>
       <figure className="story-figure" tabIndex={0}>
         <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Calendar of flood insurance claims in New Jersey from ${first} to ${last}, one row per year and one column per day of the year; the brightest days are the named storms.`}>
           <g className="grid" aria-hidden="true">
@@ -83,7 +85,7 @@ export default async function FloodCalendarPage() {
           })}
         </svg>
       </figure>
-      <h2 className="story-h">The ten busiest days</h2>
+      <h2 className="story-h">Ten days hold {Math.round(share * 100)}% of every claim</h2>
       <ul className="count-bars">
         {busiest.map((d) => (
           <li key={d.day}>
@@ -92,6 +94,7 @@ export default async function FloodCalendarPage() {
           </li>
         ))}
       </ul>
+      </div>
     </StoryShell>
   );
 }
