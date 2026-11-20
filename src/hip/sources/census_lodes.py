@@ -45,6 +45,8 @@ STATES = tuple(_CODES.split())
 MISSING: dict[str, tuple[str, ...]] = {
     "2022": ("AK", "MI", "MS"),
     "2023": ("AK", "MI"),
+    # LODES 8.5's technical notes: 2022-2024 cover 49 states, without Alaska and Michigan.
+    "2024": ("AK", "MI"),
 }
 
 
