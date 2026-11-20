@@ -85,6 +85,20 @@ def record_landed(release: Release, out: Path) -> None:
     _stamp_path(out).write_text(release.sha256 + "\n")
 
 
+# A UTF-8 byte-order mark, as the first column's name reads once a file is decoded as
+# latin-1 (or as UTF-8 that keeps it). IRS SOI's 2023-24 migration files open with one,
+# which named their first column "\u00ef\u00bb\u00bfy1_statefips" and broke the staging
+# models that read every year together (2026-11-20).
+_BOMS = ("\u00ef\u00bb\u00bf", "\ufeff")
+
+
+def _without_bom(name: str) -> str:
+    for bom in _BOMS:
+        if name.startswith(bom):
+            return name[len(bom) :]
+    return name
+
+
 def land_csv(
     release: Release,
     *,
@@ -105,7 +119,7 @@ def land_csv(
         if needs_landing(release, out, overwrite):
             if required_columns:
                 header = {
-                    row[0]
+                    _without_bom(row[0])
                     for row in con.execute(
                         f"DESCRIBE SELECT * FROM read_csv('{release.path}', header=true, "
                         f"encoding='{encoding}'{csv_options})"
@@ -126,14 +140,27 @@ def land_csv(
             # non-UTF-8 bytes in county names (line 2333 of countyinflow2122.csv), which
             # aborts a UTF-8 read outright; latin-1 decodes every byte, so no row is
             # dropped. Wikidata's names are UTF-8 and would land garbled (2026-10-23).
+            read = (
+                f"read_csv('{release.path}', header=true, sample_size=-1, "
+                f"encoding='{encoding}'{csv_options})"
+            )
+            # A byte-order mark is not part of the first column's name: it is dropped.
+            described = con.execute(f"DESCRIBE SELECT * FROM {read}").fetchall()
+            names = [row[0] for row in described]
+
+            def quote(name: str) -> str:
+                return '"' + name.replace('"', '""') + '"'
+
+            def select(name: str) -> str:
+                clean = _without_bom(name)
+                if clean == name:
+                    return quote(name)
+                return f"{quote(name)} AS {quote(clean)}"
+
+            columns = ", ".join(select(n) for n in names)
             con.execute(
-                f"""
-                COPY (
-                    SELECT * FROM read_csv('{release.path}',
-                                           header=true, sample_size=-1,
-                                           encoding='{encoding}'{csv_options})
-                ) TO '{out}' (FORMAT PARQUET, COMPRESSION ZSTD)
-                """
+                f"COPY (SELECT {columns} FROM {read}) "
+                f"TO '{out}' (FORMAT PARQUET, COMPRESSION ZSTD)"
             )
             record_landed(release, out)
         result = con.execute(

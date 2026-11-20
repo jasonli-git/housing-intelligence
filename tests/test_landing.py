@@ -113,3 +113,26 @@ def test_a_parquet_with_no_stamp_is_rebuilt_once(tmp_path: Path) -> None:
 
     out.with_suffix(".parquet.src").unlink()
     assert needs_landing(release, out, overwrite=False) is True
+
+
+def test_a_byte_order_mark_is_not_part_of_the_first_column(tmp_path: Path) -> None:
+    """IRS SOI's 2023-24 files open with a UTF-8 byte-order mark (2026-11-20)."""
+    body = "\ufeffy1_statefips,y1_countyfips,n1\n34,001,12\n"
+    path = tmp_path / "raw" / "countyoutflow2324.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(body.encode("utf-8"))
+    release = _release(tmp_path, "", name="unused.csv")
+    release = Release(
+        ref=release.ref,
+        path=path,
+        sha256="bom",
+        size_bytes=path.stat().st_size,
+        fetched_at=release.fetched_at,
+    )
+    landed = land_csv(
+        release, parquet_dir=tmp_path / "parquet", required_columns=("y1_statefips",)
+    )
+    described = duckdb.sql(f"DESCRIBE SELECT * FROM read_parquet('{landed.path}')")
+    columns = [row[0] for row in described.fetchall()]
+    assert columns == ["y1_statefips", "y1_countyfips", "n1"]
+    assert landed.row_count == 1
