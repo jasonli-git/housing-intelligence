@@ -7,7 +7,7 @@ import { fit, rotate, scene, screen, view } from "@/lib/globe";
 import { ATLAS_CITIES, NJ_NEIGHBOURS } from "@/lib/njNeighbours";
 import { WORLD_LAND } from "@/lib/worldLand";
 import { unpack, type PackedOutline } from "@/lib/mapdata";
-import { atlasColor, atlasQuintileColor, atlasRank, atlasReading, layerForZoom, MAX_ZOOM, quintileBreaks, atlasValue, ATLAS_COLORS, ATLAS_LEVELS, compareHref, loadAtlasMeasure, type AtlasCounty, type AtlasEntry, type AtlasLevel, type AtlasMeasure, type AtlasMode } from "@/lib/housingAtlas";
+import { atlasColor, atlasQuintileColor, atlasRank, atlasReading, layerForZoom, MAX_ZOOM, DETAIL_ZOOM, quintileBreaks, atlasValue, ATLAS_COLORS, ATLAS_LEVELS, compareHref, loadAtlasMeasure, type AtlasCounty, type AtlasEntry, type AtlasLevel, type AtlasMeasure, type AtlasMode } from "@/lib/housingAtlas";
 import { GROUPS } from "@/lib/groups";
 import { MAX_PLACES } from "@/lib/compare";
 import { formatChange, formatMetric } from "@/lib/format";
@@ -17,6 +17,7 @@ import { WINDOWS, windowNote } from "@/lib/windows";
 import { regionPath } from "@/lib/placeRoutes";
 import { ordinal } from "@/lib/ranks";
 import { useAtlasCamera } from "./useAtlasCamera";
+import { useAtlasGestures } from "./useAtlasGestures";
 import { AtlasPreview } from "./AtlasPreview";
 import { BudgetCard, BudgetLine, useAtlasBudget, type AtlasBudgetData } from "./AtlasBudget";
 import { formatValue } from "@/lib/format";
@@ -54,6 +55,8 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
   // data", 2026-10-22).
   const [picks,setPicks]=useState<number[]>([]);
   const [outlinesByLevel,setOutlinesByLevel]=useState<Partial<Record<AtlasLevel,PackedOutline[]>>>({});
+  // The detailed outlines, fetched the first time a layer is zoomed in on (#523).
+  const [detailByLevel,setDetailByLevel]=useState<Partial<Record<AtlasLevel,PackedOutline[]|"loading">>>({});
   const [loaded,setLoaded]=useState<Record<string,AtlasMeasure|"loading"|"failed">>({});
   const [failed,setFailed]=useState(false);
   const [expanded,setExpanded]=useState(false);
@@ -79,16 +82,23 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
   const [frame,setFrame]=useState({width:900,height:1000,box:{x:0,y:0,w:900,h:1000}});
   const frameRef=useRef(frame.box);
   frameRef.current=frame.box;
-  // The drawn map's extent in the open area, before zoom (#398). A dimension the map
-  // fits in stays centred; one it overflows can be panned only until an edge reaches the
-  // area's, so the map cannot be dragged away from view.
+  // The drawn map's extent in the open area, before zoom (#398). The map can be dragged at
+  // every zoom (#523: until then a map that fitted was held centred, so a drag at the
+  // opening view did nothing), but not lost: a third of it, or of the area if the map is
+  // larger, stays in view.
   const extent=useRef<[number,number,number,number]|null>(null);
   const bounded=useCallback((v:{scale:number;x:number;y:number})=>{
     const scale=Math.max(.8,Math.min(MAX_ZOOM,v.scale)), e=extent.current, box=frameRef.current;
     if(!e)return {...v,scale};
-    const place=(lo:number,hi:number,offset:number,size:number)=>{const a=scale*lo,b=scale*hi;return b-a<=size?(size-a-b)/2:Math.min(-a,Math.max(size-b,offset));};
+    const place=(lo:number,hi:number,offset:number,size:number)=>{const a=scale*lo,b=scale*hi,keep=Math.min(b-a,size)/3;return Math.min(size-keep-a,Math.max(keep-b,offset));};
     return {scale,x:place(e[0],e[2],v.x,box.w),y:place(e[1],e[3],v.y,box.h)};
   },[]);
+  // The whole map, centred in the open area: the opening view, Reset, and a new frame.
+  const centred=useCallback(()=>{const e=extent.current,box=frameRef.current;return e?{scale:1,x:(box.w-e[0]-e[2])/2,y:(box.h-e[1]-e[3])/2}:{scale:1,x:0,y:0};},[]);
+  // Set when the view should be centred once the map's extent is known.
+  const home=useRef(true);
+  // Set when a gesture hands over its view, so the camera draws it at once rather than easing.
+  const direct=useRef(false);
   const setViewport=useCallback((next:{scale:number;x:number;y:number}|((current:{scale:number;x:number;y:number})=>{scale:number;x:number;y:number}))=>setRawViewport(current=>bounded(typeof next==="function"?next(current):next)),[bounded]);
   const [panelWidth,setPanelWidth]=useState(370);
   const [moreMeasures,setMoreMeasures]=useState(false);
@@ -127,7 +137,6 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
     if(!panelsRead)return;
     try{window.localStorage.setItem(PANELS_KEY,JSON.stringify({...panels,mapOnly}));}catch{/* private window: the choice lasts this visit */}
   },[panels,mapOnly,panelsRead]);
-  const [dragging,setDragging]=useState(false);
   const controls=useRef<HTMLDivElement>(null);
   useEffect(()=>{const el=controls.current;if(!el)return;const ro=new ResizeObserver(()=>setControlsHeight(el.offsetHeight));ro.observe(el);return()=>ro.disconnect();},[]);
   const measureLauncher=useRef<HTMLButtonElement>(null);
@@ -161,6 +170,7 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
       const zoomed=params.has("zoom")&&Number.isFinite(scale)?Math.max(.8,Math.min(MAX_ZOOM,scale)):1;
       const fits=layerForZoom(nextLevel,zoomed,nextLevel==="states"?"county":nextLevel)===nextLevel;
       if(nextLevel!=="states")setStateLayer(nextLevel);
+      home.current=!params.has("zoom")||!fits;
       setViewport({scale:fits?zoomed:1,x:fits&&Number.isFinite(x)?x:0,y:fits&&Number.isFinite(y)?y:0});
       setRestored(true);
     };
@@ -181,9 +191,13 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
   },[restored,level,metric,mode,selected,picks,viewport]);
   const resizing=useRef<{x:number;width:number}|null>(null);
   const svg=useRef<SVGSVGElement>(null);
+  // The water and neighbouring land behind the outlines, and the city labels above them,
+  // are SVGs of their own (#523): the outlines' shadow is then a filter on their own
+  // layer, which the compositor draws without repainting an outline, and the land and
+  // labels do not cast it.
+  const back=useRef<SVGSVGElement>(null);
+  const front=useRef<SVGSVGElement>(null);
   const table=useRef<HTMLDivElement>(null);
-  const drag=useRef<{id:number;x:number;y:number;start:typeof viewport}|null>(null);
-  const moved=useRef(false);
   useEffect(()=>{
     const controller=new AbortController();
     fetch("/states.json",{signal:controller.signal}).then(r=>{if(!r.ok)throw new Error();return r.json();}).then((file:{outlines:PackedOutline[]})=>setStateGeometry(file.outlines)).catch(()=>{if(!controller.signal.aborted)setFailed(true);});
@@ -197,6 +211,13 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
     fetch(file,{signal:controller.signal}).then(r=>{if(!r.ok)throw new Error();return r.json();}).then((body:{outlines:PackedOutline[]})=>{if(!body.outlines.length)throw new Error();setOutlinesByLevel(current=>({...current,[level]:body.outlines}));}).catch(()=>{if(!controller.signal.aborted)setFailed(true);});
     return()=>controller.abort();
   },[restored,level,outlinesByLevel]);
+  useEffect(()=>{
+    if(!restored||level==="states"||viewport.scale<DETAIL_ZOOM||detailByLevel[level])return;
+    const at=level;
+    setDetailByLevel(current=>({...current,[at]:"loading"}));
+    // Failing, the light outlines stay: the map is coarser up close, not missing.
+    fetch(ATLAS_LEVELS.find(l=>l.key===at)!.detail).then(r=>{if(!r.ok)throw new Error();return r.json();}).then((body:{outlines:PackedOutline[]})=>{if(body.outlines.length)setDetailByLevel(current=>({...current,[at]:body.outlines}));}).catch(()=>{});
+  },[restored,level,viewport.scale,detailByLevel]);
   // A New Jersey measure's figures, read when it is first chosen at a level.
   useEffect(()=>{
     if(!restored||level==="states")return;
@@ -223,14 +244,24 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
   const njFrame=useMemo(()=>njFitOutlines.length?fit(njFitOutlines,{width:box.w,height:box.h,padding:.97}):{lon:-74.65,lat:40.15,scale:19000*Math.min(box.w/900,box.h/1000)},[njFitOutlines,box.w,box.h]);
   const nj=level!=="states";
   const targetCamera=useMemo(()=>({lon:nj?njFrame.lon:statesFrame.lon,lat:nj?njFrame.lat:statesFrame.lat,scale:nj?njFrame.scale:statesFrame.scale,zoom:viewport.scale,x:viewport.x,y:viewport.y}),[nj,statesFrame,njFrame,viewport]);
-  const camera=useAtlasCamera(targetCamera,dragging||!restored);
+  const camera=useAtlasCamera(targetCamera,direct.current||!restored);
+  useEffect(()=>{direct.current=false;});
+  const drawnView=useMemo(()=>({scale:camera.zoom,x:camera.x,y:camera.y}),[camera.zoom,camera.x,camera.y]);
+  const gestures=useAtlasGestures({svg,layers:[back,front],drawn:drawnView,frame,bounded,minScale:.8,maxScale:MAX_ZOOM,
+    commit:v=>{direct.current=true;setViewport(v);}});
+  const moved=gestures.moved;
   // The projection only: pan and zoom are the group's transform, so the outlines are not
   // re-projected on every frame of a pan.
   const perspective=useMemo(()=>view({lon:camera.lon,lat:camera.lat,scale:camera.scale,width:box.w,height:box.h}),[camera.lon,camera.lat,camera.scale,box.w,box.h]);
   const levelGeometry=level==="states"?null:outlinesByLevel[level]??null;
   const njOutlines=useMemo(()=>unpack(levelGeometry??[]),[levelGeometry]);
+  // Drawn from the detailed outlines when zoomed in and they have arrived; the light ones
+  // still fit the frame and bound the pan, so the view does not shift when they swap.
+  const detail=level==="states"?undefined:detailByLevel[level];
+  const detailed=viewport.scale>=DETAIL_ZOOM&&Array.isArray(detail)?detail:null;
+  const detailOutlines=useMemo(()=>detailed?unpack(detailed):null,[detailed]);
   const stateOutlines=contiguous;
-  const shapes=useMemo(()=>scene(perspective,nj?njOutlines:stateOutlines,()=>0),[perspective,nj,njOutlines,stateOutlines]);
+  const shapes=useMemo(()=>scene(perspective,nj?detailOutlines??njOutlines:stateOutlines,()=>0),[perspective,nj,njOutlines,detailOutlines,stateOutlines]);
   // The extent the pan is held to: every point of the outlines as they will sit when the
   // camera arrives, not as it draws them mid-flight. Measured from the moving camera, the
   // bound moved the target and the target moved the camera, and New Jersey's 564 small
@@ -241,14 +272,18 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
     for(const shape of restingShapes){const n=shape.base.match(/-?\d+(?:\.\d+)?/g)??[];for(let i=0;i+1<n.length;i+=2){const x=Number(n[i]),y=Number(n[i+1]);if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;}}
     extent.current=Number.isFinite(minX)?[minX,minY,maxX,maxY]:null;
     // The same object when nothing moved, or the camera would retarget and redraw forever.
+    if(extent.current&&home.current){home.current=false;setRawViewport(centred());return;}
     setRawViewport(current=>{const next=bounded(current);return next.scale===current.scale&&next.x===current.x&&next.y===current.y?current:next;});
-  },[restingShapes,bounded]);
+  },[restingShapes,bounded,centred]);
   const stage=useRef<HTMLDivElement>(null);
   useEffect(()=>{
     const element=stage.current;
     if(!element||typeof ResizeObserver==="undefined")return;
     const atlas=element.closest(".housing-atlas");
     const measure=()=>{
+      // Mid-gesture the map is a moved picture and its box is not its place; the next
+      // change after the gesture measures again.
+      if(gestures.active.current)return;
       const area=(svg.current??element).getBoundingClientRect();
       if(!area.width||!area.height)return;
       const unit=1000/area.height, width=Math.round(area.width*unit);
@@ -353,7 +388,7 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
     const path=svg.current?.querySelector<SVGPathElement>(`[data-county="${id}"]`);
     if(path) {
       const box=path.getBBox();
-      setViewport(current=>{const scale=level==="county"?Math.max(current.scale,1.35):nj?Math.max(current.scale,2.4):Math.min(6,Math.max(1.35,Math.min(420/box.width,420/box.height)));return {scale,x:frameRef.current.w/2-(box.x+box.width/2)*scale,y:frameRef.current.h/2-(box.y+box.height/2)*scale};});
+      gestures.animateTo(current=>{const scale=level==="county"?Math.max(current.scale,1.35):nj?Math.max(current.scale,2.4):Math.min(6,Math.max(1.35,Math.min(420/box.width,420/box.height)));return {scale,x:frameRef.current.w/2-(box.x+box.width/2)*scale,y:frameRef.current.h/2-(box.y+box.height/2)*scale};});
     }
     const row=table.current?.querySelector<HTMLElement>(`[data-county-row="${id}"]`);
     if(row&&table.current) {
@@ -369,11 +404,7 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
   const pathElements=useMemo(()=>shapes.map(shape=>{const county=nj?destinationById.get(Number(shape.id)):destinationByName.get(shape.name), id=county?.id, value=atlasValue(id===undefined?undefined:rows.get(id),mode);return county&&id!==undefined?<path key={id} data-county={id} data-state={!nj?String(shape.id):undefined} data-selected={selected===id} data-pinned={picks.includes(id)} data-budget={budget.fitOf(id)} data-empty={!nj&&value===null} d={shape.base} fill={fill(value)} tabIndex={0} role="button" aria-label={`${county.name}: ${format(value)}. Select ${nj?levelInfo!.noun:"state"}`} aria-pressed={selected===id} onClick={()=>{if(!moved.current)handlers.current.select(id);}} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();handlers.current.select(id);}}}><title>{county.name} · {format(value)}</title></path>:null;}),[shapes,nj,destinationById,destinationByName,rows,mode,selected,picks,breaks,values,byFifths,measure,metric,levelInfo,budget.reading]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const tableRows=useMemo(()=>visibleRows.map(({county,value})=><tr key={county.id} data-county-row={county.id} data-selected={selected===county.id} data-pinned={picks.includes(county.id)}><th scope="row"><button type="button" aria-label={`Select ${county.name}`} aria-pressed={selected===county.id} onClick={()=>handlers.current.select(county.id)}>{county.name.replace(/ County$/,"")}</button></th>{budget.reading&&<td className="atlas-budget-cost" data-fit={budget.fitOf(county.id)}>{budget.costOf(county.id)!==null?formatValue(budget.costOf(county.id)!,"usd"):"—"}<small>{budget.costOf(county.id)!==null?(budget.fitOf(county.id)==="within"?`${formatValue(budget.line-budget.costOf(county.id)!,"usd")} to spare`:`${formatValue(budget.costOf(county.id)!-budget.line,"usd")} over`):""}</small></td>}<td>{format(value)}{margin(county.id)&&<small>{margin(county.id)}</small>}{mode==="latest"&&dates.length>1&&<small>{measure.latest.periods[county.id]?periodLabel(measure.latest.periods[county.id],metric):""}</small>}</td></tr>),[visibleRows,selected,picks,mode,measure,metric,rows,dates,budget.reading]);
-  const zoom=(factor:number)=>setViewport(current=>{
-    const scale=Math.min(MAX_ZOOM,Math.max(.8,current.scale*factor)), ratio=scale/current.scale;
-    const cx=frameRef.current.w/2, cy=frameRef.current.h/2;
-    return {scale,x:cx-(cx-current.x)*ratio,y:cy-(cy-current.y)*ratio};
-  });
+  const zoom=gestures.zoomBy;
   // On phones the catalogue hangs from the controls, whose place on the page varies with
   // the title above them: it is held to the room left below it, so it never runs off the
   // bottom of the screen. Wide screens keep the stylesheet's height.
@@ -384,7 +415,7 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
   },[]);
   // Between New Jersey's layers the view is kept, so the whole state stays in sight; to and
   // from the nation it is reframed.
-  const changeLevel=(next:Level)=>{const reframe=next==="states"||level==="states";setLevel(next);setSelected(null);if(next!=="states")setStateLayer(next);if(reframe)setViewport({scale:1,x:0,y:0});const ids=next==="states"?stateMeasures.map(m=>m.metric_id):entries.filter(e=>e.levels.includes(next)).map(e=>e.metric_id);if(!ids.includes(metric))setMetric(ids.includes(OPENING_MEASURE)?OPENING_MEASURE:ids[0]);if(next!==level&&(next==="states"||level==="states"))setPicks([]);};
+  const changeLevel=(next:Level)=>{const reframe=next==="states"||level==="states";setLevel(next);setSelected(null);if(next!=="states")setStateLayer(next);if(reframe){home.current=true;setViewport({scale:1,x:0,y:0});}const ids=next==="states"?stateMeasures.map(m=>m.metric_id):entries.filter(e=>e.levels.includes(next)).map(e=>e.metric_id);if(!ids.includes(metric))setMetric(ids.includes(OPENING_MEASURE)?OPENING_MEASURE:ids[0]);if(next!==level&&(next==="states"||level==="states"))setPicks([]);};
   // Zooming in on the nation opens New Jersey; zooming out of New Jersey returns to it.
   useEffect(()=>{
     if(!restored)return;
@@ -392,7 +423,7 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
     if(next!==level)changeLevel(next);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[viewport.scale,restored]);
-  return <section className="housing-atlas" aria-label="Housing map and comparison" data-level={level} data-mobile-view={expanded ? "list" : "map"} data-controls={panels.controls?"open":"away"} data-results={panels.results?"open":"away"} data-map-only={mapOnly} data-moving={dragging||camera!==targetCamera} style={{"--atlas-panel-width":`${panelWidth}px`,"--atlas-sheet-height":`${sheetHeight}px`} as CSSProperties}>
+  return <section className="housing-atlas" aria-label="Housing map and comparison" data-level={level} data-mobile-view={expanded ? "list" : "map"} data-controls={panels.controls?"open":"away"} data-results={panels.results?"open":"away"} data-map-only={mapOnly} data-moving={camera!==targetCamera} data-zoomed={viewport.scale>1.6} style={{"--atlas-panel-width":`${panelWidth}px`,"--atlas-sheet-height":`${sheetHeight}px`} as CSSProperties}>
     {/* On a phone the measure takes the bar's middle, in place of the page's name, and
         opens the controls: the strip of chips under the bar is gone (owner, 2026-11-09). */}
     {bar&&<div className="atlas-bar-slot">{bar}<button type="button" className="atlas-bar-measure" aria-expanded={panels.controls} onClick={()=>setPanels(p=>({...p,controls:!p.controls}))}><span>{FRIENDLY[measure.metric_id]??measure.label}</span><small>{nj?levelInfo!.label:"United States"}</small><span aria-hidden="true">⌄</span></button></div>}
@@ -429,26 +460,28 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
     {nj&&budgetData&&<BudgetCard budget={budget} open={budgetOpen} setOpen={setBudgetOpen} controlsHeight={panels.controls?controlsHeight:chipHeight} onEnable={()=>{if(level!=="municipality"&&level!=="county")changeLevel("municipality");}} onShowTowns={()=>changeLevel("municipality")}/>}
     <div className="atlas-workspace">
       <div ref={stage} className="atlas-map-stage">
-        <svg ref={svg} className="atlas-county-map" viewBox={`0 0 ${frame.width} ${frame.height}`} tabIndex={0} role="group" aria-label={`${nj?`New Jersey ${levelInfo!.noun} map. Drag or arrow keys to pan`:"United States map. Drag or arrow keys to pan"}; plus and minus zoom. Shapes select the matching table row.`}
-          onKeyDown={e=>{if(e.target!==e.currentTarget)return;const delta=({ArrowLeft:[45,0],ArrowRight:[-45,0],ArrowUp:[0,45],ArrowDown:[0,-45]} as Record<string,number[]>)[e.key];if(delta){e.preventDefault();setViewport(v=>({...v,x:v.x+delta[0],y:v.y+delta[1]}));}else if(e.key==="+"||e.key==="="){e.preventDefault();zoom(1.25);}else if(e.key==="-"){e.preventDefault();zoom(.8);}}}
-          onPointerDown={e=>{if(e.button!==0)return;setDragging(true);drag.current={id:e.pointerId,x:e.clientX,y:e.clientY,start:viewport};moved.current=false;}}
-          onPointerMove={e=>{const d=drag.current;if(!d||d.id!==e.pointerId)return;const rect=e.currentTarget.getBoundingClientRect();const dx=e.clientX-d.x,dy=e.clientY-d.y;if(Math.hypot(dx,dy)>4){moved.current=true;e.currentTarget.setPointerCapture(e.pointerId);}if(moved.current){const pixels=Math.min(rect.width/frame.width,rect.height/frame.height);setViewport({...d.start,x:d.start.x+dx/pixels,y:d.start.y+dy/pixels});}}}
-          onPointerUp={e=>{setDragging(false);drag.current=null;if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);}}
-          onPointerCancel={()=>{setDragging(false);drag.current=null;moved.current=true;}}>
-          <defs><pattern id="atlas-missing" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#8f939c"/><path d="M0 8L8 0" stroke="#d5d8de" strokeWidth="2"/></pattern><pattern id="atlas-unpriced" width="6" height="6" patternUnits="userSpaceOnUse"><rect className="atlas-unpriced-ground" width="6" height="6"/><circle className="atlas-unpriced-dot" cx="3" cy="3" r="1.1"/></pattern><filter id="atlas-grain"><feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" stitchTiles="stitch"/></filter></defs>
+        <svg ref={back} className="atlas-map-layer atlas-map-back" viewBox={`0 0 ${frame.width} ${frame.height}`} aria-hidden="true" focusable="false">
+          <defs><filter id="atlas-grain"><feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" stitchTiles="stitch"/></filter></defs>
           <rect className="atlas-ocean" width={frame.width} height={frame.height}/><rect width={frame.width} height={frame.height} filter="url(#atlas-grain)" opacity=".035" pointerEvents="none"/>
           {/* Canada and Mexico sit apart from the states, so the states' lift is theirs alone. */}
           <g className="atlas-context" transform={`translate(${box.x+camera.x} ${box.y+camera.y}) scale(${camera.zoom})`} aria-hidden="true">
             {land.map(shape=><path className="atlas-context-land" key={`land-${shape.id}`} d={shape.base} pointerEvents="none"/>)}
           </g>
+        </svg>
+        <svg ref={svg} className="atlas-county-map" viewBox={`0 0 ${frame.width} ${frame.height}`} tabIndex={0} role="group" aria-label={`${nj?`New Jersey ${levelInfo!.noun} map. Drag or arrow keys to pan`:"United States map. Drag or arrow keys to pan"}; scroll, pinch, plus and minus zoom. Shapes select the matching table row.`}
+          onKeyDown={e=>{if(e.target!==e.currentTarget)return;const delta=({ArrowLeft:[45,0],ArrowRight:[-45,0],ArrowUp:[0,45],ArrowDown:[0,-45]} as Record<string,number[]>)[e.key];if(delta){e.preventDefault();gestures.animateTo(v=>({...v,x:v.x+delta[0],y:v.y+delta[1]}));}else if(e.key==="+"||e.key==="="){e.preventDefault();zoom(1.25);}else if(e.key==="-"){e.preventDefault();zoom(.8);}}}
+          {...gestures.handlers}>
+          <defs><pattern id="atlas-missing" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#8f939c"/><path d="M0 8L8 0" stroke="#d5d8de" strokeWidth="2"/></pattern><pattern id="atlas-unpriced" width="6" height="6" patternUnits="userSpaceOnUse"><rect className="atlas-unpriced-ground" width="6" height="6"/><circle className="atlas-unpriced-dot" cx="3" cy="3" r="1.1"/></pattern></defs>
           <g className="atlas-map-geography" data-camera={`${camera.lon},${camera.lat},${camera.scale}`} transform={`translate(${box.x+camera.x} ${box.y+camera.y}) scale(${camera.zoom})`}>
             {pathElements}
           </g>
+        </svg>
+        <svg ref={front} className="atlas-map-layer atlas-map-front" viewBox={`0 0 ${frame.width} ${frame.height}`} aria-hidden="true" focusable="false">
           {/* Labels stay one size at every zoom, so they sit outside the scaled group. */}
           <g className="atlas-cities" aria-hidden="true">{cities.map(c=><text key={c.name} x={Math.round(box.x+camera.x+c.xy[0]*camera.zoom)} y={Math.round(box.y+camera.y+c.xy[1]*camera.zoom)} data-beyond={c.beyond||undefined}><tspan className="atlas-city-dot" dy="0">•</tspan> {c.name}</text>)}</g>
         </svg>
         {!(nj?levelGeometry??[]:stateGeometry).length&&<p className="atlas-map-status" role="status">{failed?"Map unavailable. Published figures remain in the table.":"Drawing the atlas…"}</p>}
-        <div className="atlas-map-buttons" role="group" aria-label="Map controls">{nj&&!panels.controls&&<button type="button" className="atlas-layers-button" aria-label={`Layers: ${FRIENDLY[measure.metric_id]??measure.label}`} title="Layers" onClick={()=>setPanels(p=>({...p,controls:true}))}><AtlasPreview metric={metric}/><span>Layers</span></button>}<button type="button" aria-label="Zoom in" onClick={()=>zoom(1.25)}>+</button><button type="button" aria-label="Zoom out" onClick={()=>zoom(.8)}>−</button><button type="button" onClick={()=>setViewport({scale:1,x:0,y:0})}>Reset</button><button type="button" className="atlas-map-only" aria-pressed={mapOnly} onClick={()=>setMapOnly(!mapOnly)} title={mapOnly?"Show the panels":"Map only: put every panel away"}><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{mapOnly?<path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/>:<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>}</svg><span>{mapOnly?"Panels":"Map only"}</span></button></div>
+        <div className="atlas-map-buttons" role="group" aria-label="Map controls">{nj&&!panels.controls&&<button type="button" className="atlas-layers-button" aria-label={`Layers: ${FRIENDLY[measure.metric_id]??measure.label}`} title="Layers" onClick={()=>setPanels(p=>({...p,controls:true}))}><AtlasPreview metric={metric}/><span>Layers</span></button>}<button type="button" aria-label="Zoom in" onClick={()=>zoom(1.25)}>+</button><button type="button" aria-label="Zoom out" onClick={()=>zoom(.8)}>−</button><button type="button" onClick={()=>gestures.animateTo(centred())}>Reset</button><button type="button" className="atlas-map-only" aria-pressed={mapOnly} onClick={()=>setMapOnly(!mapOnly)} title={mapOnly?"Show the panels":"Map only: put every panel away"}><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{mapOnly?<path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/>:<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>}</svg><span>{mapOnly?"Panels":"Map only"}</span></button></div>
         <div className="atlas-legend"><span>{format(values.length?Math.min(...values):null)}</span><div role="img" aria-label="Color scale for published area figures">{legendColors.map(color=><i key={color} style={{background:color}}/>)}</div><span>{format(values.length?Math.max(...values):null)}</span><small>{values.length===1?"Only one published area; no cross-area comparison yet":shading}</small>{byFifths&&breaks.length>0&&<small>Each shade is a fifth of {levelInfo!.plural}: {breaks.map(b=>format(b)).join(" · ")}</small>}<small><i className="atlas-missing-key"/>{nj?measureStatus||(values.length<destinations.length?`No figure: ${destinations.length-values.length} of ${destinations.length} ${levelInfo!.plural}${mode==="latest"&&measure.leftOut&&Object.keys(measure.leftOut).length?`, ${Object.keys(measure.leftOut).length} of them older or too uncertain to map`:""}`:`Every ${levelInfo!.noun} has a figure`):"Outline only: no figures yet"} · higher is not necessarily better</small></div>
         <small className="atlas-map-credit">Boundaries: Census TIGER/Line · world silhouette: Natural Earth · area figures, not individual homes</small>
       </div>

@@ -32,11 +32,14 @@ export function atlasColor(value:number|null, values:number[]):string {
 
 /** New Jersey's mapped levels beyond the states (Director Note "Visualizing the data"). */
 export type AtlasLevel = "county" | "municipality" | "zip";
-export const ATLAS_LEVELS: { key: AtlasLevel; label: string; noun: string; plural: string; outlines: string }[] = [
-  { key: "county", label: "Counties", noun: "county", plural: "counties", outlines: "/atlas/counties.json" },
-  { key: "municipality", label: "Towns", noun: "town", plural: "towns", outlines: "/atlas/municipalities.json" },
-  { key: "zip", label: "ZIP codes", noun: "ZIP code", plural: "ZIP codes", outlines: "/atlas/zips.json" },
+/** `outlines` draws the whole state; `detail` is fetched from `DETAIL_ZOOM` in (#523). */
+export const ATLAS_LEVELS: { key: AtlasLevel; label: string; noun: string; plural: string; outlines: string; detail: string }[] = [
+  { key: "county", label: "Counties", noun: "county", plural: "counties", outlines: "/atlas/counties.json", detail: "/atlas/counties-detail.json" },
+  { key: "municipality", label: "Towns", noun: "town", plural: "towns", outlines: "/atlas/municipalities.json", detail: "/atlas/municipalities-detail.json" },
+  { key: "zip", label: "ZIP codes", noun: "ZIP code", plural: "ZIP codes", outlines: "/atlas/zips.json", detail: "/atlas/zips-detail.json" },
 ];
+/** The zoom from which the detailed outlines are drawn (lib/atlasOutlines.ts). */
+export const DETAIL_ZOOM = 2;
 
 /** A measure the atlas can map, and the levels it is published for. Its figures load on demand. */
 export type AtlasEntry = {

@@ -13,6 +13,7 @@ are not yet recorded here.
 
 ### Added
 
+- **The housing map zooms with the scroll wheel and a pinch, and drags at every zoom** (Milestone 66, ARCHITECTURE #523): the wheel and a trackpad pinch zoom about the pointer instead of scrolling the page, two fingers pinch on a phone, and the opening view can be dragged (it was held centred). Pans and zooms move the drawn map as a picture and redraw it once at the end, so on a 4× slowed CPU a drag of the towns map does a third to a half of the work it did and a zoom-button glide under half; up close the outlines are drawn from a detailed file, and the whole state from a lighter one (towns 206KB → 153KB). `web/scripts/bench-atlas.mjs` measures it.
 - **A New Jersey town's address opens its briefing** (Milestone 62, ARCHITECTURE #520, #521): `/nj/hoboken` is seven slides — where the town stands out, then prices, taxes, flood risk, the homes and the market, and sources — and `/nj/hoboken/full` is the full page, with a switch on both. The slides are in the page's HTML, so search engines and link previews read them. On a phone the briefing is a portrait card with the controls at the foot and a sideways swipe. Older links to a section (`/nj/hoboken#tax`) open the full page there. Counties and ZIP codes are unchanged.
 - **Homes with three or more bedrooms, ranked** (ARCHITECTURE #519): a new Census figure, the share of homes with three or more bedrooms, with its margin, ranked among New Jersey's towns, ZIP codes and counties and listed under "The homes".
 

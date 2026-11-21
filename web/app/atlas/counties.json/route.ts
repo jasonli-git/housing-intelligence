@@ -1,8 +1,6 @@
-import { api } from "@/lib/api";
-import { pack } from "@/lib/mapdata";
+import { atlasOutlines } from "@/lib/atlasOutlines";
 export const dynamic="force-static";
+/** The atlas's light county outlines, for the whole state (lib/atlasOutlines.ts). */
 export async function GET() {
-  // The Atlas county level is deliberately New Jersey's (Decision #398).
-  const geometry=await api.geo("county","NJ",.001);
-  return Response.json({outlines:geometry ? pack(geometry,"region_id") : []});
+  return Response.json({outlines:await atlasOutlines("county","light")});
 }

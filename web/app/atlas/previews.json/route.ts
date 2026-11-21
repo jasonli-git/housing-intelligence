@@ -1,14 +1,15 @@
 import { api } from "@/lib/api";
 import { previewShades, type Preview, type PreviewFile } from "@/lib/atlasPreviews";
 import { GROUPS } from "@/lib/groups";
+import { TOLERANCE } from "@/lib/atlasOutlines";
 export const dynamic="force-static";
 /**
  * The atlas's layer tiles (`lib/atlasPreviews.ts`): every catalogued measure's shade for
  * each New Jersey town, worked out at build time so the browser fetches one small file
- * rather than every measure. A measure with no New Jersey figures is simply absent. Same geometry request as `municipalities.json`, for the order.
+ * rather than every measure. A measure with no New Jersey figures is simply absent. Same geometry request as `municipalities.json` (lib/atlasOutlines.ts), for the order.
  */
 export async function GET() {
-  const [geometry,regions]=await Promise.all([api.geo("municipality","NJ",.0005),api.regions("level=municipality&state=NJ&limit=1000")]);
+  const [geometry,regions]=await Promise.all([api.geo("municipality","NJ",TOLERANCE.municipality.light),api.regions("level=municipality&state=NJ&limit=1000")]);
   // The outlines carry no county; the region list does, for measures shaded by county.
   const parentOf=new Map((regions?.items??[]).map(r=>[r.region_id,r.parent_id??undefined]));
   const towns=(geometry?.features??[]).map(f=>({id:Number(f.properties.region_id),parent:parentOf.get(Number(f.properties.region_id))}));
