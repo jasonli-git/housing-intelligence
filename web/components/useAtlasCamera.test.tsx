@@ -38,6 +38,14 @@ it("takes the short longitude arc at the antimeridian",()=>{
   clock.frame(800);expect(hook.result.current.lon).toBe(-179);
 });
 it("cancels scheduled frames on unmount",()=>{
-  const clock=setup();const hook=renderHook(()=>useAtlasCamera(base,false));
+  const clock=setup();const hook=renderHook(({target})=>useAtlasCamera(target,false),{initialProps:{target:base}});
+  hook.rerender({target:{...base,scale:500}});
   expect(clock.pending.size).toBe(1);hook.unmount();expect(clock.pending.size).toBe(0);
+});
+it("schedules nothing when the target is already drawn",()=>{
+  // A gesture's view arrives drawn directly; the render after it must not ease to itself.
+  const clock=setup();const moved={...base,zoom:2,x:40};
+  const hook=renderHook(({target,direct})=>useAtlasCamera(target,direct),{initialProps:{target:base,direct:false}});
+  hook.rerender({target:moved,direct:true});hook.rerender({target:moved,direct:false});
+  expect(clock.pending.size).toBe(0);expect(hook.result.current).toEqual(moved);
 });

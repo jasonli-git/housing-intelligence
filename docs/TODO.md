@@ -29,27 +29,21 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — Milestone 62, the briefing as a town's front page (2026-11-13)
+## Now — Milestone 66, map performance and gestures (2026-11-21)
 
-On `milestone/m62-general-briefing` (ROADMAP 62; ARCHITECTURE #520, #521, #522). Milestone
-61 shipped; its record is in CHANGELOG and ARCHITECTURE #513–#518.
+On `milestone/m66-map-performance` (ROADMAP 66, ahead of 63 by the owner's decision;
+ARCHITECTURE #523). Milestone 62 shipped; its record is in CHANGELOG and ARCHITECTURE
+#520–#522.
 
-- [x] `/nj/<town>` is the briefing, `/nj/<town>/full` the full page, with a switch on
-  both; counties and ZIP codes unchanged; section anchors and `/guide?place=` links land
-  on the right page.
-- [x] The seven slides, final: title, At a glance, prices, taxes, flood risk, the homes
-  and the market, sources. No commute slide.
-- [x] The briefing rendered at build time from the API; the deck only moves between
-  slides.
-- [x] The phone layout: a portrait card, controls at the foot, a sideways swipe.
-- [x] The title slide's state map; the full page's hero keeps the garden motif, not the
-  map.
-- [x] `/guide` as a town search; the "Buyer's guide" name gone from the Menu, footer
-  and home tiles.
-- [x] The full page states each section's conclusion beside the state's median town.
-- [x] The poster moved out of the route module (`PlacePoster.tsx`); the briefing's
-  in-browser loading and town picker removed.
-- [x] Tests, type check and a clean production build.
+- [x] A baseline of the live map's drag, button and wheel work at each layer and three
+  zooms, on a 4× slowed CPU (`web/scripts/bench-atlas.mjs`).
+- [x] Pan and zoom move the drawn map as a picture; React redraws it once, at the end.
+- [x] Scroll-wheel and trackpad-pinch zoom about the pointer; two-finger pinch on touch.
+- [x] Dragging at every zoom, held so a third of the map stays in view.
+- [x] Light outlines for the whole state, detailed ones from 2× zoom.
+- [x] No drop shadow when zoomed in.
+- [x] The same benchmark after, on the same machine; tests, type check, a clean
+  production build, the accessibility and glossary checks.
 - [ ] Owner review of the pull request.
 
 ## Open

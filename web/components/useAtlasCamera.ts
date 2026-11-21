@@ -18,6 +18,8 @@ export function useAtlasCamera(target:AtlasCamera, direct:boolean) {
   useEffect(()=>{
     if(direct||reduced) {current.current=target;setDrawn(target);return;}
     const start=current.current;
+    // A view committed directly (a gesture's end) arrives already drawn: nothing to animate.
+    if(start.lon===target.lon&&start.lat===target.lat&&start.scale===target.scale&&start.zoom===target.zoom&&start.x===target.x&&start.y===target.y){current.current=target;setDrawn(target);return;}
     // Follow the shortest longitude arc when crossing the antimeridian.
     const longitude=(((target.lon-start.lon)%360+540)%360)-180;
     const began=performance.now();

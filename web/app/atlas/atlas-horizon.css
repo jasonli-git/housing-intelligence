@@ -110,7 +110,7 @@
    one takes an ink outline with a halo. Colours are
    mist to indigo (ATLAS_COLORS). */
 @media screen {
-  .horizon-page .atlas-map-geography { filter: drop-shadow(0 18px 24px light-dark(#1d1e2133, #00000080)) drop-shadow(0 2px 3px light-dark(#1d1e2122, #00000066)); }
+  .horizon-page .atlas-county-map { filter: drop-shadow(0 18px 24px light-dark(#1d1e2133, #00000080)) drop-shadow(0 2px 3px light-dark(#1d1e2122, #00000066)); }
   .horizon-page .atlas-map-geography path { stroke: light-dark(#ffffffe6, #0c0d0fcc) !important; stroke-width: 1.1 !important; stroke-linejoin: round; transition: fill 160ms ease, filter 160ms ease, stroke-width 160ms ease; }
   .horizon-page .atlas-map-geography path:hover, .horizon-page .atlas-map-geography path:focus-visible { filter: brightness(1.12) drop-shadow(0 3px 6px #0005); stroke: light-dark(#1d1e21, #ffffff) !important; stroke-width: 2 !important; }
   .horizon-page .atlas-map-geography path[data-selected="true"] { stroke: light-dark(#1d1e21, #ffffff) !important; stroke-width: 3 !important; filter: drop-shadow(0 0 8px light-dark(#4d5ca899, #b4bfe2aa)); }
@@ -123,7 +123,7 @@
    states with figures carry the colour; the coast gets a soft lift. */
 @media screen {
   .horizon-page .atlas-context .atlas-context-land { fill: light-dark(#e6e6e2, #17181c); stroke: none; }
-  .horizon-page .atlas-map-geography { filter: drop-shadow(0 14px 22px light-dark(#1d1e2126, #00000099)) drop-shadow(0 1px 2px light-dark(#1d1e2118, #00000066)); }
+  .horizon-page .atlas-county-map { filter: drop-shadow(0 14px 22px light-dark(#1d1e2126, #00000099)) drop-shadow(0 1px 2px light-dark(#1d1e2118, #00000066)); }
   .horizon-page .atlas-map-geography path { stroke-width: .9 !important; }
   .horizon-page .atlas-map-geography path[data-empty="true"] { fill: light-dark(#d2d4d9, #2c2f36); }
   .horizon-page .atlas-map-geography path[data-empty="true"]:hover, .horizon-page .atlas-map-geography path[data-empty="true"]:focus-visible { fill: light-dark(#c3c6cd, #383c45); filter: none; }

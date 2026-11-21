@@ -34,8 +34,8 @@
   body:has(main.atlas-app) { --plate-paper: var(--atlas-paper); }
   main.atlas-app .atlas-ocean { fill: var(--atlas-water) !important; }
   main.atlas-app .atlas-map-stage { background: var(--atlas-water) !important; overflow: hidden !important; }
-  /* The land runs past the fitted frame to the window's edges. */
-  main.atlas-app .atlas-county-map { overflow: visible; }
+  /* The land runs past the fitted frame to the window's edges: the SVG fills the stage, and
+     its view box is the stage's shape, so its own clip (#523) is the stage's. */
   /* The map takes focus when clicked, and its frame is only part of what it draws now, so
      the browser's focus ring boxed a patch of the map, and a clicked place got a box
      round it too (owner, 2026-11-09). No ring after a click or tap: a place shows focus
@@ -170,8 +170,23 @@
   main.atlas-app .atlas-selected .atlas-fallback .atlas-inline-link { display: inline; min-height: 0; margin: 0; font-size: 12px; color: var(--plate-ink); }
   /* While the map pans or zooms its shadows and fades wait: a drop shadow on 564 outlines
      is repainted for every frame of a move, and nobody reads it mid-move (2026-11-09). */
-  main.atlas-app .housing-atlas[data-moving="true"] .atlas-map-geography { filter: none !important; }
+  main.atlas-app .housing-atlas[data-moving="true"] .atlas-county-map { filter: none !important; }
   main.atlas-app .housing-atlas[data-moving="true"] .atlas-map-geography path { transition: none !important; }
+  /* Zoomed in, the shadow is not drawn at all (#523): the state's edge, which it lifts off
+     the water, is mostly out of view, and a drop shadow on a group scaled several times
+     over is computed across the whole of it after every move. Pans and zooms themselves
+     move the drawn map as a picture, so the shadow no longer waits on them. */
+  main.atlas-app .housing-atlas[data-zoomed="true"] .atlas-county-map { filter: none !important; }
+  /* Three stacked SVGs (#523): water and land behind, the outlines, city labels in front.
+     Each is its own layer, moved as a picture during a gesture; the outlines' shadow is a
+     filter on their layer, which the compositor applies without repainting them. */
+  main.atlas-app :is(.atlas-county-map, .atlas-map-layer) { will-change: transform; }
+  main.atlas-app .atlas-county-map { position: relative; z-index: 1; }
+  main.atlas-app .atlas-map-layer { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  /* Clipped to their box: a layer that overflowed painted every outline of a map zoomed
+     eight times over, most of it off screen (a third of a drag's work at 8×). */
+  main.atlas-app :is(.atlas-county-map, .atlas-map-layer) { overflow: hidden; }
+  main.atlas-app .atlas-map-front { z-index: 2; }
   /* The controls card (owner, 2026-11-09): the measure as its title, one row for whose
      figure and which layer, the measure chips, and a quiet footer. */
   main.atlas-app .atlas-controls { display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: .7rem !important; padding: .9rem 1rem .75rem !important; }

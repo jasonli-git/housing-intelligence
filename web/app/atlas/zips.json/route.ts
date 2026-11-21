@@ -1,8 +1,6 @@
-import { api } from "@/lib/api";
-import { pack } from "@/lib/mapdata";
+import { atlasOutlines } from "@/lib/atlasOutlines";
 export const dynamic="force-static";
+/** The atlas's light zip outlines, for the whole state (lib/atlasOutlines.ts). */
 export async function GET() {
-  // New Jersey's ZIP codes for the atlas (Director Note "Visualizing the data", 2026-10-22).
-  const geometry=await api.geo("zip","NJ",.0005);
-  return Response.json({outlines:geometry ? pack(geometry,"region_id") : []});
+  return Response.json({outlines:await atlasOutlines("zip","light")});
 }

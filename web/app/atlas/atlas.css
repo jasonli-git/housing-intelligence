@@ -176,7 +176,7 @@ body:has(.housing-atlas-page) { --surface-1:light-dark(#f2f5f8,#19232c); --surfa
   .atlas-map-stage { background:radial-gradient(ellipse at 35% 45%,light-dark(#f3f0e9,#223b50),transparent 65%),light-dark(#dee7ed,#111c29); }
   .atlas-ocean { fill:none; }
   /* The fitted SVG leaves side gutters: texture only inside it would reveal a tile. */
-  .atlas-county-map > rect[filter] { display:none; }
+  .atlas-map-back > rect[filter] { display:none; }
   .atlas-controls { width:min(580px,calc(100% - var(--atlas-panel-width) - 65px)); padding:.65rem .8rem; gap:.55rem; border-radius:22px; }
   .atlas-levels { padding:3px; border-radius:15px; background:color-mix(in srgb,var(--text-primary) 4%,transparent); gap:2px; }
   .atlas-levels button { min-height:36px; border-radius:12px; font-size:12px; transition:background 160ms,color 160ms,box-shadow 160ms; }
