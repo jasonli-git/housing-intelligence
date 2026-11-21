@@ -29,22 +29,12 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — Milestone 66, map performance and gestures (2026-11-21)
+## Now — between milestones (2026-11-21)
 
-On `milestone/m66-map-performance` (ROADMAP 66, ahead of 63 by the owner's decision;
-ARCHITECTURE #523). Milestone 62 shipped; its record is in CHANGELOG and ARCHITECTURE
-#520–#522.
-
-- [x] A baseline of the live map's drag, button and wheel work at each layer and three
-  zooms, on a 4× slowed CPU (`web/scripts/bench-atlas.mjs`).
-- [x] Pan and zoom move the drawn map as a picture; React redraws it once, at the end.
-- [x] Scroll-wheel and trackpad-pinch zoom about the pointer; two-finger pinch on touch.
-- [x] Dragging at every zoom, held so a third of the map stays in view.
-- [x] Light outlines for the whole state, detailed ones from 2× zoom.
-- [x] No drop shadow when zoomed in.
-- [x] The same benchmark after, on the same machine; tests, type check, a clean
-  production build, the accessibility and glossary checks.
-- [ ] Owner review of the pull request.
+Milestone 66, map performance and gestures, shipped and deployed on 2026-11-21 (PR #321);
+its record is in CHANGELOG and ARCHITECTURE #523, and `web/scripts/bench-atlas.mjs`
+repeats its measurements. Next on the roadmap is Milestone 63, a second state, which
+starts by choosing the state.
 
 ## Open
 
