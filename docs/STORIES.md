@@ -62,8 +62,8 @@ One story a week on X and Bluesky, Fridays at 9 AM Eastern; the plan is in
 | Date | Story | State |
 |---|---|---|
 | 2026-11-06 | [The Starbucks index](../web/app/stories/the-starbucks-index/page.tsx) | posted |
-| 2026-11-13 | [The Wawa line](../web/app/stories/the-wawa-line/page.tsx) | scheduled |
-| 2026-11-20 | [The flood claims calendar](../web/app/stories/the-flood-claims-calendar/page.tsx) | planned |
+| 2026-11-13 | [The Wawa line](../web/app/stories/the-wawa-line/page.tsx) | posted |
+| 2026-11-20 | [The flood claims calendar](../web/app/stories/the-flood-claims-calendar/page.tsx) | posted |
 | 2026-11-27 | [Hometown famous](../web/app/stories/hometown-famous/page.tsx) | planned |
 | 2026-12-04 | [When the town was built](../web/app/stories/when-the-town-was-built/page.tsx) | planned |
 | 2026-12-11 | [The pizza–bagel line](../web/app/stories/the-pizza-bagel-line/page.tsx) | planned |
