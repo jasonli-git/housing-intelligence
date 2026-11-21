@@ -157,8 +157,8 @@ export type Posting = { date: string; slug: string; state: "posted" | "scheduled
  *  (2026-12-25, 2027-01-01) are left free. */
 export const POSTING_ORDER: Posting[] = [
   { date: "2026-11-06", slug: "the-starbucks-index", state: "posted" },
-  { date: "2026-11-13", slug: "the-wawa-line", state: "scheduled" },
-  { date: "2026-11-20", slug: "the-flood-claims-calendar", state: "planned" },
+  { date: "2026-11-13", slug: "the-wawa-line", state: "posted" },
+  { date: "2026-11-20", slug: "the-flood-claims-calendar", state: "posted" },
   { date: "2026-11-27", slug: "hometown-famous", state: "planned" },
   { date: "2026-12-04", slug: "when-the-town-was-built", state: "planned" },
   { date: "2026-12-11", slug: "the-pizza-bagel-line", state: "planned" },
