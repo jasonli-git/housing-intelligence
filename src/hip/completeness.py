@@ -235,6 +235,8 @@ METRIC_SUBJECTS: dict[str, str] = {
     "lodes_work_other_nj_share": "access",
     "lodes_work_nyc_share": "access",
     "lodes_work_pennsylvania_share": "access",
+    "lodes_work_other_pa_share": "access",
+    "lodes_work_new_jersey_share": "access",
     "lodes_work_other_state_share": "access",
     "transit_rail_homes_share": "access",
     # Milestone 48: the mortgages buyers here took, and FHA's county limit.

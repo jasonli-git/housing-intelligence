@@ -1263,7 +1263,7 @@ sources:
   epa_water_areas:
     name: Public Water System Service Area Boundaries
     publisher: U.S. Environmental Protection Agency
-    license: U.S. Government work
+    license: Public domain (U.S. Government work)
     licence_class: public_domain
     commercial:
       ads: allowed

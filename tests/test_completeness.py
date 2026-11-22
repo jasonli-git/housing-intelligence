@@ -69,7 +69,8 @@ def test_coverage_is_measured_at_each_metric_s_newest_period() -> None:
         pytest.skip("no observations loaded")
     by_id = {c.metric_id: c for c in coverage}
 
-    assert (totals.municipalities, totals.counties) == (564, 21)
+    # New Jersey alone, or with Pennsylvania (Milestone 63).
+    assert (totals.municipalities, totals.counties) in {(564, 21), (3135, 88)}
     for c in coverage:
         assert c.municipalities <= totals.municipalities
         assert c.population_share is None or 0 < c.population_share <= 1.0001
