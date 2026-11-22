@@ -294,9 +294,23 @@ class UcmrAdapter(SourceAdapter):
         return result
 
 
+# The states EIA-861's utilities are kept for (Milestone 63). A utility is a record per
+# state, so one serving two never mixes their sales: New Jersey's keep the bare EIA id
+# they always had, another state's carry its code, `14940:PA`.
+EIA_STATES = ("NJ", "PA")
+
+
+def eia_key(utility: str, state: str) -> str:
+    return utility if state == "NJ" else f"{utility}:{state}"
+
+
 class EiaAdapter(SourceAdapter):
+    """Each kept state's utilities: residential sales, reliability, and since
+    Milestone 63 the counties EIA lists each serving (`Service_Territory`), which places
+    a state without a territory map of its own at county level."""
+
     source_id: ClassVar[str] = "eia861"
-    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
+    states: ClassVar[tuple[str, ...] | None] = EIA_STATES
     default_vintage: ClassVar[str] = "2024"
     landing_format: ClassVar[str] = "xlsx_records"
 
@@ -377,11 +391,12 @@ class EiaAdapter(SourceAdapter):
                         if any(r.get(k) != v for k, v in expected.items()):
                             raise SourceError("EIA utility headers or units changed")
                         header_seen = True
-                    if n < 4 or r.get("G" if prefix == "Sales_Ult_Cust" else "D") != "NJ":
+                    state = r.get("G" if prefix == "Sales_Ult_Cust" else "D")
+                    if n < 4 or state not in EIA_STATES:
                         continue
                     if r.get("A") != ref.vintage:
                         raise SourceError("EIA utility year differs from release")
-                    key = r["B"]
+                    key = eia_key(r["B"], state)
                     # EIA's statewide balancing adjustment is not a supplier;
                     # its signed corrections must not become company statistics.
                     if key == "99999":
@@ -391,7 +406,8 @@ class EiaAdapter(SourceAdapter):
                     record = records.setdefault(
                         key,
                         {
-                            "utility_id": key,
+                            "utility_id": r["B"],
+                            "state": state,
                             "name": r["C"],
                             "year": int(ref.vintage),
                             "sales": [],
@@ -434,7 +450,33 @@ class EiaAdapter(SourceAdapter):
                                 )
                 if not header_seen:
                     raise SourceError("EIA utility header row missing")
-        if not records:
+            # The counties each kept utility serves outside New Jersey, which has a
+            # territory map of its own (`njdep_utility_areas`).
+            member = f"Service_Territory_{ref.vintage}.xlsx"
+            target = Path(folder) / member
+            target.write_bytes(archive.read(member))
+            for n, r in rows(target, "Counties_States"):
+                if n == 1:
+                    if (r.get("B"), r.get("E"), r.get("F")) != (
+                        "Utility Number",
+                        "State",
+                        "County",
+                    ):
+                        raise SourceError("EIA service territory headers changed")
+                    continue
+                state = r.get("E")
+                if state not in EIA_STATES or state == "NJ":
+                    continue
+                if r.get("A") != ref.vintage:
+                    raise SourceError("EIA territory year differs from release")
+                served = records.get(eia_key(r["B"], state))
+                # A utility with no residential sales here serves no homes.
+                if served is None:
+                    continue
+                counties = served.setdefault("counties", [])
+                assert isinstance(counties, list)
+                counties.append(r["F"])
+        if not any(r["state"] == "NJ" for r in records.values()):
             raise SourceError("EIA has no New Jersey utilities")
         return [{"utility_id": k, "payload": json.dumps(r)} for k, r in records.items()]
 

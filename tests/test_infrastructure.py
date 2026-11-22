@@ -105,8 +105,17 @@ def test_eia_preserves_service_types_and_reliability_basis(
     with ZipFile(tmp_path / "a.zip", "w") as archive:
         archive.writestr("Sales_Ult_Cust_2024.xlsx", b"stub")
         archive.writestr("Reliability_2024.xlsx", b"stub")
+        archive.writestr("Service_Territory_2024.xlsx", b"stub")
 
     def offered(path: Path, sheet: str):  # type: ignore[no-untyped-def]
+        if sheet == "Counties_States":
+            yield 1, {"B": "Utility Number", "E": "State", "F": "County"}
+            # PECO serves two counties; a utility with no Pennsylvania homes is left out.
+            for county in ("Bucks", "Philadelphia"):
+                yield 2, {"A": "2024", "B": "14940", "C": "PECO", "E": "PA", "F": county}
+            yield 3, {"A": "2024", "B": "777", "C": "Industrial", "E": "PA", "F": "Bucks"}
+            yield 4, {"A": "2024", "B": "963", "C": "Utility", "E": "NJ", "F": "Atlantic"}
+            return
         if sheet == "States":
             yield 1, {"J": "RESIDENTIAL"}
             yield (
@@ -133,6 +142,20 @@ def test_eia_preserves_service_types_and_reliability_basis(
                         "L": "40",
                     },
                 )
+            yield (
+                4,
+                {
+                    "A": "2024",
+                    "B": "14940",
+                    "C": "PECO",
+                    "G": "PA",
+                    "E": "Bundled",
+                    "F": "O",
+                    "J": "300",
+                    "K": "2000",
+                    "L": "90",
+                },
+            )
             yield (
                 5,
                 {
@@ -180,9 +203,12 @@ def test_eia_preserves_service_types_and_reliability_basis(
 
     monkeypatch.setattr("hip.sources.infrastructure.rows", offered)
     records = EiaAdapter.xlsx_records(tmp_path / "a.zip", EiaAdapter().refs()[0])
-    assert len(records) == 1
-    assert records[0]["utility_id"] == "963"
+    # Milestone 63: Pennsylvania's utility is its own record, with the counties it serves.
+    assert [r["utility_id"] for r in records] == ["963", "14940:PA"]
+    peco = json.loads(str(records[1]["payload"]))
+    assert peco["counties"] == ["Bucks", "Philadelphia"] and peco["state"] == "PA"
     record = json.loads(str(records[0]["payload"]))
+    assert "counties" not in record
     assert [s["service_type"] for s in record["sales"]] == [
         "Bundled",
         "Delivery",
