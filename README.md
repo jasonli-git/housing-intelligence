@@ -21,9 +21,8 @@ optional AI layer only explains figures that were already computed.
 > <!-- fill:pa_zips -->1,833<!-- /fill --> ZIP codes, without New Jersey's tax records,
 > broadband or visual stories.
 >
-> **Latest.** Pennsylvania (Milestone 63): a state page, a page for every county, town
-> and ZIP code under `/pa/`, each ranked among Pennsylvania's own places. Before that,
-> the housing map learned to zoom with the scroll wheel and a pinch (Milestone 66).
+> **Latest.** Pennsylvania, the second state: a state page, and a page for every county,
+> town and ZIP code under `/pa/`, each ranked among Pennsylvania's own places.
 >
 > **Next.** Pennsylvania's broadband files and visual stories, both open in
 > [TODO.md](docs/TODO.md). See [ROADMAP.md](docs/ROADMAP.md) and

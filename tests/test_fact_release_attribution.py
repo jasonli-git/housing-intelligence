@@ -119,7 +119,7 @@ def test_fact_load_aborts_before_upserting_any_fact_without_exact_release(
         stage.execute(
             "CREATE TABLE stg_match_reject (source_id VARCHAR, layer VARCHAR, "
             "region_name VARCHAR, county_name VARCHAR, observations INTEGER, "
-            "reason VARCHAR)"
+            "reason VARCHAR, state_code VARCHAR)"
         )
 
     class Result:
