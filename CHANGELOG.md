@@ -13,6 +13,7 @@ are not yet recorded here.
 
 ### Added
 
+- **Pennsylvania, the second state** (Milestone 63, ARCHITECTURE #524–#534): its 67 counties, 2,571 towns and 1,833 ZIP codes, on every source that covers it, each ranked among Pennsylvania's own places. A state page at `/states/pennsylvania` and place pages at `/pa/<place>` (`/pa/philadelphia`, `/pa/pittsburgh`); the home map and the housing map include it. Water systems are placed by EPA's national service-area map and electric utilities by the counties EIA lists each serving. Not yet: broadband (its FCC files are handed in by hand), health estimates (none in CDC's 2025 release), visual stories, tax and deed records.
 - **The housing map zooms with the scroll wheel and a pinch, and drags at every zoom** (Milestone 66, ARCHITECTURE #523): the wheel and a trackpad pinch zoom about the pointer instead of scrolling the page, two fingers pinch on a phone, and the opening view can be dragged (it was held centred). Pans and zooms move the drawn map as a picture and redraw it once at the end, so on a 4× slowed CPU a drag of the towns map does a third to a half of the work it did and a zoom-button glide under half; up close the outlines are drawn from a detailed file, and the whole state from a lighter one (towns 206KB → 153KB). `web/scripts/bench-atlas.mjs` measures it.
 - **A New Jersey town's address opens its briefing** (Milestone 62, ARCHITECTURE #520, #521): `/nj/hoboken` is seven slides — where the town stands out, then prices, taxes, flood risk, the homes and the market, and sources — and `/nj/hoboken/full` is the full page, with a switch on both. The slides are in the page's HTML, so search engines and link previews read them. On a phone the briefing is a portrait card with the controls at the foot and a sideways swipe. Older links to a section (`/nj/hoboken#tax`) open the full page there. Counties and ZIP codes are unchanged.
 - **Homes with three or more bedrooms, ranked** (ARCHITECTURE #519): a new Census figure, the share of homes with three or more bedrooms, with its margin, ranked among New Jersey's towns, ZIP codes and counties and listed under "The homes".
@@ -89,6 +90,10 @@ are not yet recorded here.
 
 ### Changed
 
+- **Every ranking and "median town" counts within the place's own state** (Milestone 63, #524). New Jersey's ranks are unchanged.
+- **A landed file is read again when the code reading it changes** (Milestone 63, #530): `hip land` records a hash of each source's reader beside its Parquet. The first run after this change re-reads every file once.
+- **A town's commute no longer reads "most often in Other states"**: "Other states", like "Elsewhere in …", is a remainder, not a destination (New Jersey towns too).
+- **Union township, New Jersey, keeps its Zillow rent and bottom-tier figures**: town names are matched within their state (#528), so Pennsylvania's Union County no longer makes it ambiguous.
 - **The briefing replaces the Buyer's guide** (Milestone 62, ARCHITECTURE #520): the Menu no longer lists it, since a town's page is its briefing; the footer and home tiles call it Briefing; `/guide` is a search that opens a town's briefing; the monthly-cost slide is gone and flood risk has its own slide.
 - **The full page states each section's conclusion** (ARCHITECTURE #522), with the state's median town or ZIP code beneath it; supporting figures fold under More, and the hero's map moved to the briefing's title slide.
 - **The Buyer's guide is a briefing** (2026-11-11, ARCHITECTURE #498): pick a town and

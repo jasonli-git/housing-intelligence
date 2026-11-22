@@ -1,29 +1,32 @@
 # Housing Intelligence Platform
 
-Free, sourced answers about housing costs in New Jersey: what homes cost and rent, what a
-household can afford, what the tax bill is, how homes sell, and what comes with a place —
-flood risk, water, schools, commutes. Live at
+Free, sourced answers about housing costs in New Jersey and Pennsylvania: what homes
+cost and rent, what a household can afford, what the tax bill is, how homes sell, and
+what comes with a place — flood risk, water, schools, commutes. Live at
 **[housing.jasonli.app](https://housing.jasonli.app)**.
 
-It is built on <!-- fill:sources -->65<!-- /fill --> public sources pulled through one staged pipeline into a warehouse,
+It is built on <!-- fill:sources -->66<!-- /fill --> public sources pulled through one staged pipeline into a warehouse,
 resolved to a shared geography, and computed before anything is shown. Every figure
 carries its source file, date, licence and margin of error. It is not a listings site
 and not a chatbot: pages, maps, tools, reports and an API are the product, and an
 optional AI layer only explains figures that were already computed.
 
 > **Status — <!-- fill:version -->v0.50.0 (2026-10-08)<!-- /fill -->, updated
-> 2026-11-11.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
+> 2026-11-22.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
 > published in full: the state, <!-- fill:counties -->21<!-- /fill --> counties,
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
-> codes, plus five tools.
+> codes, plus five tools. Pennsylvania, the second state, has its
+> <!-- fill:pa_counties -->67<!-- /fill --> counties,
+> <!-- fill:pa_towns -->2,571<!-- /fill --> towns and
+> <!-- fill:pa_zips -->1,833<!-- /fill --> ZIP codes, without New Jersey's tax records,
+> broadband or visual stories.
 >
-> **Latest.** The Budget explorer became a filter on the housing map: enter an income and
-> the towns out of reach fade, while the chosen layer stays on the rest. Town and ZIP
-> pages became a poster and four acts, and the tools now take their figures. Before that,
-> the home page's US market figures became one indicators table.
+> **Latest.** Pennsylvania (Milestone 63): a state page, a page for every county, town
+> and ZIP code under `/pa/`, each ranked among Pennsylvania's own places. Before that,
+> the housing map learned to zoom with the scroll wheel and a pinch (Milestone 66).
 >
-> **Next.** Clearing TODO and the open Director Notes; then the rest of the work for a
-> second state, on hold until they are cleared. See [ROADMAP.md](docs/ROADMAP.md) and
+> **Next.** Pennsylvania's broadband files and visual stories, both open in
+> [TODO.md](docs/TODO.md). See [ROADMAP.md](docs/ROADMAP.md) and
 > [CHANGELOG.md](CHANGELOG.md).
 
 [SPEC.md](docs/SPEC.md) says what the platform is for, [ARCHITECTURE.md](docs/ARCHITECTURE.md) how
