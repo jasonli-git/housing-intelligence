@@ -47,9 +47,12 @@ file once (#530). Its follow-ups are under Open.
 - **Before a third state: fit the site under Cloudflare's 100,000-file cap, and revisit
   R2 writes.** (Milestone 63; ARCHITECTURE #454 and Known Limitations, re-measured
   2026-11-22.) The export is 71,687 files at 10 GB with two states, 72% of the Worker's
-  100,000-file cap; Pennsylvania alone added about 57,000, so a third state of its size
-  would likely be refused at deploy. The owner decided on 2026-11-21 not to bundle R2
-  files for Pennsylvania (step 1) and to revisit at a third state.
+  100,000-file cap; Pennsylvania's 4,471 places are 53,652 of them, so a third state of
+  its size would likely be refused at deploy. 83% of the files (59,656) are Next's RSC
+  payloads, five beside every page's HTML, so cutting those is likely the cheapest room;
+  measure what dropping or merging them costs page-to-page navigation before choosing.
+  The owner decided on 2026-11-21 not to bundle R2 files for Pennsylvania (step 1) and
+  to revisit at a third state.
   R2 charges per file written: past 1M Class A operations a month, each started million costs $4.50, rounded up. The Oct 5 – Nov 4 cycle reached 1.03M and was billed $4.50. Each changed file costs about 2 operations: the upload, plus the `--backup-dir` copy (#359). A refresh across many states could reach millions. Options: bundle a state's artifacts into fewer files, back up less, batch refreshes into one deploy. Weigh at the same time, for the file cap, whether to render place pages on demand: a Worker would fill a template from that place's R2 data and cache the page, instead of pre-building every page in the static export. That would shrink build and deploy size at many states, but not the data writes. It costs runtime reads and CPU, a slower first visit and a migration away from `output: export`. A possible middle path: pre-built pages for New Jersey and the stories, on-demand pages for other states. Avoid pages that build themselves in the browser, which would break share previews. (Owner, 2026-11-04.)
 - The completeness report still says "New Jersey's population" and "the state" where it
   now measures two states (`hip.completeness`, Milestone 63).
