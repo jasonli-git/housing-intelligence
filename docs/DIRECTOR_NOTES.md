@@ -1316,3 +1316,17 @@ when they fit, not decided:
 3. Elections only after the political rules are decided.
 
 Do not implement yet.
+
+## Decision: two stories a week
+
+**Status:** Approved direction (owner, 2026-11-21). Changes "Social media lineup" and
+"Decision: social accounts are X and Bluesky only" above.
+
+Post two stories a week on X and Bluesky, Mondays and Fridays at 9 AM Eastern, instead of
+one on Fridays.
+
+- Mondays start on 2026-11-23. The remaining posting order keeps its sequence and moves
+  onto the new days.
+- The holiday weeks stay free: 2026-12-25, 2026-12-28, 2027-01-01 and 2027-01-04.
+- At this pace the reviewed stories run out after 2026-12-11. Which stories are reviewed
+  next, and whether to slow down if reviews fall behind, is undecided.

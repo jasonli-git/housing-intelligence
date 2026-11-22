@@ -149,22 +149,24 @@ export const REVIEWS: Record<string, StoryReview> = {
   },
 };
 
-/** One week's social post (Director Notes, "Social media lineup"): Fridays at 9 AM ET on X
- *  and Bluesky. "planned" is the owner's order, not yet written or scheduled. */
+/** One social post on X and Bluesky at 9 AM ET: Fridays until 2026-11-20, then Mondays and
+ *  Fridays (Director Notes, "Decision: two stories a week", 2026-11-21). "planned" is the
+ *  owner's order, not yet written or scheduled. */
 export type Posting = { date: string; slug: string; state: "posted" | "scheduled" | "planned" };
 
-/** The posting order, approved by the owner on 2026-11-12. Christmas and New Year's Day
- *  (2026-12-25, 2027-01-01) are left free. */
+/** The posting order, approved by the owner on 2026-11-12 and moved onto two days a week on
+ *  2026-11-21. The weeks of Christmas and New Year's Day (2026-12-28, 2027-01-01,
+ *  2027-01-04) are left free; 2026-12-25 is too. */
 export const POSTING_ORDER: Posting[] = [
   { date: "2026-11-06", slug: "the-starbucks-index", state: "posted" },
   { date: "2026-11-13", slug: "the-wawa-line", state: "posted" },
   { date: "2026-11-20", slug: "the-flood-claims-calendar", state: "posted" },
-  { date: "2026-11-27", slug: "hometown-famous", state: "planned" },
-  { date: "2026-12-04", slug: "when-the-town-was-built", state: "planned" },
-  { date: "2026-12-11", slug: "the-pizza-bagel-line", state: "planned" },
-  { date: "2026-12-18", slug: "where-you-can-see-the-stars", state: "planned" },
-  { date: "2027-01-08", slug: "boroughitis", state: "planned" },
-  { date: "2027-01-15", slug: "pricier-towns", state: "planned" },
+  { date: "2026-11-23", slug: "hometown-famous", state: "planned" },
+  { date: "2026-11-27", slug: "when-the-town-was-built", state: "planned" },
+  { date: "2026-11-30", slug: "the-pizza-bagel-line", state: "planned" },
+  { date: "2026-12-04", slug: "where-you-can-see-the-stars", state: "planned" },
+  { date: "2026-12-07", slug: "boroughitis", state: "planned" },
+  { date: "2026-12-11", slug: "pricier-towns", state: "planned" },
 ];
 
 const where = (slug: string) => [
@@ -202,8 +204,10 @@ export function renderStoryRegister(): string {
     "| Story | Where it appears | Share image | Status | Reviewed |", "|---|---|---|---|---|",
     ...rows, "",
     "## Posting order", "",
-    "One story a week on X and Bluesky, Fridays at 9 AM Eastern; the plan is in",
-    "[DIRECTOR_NOTES.md](DIRECTOR_NOTES.md) (\"Social media lineup\"). 2026-12-25 and 2027-01-01 are left free.", "",
+    "Two stories a week on X and Bluesky, Mondays and Fridays at 9 AM Eastern, from 2026-11-23",
+    "(Fridays only before then); the plan is in [DIRECTOR_NOTES.md](DIRECTOR_NOTES.md)",
+    "(\"Social media lineup\", \"Decision: two stories a week\"). 2026-12-25, 2026-12-28,",
+    "2027-01-01 and 2027-01-04 are left free.", "",
     "| Date | Story | State |", "|---|---|---|",
     ...POSTING_ORDER.map((p) => {
       const story = STORIES.find((s) => storySlug(s) === p.slug);

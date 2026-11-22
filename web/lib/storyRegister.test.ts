@@ -30,11 +30,13 @@ it("names only sources config/sources.yml defines", () => {
   }
 });
 
-it("posts only stories that exist, each once, on Fridays in date order", () => {
+it("posts only stories that exist, each once, on Fridays (and Mondays from 2026-11-23) in date order", () => {
   const slugs = new Set(STORIES.map(storySlug));
   for (const p of POSTING_ORDER) {
     expect(slugs.has(p.slug), p.slug).toBe(true);
-    expect(new Date(`${p.date}T12:00:00Z`).getUTCDay(), p.date).toBe(5);
+    const day = new Date(`${p.date}T12:00:00Z`).getUTCDay();
+    expect(day === 5 || (day === 1 && p.date >= "2026-11-23"), p.date).toBe(true);
+    expect(["2026-12-25", "2026-12-28", "2027-01-01", "2027-01-04"], p.date).not.toContain(p.date);
   }
   expect(new Set(POSTING_ORDER.map((p) => p.slug)).size).toBe(POSTING_ORDER.length);
   const dates = POSTING_ORDER.map((p) => p.date);
