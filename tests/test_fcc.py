@@ -384,3 +384,26 @@ def test_each_state_hands_in_its_own_location_files() -> None:
     assert BroadbandLocationsAdapter.filename(refs[2]) == (
         "bdc_42_fixed_broadband_served_unserved_D25_13oct2026.zip"
     )
+
+
+def test_a_state_not_handed_in_yet_leaves_the_others_to_load(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    """Milestone 63: Pennsylvania's location files missing from disk dropped New
+    Jersey's too, and the load then refused New Jersey's staged rows for want of a
+    release. A hand-in source now keeps each state's files it has."""
+    from hip.cli import _cached
+
+    adapter = BroadbandLocationsAdapter(states=["NJ", "PA"])
+
+    def fetch(ref: Any, **_: Any) -> Any:
+        if ref.layer.endswith("_pa"):
+            raise SourceError("not handed in")
+        return Mock(ref=ref)
+
+    monkeypatch.setattr(adapter, "fetch", fetch)
+    assert [r.ref.layer for r in _cached(adapter, tmp_path, None)] == ["served", "fiber"]
+
+    monkeypatch.setattr(adapter, "fetch", Mock(side_effect=SourceError("none")))
+    with pytest.raises(SourceError, match="nothing handed in"):
+        _cached(adapter, tmp_path, None)
