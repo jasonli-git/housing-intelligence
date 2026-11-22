@@ -170,6 +170,22 @@ def test_eia_preserves_service_types_and_reliability_basis(
                     "L": "-18",
                 },
             )
+            # Milestone 63: Pennsylvania's adjustment too, keyed `99999:PA`, which a
+            # test on the key alone let through with its negative customers.
+            yield (
+                6,
+                {
+                    "A": "2024",
+                    "B": "99999",
+                    "C": "Adjustment 2024",
+                    "G": "PA",
+                    "E": "Energy",
+                    "F": "I",
+                    "J": "78.2",
+                    "K": "593",
+                    "L": "-130",
+                },
+            )
         else:
             yield (
                 2,

@@ -399,7 +399,8 @@ class EiaAdapter(SourceAdapter):
                     key = eia_key(r["B"], state)
                     # EIA's statewide balancing adjustment is not a supplier;
                     # its signed corrections must not become company statistics.
-                    if key == "99999":
+                    # Tested on the bare id: the key carries the state outside NJ.
+                    if r["B"] == "99999":
                         if r["C"] != f"Adjustment {ref.vintage}":
                             raise SourceError("EIA adjustment identity changed")
                         continue
