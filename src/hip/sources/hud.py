@@ -478,25 +478,34 @@ class HudChasAdapter(SourceAdapter):
         if not isinstance(entries, list):
             raise ValueError(f"hud_chas/{directory.ref.key}: directory is not a list")
         state = fips_for(directory.ref.scope or "")
+        # A borough split by a county line is listed once per county under one MCD code
+        # (dozens in Pennsylvania), and HUD's answer for that code already carries a row
+        # for each piece, so one ref per code; otherwise the same release is cached twice.
+        codes = sorted(
+            {
+                int(entry["entityId"])
+                for entry in entries
+                if isinstance(entry, dict)
+                and str(entry.get("statecode")) == state
+                # Code 0 is "County subdivisions not defined" — the water areas, listed
+                # once per coastal county (five times for NJ). Not a municipality, and
+                # TIGER's 00000 is filtered for the same reason.
+                and int(entry["entityId"]) != 0
+            }
+        )
         return [
             ReleaseRef(
                 source_id=self.source_id,
-                # State FIPS and the five-digit MCD code: the key dbt resolves to a
-                # municipal GEOID through TIGER, since a CHAS row names no county code.
-                layer=f"mcd_{state}{int(entry['entityId']):05d}",
+                # State FIPS and the five-digit MCD code; dbt resolves it to a municipal
+                # GEOID through TIGER plus the county named in each row's place name.
+                layer=f"mcd_{state}{code:05d}",
                 vintage=year,
                 url=(
                     f"{BASE_URL}/chas?type={CHAS_MCD}&year={year}"
-                    f"&stateId={int(state)}&entityId={int(entry['entityId'])}"
+                    f"&stateId={int(state)}&entityId={code}"
                 ),
             )
-            for entry in entries
-            if isinstance(entry, dict)
-            and str(entry.get("statecode")) == state
-            # Code 0 is "County subdivisions not defined" — the water areas, listed once
-            # per coastal county (five times for NJ). Not a municipality, and TIGER's
-            # 00000 is filtered for the same reason.
-            and int(entry["entityId"]) != 0
+            for code in codes
         ]
 
     @classmethod

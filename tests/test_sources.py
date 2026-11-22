@@ -820,3 +820,34 @@ def test_fred_asks_for_the_weekly_benchmark_and_the_monthly_history(
         for layer, url in refs.items()
         if layer.startswith("MORTGAGE30US")
     )
+
+
+def test_chas_asks_once_for_an_mcd_code_split_by_a_county_line(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Milestone 63: HUD's directory lists Falls Creek borough under Clearfield and
+    Jefferson counties with one MCD code, and its answer for that code carries both
+    pieces. Asking twice gave two releases one key, which the load refuses."""
+    from hip.sources.hud import HudChasAdapter
+
+    _hud(monkeypatch)
+    path = tmp_path / "mcds_PA"
+    path.write_text(
+        json.dumps(
+            [
+                {"statecode": "42", "entityId": 25136, "mcdname": "Falls Creek borough"},
+                {"statecode": "42", "entityId": 25136, "mcdname": "Falls Creek borough"},
+                {"statecode": "42", "entityId": 1000, "mcdname": "Abbott township"},
+                {"statecode": "42", "entityId": 0, "mcdname": "not defined"},
+            ]
+        )
+    )
+    ref = ReleaseRef(
+        source_id="hud_chas", layer="mcds", vintage="current", scope="PA", url="https://x"
+    )
+    release = Release(
+        ref=ref, path=path, sha256="0" * 64, size_bytes=1, fetched_at=datetime.now(UTC)
+    )
+    adapter = HudChasAdapter(states=["PA"], county_fips=["42001"])
+    layers = [r.layer for r in adapter.child_refs(release, "2018-2022")]
+    assert layers == ["mcd_4201000", "mcd_4225136"]
