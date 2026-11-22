@@ -196,9 +196,15 @@ class LeadLinesOpraAdapter(SourceAdapter):
         return records
 
 
+# The states whose UCMR 5 samples are kept (Milestone 63). The file is national; a state
+# is read once its water systems can be placed: New Jersey by NJDEP's service areas,
+# Pennsylvania by EPA's (`epa_water_areas`).
+UCMR_STATES = ("NJ", "PA")
+
+
 class UcmrAdapter(SourceAdapter):
     source_id: ClassVar[str] = "epa_ucmr5"
-    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
+    states: ClassVar[tuple[str, ...] | None] = UCMR_STATES
     default_vintage: ClassVar[str] = "current"
     landing_format: ClassVar[str] = "xlsx_records"
 
@@ -244,7 +250,7 @@ class UcmrAdapter(SourceAdapter):
                 raise SourceError("UCMR 5 headers changed")
             for r in reader:
                 if (
-                    r["State"] != "NJ"
+                    r["State"] not in UCMR_STATES
                     or r["SamplePointType"] != "EP"
                     or r["Contaminant"].casefold() == "lithium"
                 ):
@@ -284,7 +290,7 @@ class UcmrAdapter(SourceAdapter):
                     }
                 )
         if not result:
-            raise SourceError("UCMR 5 has no NJ entry-point samples")
+            raise SourceError("UCMR 5 has no entry-point samples for its states")
         return result
 
 
