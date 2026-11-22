@@ -1713,11 +1713,16 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   instead of being pre-rendered.
   **Re-measured 2026-11-22 with Pennsylvania (M63): 71,687 export files at 10 GB**, against
   14,637 files at 3.7 GB for New Jersey alone (#454), and 75,609 artifact files. Files
-  track places, not states: Pennsylvania's 2,571 towns and 1,833 ZIP codes added about
-  57,000 files, so #454's "about seven New Jersey-sized states" no longer describes the
+  track places, not states. By `web/.publication/inventory.json`: every place is 12 files
+  (its page and its report, each an HTML file and five RSC payloads), and a New Jersey
+  town 18, since Milestone 62 gave it a briefing as well as `/full` (#520). New Jersey's
+  1,183 places are now 17,580 files, about 2,900 more than on 2026-10-30; Pennsylvania's
+  4,471 (67 counties, 2,571 towns, 1,833 ZIP codes) are 53,652; state pages, stories and
+  tools about 455. So #454's "about seven New Jersey-sized states" no longer describes the
   states left to add. The site now uses 72% of the Worker's 100,000-file cap, and a third
-  state of Pennsylvania's size would likely pass it. A third state needs a change to how
-  pages are published first (TODO, *Before a third state*).
+  state of Pennsylvania's size would likely pass it. RSC payloads are 59,656 of the
+  71,687 files (83%), HTML 11,932. A third state needs a change to how pages are
+  published first (TODO, *Before a third state*).
 - **The per-page file cost grows when a shared component gains a fetch** (#68, #71). The
   attribution footer sits in the root layout and calls `GET /sources`, which added a
   fifth RSC payload to every route: 2,272 files and 62MB for one footer, taking the
