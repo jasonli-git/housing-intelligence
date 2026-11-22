@@ -390,7 +390,10 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
     if source_id == TigerAdapter.source_id:
         return TigerAdapter(states=scope.states)
     if source_id == DistrictDirectoryAdapter.source_id:
-        return DistrictDirectoryAdapter(states=scope.states)
+        # New Jersey's alone: it explains NJDOE's district results (#356), which no
+        # other covered state has a counterpart for (Milestone 63).
+        covered = DistrictDirectoryAdapter.states or ()
+        return DistrictDirectoryAdapter(states=[s for s in scope.states if s in covered])
     if source_id == ZhviAdapter.source_id:
         return ZhviAdapter()
     if source_id == ZhviBottomAdapter.source_id:
