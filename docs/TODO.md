@@ -44,12 +44,17 @@ file once (#530). Its follow-ups are under Open.
   broadband figures (Milestone 63).
 - Open the ten story sources to Pennsylvania (Milestone 63, #532): noise, night lights,
   roads, impervious cover, footprints, heat, Overture, tree canopy, elevation, Wikidata.
-- Revisit bundling a state's R2 files before a third state (Milestone 63, step 1).
+- **Before a third state: fit the site under Cloudflare's 100,000-file cap, and revisit
+  R2 writes.** (Milestone 63; ARCHITECTURE #454 and Known Limitations, re-measured
+  2026-11-22.) The export is 71,687 files at 10 GB with two states, 72% of the Worker's
+  100,000-file cap; Pennsylvania alone added about 57,000, so a third state of its size
+  would likely be refused at deploy. The owner decided on 2026-11-21 not to bundle R2
+  files for Pennsylvania (step 1) and to revisit at a third state.
+  R2 charges per file written: past 1M Class A operations a month, each started million costs $4.50, rounded up. The Oct 5 – Nov 4 cycle reached 1.03M and was billed $4.50. Each changed file costs about 2 operations: the upload, plus the `--backup-dir` copy (#359). A refresh across many states could reach millions. Options: bundle a state's artifacts into fewer files, back up less, batch refreshes into one deploy. Weigh at the same time, for the file cap, whether to render place pages on demand: a Worker would fill a template from that place's R2 data and cache the page, instead of pre-building every page in the static export. That would shrink build and deploy size at many states, but not the data writes. It costs runtime reads and CPU, a slower first visit and a migration away from `output: export`. A possible middle path: pre-built pages for New Jersey and the stories, on-demand pages for other states. Avoid pages that build themselves in the browser, which would break share previews. (Owner, 2026-11-04.)
 - The completeness report still says "New Jersey's population" and "the state" where it
   now measures two states (`hip.completeness`, Milestone 63).
 - Look into promoting the Census County Business Patterns cross-check from a one-off review to a pipeline step that re-runs on refresh (owner, 2026-11-03). It compared Overture's county counts with NAICS 812310, 713910 and 713940 for 2023, using the `CENSUS_API_KEY` the ACS already uses; results are in docs/STORIES.md.
 - Look into giving every visual story the same kind of outside cross-check, not only the Starbucks index (owner, 2026-11-03).
-- Note: before planning a second state, revisit how artifacts are laid out in R2 (owner, 2026-11-04). R2 charges per file written: past 1M Class A operations a month, each started million costs $4.50, rounded up. The Oct 5 – Nov 4 cycle reached 1.03M and was billed $4.50. Each changed file costs about 2 operations: the upload, plus the `--backup-dir` copy (#359). A refresh across many states could reach millions. Options: bundle a state's artifacts into fewer files, back up less, batch refreshes into one deploy. Weigh at the same time whether to render place pages on demand: a Worker would fill a template from that place's R2 data and cache the page, instead of pre-building every page in the static export. That would shrink build and deploy size at many states, but not the data writes. It costs runtime reads and CPU, a slower first visit and a migration away from `output: export`. A possible middle path: pre-built pages for New Jersey and the stories, on-demand pages for other states. Avoid pages that build themselves in the browser, which would break share previews.
 - Point the shop counts on place pages at Overture: `web/app/[state]/[place]/PlacePoster.tsx` still lists the `osm_*` counts the stories have left (#472).
 - Add a national rent figure to the home page's rent card; Zillow's Metro & U.S. file needs a hand download.
 - Add FEMA's National Risk Index as a source (owner, 2026-11-10): overall hazard risk beyond flooding, by county (FEMA also publishes it by tract). Found by the Data Commons survey (ARCHITECTURE #488); take it from FEMA, not Data Commons, whose copy is dated 2000. Check FEMA's current release and its terms first.
@@ -279,7 +284,7 @@ Not open work: each comes round on a date. The steps live where the row says.
       #454) `housing-intelligence` on Pages is kept as the rollback for the move to the
       `housing-site` Worker; delete it once the Worker has served two weeks without a
       rollback. Pages' file and rule caps that blocked a second state (#367, #400) no
-      longer apply: about seven New Jersey-sized states fit under the Worker's 100,000.
+      longer apply; the Worker's own 100,000-file cap is under *Before a third state*.
 - [ ] **A place newly gaining data stops the Friday build.** (#367) Its page has no pinned
       address, so the build refuses rather than publish one that could change; the
       scheduled run then reports a failed build. Fix: `cd web && npm run routes:refresh`,
