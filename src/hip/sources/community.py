@@ -403,7 +403,12 @@ class PlacesAdapter(SourceAdapter):
                 self.source_id,
                 level,
                 "current",
-                f"https://data.cdc.gov/resource/{dataset}.json",
+                # The states asked for are part of the request, so part of the URL the
+                # raw cache compares (#214), as a fragment: it is never sent, and a
+                # query parameter would be read by Socrata as a column filter. New
+                # Jersey alone keeps the URL it always had.
+                f"https://data.cdc.gov/resource/{dataset}.json"
+                + ("" if self.scoped == ["NJ"] else f"#{','.join(self.scoped)}"),
             )
             for level, dataset in CDC_DATASETS.items()
         ]
@@ -435,8 +440,9 @@ class PlacesAdapter(SourceAdapter):
             name = meta.json()["name"]
             if not re.search(r"20\d\d release$", name):
                 raise SourceError("CDC release identity missing")
+            url = ref.url.split("#", 1)[0]
             response = client.get(
-                ref.url, params={"$select": "count(*) as n", "$where": where}
+                url, params={"$select": "count(*) as n", "$where": where}
             )
             response.raise_for_status()
             expected = int(response.json()[0]["n"])
@@ -446,7 +452,7 @@ class PlacesAdapter(SourceAdapter):
                 raise SourceError("CDC query unexpectedly small or unbounded")
             for start in range(0, expected, 1000):
                 response = client.get(
-                    ref.url,
+                    url,
                     params={
                         "$where": where,
                         "$limit": 1000,
