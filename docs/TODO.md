@@ -29,12 +29,23 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — between milestones (2026-11-21)
+## Now — Milestone 63, Pennsylvania (started 2026-11-21)
 
-Milestone 66, map performance and gestures, shipped and deployed on 2026-11-21 (PR #321);
-its record is in CHANGELOG and ARCHITECTURE #523, and `web/scripts/bench-atlas.mjs`
-repeats its measurements. Next on the roadmap is Milestone 63, a second state, which
-starts by choosing the state.
+The second state, chosen by the owner on 2026-11-21: Pennsylvania at county, town and ZIP
+level, ranked within its own state, on every source that covers it after review.
+Branch `milestone/m63-pennsylvania`.
+
+- [ ] 1. Measure the cost of Pennsylvania's files, then bundle each place's R2 artifacts
+      into fewer files before it is loaded (the R2 note under Open).
+- [ ] 2. Load Pennsylvania on the 20 sources that already cover it; check counts against
+      the Census.
+- [ ] 3. Review the 25 federal sources declared New Jersey's (#406) and open each that
+      fits to Pennsylvania; name any that do not.
+- [ ] 4. Rankings within each state.
+- [ ] 5. Pennsylvania's cost rules in `STATE_RULES`.
+- [ ] 6. Site: a state page template, two states on the home map, a state choice on the
+      housing map, pinned `/pa/` addresses; stories stay New Jersey's.
+- [ ] 7. Documentation pass, checks, PR.
 
 ## Open
 
