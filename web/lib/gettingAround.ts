@@ -42,9 +42,12 @@ export function workPicture(levels: PacketLevel[], level: string, name: string):
           { key: "county", label: "elsewhere in the county", share: Math.max(0, county - town) },
         ]
       : [{ key: "county", label: level === "county" ? "in the county" : "in their home county", share: county }]),
+    // Each state's own shares (Milestone 63): a place has one pair or the other.
     { key: "nj", label: "elsewhere in New Jersey", share: value(levels, "lodes_work_other_nj_share") ?? 0 },
+    { key: "pa-home", label: "elsewhere in Pennsylvania", share: value(levels, "lodes_work_other_pa_share") ?? 0 },
     { key: "nyc", label: "in New York City", share: value(levels, "lodes_work_nyc_share") ?? 0 },
     { key: "pa", label: "in Pennsylvania", share: value(levels, "lodes_work_pennsylvania_share") ?? 0 },
+    { key: "nj-away", label: "in New Jersey", share: value(levels, "lodes_work_new_jersey_share") ?? 0 },
     { key: "other", label: "in other states", share: value(levels, "lodes_work_other_state_share") ?? 0 },
   ];
   return {

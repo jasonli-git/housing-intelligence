@@ -754,6 +754,14 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     what: "The share of residents’ jobs located in Pennsylvania, Philadelphia included.",
     why: "Part of where residents work.",
   },
+  lodes_work_other_pa_share: {
+    what: "The share of a Pennsylvania place’s residents’ jobs in Pennsylvania but outside their home county.",
+    why: "Part of where residents work.",
+  },
+  lodes_work_new_jersey_share: {
+    what: "The share of a Pennsylvania place’s residents’ jobs located in New Jersey.",
+    why: "Part of where residents work.",
+  },
   lodes_work_other_state_share: {
     what: "The share of residents’ jobs outside New Jersey, New York City and Pennsylvania.",
     why: "Part of where residents work. LODES 2023 has no records for Alaska or Michigan.",

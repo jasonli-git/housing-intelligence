@@ -196,6 +196,8 @@ export const KINDS: Record<string, RecordType> = {
   lodes_work_other_nj_share: "calculated",
   lodes_work_nyc_share: "calculated",
   lodes_work_pennsylvania_share: "calculated",
+  lodes_work_other_pa_share: "calculated",
+  lodes_work_new_jersey_share: "calculated",
   lodes_work_other_state_share: "calculated",
   transit_rail_homes_share: "calculated",
   // The visual stories (2026-10-22).

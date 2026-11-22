@@ -122,8 +122,13 @@ describe("over the years", () => {
 describe("seller fees follow the place's state", () => {
   it("are New Jersey's in New Jersey and none where no rules are held", () => {
     const nj = overYears({ ...BASE, state: "NJ", years: 10 });
+    const oh = overYears({ ...BASE, state: "OH", years: 10 });
+    expect(nj.sellingCosts).toBeGreaterThan(oh.sellingCosts);
+    expect(oh.sellingCosts).toBeCloseTo((oh.salePrice * BASE.commissionPct) / 100);
+  });
+
+  it("are the seller's customary half of Pennsylvania's usual 2% in Pennsylvania", () => {
     const pa = overYears({ ...BASE, state: "PA", years: 10 });
-    expect(nj.sellingCosts).toBeGreaterThan(pa.sellingCosts);
-    expect(pa.sellingCosts).toBeCloseTo((pa.salePrice * BASE.commissionPct) / 100);
+    expect(pa.sellingCosts).toBeCloseTo((pa.salePrice * (BASE.commissionPct + 1)) / 100);
   });
 });
