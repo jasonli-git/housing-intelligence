@@ -14,8 +14,10 @@ overlaid as (
     select b.block_geoid, p.class,
            sum(ST_Area(ST_Intersection(b.geom, p.geom))) / any_value(b.area) as share
     from blocks b
-    join {{ ref('stg_flood_pieces') }} p
-      on p.state = left(b.block_geoid, 2) and ST_Intersects(b.geom, p.geom)
+    -- The state is matched after the spatial join, not in it: an equality beside
+    -- ST_Intersects takes DuckDB off its spatial join onto a pairwise comparison.
+    join {{ ref('stg_flood_pieces') }} p on ST_Intersects(b.geom, p.geom)
+    where p.state = left(b.block_geoid, 2)
     group by 1, 2
 ),
 pivoted as (

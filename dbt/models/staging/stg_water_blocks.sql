@@ -37,6 +37,8 @@ select b.block_geoid,
        any_value(a.area_layer) as area_layer,
        least(1.0, sum(ST_Area(ST_Intersection(b.geom, a.geom)) / ST_Area(b.geom))) as share
 from {{ ref('stg_block_homes') }} b
-join areas a on a.state = left(b.block_geoid, 2) and ST_Intersects(b.geom, a.geom)
+-- The state after the spatial join, as in `stg_flood_blocks`.
+join areas a on ST_Intersects(b.geom, a.geom)
+where a.state = left(b.block_geoid, 2)
 group by 1, 2
 having share > 0
