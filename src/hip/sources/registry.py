@@ -454,7 +454,7 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
     if source_id == TransitStopsAdapter.source_id:
         return TransitStopsAdapter()
     if source_id == HmdaAdapter.source_id:
-        return HmdaAdapter()
+        return HmdaAdapter(states=scope.states)
     if source_id == HudFhaLimitsAdapter.source_id:
         return HudFhaLimitsAdapter()
     if source_id == OsmAdapter.source_id:

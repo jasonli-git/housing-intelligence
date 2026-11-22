@@ -7,10 +7,12 @@ census tract and modified for privacy (loan amounts rounded to the midpoint of a
 $10,000 interval, ages binned, some fields withheld). Information the CFPB creates is in
 the public domain; it asks for citation.
 
-Read from the FFIEC's data browser, one file per year filtered to New Jersey (140MB and
-370,769 applications for 2025). Its CSV endpoint answers with a redirect to a snapshot
-file, which the fetch follows. Five years: enough to show the rise from about 3% to
-about 7% without storing the whole decade.
+Read from the FFIEC's data browser, one file per state and year (New Jersey's 2025 file is
+140MB and 370,769 applications). The records are national and their layout is the same
+for every state, so the adapter follows the geography scope (Milestone 63); New Jersey's
+layers keep their names, `nj_<year>`. Its CSV endpoint answers with a redirect to a
+snapshot file, which the fetch follows. Five years: enough to show the rise from about
+3% to about 7% without storing the whole decade.
 
 **What HMDA leaves out**, which the page says: lenders below its reporting thresholds,
 mostly small banks and credit unions; and credit scores and full underwriting, so a
@@ -19,6 +21,7 @@ denial rate is not a measure of who could have qualified.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import date
 from typing import ClassVar
 
@@ -31,15 +34,17 @@ YEARS = 5
 
 
 class HmdaAdapter(SourceAdapter):
-    """New Jersey's HMDA records, one release per year."""
+    """Each scoped state's HMDA records, one release per state and year."""
 
     source_id: ClassVar[str] = "ffiec_hmda"
-    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     # The floor: 2025's records were published by 2026-10-07.
     default_vintage: ClassVar[str] = "2025"
     landing_format: ClassVar[str] = "csv"
     # Codes like "1" and tract ids with leading digits stay text; staging casts.
     csv_read_options: ClassVar[str] = ", all_varchar=true"
+
+    def __init__(self, states: Sequence[str] = ("NJ",)) -> None:
+        self.scoped = [s.upper() for s in states]
 
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         newest = int(vintage or self.newest or self.default_vintage)
@@ -47,22 +52,27 @@ class HmdaAdapter(SourceAdapter):
         return [
             ReleaseRef(
                 source_id=self.source_id,
-                layer=f"nj_{year}",
+                layer=f"{state.lower()}_{year}",
                 vintage=str(year),
-                url=f"{API}/csv?states=NJ&years={year}",
+                url=f"{API}/csv?states={state}&years={year}",
             )
+            for state in self.scoped
             for year in years
         ]
 
     @classmethod
     def filename(cls, ref: ReleaseRef) -> str:
-        return f"hmda_nj_{ref.vintage}.csv"
+        return f"hmda_{ref.layer}.csv"
 
     def discover(self, today: date) -> Discovery:
-        """The newest year the data browser counts New Jersey applications for."""
+        """The newest year the data browser counts the first scoped state's applications.
+
+        The CFPB publishes every state's year at once, so one state answers for all.
+        """
 
         def exists(year: int) -> tuple[bool | None, str | None]:
-            response = self._ask(f"{API}/aggregations?states=NJ&years={year}")
+            state = self.scoped[0]
+            response = self._ask(f"{API}/aggregations?states={state}&years={year}")
             if response is None:
                 return None, None
             if response.status_code != 200:

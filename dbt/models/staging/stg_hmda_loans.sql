@@ -1,4 +1,5 @@
--- Home-purchase mortgage applications in New Jersey (Milestone 48, ARCHITECTURE #324):
+-- Home-purchase mortgage applications in each scoped state (Milestone 48, ARCHITECTURE #324;
+-- every state since Milestone 63):
 -- first liens to buy an owner-occupied one-to-four-family home, from HMDA, one row per
 -- application with its tract and what was decided.
 --
@@ -17,8 +18,10 @@ select activity_year::integer as year,
        try_cast(total_loan_costs as double) as loan_costs,
        -- Reported in thousands of dollars.
        try_cast(income as double) * 1000 as income,
-       "denial_reason-1" as denial_reason
-from read_parquet('{{ var("parquet_dir") }}/ffiec_hmda/*/nj_*.parquet')
+       "denial_reason-1" as denial_reason,
+       -- The release the row came from, `nj_2025`: each state's file is its own layer.
+       regexp_extract(filename, '([a-z]{2}_[0-9]{4})\.parquet$', 1) as release_layer
+from read_parquet('{{ var("parquet_dir") }}/ffiec_hmda/*/*_*.parquet', filename = true)
 where loan_purpose = '1'
   and lien_status = '1'
   and occupancy_type = '1'
@@ -27,4 +30,4 @@ where loan_purpose = '1'
   and reverse_mortgage <> '1'
   and "open-end_line_of_credit" <> '1'
   and length(census_tract) = 11
-  and left(census_tract, 2) = '34'
+  and left(census_tract, 2) in ({{ var("state_fips") }})
