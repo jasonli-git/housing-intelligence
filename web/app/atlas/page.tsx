@@ -14,8 +14,9 @@ import "../income-pressure.css";
 import "../horizon-theme.css";
 import "./atlas-horizon.css";
 import "./atlas-app.css";
+import { COVERED_STATES, coveredNames } from "@/lib/states";
 
-export const metadata:Metadata=pageMetadata({title:"Housing map — Housing",description:"Explore New Jersey housing figures for every county, town and ZIP code on one map.",path:"/atlas"});
+export const metadata:Metadata=pageMetadata({title:"Housing map — Housing",description:`Explore ${coveredNames()} housing figures for every county, town and ZIP code on one map.`,path:"/atlas"});
 const METRICS=["zhvi_sfr","zori_all","acs_median_hh_income","acs_median_gross_rent","acs_median_home_value","acs_renter_cost_burden","pep_population","permits_total_units"];
 async function loadMeasures(level:"county"|"state",members:Region[],catalog:MetricEntry[],sources:SourceEntry[]) {
   const countyIds=new Set(members.map(r=>r.region_id));
@@ -48,14 +49,14 @@ async function loadMeasures(level:"county"|"state",members:Region[],catalog:Metr
  * files when a reader picks it (`loadAtlasMeasure`). One small request per measure and
  * level here, against the build's own API.
  */
-async function loadEntries(catalog:MetricEntry[],sources:SourceEntry[]):Promise<AtlasEntry[]> {
+async function loadEntries(catalog:MetricEntry[],sources:SourceEntry[],state:string):Promise<AtlasEntry[]> {
   const groupOf=new Map(GROUPS.flatMap(g=>g.metrics.map(m=>[m,g.title] as const)));
   const levels:AtlasLevel[]=["county","municipality","zip"];
   const entries=await Promise.all(catalog.filter(m=>groupOf.has(m.metric_id)).map(async metric=>{
     // Each level's newest period end, from the top-ranked place's own series: the catalog
     // says when the newest period starts, and a five-year survey is labelled by its end.
     const found=await Promise.all(levels.map(async level=>{
-      const ranking=await api.values(metric.metric_id,level,1);
+      const ranking=await api.values(metric.metric_id,level,1,state);
       const top=ranking?.items?.[0];
       if(!top)return null;
       // A layer where most places' figures are left out of the ranking — an older survey,
@@ -76,12 +77,20 @@ async function loadEntries(catalog:MetricEntry[],sources:SourceEntry[]):Promise<
   return entries.filter((e):e is AtlasEntry=>e!==null);
 }
 export default async function AtlasPage() {
-  const [catalog,regions,stateRegions,sources]=await Promise.all([api.metrics(),api.regions("level=county&state=NJ&limit=100"),api.regions("level=state&limit=100"),api.sources()]);
-  const [entries,stateMeasures,afford]=await Promise.all([loadEntries(catalog??[],sources??[]),loadMeasures("state",stateRegions?.items??[],catalog??[],sources??[]),affordData()]);
+  const [catalog,stateRegions,sources]=await Promise.all([api.metrics(),api.regions("level=state&limit=100"),api.sources()]);
+  // Each covered state's measures and counties (Milestone 63).
+  const perState=await Promise.all(COVERED_STATES.map(async c=>{
+    const [entries,counties]=await Promise.all([loadEntries(catalog??[],sources??[],c.code),api.regions(`level=county&state=${c.code}&limit=100`)]);
+    return [c.code,entries,(counties?.items??[]).map(r=>({id:r.region_id,name:`${r.name.replace(/ County$/,"")} County`}))] as const;
+  }));
+  const entriesByState=Object.fromEntries(perState.map(([code,entries])=>[code,entries]));
+  const countiesByState=Object.fromEntries(perState.map(([code,,counties])=>[code,counties]));
+  const entries=entriesByState.NJ??[], regions={items:countiesByState.NJ??[]};
+  const [stateMeasures,afford]=await Promise.all([loadMeasures("state",stateRegions?.items??[],catalog??[],sources??[]),affordData()]);
   return <>
     {/* The atlas is a full-screen map with a bar of its own (AtlasBar), not the site bar. */}
     <main id="main-content" tabIndex={-1} className="housing-atlas-page horizon-page atlas-app" data-region-level="atlas">
-      {entries.length && stateMeasures.length && regions?.items.length ? <HousingAtlas budgetData={afford??undefined} bar={<AtlasBar />} entries={entries} artifactUrl={artifactUrl} stateMeasures={stateMeasures} states={(stateRegions?.items??[]).map(r=>({id:r.region_id,name:r.name,code:r.state_code}))} counties={regions.items.map(r=>({id:r.region_id,name:`${r.name.replace(/ County$/,"")} County`}))} /> : <><AtlasBar /><p className="atlas-unavailable">Figures are unavailable in this build. <Link href="/states/new-jersey">Explore New Jersey instead.</Link></p></>}
+      {entries.length && stateMeasures.length && regions?.items.length ? <HousingAtlas budgetData={afford??undefined} bar={<AtlasBar />} entriesByState={entriesByState} countiesByState={countiesByState} artifactUrl={artifactUrl} stateMeasures={stateMeasures} states={(stateRegions?.items??[]).map(r=>({id:r.region_id,name:r.name,code:r.state_code}))} /> : <><AtlasBar /><p className="atlas-unavailable">Figures are unavailable in this build. <Link href="/states/new-jersey">Explore New Jersey instead.</Link></p></>}
     </main>
   </>;
 }

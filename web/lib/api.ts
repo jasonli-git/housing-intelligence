@@ -694,9 +694,10 @@ export const api = {
    * the storage keys value rankings under exactly that sentinel. `hip publish` splits
    * them for the same reason.
    */
-  values: (metricId: string, level: string, limit = 1000) =>
+  /** A value ranking; with `state`, that state's places alone (they rank within it). */
+  values: (metricId: string, level: string, limit = 1000, state?: string) =>
     tryGet<Ranking>(
-      `/rankings?metric_id=${metricId}&level=${level}&limit=${limit}&basis=value`,
+      `/rankings?metric_id=${metricId}&level=${level}&limit=${limit}&basis=value${state ? `&state=${state}` : ""}`,
     ),
   /** MOCK (2026-11-13): how many values a region holds, read from one row's `total`. */
   regionValueCount: (id: number) =>

@@ -4,10 +4,11 @@ import { Glossed } from "@/components/Glossed";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import { fit, rotate, scene, screen, view } from "@/lib/globe";
-import { ATLAS_CITIES, NJ_NEIGHBOURS } from "@/lib/njNeighbours";
+import { ATLAS_CITIES, NJ_NEIGHBOURS, PA_CITIES } from "@/lib/njNeighbours";
+import { COVERED_STATES, coveredNames, coveredState } from "@/lib/states";
 import { WORLD_LAND } from "@/lib/worldLand";
 import { unpack, type PackedOutline } from "@/lib/mapdata";
-import { atlasColor, atlasQuintileColor, atlasRank, atlasReading, layerForZoom, MAX_ZOOM, DETAIL_ZOOM, quintileBreaks, atlasValue, ATLAS_COLORS, ATLAS_LEVELS, compareHref, loadAtlasMeasure, type AtlasCounty, type AtlasEntry, type AtlasLevel, type AtlasMeasure, type AtlasMode } from "@/lib/housingAtlas";
+import { atlasColor, atlasQuintileColor, atlasRank, atlasReading, layerForZoom, MAX_ZOOM, DETAIL_ZOOM, quintileBreaks, atlasValue, ATLAS_COLORS, ATLAS_LEVELS, atlasFiles, compareHref, loadAtlasMeasure, type AtlasCounty, type AtlasEntry, type AtlasLevel, type AtlasMeasure, type AtlasMode } from "@/lib/housingAtlas";
 import { GROUPS } from "@/lib/groups";
 import { MAX_PLACES } from "@/lib/compare";
 import { formatChange, formatMetric } from "@/lib/format";
@@ -38,7 +39,16 @@ const PANELS_KEY="atlas-panels";
 // Zillow leaves out shows the Census figure in its card instead, labelled as the survey's.
 const FALLBACK_OF:Record<string,string>={zhvi_sfr:"acs_median_home_value"};
 
-export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,states,budgetData}:{budgetData?:AtlasBudgetData;bar?:ReactNode;entries:AtlasEntry[];artifactUrl:string;counties:AtlasCounty[];stateMeasures:AtlasMeasure[];states:(AtlasCounty&{code:string})[]}) {
+// Each covered state's cities to find one's bearings by (Milestone 63).
+const CITIES:Record<string,typeof ATLAS_CITIES>={NJ:ATLAS_CITIES,PA:PA_CITIES};
+
+export function HousingAtlas({bar,entriesByState,artifactUrl,countiesByState,stateMeasures,states,budgetData}:{budgetData?:AtlasBudgetData;bar?:ReactNode;entriesByState:Record<string,AtlasEntry[]>;artifactUrl:string;countiesByState:Record<string,AtlasCounty[]>;stateMeasures:AtlasMeasure[];states:(AtlasCounty&{code:string})[]}) {
+  // The covered state the map shows (Milestone 63): New Jersey unless the address names
+  // another, `?state=PA`. Each state's outlines, measures and rankings are its own.
+  const [atlasState,setAtlasState]=useState("NJ");
+  const covered=coveredState(atlasState)!;
+  const entries=entriesByState[atlasState]??[];
+  const counties=countiesByState[atlasState]??[];
   // The United States, then New Jersey's counties: the whole-globe view was removed
   // 2026-10-20 (#398), since every figure is in the United States, and the map stopped
   // turning as a globe (#398) — both levels are one fitted frame, panned and zoomed flat,
@@ -62,7 +72,8 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
   const [expanded,setExpanded]=useState(false);
   const [descending,setDescending]=useState(true);
   // (#496) the Budget explorer as a filter on the map (components/AtlasBudget.tsx).
-  const budget=useAtlasBudget(budgetData,level,metric);
+  // The budget explorer reads New Jersey's prices alone.
+  const budget=useAtlasBudget(atlasState==="NJ"?budgetData:undefined,level,metric);
   const [sortBy,setSortBy]=useState<"figure"|"cost">("figure");
   const [budgetOpen,setBudgetOpen]=useState(false);
   // On a phone the card starts as its one-line summary, so the map stays in view.
@@ -155,9 +166,11 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
   useEffect(()=>{
     const restore=()=>{
       const params=new URLSearchParams(window.location.search);
+      const wanted=coveredState(params.get("state"))?.code??"NJ";
+      setAtlasState(wanted);
       const next=params.get("level");
       const nextLevel:Level=isLevel(next)?next:OPENING_LEVEL;
-      const ids=nextLevel==="states"?stateMeasures.map(m=>m.metric_id):entries.filter(e=>e.levels.includes(nextLevel)).map(e=>e.metric_id);
+      const ids=nextLevel==="states"?stateMeasures.map(m=>m.metric_id):(entriesByState[wanted]??[]).filter(e=>e.levels.includes(nextLevel)).map(e=>e.metric_id);
       const requestedMeasure=params.get("measure");
       const picked=requestedMeasure&&ids.includes(requestedMeasure)?requestedMeasure:ids.includes(OPENING_MEASURE)?OPENING_MEASURE:ids[0];
       const requested=params.get("view") as AtlasMode;
@@ -175,20 +188,21 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
       setRestored(true);
     };
     restore();window.addEventListener("popstate",restore);return()=>window.removeEventListener("popstate",restore);
-  },[entries,stateMeasures]);
+  },[entriesByState,stateMeasures]);
   useEffect(()=>{
     if(!restored)return;
     const timer=window.setTimeout(()=>{
       const url=new URL(window.location.href);
       const params=url.searchParams;
       params.set("level",level);params.set("measure",metric);params.set("view",mode);
+      if(atlasState!=="NJ")params.set("state",atlasState);else params.delete("state");
       if(selected!==null)params.set("place",String(selected));else params.delete("place");
       if(picks.length)params.set("compare",picks.join(","));else params.delete("compare");
       params.delete("pin");params.delete("lon");params.delete("lat");params.set("zoom",String(viewport.scale));params.set("x",String(viewport.x));params.set("y",String(viewport.y));
       window.history.replaceState(null,"",url);
     },150);
     return()=>window.clearTimeout(timer);
-  },[restored,level,metric,mode,selected,picks,viewport]);
+  },[restored,level,metric,mode,selected,picks,viewport,atlasState]);
   const resizing=useRef<{x:number;width:number}|null>(null);
   const svg=useRef<SVGSVGElement>(null);
   // The water and neighbouring land behind the outlines, and the city labels above them,
@@ -207,17 +221,17 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
     if(!restored||level==="states"||outlinesByLevel[level]?.length)return;
     const controller=new AbortController();
     setFailed(false);
-    const file=ATLAS_LEVELS.find(l=>l.key===level)!.outlines;
+    const file=atlasFiles(atlasState,level).outlines;
     fetch(file,{signal:controller.signal}).then(r=>{if(!r.ok)throw new Error();return r.json();}).then((body:{outlines:PackedOutline[]})=>{if(!body.outlines.length)throw new Error();setOutlinesByLevel(current=>({...current,[level]:body.outlines}));}).catch(()=>{if(!controller.signal.aborted)setFailed(true);});
     return()=>controller.abort();
-  },[restored,level,outlinesByLevel]);
+  },[restored,level,outlinesByLevel,atlasState]);
   useEffect(()=>{
     if(!restored||level==="states"||viewport.scale<DETAIL_ZOOM||detailByLevel[level])return;
     const at=level;
     setDetailByLevel(current=>({...current,[at]:"loading"}));
     // Failing, the light outlines stay: the map is coarser up close, not missing.
-    fetch(ATLAS_LEVELS.find(l=>l.key===at)!.detail).then(r=>{if(!r.ok)throw new Error();return r.json();}).then((body:{outlines:PackedOutline[]})=>{if(body.outlines.length)setDetailByLevel(current=>({...current,[at]:body.outlines}));}).catch(()=>{});
-  },[restored,level,viewport.scale,detailByLevel]);
+    fetch(atlasFiles(atlasState,at).detail).then(r=>{if(!r.ok)throw new Error();return r.json();}).then((body:{outlines:PackedOutline[]})=>{if(body.outlines.length)setDetailByLevel(current=>({...current,[at]:body.outlines}));}).catch(()=>{});
+  },[restored,level,viewport.scale,detailByLevel,atlasState]);
   // A New Jersey measure's figures, read when it is first chosen at a level.
   useEffect(()=>{
     if(!restored||level==="states")return;
@@ -226,7 +240,7 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
       const key=`${level}/${id}`, entry=entries.find(e=>e.metric_id===id&&e.levels.includes(level));
       if(!entry||loaded[key])continue;
       setLoaded(current=>({...current,[key]:"loading"}));
-      loadAtlasMeasure(artifactUrl,entry,level,id===metric?WINDOWS.map(w=>w.key):[]).then(m=>setLoaded(current=>({...current,[key]:m}))).catch(()=>setLoaded(current=>({...current,[key]:"failed"})));
+      loadAtlasMeasure(artifactUrl,entry,level,id===metric?WINDOWS.map(w=>w.key):[],atlasState).then(m=>setLoaded(current=>({...current,[key]:m}))).catch(()=>setLoaded(current=>({...current,[key]:"failed"})));
     }
   },[restored,level,metric,entries,loaded,artifactUrl]);
   const stateOutlinesAll=useMemo(()=>unpack(stateGeometry),[stateGeometry]);
@@ -333,8 +347,8 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
   // The low-resolution world silhouette is useful at globe scale, not parcel-close zoom.
   // Behind New Jersey, its neighbours' land, so the state sits on water; behind the
   // nation, the world's (owner, 2026-11-09).
-  const land=useMemo(()=>scene(perspective,nj?NJ_NEIGHBOURS:WORLD_LAND,()=>0),[perspective,nj]);
-  const cities=useMemo(()=>nj?ATLAS_CITIES.map(c=>({...c,xy:screen(perspective,rotate(perspective.camera,c.at))})):[],[perspective,nj]);
+  const land=useMemo(()=>scene(perspective,nj&&atlasState==="NJ"?NJ_NEIGHBOURS:WORLD_LAND,()=>0),[perspective,nj,atlasState]);
+  const cities=useMemo(()=>nj?(CITIES[atlasState]??[]).map(c=>({...c,xy:screen(perspective,rotate(perspective.camera,c.at))})):[],[perspective,nj,atlasState]);
   const levelInfo=ATLAS_LEVELS.find(l=>l.key===level);
   // Everything below that depends only on the data is held between renders: a pan or a
   // zoom changes the map's transform and nothing else, and rebuilding 564 outlines and 564
@@ -415,6 +429,13 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
   },[]);
   // Between New Jersey's layers the view is kept, so the whole state stays in sight; to and
   // from the nation it is reframed.
+  // Another covered state: its outlines, measures and rankings replace the last state's.
+  const openState=(code:string,next:AtlasLevel=stateLayer)=>{
+    if(code!==atlasState){setAtlasState(code);setOutlinesByLevel({});setDetailByLevel({});setLoaded({});setPicks([]);setCountySearch("");}
+    const ids=(entriesByState[code]??[]).filter(e=>e.levels.includes(next)).map(e=>e.metric_id);
+    setLevel(next);setStateLayer(next);setSelected(null);home.current=true;setViewport({scale:1,x:0,y:0});
+    setMetric(current=>ids.includes(current)?current:ids.includes(OPENING_MEASURE)?OPENING_MEASURE:ids[0]);
+  };
   const changeLevel=(next:Level)=>{const reframe=next==="states"||level==="states";setLevel(next);setSelected(null);if(next!=="states")setStateLayer(next);if(reframe){home.current=true;setViewport({scale:1,x:0,y:0});}const ids=next==="states"?stateMeasures.map(m=>m.metric_id):entries.filter(e=>e.levels.includes(next)).map(e=>e.metric_id);if(!ids.includes(metric))setMetric(ids.includes(OPENING_MEASURE)?OPENING_MEASURE:ids[0]);if(next!==level&&(next==="states"||level==="states"))setPicks([]);};
   // Zooming in on the nation opens New Jersey; zooming out of New Jersey returns to it.
   useEffect(()=>{
@@ -437,10 +458,10 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
           measures are the picker with the whole catalogue one chip further, and time,
           the way out to the United States and sharing wait in a quiet footer. */}
       <h2 className="atlas-card-title"><Glossed text={FRIENDLY[measure.metric_id]??measure.label} /></h2>
-      <div className="atlas-card-row">{variants.length>1&&<div className="atlas-source-switch" role="group" aria-label={variantSet!.name}>{variants.map(h=><button key={h.id} type="button" aria-pressed={metric===h.id} title={h.note} onClick={()=>{setMetric(h.id);setMode("latest");}}>{h.label}</button>)}</div>}{nj?<div className="atlas-levels" role="group" aria-label="New Jersey layer">{ATLAS_LEVELS.map(l=><button key={l.key} type="button" aria-pressed={level===l.key} onClick={()=>{setCountySearch("");changeLevel(l.key);}}>{l.label}</button>)}</div>:<span className="atlas-layer-name">The United States<small> · figures for New Jersey only. <button type="button" className="atlas-inline-link" onClick={()=>changeLevel(stateLayer)}>Open New Jersey</button></small></span>}</div>
+      <div className="atlas-card-row">{variants.length>1&&<div className="atlas-source-switch" role="group" aria-label={variantSet!.name}>{variants.map(h=><button key={h.id} type="button" aria-pressed={metric===h.id} title={h.note} onClick={()=>{setMetric(h.id);setMode("latest");}}>{h.label}</button>)}</div>}{nj?<div className="atlas-levels" role="group" aria-label={`${covered.name} layer`}>{ATLAS_LEVELS.map(l=><button key={l.key} type="button" aria-pressed={level===l.key} onClick={()=>{setCountySearch("");changeLevel(l.key);}}>{l.label}</button>)}</div>:<span className="atlas-layer-name">The United States<small> · figures for {coveredNames()} only.{COVERED_STATES.map(c=><> <button key={c.code} type="button" className="atlas-inline-link" onClick={()=>openState(c.code)}>Open {c.name}</button></>)}</small></span>}{nj&&COVERED_STATES.length>1&&<div className="atlas-levels atlas-states" role="group" aria-label="State">{COVERED_STATES.map(c=><button key={c.code} type="button" aria-pressed={atlasState===c.code} onClick={()=>openState(c.code,level as AtlasLevel)}>{c.code}</button>)}</div>}</div>
       {/* Layer tiles (owner, 2026-11-09): each suggested measure as a small map of New
           Jersey in its own shades, so a reader sees where it is high before choosing it. */}
-      <div className="atlas-tiles" role="group" aria-label="Measures">{suggested.map(s=><button key={s.id} type="button" className="atlas-tile" aria-pressed={s.pressed} onClick={()=>{setMetric(s.id);setMode("latest");setMoreMeasures(false);}}><AtlasPreview metric={s.pressed?metric:s.id}/><span>{s.label}</span></button>)}<button ref={measureLauncher} type="button" className="atlas-tile atlas-more-measures" aria-haspopup="dialog" aria-expanded={moreMeasures} aria-controls="atlas-measure-picker" aria-pressed={nj&&!suggested.some(s=>s.pressed)} onClick={()=>{setMoreMeasures(!moreMeasures);setMeasureSearch("");setSearchOpen(false);setAboutMeasure(null);}}><span className="atlas-more-face" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><small>{nj?catalogue.length:stateMeasures.length}</small></span><span>{suggested.some(s=>s.pressed)||!nj?"More":FRIENDLY[measure.metric_id]??measure.label}</span></button></div>
+      <div className="atlas-tiles" role="group" aria-label="Measures">{suggested.map(s=><button key={s.id} type="button" className="atlas-tile" aria-pressed={s.pressed} onClick={()=>{setMetric(s.id);setMode("latest");setMoreMeasures(false);}}>{atlasState==="NJ"&&<AtlasPreview metric={s.pressed?metric:s.id}/>}<span>{s.label}</span></button>)}<button ref={measureLauncher} type="button" className="atlas-tile atlas-more-measures" aria-haspopup="dialog" aria-expanded={moreMeasures} aria-controls="atlas-measure-picker" aria-pressed={nj&&!suggested.some(s=>s.pressed)} onClick={()=>{setMoreMeasures(!moreMeasures);setMeasureSearch("");setSearchOpen(false);setAboutMeasure(null);}}><span className="atlas-more-face" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><small>{nj?catalogue.length:stateMeasures.length}</small></span><span>{suggested.some(s=>s.pressed)||!nj?"More":FRIENDLY[measure.metric_id]??measure.label}</span></button></div>
       {moreMeasures&&<div id="atlas-measure-picker" className="atlas-measure-picker" ref={fitPicker} tabIndex={-1} role="region" aria-label="Measure catalogue" onKeyDown={e=>{if(!searchOpen&&e.key.length===1&&/\S/.test(e.key)&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&(e.target as HTMLElement).tagName!=="INPUT"){e.preventDefault();setSearchOpen(true);setMeasureSearch(e.key);requestAnimationFrame(()=>measureSearchInput.current?.focus());}}}>
         <header><div><small>MEASURES</small><h2>Choose a measure</h2></div><button type="button" className="atlas-search-toggle" aria-label="Search measures" aria-expanded={searchOpen} aria-controls="atlas-measure-search" onClick={()=>{if(searchOpen){setSearchOpen(false);setMeasureSearch("");}else{setSearchOpen(true);requestAnimationFrame(()=>measureSearchInput.current?.focus());}}}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8"/></svg></button><button type="button" aria-label="Close measures" onClick={()=>{setMoreMeasures(false);measureLauncher.current?.focus({preventScroll:true});}}>×</button></header>
         {searchOpen&&<label className="atlas-measure-search">Search measures<input id="atlas-measure-search" ref={measureSearchInput} type="search" value={measureSearch} onChange={e=>setMeasureSearch(e.target.value)} onKeyDown={e=>{if(e.key==="Escape"&&measureSearch){e.stopPropagation();e.nativeEvent.stopImmediatePropagation();setMeasureSearch("");}}} placeholder="Rent, income, building…"/></label>}
@@ -468,7 +489,7 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
             {land.map(shape=><path className="atlas-context-land" key={`land-${shape.id}`} d={shape.base} pointerEvents="none"/>)}
           </g>
         </svg>
-        <svg ref={svg} className="atlas-county-map" viewBox={`0 0 ${frame.width} ${frame.height}`} tabIndex={0} role="group" aria-label={`${nj?`New Jersey ${levelInfo!.noun} map. Drag or arrow keys to pan`:"United States map. Drag or arrow keys to pan"}; scroll, pinch, plus and minus zoom. Shapes select the matching table row.`}
+        <svg ref={svg} className="atlas-county-map" viewBox={`0 0 ${frame.width} ${frame.height}`} tabIndex={0} role="group" aria-label={`${nj?`${covered.name} ${levelInfo!.noun} map. Drag or arrow keys to pan`:"United States map. Drag or arrow keys to pan"}; scroll, pinch, plus and minus zoom. Shapes select the matching table row.`}
           onKeyDown={e=>{if(e.target!==e.currentTarget)return;const delta=({ArrowLeft:[45,0],ArrowRight:[-45,0],ArrowUp:[0,45],ArrowDown:[0,-45]} as Record<string,number[]>)[e.key];if(delta){e.preventDefault();gestures.animateTo(v=>({...v,x:v.x+delta[0],y:v.y+delta[1]}));}else if(e.key==="+"||e.key==="="){e.preventDefault();zoom(1.25);}else if(e.key==="-"){e.preventDefault();zoom(.8);}}}
           {...gestures.handlers}>
           <defs><pattern id="atlas-missing" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#8f939c"/><path d="M0 8L8 0" stroke="#d5d8de" strokeWidth="2"/></pattern><pattern id="atlas-unpriced" width="6" height="6" patternUnits="userSpaceOnUse"><rect className="atlas-unpriced-ground" width="6" height="6"/><circle className="atlas-unpriced-dot" cx="3" cy="3" r="1.1"/></pattern></defs>
@@ -499,9 +520,9 @@ export function HousingAtlas({bar,entries,artifactUrl,counties,stateMeasures,sta
         {choice&&<button className="atlas-clear-selection" type="button" onClick={()=>setSelected(null)}>Clear selection ×</button>}
 
         {nj&&picks.length>0&&<div className="atlas-comparison" aria-label="Places chosen to compare"><header><b>To compare · {picks.length} of {MAX_PLACES}</b><button type="button" aria-label="Clear the comparison" onClick={()=>setPicks([])}>×</button></header><ul className="atlas-compare-chips">{pickedPlaces.map(p=><li key={p.id}><button type="button" onClick={()=>select(p.id)}>{p.name}</button><button type="button" aria-label={`Remove ${p.name}`} onClick={()=>togglePick(p.id)}>×</button></li>)}</ul><Link className="atlas-compare-go" href={compareHref(picks)}>{picks.length===1?"Open it on the compare page →":`Compare ${picks.length} places on every measure →`}</Link><small>Counties, towns and ZIP codes can be compared together.</small></div>}
-        {!nj&&<p className="atlas-state-coverage">New Jersey only. Other states: outlines, not figures.</p>}
+        {!nj&&<p className="atlas-state-coverage">{coveredNames()} only. Other states: outlines, not figures.</p>}
         {outlineOnly&&<p className="atlas-outline-status" role="status">Boundary only · figures not yet supported</p>}
-        <div className="atlas-selected" aria-live="polite" data-active={Boolean(choice)}><div key={`${selected}-${metric}-${mode}`} className="atlas-selection-content">{choice?<><h3>{choice.county.name}</h3><strong>{format(choice.value)}</strong>{rankLine&&<span className="atlas-rank">{rankLine}</span>}{nj&&<BudgetLine budget={budget} id={choice.county.id}/>}{fallbackRow&&typeof fallbackMeasure==="object"&&<span className="atlas-fallback">Zillow publishes no figure here. Census survey: <b>{formatMetric(fallbackRow.latest!,fallbackMeasure.unit,fallbackMeasure.metric_id)}</b>, owners’ own estimate{fallbackMeasure.latest.end?`, ${periodLabel(fallbackMeasure.latest.end,fallbackMeasure.metric_id)}`:""}. <button type="button" className="atlas-inline-link" onClick={()=>setMetric(FALLBACK_OF[metric])}>Show the Census map</button></span>}{leftOut&&<span className="atlas-fallback">{leftOut.reason==="older"?<>Not in the newest survey. The {surveyYears(leftOut)} survey: <b>{formatMetric(leftOut.value,measure.unit,metric)}</b>{leftOut.margin_of_error!=null?<> ({marginLabel(leftOut.value,leftOut.margin_of_error,measure.unit,metric)})</>:null}.</>:<>Too uncertain to map: <b>{formatMetric(leftOut.value,measure.unit,metric)}</b> ({marginLabel(leftOut.value,leftOut.margin_of_error,measure.unit,metric)}), {surveyYears(leftOut)} survey.</>}</span>}<small>{margin(choice.county.id)}{mode==="latest"&&measure.latest.periods[choice.county.id]?` · ${periodLabel(measure.latest.periods[choice.county.id],metric)}`:""}</small>{nj?<div className="atlas-place-actions"><Link className="destination-county" href={regionPath(choice.county.id)}>View place →</Link>{nj&&choice&&choice.county.id>0&&<button className="atlas-pin-button" type="button" aria-pressed={picks.includes(choice.county.id)} disabled={!picks.includes(choice.county.id)&&picks.length>=MAX_PLACES} onClick={()=>togglePick(choice.county.id)}>{picks.includes(choice.county.id)?"Remove from comparison":picks.length>=MAX_PLACES?`Comparison full (${MAX_PLACES})`:"Add to comparison"}</button>}</div>:choice.county.id===states.find(s=>s.code==="NJ")?.id?<><button type="button" className="atlas-drill" onClick={()=>changeLevel("county")}>Explore New Jersey counties →</button><Link href="/states/new-jersey">Open state page →</Link></>:<p>State and county figures are not available here yet.</p>}</>:<p>Select a {nj?levelInfo!.noun:"state"} on the map or in the table.</p>}</div></div>
+        <div className="atlas-selected" aria-live="polite" data-active={Boolean(choice)}><div key={`${selected}-${metric}-${mode}`} className="atlas-selection-content">{choice?<><h3>{choice.county.name}</h3><strong>{format(choice.value)}</strong>{rankLine&&<span className="atlas-rank">{rankLine}</span>}{nj&&<BudgetLine budget={budget} id={choice.county.id}/>}{fallbackRow&&typeof fallbackMeasure==="object"&&<span className="atlas-fallback">Zillow publishes no figure here. Census survey: <b>{formatMetric(fallbackRow.latest!,fallbackMeasure.unit,fallbackMeasure.metric_id)}</b>, owners’ own estimate{fallbackMeasure.latest.end?`, ${periodLabel(fallbackMeasure.latest.end,fallbackMeasure.metric_id)}`:""}. <button type="button" className="atlas-inline-link" onClick={()=>setMetric(FALLBACK_OF[metric])}>Show the Census map</button></span>}{leftOut&&<span className="atlas-fallback">{leftOut.reason==="older"?<>Not in the newest survey. The {surveyYears(leftOut)} survey: <b>{formatMetric(leftOut.value,measure.unit,metric)}</b>{leftOut.margin_of_error!=null?<> ({marginLabel(leftOut.value,leftOut.margin_of_error,measure.unit,metric)})</>:null}.</>:<>Too uncertain to map: <b>{formatMetric(leftOut.value,measure.unit,metric)}</b> ({marginLabel(leftOut.value,leftOut.margin_of_error,measure.unit,metric)}), {surveyYears(leftOut)} survey.</>}</span>}<small>{margin(choice.county.id)}{mode==="latest"&&measure.latest.periods[choice.county.id]?` · ${periodLabel(measure.latest.periods[choice.county.id],metric)}`:""}</small>{nj?<div className="atlas-place-actions"><Link className="destination-county" href={regionPath(choice.county.id)}>View place →</Link>{nj&&choice&&choice.county.id>0&&<button className="atlas-pin-button" type="button" aria-pressed={picks.includes(choice.county.id)} disabled={!picks.includes(choice.county.id)&&picks.length>=MAX_PLACES} onClick={()=>togglePick(choice.county.id)}>{picks.includes(choice.county.id)?"Remove from comparison":picks.length>=MAX_PLACES?`Comparison full (${MAX_PLACES})`:"Add to comparison"}</button>}</div>:(()=>{const c=COVERED_STATES.find(c=>states.find(s=>s.code===c.code)?.id===choice.county.id);return c?<><button type="button" className="atlas-drill" onClick={()=>openState(c.code,"county")}>Explore {c.name} counties →</button><Link href={c.path}>Open state page →</Link></>:<p>State and county figures are not available here yet.</p>;})()}</>:<p>Select a {nj?levelInfo!.noun:"state"} on the map or in the table.</p>}</div></div>
         <div className="atlas-reading"><b><Glossed text={FRIENDLY[measure.metric_id]??measure.label} /></b><span>{measureStatus||<>{mode==="latest"?"Latest figure":"Percentage change"} · {dateLabel}</>}</span><p className="atlas-how-to-read">{measure.definition}</p></div>
         {nj&&<div className="atlas-county-finder"><label>Find a {levelInfo!.noun}<input type="search" value={countySearch} onChange={e=>setCountySearch(e.target.value)} placeholder={level==="zip"?"ZIP code":`${levelInfo!.noun[0].toUpperCase()}${levelInfo!.noun.slice(1)} name`}/></label>{countySearch&&<small role="status">{visibleRows.length} matching · map still shows all {levelInfo!.plural}</small>}</div>}
 <div className="atlas-table-wrap" ref={table} id="atlas-table" tabIndex={0} role="region" aria-label={`${nj?levelInfo!.label:"States"} ranked, scroll for all places`}><table><thead><tr><th scope="col">{nj?levelInfo!.noun[0].toUpperCase()+levelInfo!.noun.slice(1):"State"}</th>{budget.reading&&<th scope="col"><button type="button" aria-pressed={sortBy==="cost"} onClick={()=>setSortBy(sortBy==="cost"?"figure":"cost")}>A month {sortBy==="cost"?"↑":""}</button></th>}<th scope="col"><button type="button" onClick={()=>{setSortBy("figure");setDescending(!descending);}} aria-label={`Sort figures ${descending?"low to high":"high to low"}`}>Figure {descending?"↓":"↑"}</button></th></tr></thead><tbody>{tableRows}</tbody></table></div>
