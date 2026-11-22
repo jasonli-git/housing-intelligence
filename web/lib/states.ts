@@ -7,6 +7,8 @@
  */
 export type CoveredState = {
   code: string;
+  /** The state's two-digit FIPS code, its GEOID. */
+  fips: string;
   name: string;
   path: string;
   regionId: number;
@@ -15,7 +17,7 @@ export type CoveredState = {
 };
 
 export const COVERED_STATES: ReadonlyArray<CoveredState> = [
-  { code: "NJ", name: "New Jersey", path: "/states/new-jersey", regionId: 1, locator: [-74.5, 40] },
+  { code: "NJ", fips: "34", name: "New Jersey", path: "/states/new-jersey", regionId: 1, locator: [-74.5, 40] },
 ];
 
 /** The state the home map points to and flies into. With several covered, the first:
