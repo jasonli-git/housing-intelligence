@@ -56,20 +56,22 @@ open work is in [TODO.md](TODO.md), and ideas here are not decided.
 
 ## Posting order
 
-One story a week on X and Bluesky, Fridays at 9 AM Eastern; the plan is in
-[DIRECTOR_NOTES.md](DIRECTOR_NOTES.md) ("Social media lineup"). 2026-12-25 and 2027-01-01 are left free.
+Two stories a week on X and Bluesky, Mondays and Fridays at 9 AM Eastern, from 2026-11-23
+(Fridays only before then); the plan is in [DIRECTOR_NOTES.md](DIRECTOR_NOTES.md)
+("Social media lineup", "Decision: two stories a week"). 2026-12-25, 2026-12-28,
+2027-01-01 and 2027-01-04 are left free.
 
 | Date | Story | State |
 |---|---|---|
 | 2026-11-06 | [The Starbucks index](../web/app/stories/the-starbucks-index/page.tsx) | posted |
 | 2026-11-13 | [The Wawa line](../web/app/stories/the-wawa-line/page.tsx) | posted |
 | 2026-11-20 | [The flood claims calendar](../web/app/stories/the-flood-claims-calendar/page.tsx) | posted |
-| 2026-11-27 | [Hometown famous](../web/app/stories/hometown-famous/page.tsx) | planned |
-| 2026-12-04 | [When the town was built](../web/app/stories/when-the-town-was-built/page.tsx) | planned |
-| 2026-12-11 | [The pizza–bagel line](../web/app/stories/the-pizza-bagel-line/page.tsx) | planned |
-| 2026-12-18 | [Where you can see the stars](../web/app/stories/where-you-can-see-the-stars/page.tsx) | planned |
-| 2027-01-08 | [Boroughitis](../web/app/stories/boroughitis/page.tsx) | planned |
-| 2027-01-15 | [What goes with pricier towns](../web/app/stories/pricier-towns/page.tsx) | planned |
+| 2026-11-23 | [Hometown famous](../web/app/stories/hometown-famous/page.tsx) | planned |
+| 2026-11-27 | [When the town was built](../web/app/stories/when-the-town-was-built/page.tsx) | planned |
+| 2026-11-30 | [The pizza–bagel line](../web/app/stories/the-pizza-bagel-line/page.tsx) | planned |
+| 2026-12-04 | [Where you can see the stars](../web/app/stories/where-you-can-see-the-stars/page.tsx) | planned |
+| 2026-12-07 | [Boroughitis](../web/app/stories/boroughitis/page.tsx) | planned |
+| 2026-12-11 | [What goes with pricier towns](../web/app/stories/pricier-towns/page.tsx) | planned |
 
 ## Reviews
 
