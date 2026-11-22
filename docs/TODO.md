@@ -35,8 +35,10 @@ The second state, chosen by the owner on 2026-11-21: Pennsylvania at county, tow
 level, ranked within its own state, on every source that covers it after review.
 Branch `milestone/m63-pennsylvania`.
 
-- [ ] 1. Measure the cost of Pennsylvania's files, then bundle each place's R2 artifacts
-      into fewer files before it is loaded (the R2 note under Open).
+- [x] 1. Measure the cost of Pennsylvania's files (2026-11-21). The 2026-11-20 refresh
+      rewrote 10,609 of about 19,500 R2 files; with Pennsylvania about 50,000 a week,
+      some 430,000 of R2's 1M free writes a month. The owner decided not to bundle now;
+      revisit at a third state.
 - [ ] 2. Load Pennsylvania on the 20 sources that already cover it; check counts against
       the Census.
 - [ ] 3. Review the 25 federal sources declared New Jersey's (#406) and open each that
