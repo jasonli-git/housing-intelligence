@@ -187,9 +187,15 @@ def _run(
         .render(
             config=lambda **_: "",
             ref=lambda name: name,
+            # `dbt/macros/scoped_layer.sql`, for New Jersey and Pennsylvania.
+            scoped_layer=lambda base, fips: (
+                f"case {fips} when '34' then '{base}' when '42' then '{base}_pa' end"
+            ),
             var=lambda name: (
                 str(parquet)
                 if name == "parquet_dir"
+                else "'34', '42'"
+                if name == "state_fips"
                 else {
                     s: years
                     for s in (
@@ -257,12 +263,14 @@ def _flood_world(
             "FLD_ZONE": "AE",
             "ZONE_SUBTY": None,
             "SFHA_TF": "T",
+            "DFIRM_ID": "34029C",
             "geometry": _geojson(con, "ST_MakeEnvelope(0, 0, 0.5, 1)"),
         },
         {
             "FLD_ZONE": "X",
             "ZONE_SUBTY": "AREA OF MINIMAL FLOOD HAZARD",
             "SFHA_TF": "F",
+            "DFIRM_ID": "34029C",
             "geometry": _geojson(con, "ST_MakeEnvelope(0.5, 0, 1, 1)"),
         },
     ]
@@ -272,6 +280,7 @@ def _flood_world(
                 "FLD_ZONE": "X",
                 "ZONE_SUBTY": "AREA OF MINIMAL FLOOD HAZARD",
                 "SFHA_TF": "F",
+                "DFIRM_ID": "34029C",
                 "geometry": _geojson(con, _square(1, 0)),
             }
         )
@@ -337,7 +346,15 @@ def test_a_polygon_over_2000_vertices_is_cut_without_losing_area(
     _write(
         con,
         tmp_path / "fema_nfhl" / "current" / "zones.parquet",
-        [{"FLD_ZONE": "AE", "ZONE_SUBTY": None, "SFHA_TF": "T", "geometry": circle}],
+        [
+            {
+                "FLD_ZONE": "AE",
+                "ZONE_SUBTY": None,
+                "SFHA_TF": "T",
+                "DFIRM_ID": "34029C",
+                "geometry": circle,
+            }
+        ],
     )
     _write(
         con,

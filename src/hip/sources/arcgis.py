@@ -64,6 +64,10 @@ class ArcGisAdapter(SourceAdapter):
     row_group_size: ClassVar[int | None] = 2048
     LAYERS: ClassVar[dict[str, ArcGisLayer]]
 
+    def layers(self) -> dict[str, ArcGisLayer]:
+        """The layers read. A source whose layers depend on its states overrides this."""
+        return self.LAYERS
+
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         return [
             ReleaseRef(
@@ -75,7 +79,7 @@ class ArcGisAdapter(SourceAdapter):
                 url=f"{layer.url}/query?where={layer.where}"
                 f"&outFields={','.join(layer.fields)}",
             )
-            for name, layer in self.LAYERS.items()
+            for name, layer in self.layers().items()
         ]
 
     @classmethod
@@ -87,7 +91,7 @@ class ArcGisAdapter(SourceAdapter):
         return httpx.Client(timeout=httpx.Timeout(30.0, read=180.0), headers=self.headers)
 
     def _fetch_bytes(self, ref: ReleaseRef, destination: Path) -> None:
-        layer = self.LAYERS[ref.layer]
+        layer = self.layers()[ref.layer]
         with self._client() as client:
             ids = self._ids(client, layer)
             written = 0

@@ -439,11 +439,11 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
     if source_id == BlockRelationshipAdapter.source_id:
         return BlockRelationshipAdapter(states=scope.states)
     if source_id == NfhlAdapter.source_id:
-        return NfhlAdapter()
+        return NfhlAdapter(states=scope.states)
     if source_id == CafeAdapter.source_id:
         return CafeAdapter()
     if source_id == NfipClaimsAdapter.source_id:
-        return NfipClaimsAdapter()
+        return NfipClaimsAdapter(states=scope.states)
     if source_id == KcslAdapter.source_id:
         return KcslAdapter()
     if source_id == WaterAreasAdapter.source_id:
