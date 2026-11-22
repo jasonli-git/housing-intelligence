@@ -10,7 +10,7 @@ describe("ACE public filing route", () => {
       record_id: "963", vintage: "2024", snapshot: "2024-12-31", release_id: 1,
       file_sha256: "a".repeat(64), fetched_at: "2026-10-04" };
     const data: UtilityData = { region_id: 5, energy_context: null, providers: [{
-      fuel: "electric", provider: "Atlantic City Electric", approximate_share: 1,
+      fuel: "electric", provider: "Atlantic City Electric", approximate_share: 1, placed: "place",
       territory: { ...provenance, payload: { fuel: "electric", provider: "Atlantic City Electric", eia_id: "963" } },
       electricity: { ...provenance, payload: { name: "Atlantic City Electric", year: 2024, sales: [], method: "IEEE",
         saidi_all: null, saifi_all: null, saidi_normal: null, saifi_normal: null } },

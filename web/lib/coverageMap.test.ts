@@ -5,19 +5,20 @@ import type { Outline } from "./globe";
 const box = (id: string, lon: number, lat: number): Outline => ({ id, name: id, rings: [[lon, lat, lon + 1, lat, lon + 1, lat + 1, lon, lat + 1, lon, lat]] });
 
 describe("national coverage locator", () => {
-  it("only links New Jersey to a published state profile", () => {
-    expect(STATE_DESTINATIONS).toEqual({ NJ: "/states/new-jersey" });
-    expect(STATE_DESTINATIONS.PA).toBeUndefined();
+  it("only links the covered states to a published state profile", () => {
+    expect(STATE_DESTINATIONS).toEqual({ NJ: "/states/new-jersey", PA: "/states/pennsylvania" });
+    expect(STATE_DESTINATIONS.OH).toBeUndefined();
   });
   it("handles missing map data without a bogus camera", () => {
     expect(coverageScene([])).toBeNull();
     expect(coverageScene([box("AK", -150, 60)])).toBeNull();
   });
   it("frames the lower 48 and raises availability, not a housing statistic", () => {
-    const drawing = coverageScene([box("NJ", -75, 40), box("PA", -78, 40), box("CA", -120, 35), box("HI", -156, 20)])!;
+    const drawing = coverageScene([box("NJ", -75, 40), box("PA", -78, 40), box("OH", -83, 40), box("CA", -120, 35), box("HI", -156, 20)])!;
     expect(drawing.states.map((state) => state.id)).not.toContain("HI");
     expect(drawing.states.find((state) => state.id === "NJ")?.lift).toBe(6);
-    expect(drawing.states.find((state) => state.id === "PA")?.lift).toBe(0);
+    expect(drawing.states.find((state) => state.id === "PA")?.lift).toBe(6);
+    expect(drawing.states.find((state) => state.id === "OH")?.lift).toBe(0);
     expect(drawing.locator.every(Number.isFinite)).toBe(true);
   });
   it("centers the available state on first zoom and keeps it centered on repeated presses", () => {
@@ -45,7 +46,7 @@ describe("national coverage locator", () => {
     expect(new Set(codes).size).toBe(51);
     expect(COVERAGE_REGIONS.Northeast).toContain("NJ");
     expect(COVERAGE_REGIONS.West).toContain("AK");
-    expect(Object.keys(STATE_DESTINATIONS)).toEqual(["NJ"]);
+    expect(Object.keys(STATE_DESTINATIONS)).toEqual(["NJ", "PA"]);
   });
   it("frames region geometry and handles an absent region honestly", () => {
     const outlines = [box("NJ", -75, 40), box("PA", -78, 40), box("CA", -120, 35), box("AK", -150, 60)];

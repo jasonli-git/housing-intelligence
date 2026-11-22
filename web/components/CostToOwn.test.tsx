@@ -15,7 +15,7 @@ const inputs: CostProps = {
 };
 describe("a state whose rules are not held", () => {
   it("shows its costs without New Jersey's fees, deposit cap or relief, and says so", () => {
-    const { container } = render(createElement(CostToOwn, { ...inputs, state: "PA", quiet: true }));
+    const { container } = render(createElement(CostToOwn, { ...inputs, state: "OH", quiet: true }));
     const text = container.textContent ?? "";
     expect(text).not.toContain("New Jersey");
     expect(container.querySelector(".cost-relief")).toBeNull();

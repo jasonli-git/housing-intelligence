@@ -245,7 +245,9 @@ export type EnergyContext = {
 
 export type Utilities = {
   region_id: number;
-  providers: { fuel: string; provider: string; approximate_share: number;
+  // `approximate_share` is null and `placed` "county" where a state has no territory map
+  // and EIA-861's county list places its utilities (Pennsylvania, Milestone 63).
+  providers: { fuel: string; provider: string; approximate_share: number | null; placed: "place" | "county";
     territory: InfrastructureRecord<{ fuel: string; provider: string; eia_id: string | null }>;
     electricity: InfrastructureRecord<ElectricUtility> | null;
     regulatory_reliability?: InfrastructureRecord<{ year: number; caidi_minutes: number;

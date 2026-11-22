@@ -117,7 +117,7 @@ export function PlaceStoryFocus({ initial, artifactUrl }: { initial: PlaceStoryR
         {record.topic === "water" && <GroundAndWater name={name} levels={record.levels} water={record.water} scope="water" state={record.place.state_code} />}
         {record.topic === "health" && <CommunityContext data={record.community??null} level={record.place.level} topics={["health"]}/>}
         {record.topic === "sites" && <GroundAndWater name={name} levels={record.levels} water={null} scope="sites"/>}
-        {record.topic === "utilities" && <><UtilityOutageExplorer key={record.place.region_id} data={record.utilities??null}/><Utilities data={record.utilities??null} bpuInquiry={record.utilityInquiry??undefined}/></>}
+        {record.topic === "utilities" && <><UtilityOutageExplorer key={record.place.region_id} data={record.utilities??null}/><Utilities data={record.utilities??null} bpuInquiry={record.utilityInquiry??undefined} state={record.place.state_code}/></>}
         {record.topic === "schools" && <SchoolsStory name={name} record={record}/>}
         {record.topic === "broadband" && <BroadbandStoryExplorer key={record.place.region_id} data={record.community??null} level={record.place.level}/>}
         {record.topic === "flood" && <FloodRisk state={record.place.state_code} name={name} levels={record.levels} claims={record.flood?.claims??[]} paid={record.flood?.paid??[]} unplaced={record.flood?.unplaced??[]} newestYear={record.flood?.newest??null} claimsPlace={record.flood?.place??null} estimated={record.flood?.estimated??false} unseparable={record.flood?.unseparable??false}/>}
