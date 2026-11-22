@@ -11,7 +11,7 @@ import "../stories.css";
 
 export const metadata:Metadata=pageMetadata({title:"Where students go — Housing",description:"How many K–12 students who live in a place attend public or private school, beside the district whose boundary covers it.",path:"/stories/where-students-go"});
 export default async function SchoolsStoryPage(){
-  const [initial,counties]=await Promise.all([initialPlaceStory("schools"),api.values("acs_k12_private_share","county",50)]);
+  const [initial,counties]=await Promise.all([initialPlaceStory("schools"),api.values("acs_k12_private_share","county",50,"NJ")]);
   const rows=[...(counties?.items??[])].filter(c=>Number.isFinite(c.value)&&c.value>=0&&c.value<=1).sort((a,b)=>b.value-a.value);
   const max=Math.max(.01,...rows.map(r=>r.value));
   return <StoryShell title="Where students go" focus={<PlaceStoryFocus initial={initial} artifactUrl={artifactUrl}/>}

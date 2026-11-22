@@ -673,6 +673,17 @@ export const api = {
   housingPressure: (id:number) => tryGet<HousingPressure>(`/regions/${id}/housing-pressure`),
   regions: (query: string) =>
     tryGet<{ total: number; items: Region[] }>(`/regions?${query}`),
+  /** Every region a query matches, a page of 1,000 at a time (the endpoint's cap):
+   * Pennsylvania has 2,571 towns (Milestone 63). Null if any page cannot be read. */
+  allRegions: async (query: string): Promise<{ total: number; items: Region[] } | null> => {
+    const items: Region[] = [];
+    for (let offset = 0; ; offset += 1000) {
+      const page = await tryGet<{ total: number; items: Region[] }>(`/regions?${query}&limit=1000&offset=${offset}`);
+      if (!page) return null;
+      items.push(...page.items);
+      if (items.length >= page.total || page.items.length === 0) return { total: page.total, items };
+    }
+  },
   region: (id: number) =>
     tryGet<Region & { ancestors: Region[] }>(`/regions/${id}`),
   summary: (id: number, window: string) =>

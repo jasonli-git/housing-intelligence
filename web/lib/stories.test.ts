@@ -97,10 +97,11 @@ describe("the newer stories' arithmetic", () => {
     const d = [
       { name: "Montclair", region_id: 1, share: 0.2 },
       { name: "Elsewhere in New York", region_id: null, share: 0.1 },
+      { name: "Other states", region_id: null, share: 0.08 },
       { name: "Newark", region_id: 2, share: 0.05 },
     ];
     expect(leadingDestination(d, 1)?.name).toBe("Newark");
-    expect(leadingDestination(d.slice(0, 2), 1)).toBeNull();
+    expect(leadingDestination(d.slice(0, 3), 1)).toBeNull();
   });
 });
 

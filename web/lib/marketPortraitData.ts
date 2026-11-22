@@ -5,7 +5,7 @@ import { matchedMarketPeers, type MarketCohort } from "./marketPortrait";
 export async function marketPortraitData(state: string, levels: PacketLevel[], level = "municipality"): Promise<MarketCohort[]> {
   // A place is set among places of its own kind: towns, counties or ZIP codes.
   const [towns, counties] = await Promise.all([
-    api.regions(`state=${encodeURIComponent(state)}&level=${level}&limit=1000`),
+    api.allRegions(`state=${encodeURIComponent(state)}&level=${level}`),
     api.regions(`state=${encodeURIComponent(state)}&level=county&limit=1000`),
   ]);
   if (!towns) return [];

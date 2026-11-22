@@ -23,7 +23,7 @@ export function livingStorySummary(record:PlaceStoryRecord):PlaceStorySummary|nu
   if(record.topic==="flood") {
     const f=floodLevels(record.levels),anchor=row("fema_flood_homes_share");
     if(!anchor||f.high===null||!Number.isFinite(f.high)||f.high<0||f.high>1||f.mapped===null||f.mapped<MAPPED_FLOOR)return {...missing,headline:"Flood-zone share unavailable",qualifier:"FEMA’s mapped coverage is missing or incomplete. Unmapped homes are not flood-free; check the actual address."};
-    return {available:true,headline:`${(f.high*100).toFixed(1)}% of homes in FEMA’s 1%-a-year flood zone`,source:"FEMA NFHL / NJDEP",period:`Map copy ${anchor.period_end.slice(0,4)} · 2020 homes`,
+    return {available:true,headline:`${(f.high*100).toFixed(1)}% of homes in FEMA’s 1%-a-year flood zone`,source:record.place.state_code==="NJ"?"FEMA NFHL / NJDEP":"FEMA NFHL",period:`Map copy ${anchor.period_end.slice(0,4)} · 2020 homes`,
       qualifier:"Estimated shares of homes, not land or one home’s risk. Outside a mapped zone is not safe from flooding. Claims count insured losses only; town estimates and county fallbacks are labeled separately below.",
       rows:[["1%-a-year zone",f.high],["0.2%-a-year zone",f.moderate]].flatMap(([label,value])=>typeof value==="number"&&Number.isFinite(value)&&value>=0&&value<=1?[{label:String(label),value,formatted:`${(value*100).toFixed(1)}%`}]:[])};
   }
