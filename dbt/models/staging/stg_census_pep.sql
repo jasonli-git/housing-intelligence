@@ -49,7 +49,8 @@ with counties as (
         lpad(state::varchar, 2, '0')
             || lpad(county::varchar, 3, '0')
             || lpad(cousub::varchar, 5, '0') as geoid,
-        'cousub' as release_layer,
+        -- Each state's file is its own release (`cousub_pa`, Milestone 63).
+        {{ scoped_layer('cousub', "lpad(state::varchar, 2, '0')") }} as release_layer,
         {{ release_vintage() }} as release_vintage,
         * exclude (sumlev, state, county, cousub)
     from read_parquet(

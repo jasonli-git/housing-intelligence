@@ -7,10 +7,11 @@
 {{ config(materialized='table') }}
 
 with estimates as (
-    select *, 'county' as level, 'county' as release_layer
+    -- Each state's file is its own release (`county_pa`, Milestone 63).
+    select *, 'county' as level, {{ scoped_layer('county', 'left(geoid, 2)') }} as release_layer
     from read_parquet('{{ var("parquet_dir") }}/census_saipe/current/county_*.parquet')
     union all
-    select *, 'state', 'state'
+    select *, 'state', {{ scoped_layer('state', 'left(geoid, 2)') }}
     from read_parquet('{{ var("parquet_dir") }}/census_saipe/current/state_*.parquet')
 )
 select

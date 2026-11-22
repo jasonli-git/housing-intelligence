@@ -202,7 +202,7 @@ def test_every_keyed_model_declares_its_release_layer() -> None:
     # The ACS models read their layers through `acs_layers` (Milestone 34), which names
     # each row's file as its release layer, so a model using it declares one.
     macro = (dbt / "macros" / "acs_layers.sql").read_text()
-    assert "'{{ prefix }}zcta' as release_layer" in macro
+    assert "file_scoped_layer(prefix ~ 'zcta', 'filename') }} as release_layer" in macro
 
     def declares(sql: str) -> bool:
         return "as release_layer" in sql or "acs_layers(" in sql

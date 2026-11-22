@@ -27,7 +27,9 @@ select case when json['level']='county' then 'county' else 'municipality' end as
        case when json['level']='county' then json['geo_key'] else town_geoid end as geoid,
        '{{ tenure }}' as tenure, {{ loop.index0 }} as band,
        '2018-2022' as vintage,
-       case when json['level']='county' then '050' else '060' end as release_layer,
+       -- Each state's file is its own release (`050_pa`, Milestone 63).
+       case when json['level']='county' then {{ file_scoped_layer('050', 'filename') }}
+            else {{ file_scoped_layer('060', 'filename') }} end as release_layer,
        file_sha256,
        json['T8_est{{ band }}']::double as total,
        json['T8_moe{{ band }}']::double as total_moe,

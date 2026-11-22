@@ -34,7 +34,8 @@ select
     make_date(fiscal_year::int, 9, 30) as period_end,
     {{ column }}::double as value,
     'fips' as match_method,
-    'fmr' as release_layer,
+    -- Each state's file is its own release (`fmr_pa`, Milestone 63).
+    {{ scoped_layer('fmr', 'left(fips_code, 2)') }} as release_layer,
     {{ release_vintage() }} as release_vintage
 from raw
 where {{ column }} is not null

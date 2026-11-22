@@ -17,6 +17,7 @@ import logging
 import shutil
 import subprocess
 import sys
+from collections.abc import Sequence
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Annotated
@@ -93,6 +94,7 @@ from hip.sources.base import (
     SourceError,
     local,
     redact,
+    scoped_layer,
 )
 from hip.sources.registry import (
     IMPLEMENTED,
@@ -1331,6 +1333,20 @@ def _landed_rows(
     return int(row[0]) if row else 0
 
 
+def _fact_layer(release: Release, states: Sequence[str]) -> str:
+    """The layer a fact's release is recorded under.
+
+    A source read once per state lands one file per state under the same layer, so
+    from Milestone 63 each state's file is recorded as `scoped_layer` names it: New
+    Jersey's keeps the bare layer it always had, Pennsylvania's is `county_pa`. Staging
+    names the same layer on each row, so a value cites its own state's file.
+    """
+    ref = release.ref
+    if ref.scope is not None and ref.scope in states:
+        return scoped_layer(ref.layer, ref.scope)
+    return ref.layer
+
+
 @app.command()
 def load(
     vintage: Annotated[str | None, typer.Option("--vintage")] = None,
@@ -1415,7 +1431,7 @@ def load(
             fact_provenance += [
                 ReleaseProvenance(
                     source_id=release.ref.source_id,
-                    layer=release.ref.layer,
+                    layer=_fact_layer(release, scope.states),
                     vintage=release.ref.vintage,
                     fetched_at=release.fetched_at,
                     file_sha256=release.sha256,
