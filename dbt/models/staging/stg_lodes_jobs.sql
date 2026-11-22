@@ -1,8 +1,9 @@
--- New Jersey residents' jobs, placed at home and at work (Milestone 45, ARCHITECTURE
--- #313): LODES's newest year, all jobs (JT00), from New Jersey's main file and the rows
--- of every other state's auxiliary file whose home block is in New Jersey.
+-- Each scoped state's residents' jobs, placed at home and at work (Milestone 45,
+-- ARCHITECTURE #313; every scoped state since Milestone 63): LODES's newest year, all
+-- jobs (JT00), from each state's main file and the rows of every other state's
+-- auxiliary file whose home block is in a scoped state.
 --
--- New Jersey's blocks are placed by LODES's own crosswalk (county subdivision, county,
+-- A scoped state's blocks are placed by LODES's own crosswalk (county subdivision, county,
 -- ZCTA), so no spatial join is needed; a workplace elsewhere is placed by its block's
 -- state and county digits. One row per home block and workplace block.
 {{ config(materialized='table') }}
@@ -10,7 +11,7 @@
 with main as (
     select h_geocode, w_geocode, S000::integer as jobs,
            regexp_extract(filename, '/census_lodes/(\d{4})/', 1)::integer as year
-    from read_parquet('{{ var("parquet_dir") }}/census_lodes/*/od_main.parquet',
+    from read_parquet('{{ var("parquet_dir") }}/census_lodes/*/od_main*.parquet',
                       filename = true)
 ),
 aux as (
@@ -18,13 +19,15 @@ aux as (
            regexp_extract(filename, '/census_lodes/(\d{4})/', 1)::integer as year
     from read_parquet('{{ var("parquet_dir") }}/census_lodes/*/od_aux_*.parquet',
                       filename = true)
-    where left(h_geocode, 2) = '34'
+    -- An auxiliary file's own state's residents are in its main file, never here.
+    where left(h_geocode, 2) in ({{ var("state_fips") }})
+      and left(h_geocode, 2) <> left(w_geocode, 2)
 ),
 newest as (select max(year) as year from main),
 xwalk as (
     select tabblk2020 as block, cty as county, ctycsub as town, zcta,
            regexp_extract(filename, '/census_lodes/(\d{4})/', 1)::integer as year
-    from read_parquet('{{ var("parquet_dir") }}/census_lodes/*/xwalk.parquet',
+    from read_parquet('{{ var("parquet_dir") }}/census_lodes/*/xwalk*.parquet',
                       filename = true)
 ),
 jobs as (

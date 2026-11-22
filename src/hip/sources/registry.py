@@ -451,7 +451,7 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
     if source_id == SdwisAdapter.source_id:
         return SdwisAdapter()
     if source_id == LodesAdapter.source_id:
-        return LodesAdapter()
+        return LodesAdapter(states=scope.states)
     if source_id == TransitStopsAdapter.source_id:
         return TransitStopsAdapter()
     if source_id == HmdaAdapter.source_id:

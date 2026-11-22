@@ -2158,6 +2158,21 @@ metrics:
     direction: neutral
     description: >-
       The share of residents' jobs in New Jersey but outside their home county.
+      Published for New Jersey places only (Milestone 63).
+    source_id: census_lodes
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  lodes_work_other_pa_share:
+    label: Residents' jobs elsewhere in Pennsylvania
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of a Pennsylvania place's residents' jobs in Pennsylvania but outside
+      their home county (Milestone 63). Published for Pennsylvania places only; a New
+      Jersey place's counterpart is "elsewhere in New Jersey".
     source_id: census_lodes
     record_type: calculated
     ranked: false
@@ -2182,6 +2197,21 @@ metrics:
     direction: neutral
     description: >-
       The share of residents' jobs located in Pennsylvania, Philadelphia included.
+      Published for New Jersey places only (Milestone 63).
+    source_id: census_lodes
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  lodes_work_new_jersey_share:
+    label: Residents' jobs in New Jersey
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of a Pennsylvania place's residents' jobs located in New Jersey
+      (Milestone 63). Published for Pennsylvania places only; a New Jersey place's
+      counterpart is "in Pennsylvania".
     source_id: census_lodes
     record_type: calculated
     ranked: false
