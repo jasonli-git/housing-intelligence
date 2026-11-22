@@ -366,7 +366,6 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         SchoolBoundariesAdapter,
         CrimeAdapter,
         BroadbandSummaryAdapter,
-        BroadbandLocationsAdapter,
         BpuReliabilityAdapter,
         BpuAnnualReportsAdapter,
         EiaAdapter,
@@ -377,6 +376,8 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
     ):
         if source_id == builder.source_id:
             return builder()
+    if source_id == BroadbandLocationsAdapter.source_id:
+        return BroadbandLocationsAdapter(states=scope.states)
     if source_id == EnergyBurdenAdapter.source_id:
         return EnergyBurdenAdapter(states=scope.states)
     if source_id == PlacesAdapter.source_id:

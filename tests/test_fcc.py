@@ -16,8 +16,10 @@ from hip.config import load_geography
 from hip.sources.base import SourceError
 from hip.sources.fcc import (
     COUNTIES,
+    LOCATION_MINIMUM,
     SERVED_FIELDS,
     SPEEDS,
+    STATE_FIPS,
     TECHNOLOGIES,
     BroadbandLocationsAdapter,
     BroadbandSummaryAdapter,
@@ -39,7 +41,7 @@ def summary_rows() -> list[dict[str, str]]:
             "technology": tech,
             **dict.fromkeys(SPEEDS, "0.75"),
         }
-        for level, geoids in (("State", ["34"]), ("County", sorted(COUNTIES)))
+        for level, geoids in (("State", sorted(STATE_FIPS)), ("County", sorted(COUNTIES)))
         for geoid in geoids
         for tech in sorted(TECHNOLOGIES)
     ]
@@ -72,9 +74,12 @@ def test_summary_selects_total_residential_state_and_all_counties(tmp_path: Path
     records = BroadbandSummaryAdapter.xlsx_records(
         archive(tmp_path / "fcc.zip", rows), ref
     )
-    assert len(records) == 66
+    # New Jersey and Pennsylvania (Milestone 63): two states and 88 counties, three
+    # technologies each.
+    assert len(records) == 3 * (2 + 21 + 67)
     assert {r["entity_id"] for r in records} == {
         "state:34",
+        "state:42",
         *(f"county:{c}" for c in COUNTIES),
     }
     payload = json.loads(str(records[0]["payload"]))
@@ -256,7 +261,7 @@ def fiber_row(location: str, block: str, brand: str = "Verizon") -> list[str]:
 def test_location_files_reduce_to_counts_per_block(
     tmp_path: Path, monkeypatch: Any
 ) -> None:
-    monkeypatch.setattr(BroadbandLocationsAdapter, "minimum", 1)
+    monkeypatch.setitem(LOCATION_MINIMUM, "NJ", 1)
     served, fiber = BroadbandLocationsAdapter().refs()
     assert BroadbandLocationsAdapter.filename(served) == (
         "bdc_34_fixed_broadband_served_unserved_D25_13oct2026.zip"
@@ -295,7 +300,7 @@ def test_location_files_reduce_to_counts_per_block(
 def test_location_files_fail_closed(
     tmp_path: Path, monkeypatch: Any, layer: str, rows: list[list[str]]
 ) -> None:
-    monkeypatch.setattr(BroadbandLocationsAdapter, "minimum", 1)
+    monkeypatch.setitem(LOCATION_MINIMUM, "NJ", 1)
     ref = next(r for r in BroadbandLocationsAdapter().refs() if r.layer == layer)
     with pytest.raises(SourceError):
         BroadbandLocationsAdapter.xlsx_records(
@@ -370,3 +375,12 @@ def test_api_gives_each_place_its_own_location_counts(
     )
     place = community(1, session).broadband_place
     assert place is not None and place.entity_id == f"{level}:{geoid}"
+
+
+def test_each_state_hands_in_its_own_location_files() -> None:
+    """Milestone 63: Pennsylvania's pair of files, beside New Jersey's."""
+    refs = BroadbandLocationsAdapter(states=["NJ", "PA"]).refs()
+    assert [r.layer for r in refs] == ["served", "fiber", "served_pa", "fiber_pa"]
+    assert BroadbandLocationsAdapter.filename(refs[2]) == (
+        "bdc_42_fixed_broadband_served_unserved_D25_13oct2026.zip"
+    )
