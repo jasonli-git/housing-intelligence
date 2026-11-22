@@ -259,10 +259,10 @@ def test_skipped_entries_are_explanations_not_data(published: Path) -> None:
     # mean the lists stopped loading.
     no_destinations = [p for p in manifest["skipped_404"] if "/work-destinations" in p]
     assert len(no_destinations) <= 850, f"lists missing: {no_destinations[:5]}"
-    # Milestone 35: only a region with no county — the state, the nation — has no income
-    # limits; every county, town and ZIP reads one.
+    # Milestone 35: only a region with no county — a state, the nation — has no income
+    # limits; every county, town and ZIP reads one. Two states since Milestone 63.
     no_limits = [path for path in manifest["skipped_404"] if "/income-limits" in path]
-    assert len(no_limits) <= 2, f"income limits missing: {no_limits[:5]}"
+    assert len(no_limits) <= 3, f"income limits missing: {no_limits[:5]}"
 
 
 # --- Region identity. Pure: a manifest on disk, no warehouse. ----------------------
