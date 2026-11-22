@@ -393,3 +393,37 @@ def test_a_survey_ranks_one_edition_and_no_figure_mostly_margin(
         "WHERE k.metric_id = 'zhvi_sfr' AND k.basis = 'value' AND r.level = 'county'",
     )
     assert zillow[0]["n"] == 3
+
+
+def test_places_rank_within_their_own_state() -> None:
+    """Milestone 63: a second state's places never change a New Jersey rank.
+
+    One of the seeded counties is moved to Pennsylvania: New Jersey's counties rank
+    among themselves alone, and a state with one county ranks it against no one.
+    """
+    with scratch_warehouse(get_engine()) as engine:
+        seed_analytics(engine)
+        with engine.begin() as conn:
+            moved = conn.execute(
+                text(
+                    "UPDATE regions SET state_code = 'PA' WHERE region_id = ("
+                    "SELECT max(region_id) FROM regions WHERE level = 'county') "
+                    "RETURNING region_id"
+                )
+            ).scalar_one()
+            counties = conn.execute(
+                text("SELECT count(*) FROM regions WHERE level = 'county'")
+            ).scalar_one()
+        rebuild(engine)
+        rows = _rows(
+            engine,
+            """
+            SELECT k.region_id, r.state_code, k.of
+            FROM region_rankings k JOIN regions r USING (region_id)
+            WHERE r.level = 'county' AND k.metric_id = 'zhvi_sfr' AND k.basis = 'value'
+            """,
+        )
+    assert rows, "the seeded counties are ranked"
+    assert {r["state_code"] for r in rows} == {"NJ"}
+    assert {r["of"] for r in rows} == {counties - 1}
+    assert moved not in {r["region_id"] for r in rows}
