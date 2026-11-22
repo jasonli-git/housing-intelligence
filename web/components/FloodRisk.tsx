@@ -27,8 +27,12 @@ export function FloodRisk({
   claimsPlace,
   estimated = false,
   unseparable = false,
+  state = "NJ",
 }: {
   name: string;
+  /** The place's state (Milestone 63): New Jersey's disclosure law and lookup, and its
+   *  tidal line, are named only for a New Jersey place. */
+  state?: string;
   levels: PacketLevel[];
   claims: Observation[];
   paid: Observation[];
@@ -104,7 +108,7 @@ export function FloodRisk({
 
       <p className="sales-note reader-takeaway">
         Outside a flood zone does not mean flood-free. Check the address on{" "}
-        <a href={FLOOD_DISCLOSURE_URL} target="_blank" rel="noreferrer">New Jersey’s flood lookup</a>.
+        {state === "NJ" ? <a href={FLOOD_DISCLOSURE_URL} target="_blank" rel="noreferrer">New Jersey’s flood lookup</a> : <a href={FLOOD_MAP.url} target="_blank" rel="noreferrer">FEMA’s map</a>}.
       </p>
       <ReaderDetails title="Flood-map limits and sources">
       {history && <p className="sales-note">
@@ -122,19 +126,17 @@ export function FloodRisk({
         and the map shows where FEMA has studied, not every street that floods. A share is
         of homes counted in 2020, each block’s homes taken as spread evenly over it. For one
         address, use{" "}
-        <a href={FLOOD_DISCLOSURE_URL} target="_blank" rel="noreferrer">
+        {state === "NJ" && <><a href={FLOOD_DISCLOSURE_URL} target="_blank" rel="noreferrer">
           New Jersey’s flood disclosure lookup
         </a>{" "}
-        or{" "}
+        or{" "}</>}
         <a href={FLOOD_MAP.url} target="_blank" rel="noreferrer">
           FEMA’s map
         </a>
-        . Since 2024 a seller must say on the disclosure statement, and a landlord must tell a
-        tenant, whether a home is in FEMA’s 1% or 0.2% zone and any flooding they know of.
+        .{state === "NJ" && " Since 2024 a seller must say on the disclosure statement, and a landlord must tell a tenant, whether a home is in FEMA’s 1% or 0.2% zone and any flooding they know of."}
       </p>
       <p className="sales-note">
-        Flood zones: FEMA’s National Flood Hazard Layer. Tidal area: New Jersey Department of
-        Environmental Protection. Claims: FEMA’s OpenFEMA, not endorsed by FEMA.
+        Flood zones: FEMA’s National Flood Hazard Layer.{state === "NJ" && " Tidal area: New Jersey Department of Environmental Protection."} Claims: FEMA’s OpenFEMA, not endorsed by FEMA.
       </p>
       </ReaderDetails>
     </section>
