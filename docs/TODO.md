@@ -29,40 +29,12 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — Milestone 63, Pennsylvania (started 2026-11-21)
+## Now — between milestones (2026-11-22)
 
-The second state, chosen by the owner on 2026-11-21: Pennsylvania at county, town and ZIP
-level, ranked within its own state, on every source that covers it after review.
-Branch `milestone/m63-pennsylvania`.
-
-- [x] 1. Measure the cost of Pennsylvania's files (2026-11-21). The 2026-11-20 refresh
-      rewrote 10,609 of about 19,500 R2 files; with Pennsylvania about 50,000 a week,
-      some 430,000 of R2's 1M free writes a month. The owner decided not to bundle now;
-      revisit at a third state.
-- [x] 2. Load Pennsylvania on the 20 sources that already cover it; check counts against
-      the Census (2026-11-22): 67 of 67 counties, 2,571 county subdivisions as TIGER draws
-      them, 13,059,432 residents in PEP's 2025 estimate. New Jersey's figures checked
-      against `main`: 11,393 across 62 regions identical, after #528 restored Union
-      township's Zillow figures.
-- [x] 3. Review the 25 federal sources declared New Jersey's (#406) and open each that
-      fits to Pennsylvania; name any that do not. Owner, 2026-11-21: SDWIS and UCMR 5
-      are placed by EPA's national water service-area map (a new source, terms read
-      first) and EIA-861 by its own county table; the ten story sources (noise, night
-      lights, roads, impervious cover, footprints, heat, Overture, tree canopy,
-      elevation, Wikidata) stay New Jersey's, a follow-up.
-      Done (2026-11-21): HMDA, CDC PLACES (no Pennsylvania estimates in its 2025
-      release), FEMA's flood map and claims, LODES, DOE LEAD, HUD assisted and LIHTC,
-      transit stops, FCC's summary and location files (Pennsylvania's location files
-      are handed in by hand), SDWIS with EPA's water service areas (a new source),
-      UCMR 5, EIA-861 by county. NCES stays New Jersey's: it explains NJDOE's results.
-- [x] 4. Rankings within each state; similar places too.
-- [x] 5. Pennsylvania's cost rules in `STATE_RULES`.
-- [x] 6. Site: a state page template, two states on the home map, a state choice on the
-      housing map, pinned `/pa/` addresses; stories stay New Jersey's.
-- [ ] 7. Documentation pass, checks, PR.
-- [ ] 8. **At the merge, publish from `hip_m63`** (owner's approval): Pennsylvania's
-      region ids and its 4,471 pinned addresses exist only there (ARCHITECTURE #533). The
-      first `hip land` on `main` afterwards re-reads every file once (#530).
+Milestone 63, Pennsylvania, shipped and deployed on 2026-11-22 (PR #324); its record is
+in CHANGELOG and ARCHITECTURE #524–#534. `main` now publishes from the database that
+holds Pennsylvania's region ids (#533), and the first `hip land` afterwards re-reads every
+file once (#530). Its follow-ups are under Open.
 
 ## Open
 
