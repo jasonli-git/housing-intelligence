@@ -571,7 +571,11 @@ def _changes(conn: object, unranked: list[str], survey: list[str]) -> int:
 
 
 def _rankings(conn: object) -> int:
-    """Rank regions within their own level for each metric and window.
+    """Rank regions within their own level and state for each metric and window.
+
+    Within the state (Milestone 63, owner 2026-11-21): a Pennsylvania town ranks among
+    Pennsylvania's towns, so a second state changes none of New Jersey's ranks. A state
+    is the only one of its level in its state, so states are not ranked.
 
     Ranked on `pct_change`, not the raw value: "fastest rising" is the question a
     ranking answers, and comparing a county's home value to a ZIP's would be
@@ -588,14 +592,15 @@ def _rankings(conn: object) -> int:
                 WITH ranked AS (
                     SELECT c.metric_id, r.level::text AS level, c."window", c.region_id,
                            c.pct_change AS value, c.pct_change_margin AS margin,
+                           r.state_code,
                            rank() OVER (
-                               PARTITION BY c.metric_id, r.level, c."window"
+                               PARTITION BY c.metric_id, r.level, r.state_code, c."window"
                                ORDER BY CASE WHEN m.direction = 'lower_is_better'
                                              THEN c.pct_change
                                              ELSE -c.pct_change END
                            ) AS rank,
                            count(*) OVER (
-                               PARTITION BY c.metric_id, r.level, c."window"
+                               PARTITION BY c.metric_id, r.level, r.state_code, c."window"
                            ) AS of
                     FROM fact_metric_change c
                     JOIN regions r ON r.region_id = c.region_id
@@ -609,7 +614,9 @@ def _rankings(conn: object) -> int:
                        -- `_rank_ranges` tests differences with and `/rankings` shows.
                        margin,
                        -- How many share this rank (migration 0037).
-                       count(*) OVER (PARTITION BY metric_id, level, "window", rank)
+                       count(*) OVER (
+                           PARTITION BY metric_id, level, state_code, "window", rank
+                       )
                 FROM ranked
                 -- A ranking over one region is not a ranking.
                 WHERE of > 1
@@ -626,7 +633,7 @@ UNCERTAIN_SHARE = 0.5
 
 
 def _value_rankings(conn: object, unranked: list[str], survey: list[str]) -> int:
-    """Rank regions by their most recent observed value, within their own level.
+    """Rank regions by their most recent observed value, within their level and state.
 
     The question "which municipality has the highest assessed value" is different from
     "which rose fastest", and until Milestone 7 the warehouse could only answer the
@@ -659,9 +666,9 @@ def _value_rankings(conn: object, unranked: list[str], survey: list[str]) -> int
                     ORDER BY f.region_id, f.metric_id, f.period_end DESC
                 ),
                 leveled AS (
-                    SELECT l.*, r.level,
+                    SELECT l.*, r.level, r.state_code,
                            max(l.period_end) OVER (
-                               PARTITION BY l.metric_id, r.level
+                               PARTITION BY l.metric_id, r.level, r.state_code
                            ) AS newest
                     FROM latest l
                     JOIN regions r ON r.region_id = l.region_id
@@ -675,9 +682,9 @@ def _value_rankings(conn: object, unranked: list[str], survey: list[str]) -> int
                 ),
                 ranked AS (
                     SELECT l.metric_id, l.level::text AS level, l.region_id, l.value,
-                           l.margin_of_error AS margin,
+                           l.margin_of_error AS margin, l.state_code,
                            rank() OVER (
-                               PARTITION BY l.metric_id, l.level
+                               PARTITION BY l.metric_id, l.level, l.state_code
                                -- Same convention as change rankings: rank 1 is the
                                -- better end wherever the metric defines one. A
                                -- `neutral` metric ranks largest first, which is
@@ -686,7 +693,7 @@ def _value_rankings(conn: object, unranked: list[str], survey: list[str]) -> int
                                              THEN l.value ELSE -l.value END
                            ) AS rank,
                            count(*) OVER (
-                               PARTITION BY l.metric_id, l.level
+                               PARTITION BY l.metric_id, l.level, l.state_code
                            ) AS of
                     FROM kept l
                     JOIN metrics m ON m.metric_id = l.metric_id
@@ -697,7 +704,7 @@ def _value_rankings(conn: object, unranked: list[str], survey: list[str]) -> int
                             ELSE 100.0 END,
                        -- From the row the value came from (migration 0018).
                        margin,
-                       count(*) OVER (PARTITION BY metric_id, level, rank)
+                       count(*) OVER (PARTITION BY metric_id, level, state_code, rank)
                 FROM ranked
                 WHERE of > 1
                 """
@@ -736,21 +743,25 @@ def _rank_ranges(conn: Connection) -> int:
     """
     rows = conn.execute(
         text("""
-        SELECT rr.metric_id, rr.level, rr.basis, rr."window", rr.region_id,
+        SELECT rr.metric_id, rr.level, rr.basis, rr."window",
+               coalesce(r.state_code, '') AS state_code,
+               rr.region_id,
                CASE WHEN m.direction='lower_is_better'
                     THEN rr.value ELSE -rr.value END AS k,
                rr.margin_of_error
         FROM region_rankings rr JOIN metrics m USING (metric_id)
-        ORDER BY rr.metric_id,rr.level,rr.basis,rr."window"
+        LEFT JOIN regions r ON r.region_id = rr.region_id
+        ORDER BY rr.metric_id,rr.level,rr.basis,rr."window",5
     """)
     )
     updates = []
-    for key, group in groupby(rows, key=lambda row: tuple(row[:4])):
+    # A cohort is one state's places (Milestone 63): the key's fifth column is the state.
+    for key, group in groupby(rows, key=lambda row: tuple(row[:5])):
         cohort = list(group)
         counts = significance_counts([(r.k, r.margin_of_error) for r in cohort])
         if counts is not None:
             for row, (better, worse) in zip(cohort, counts, strict=True):
-                updates.append((*key, row.region_id, better, worse))
+                updates.append((*key[:4], row.region_id, better, worse))
     if not updates:
         return 0
     conn.execute(
