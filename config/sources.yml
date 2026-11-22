@@ -1260,6 +1260,35 @@ sources:
       Where each community water system delivers; a home in none is most likely on a
       private well.
 
+  epa_water_areas:
+    name: Public Water System Service Area Boundaries
+    publisher: U.S. Environmental Protection Agency
+    license: U.S. Government work
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work; EPA disclaims the spatial accuracy of the boundaries
+        and asks that the modelled ones not be treated as exact.
+    terms_url: https://www.epa.gov/ground-water-and-drinking-water/public-water-system-service-areas
+    terms_checked: 2026-11-21
+    terms_note: >-
+      Version 3 (March 2026). EPA's limitations: "The modeled water system areas are
+      estimates and should not be treated as exact reflections of true service
+      areas." Read for Pennsylvania (1,734 residential areas on 2026-11-21); New
+      Jersey keeps NJDEP's own map. Milestone 63.
+    url: https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Water_System_Boundaries/FeatureServer/0
+    homepage: https://www.epa.gov/ground-water-and-drinking-water/public-water-system-service-areas
+    cadence: annual
+    adapter: hip.sources.epa_water:EpaWaterAreasAdapter
+    fallback: >-
+      A state's own service-area map, where it publishes one, as New Jersey's does.
+    notes: >-
+      Where each community water system delivers, for a state without a map of its
+      own; partly EPA's model, so an estimate. A home in none is most likely on a
+      private well.
+
   epa_sdwis:
     name: Safe Drinking Water Information System — violations
     publisher: U.S. Environmental Protection Agency

@@ -135,6 +135,10 @@ def dbt_vars(
         # by the year the platform read the copy they came from.
         # The noise map and night lights are downloaded by hand; each one's model waits
         # for its file, so the pipeline runs before they are handed in.
+        # EPA's water areas, read only for a state without a map of its own (#63).
+        "epa_water_areas_landed": any(
+            (settings.parquet_dir / "epa_water_areas").glob("*/areas_*.parquet")
+        ),
         "story_noise_landed": any(
             (settings.parquet_dir / "bts_noise").glob("*/noise.parquet")
         ),
@@ -177,6 +181,7 @@ READ_DATED = (
     "njdep_cafe",
     "njdep_kcsl",
     "njdep_water_areas",
+    "epa_water_areas",
     "epa_sdwis",
     # The visual stories' extracts republished in place (2026-10-22).
     "osm_nj",

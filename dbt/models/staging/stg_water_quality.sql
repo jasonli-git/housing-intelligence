@@ -15,13 +15,14 @@ with window_years as (
 ),
 violating as (
     select distinct v.pwsid
-    from read_parquet('{{ var("parquet_dir") }}/epa_sdwis/current/violations.parquet') v
+    from read_parquet('{{ var("parquet_dir") }}/epa_sdwis/current/violations*.parquet') v
     cross join window_years w
     where v.pws_type_code = 'CWS'
       and year(v.compl_per_begin_date::date) between w.first_year and w.last_year
 ),
 blocks as (
     select h.block_geoid, h.county_geoid, h.municipality_geoid, h.zcta_geoid, h.homes,
+           left(h.county_geoid, 2) as state,
            least(1.0, coalesce(sum(w.share), 0)) as public,
            least(1.0, coalesce(sum(w.share) filter (where x.pwsid is not null), 0))
                as violation
@@ -31,20 +32,23 @@ blocks as (
     group by all
 ),
 places as (
-    select municipality_geoid as geoid, 'municipality' as level, homes, public, violation
+    select municipality_geoid as geoid, 'municipality' as level, state, homes, public,
+           violation
     from blocks
     union all
-    select county_geoid, 'county', homes, public, violation from blocks
+    select county_geoid, 'county', state, homes, public, violation from blocks
     union all
-    select zcta_geoid, 'zip', homes, public, violation from blocks
+    select zcta_geoid, 'zip', state, homes, public, violation from blocks
     union all
-    select '34', 'state', homes, public, violation from blocks
+    select state, 'state', state, homes, public, violation from blocks
 ),
 shares as (
     select geoid, level,
+           -- A ZIP code across a state line is cited to the larger side's map.
+           arg_max(state, homes) as state,
            sum(homes * public) / sum(homes) as public,
            sum(homes * violation) / sum(homes) as violation
-    from places group by all
+    from places group by geoid, level
 )
 select source_id, metric_id, geoid, level,
        make_date(y, 1, 1) as period_start, make_date(y, 12, 31) as period_end,
@@ -52,8 +56,13 @@ select source_id, metric_id, geoid, level,
        'current' as release_vintage
 from shares
 cross join lateral (
-    values ('njdep_water_areas', 'water_homes_share_public', public, 'areas',
-            {{ var('read_years')['njdep_water_areas'] }}),
-           ('epa_sdwis', 'water_homes_share_violation', violation, 'violations',
+    -- New Jersey's areas are NJDEP's, every other state's EPA's (Milestone 63).
+    values (case when state = '34' then 'njdep_water_areas' else 'epa_water_areas' end,
+            'water_homes_share_public', public,
+            {{ scoped_layer('areas', 'state') }},
+            case when state = '34' then {{ var('read_years')['njdep_water_areas'] }}
+                 else {{ var('read_years')['epa_water_areas'] or 'null' }} end),
+           ('epa_sdwis', 'water_homes_share_violation', violation,
+            {{ scoped_layer('violations', 'state') }},
             {{ var('read_years')['epa_sdwis'] }})
 ) as v(source_id, metric_id, value, layer, y)

@@ -1,5 +1,6 @@
-"""EPA's Safe Drinking Water Information System: health-based violations by New Jersey
-water systems (Milestone 40).
+"""EPA's Safe Drinking Water Information System: health-based violations by each scoped
+state's water systems (Milestone 40; every state since Milestone 63, by its primacy
+agency: Pennsylvania's 11,933 on 2026-11-21, its own layer, `violations_pa`).
 
 States report every public water system's violations to EPA, which publishes them
 through Envirofacts. A *health-based* violation is a contaminant over its legal limit
@@ -24,16 +25,30 @@ import io
 import json
 import struct
 import zlib
+from collections.abc import Sequence
 from datetime import timedelta
 from pathlib import Path
 from typing import ClassVar
 
 import httpx
 
-from hip.sources.base import ReleaseRef, SourceAdapter, SourceError
+from hip.sources.base import (
+    ReleaseRef,
+    SourceAdapter,
+    SourceError,
+    layer_state,
+    scoped_layer,
+)
 
 ENVIROFACTS = "https://data.epa.gov/efservice"
-VIOLATIONS_URL = f"{ENVIROFACTS}/VIOLATION/PRIMACY_AGENCY_CODE/NJ/IS_HEALTH_BASED_IND/Y"
+
+
+def violations_url(state: str) -> str:
+    """A state's health-based violations, by the agency that reports them."""
+    return f"{ENVIROFACTS}/VIOLATION/PRIMACY_AGENCY_CODE/{state}/IS_HEALTH_BASED_IND/Y"
+
+
+VIOLATIONS_URL = violations_url("NJ")
 ECHO_ZIP = "https://echo.epa.gov/files/echodownloads/SDWA_latest_downloads.zip"
 CODES_MEMBER = "SDWA_REF_CODE_VALUES.csv"
 # The code types a violation is named by.
@@ -98,16 +113,25 @@ class SdwisAdapter(SourceAdapter):
     """Two layers: `violations` from Envirofacts, `codes` from ECHO's reference file."""
 
     source_id: ClassVar[str] = "epa_sdwis"
-    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "current"
     landing_format: ClassVar[str] = "ndjson"
     # EPA refreshes SDWIS quarterly; a month is well inside that.
     revalidate_after: ClassVar[timedelta] = timedelta(days=30)
 
+    def __init__(self, states: Sequence[str] = ("NJ",)) -> None:
+        self.scoped = [s.upper() for s in states]
+
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         vintage = vintage or self.default_vintage
         return [
-            ReleaseRef(self.source_id, "violations", vintage, f"{VIOLATIONS_URL}/JSON"),
+            ReleaseRef(
+                self.source_id,
+                scoped_layer("violations", state),
+                vintage,
+                f"{violations_url(state)}/JSON",
+            )
+            for state in self.scoped
+        ] + [
             ReleaseRef(self.source_id, "codes", vintage, f"{ECHO_ZIP}#{CODES_MEMBER}"),
         ]
 
@@ -125,26 +149,31 @@ class SdwisAdapter(SourceAdapter):
     def _fetch_bytes(self, ref: ReleaseRef, destination: Path) -> None:
         with self._client() as client:
             rows = (
-                self._violations(client)
-                if ref.layer == "violations"
-                else self._codes(client)
+                self._codes(client)
+                if ref.layer == "codes"
+                else self._violations(client, layer_state(ref.layer, "violations"))
             )
         with destination.open("w", encoding="utf-8") as out:
             for row in rows:
                 out.write(json.dumps(row) + "\n")
         self._last_validators = {}
 
-    def _violations(self, client: httpx.Client) -> list[dict[str, object]]:
-        count = client.get(f"{VIOLATIONS_URL}/COUNT/JSON")
+    def _violations(
+        self, client: httpx.Client, state: str = "NJ"
+    ) -> list[dict[str, object]]:
+        url = violations_url(state)
+        count = client.get(f"{url}/COUNT/JSON")
         count.raise_for_status()
         total = int(count.json()[0]["TOTALQUERYRESULTS"])
         rows: list[dict[str, object]] = []
         for start in range(0, total, _PAGE):
-            page = client.get(f"{VIOLATIONS_URL}/rows/{start}:{start + _PAGE - 1}/JSON")
+            page = client.get(f"{url}/rows/{start}:{start + _PAGE - 1}/JSON")
             page.raise_for_status()
             rows += [{k: r.get(k) for k in VIOLATION_FIELDS} for r in page.json()]
         if len(rows) != total or total < 1000:
-            raise SourceError(f"epa_sdwis/violations: read {len(rows)} of {total}")
+            raise SourceError(
+                f"epa_sdwis/violations {state}: read {len(rows)} of {total}"
+            )
         return rows
 
     def _codes(self, client: httpx.Client) -> list[dict[str, object]]:
