@@ -365,7 +365,6 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         SchoolPerformanceAdapter,
         SchoolBoundariesAdapter,
         CrimeAdapter,
-        PlacesAdapter,
         BroadbandSummaryAdapter,
         BroadbandLocationsAdapter,
         BpuReliabilityAdapter,
@@ -379,6 +378,8 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
     ):
         if source_id == builder.source_id:
             return builder()
+    if source_id == PlacesAdapter.source_id:
+        return PlacesAdapter(states=scope.states)
     if source_id == TigerAdapter.source_id:
         return TigerAdapter(states=scope.states)
     if source_id == DistrictDirectoryAdapter.source_id:
