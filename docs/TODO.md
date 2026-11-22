@@ -41,16 +41,19 @@ Branch `milestone/m63-pennsylvania`.
       revisit at a third state.
 - [ ] 2. Load Pennsylvania on the 20 sources that already cover it; check counts against
       the Census.
-- [ ] 3. Review the 25 federal sources declared New Jersey's (#406) and open each that
+- [x] 3. Review the 25 federal sources declared New Jersey's (#406) and open each that
       fits to Pennsylvania; name any that do not. Owner, 2026-11-21: SDWIS and UCMR 5
       are placed by EPA's national water service-area map (a new source, terms read
       first) and EIA-861 by its own county table; the ten story sources (noise, night
       lights, roads, impervious cover, footprints, heat, Overture, tree canopy,
       elevation, Wikidata) stay New Jersey's, a follow-up.
-      Done: HMDA, CDC PLACES (no Pennsylvania estimates in its 2025 release), FEMA's
-      flood map and claims, LODES.
-- [ ] 4. Rankings within each state.
-- [ ] 5. Pennsylvania's cost rules in `STATE_RULES`.
+      Done (2026-11-21): HMDA, CDC PLACES (no Pennsylvania estimates in its 2025
+      release), FEMA's flood map and claims, LODES, DOE LEAD, HUD assisted and LIHTC,
+      transit stops, FCC's summary and location files (Pennsylvania's location files
+      are handed in by hand), SDWIS with EPA's water service areas (a new source),
+      UCMR 5, EIA-861 by county. NCES stays New Jersey's: it explains NJDOE's results.
+- [x] 4. Rankings within each state; similar places too.
+- [x] 5. Pennsylvania's cost rules in `STATE_RULES`.
 - [ ] 6. Site: a state page template, two states on the home map, a state choice on the
       housing map, pinned `/pa/` addresses; stories stay New Jersey's.
 - [ ] 7. Documentation pass, checks, PR.
