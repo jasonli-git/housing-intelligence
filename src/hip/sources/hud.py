@@ -574,10 +574,13 @@ class HudChasBulkAdapter(SourceAdapter):
             raise SourceError(
                 f"CHAS {year}: Table 8 is not reviewed against that release's dictionary"
             )
+        # One release per state, as every other scoped source: a scope naming several
+        # states lands as one file, and widening the scope (NJ to NJ,PA in Milestone 63)
+        # left the narrower file beside it and doubled New Jersey's rows. Each state
+        # reads the same national file the owner handed in.
         return [
-            ReleaseRef(
-                self.source_id, level, year, CHAS_PAGE, scope=",".join(self.states)
-            )
+            ReleaseRef(self.source_id, level, year, CHAS_PAGE, scope=state)
+            for state in self.states
             for level in CHAS_BULK_LEVELS
         ]
 
@@ -622,12 +625,16 @@ class HudChasBulkAdapter(SourceAdapter):
                     cls._check_sums(row, ref)
                     # `0500000US34021` → `34021`; `0600000US3402100100` → state and MCD
                     # code, `3400100`, the key the API's municipal releases carry.
+                    # The state-and-MCD key is unique only where MCD codes are unique
+                    # statewide, as New Jersey's are; Pennsylvania reuses them across
+                    # counties, so `geoid` keeps the county too (TIGER's cousub GEOID).
                     geo = row["geoid"].split("US", 1)[1]
                     geo_key = geo if level == "county" else geo[:2] + geo[5:]
                     records.append(
                         {
                             "level": level,
                             "geo_key": geo_key,
+                            "geoid": geo,
                             "name": row["name"],
                             **{c: row[c] for c in counts + margins},
                         }
