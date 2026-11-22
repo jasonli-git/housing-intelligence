@@ -29,16 +29,21 @@ with areas as (
       on st.postal = left(a.PWSID, 2)
     where geometry is not null
     {%- endif %}
+),
+-- The spatial join is fenced off and the state matched after it, as in `stg_flood_blocks`.
+pairs as materialized (
+    select b.block_geoid, a.state, a.pwsid, a.system_name, a.area_source, a.area_layer,
+           ST_Area(ST_Intersection(b.geom, a.geom)) / ST_Area(b.geom) as share
+    from {{ ref('stg_block_homes') }} b
+    join areas a on ST_Intersects(b.geom, a.geom)
 )
-select b.block_geoid,
-       a.pwsid,
-       any_value(a.system_name) as system_name,
-       any_value(a.area_source) as area_source,
-       any_value(a.area_layer) as area_layer,
-       least(1.0, sum(ST_Area(ST_Intersection(b.geom, a.geom)) / ST_Area(b.geom))) as share
-from {{ ref('stg_block_homes') }} b
--- The state after the spatial join, as in `stg_flood_blocks`.
-join areas a on ST_Intersects(b.geom, a.geom)
-where a.state = left(b.block_geoid, 2)
+select block_geoid,
+       pwsid,
+       any_value(system_name) as system_name,
+       any_value(area_source) as area_source,
+       any_value(area_layer) as area_layer,
+       least(1.0, sum(share)) as share
+from pairs
+where state = left(block_geoid, 2)
 group by 1, 2
 having share > 0
