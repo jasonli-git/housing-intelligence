@@ -198,6 +198,8 @@ class UnresolvedGeography(BaseModel):
     layer: str
     region_name: str
     county_name: str | None = None
+    # Since Milestone 63: Somerset in Somerset County is a name in two states.
+    state_code: str | None = None
     observations: int
     reason: str
 
@@ -317,7 +319,8 @@ def unresolved(session: SessionDep) -> list[UnresolvedGeography]:
     rows = session.execute(
         text(
             """
-            SELECT source_id, layer, region_name, county_name, observations, reason
+            SELECT source_id, layer, region_name, county_name, state_code,
+                   observations, reason
             FROM source_match_reject
             ORDER BY observations DESC, region_name
             """

@@ -324,7 +324,7 @@ def _build_rejects(con: duckdb.DuckDBPyConnection) -> None:
                              AND sa.county_key = g.county_key) AS source_ambiguous
             FROM geo g
         )
-        SELECT source_id, layer, region_name, county_name, observations,
+        SELECT source_id, layer, region_name, county_name, state_code, observations,
                CASE
                  WHEN layer = 'county' THEN 'county fips not in scope'
                  WHEN layer = 'zip'    THEN 'zip code has no ZCTA in scope'

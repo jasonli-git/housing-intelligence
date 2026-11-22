@@ -82,6 +82,7 @@ def con() -> duckdb.DuckDBPyConnection:
     )
     pa = "'zillow_zhvi','city','East Windsor',NULL,'Mercer County','PA'"
     values += f",\n({pa},{jan},210000)"
+    values += f",\n('zillow_zhvi','city','Iselin',NULL,'Middlesex County','PA',{jan},1)"
     c.execute(f"INSERT INTO main_staging.stg_zillow_zhvi VALUES {values}")
     build_observations(c, staged_models=MODELS, staging_schema=STAGING)
     return c
@@ -265,3 +266,12 @@ def test_a_town_matches_within_its_own_state(con: duckdb.DuckDBPyConnection) -> 
         ).fetchall()
     )
     assert rows == {"3402119780": 450000, "4208519780": 210000}
+
+
+def test_a_reject_names_its_state(con: duckdb.DuckDBPyConnection) -> None:
+    """Milestone 63: one unmatched name in a same-named county of each state is two
+    rejects, which the warehouse's unique key now tells apart by state."""
+    rows = con.execute(
+        f"SELECT state_code FROM {REJECT_TABLE} WHERE region_name = 'Iselin' ORDER BY 1"
+    ).fetchall()
+    assert rows == [("NJ",), ("PA",)]
