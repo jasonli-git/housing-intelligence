@@ -69,6 +69,18 @@ def test_refs_and_filenames_follow_hud_names() -> None:
     ]
 
 
+def test_each_state_is_its_own_release() -> None:
+    # A scope naming several states landed as one file, and widening it left the
+    # narrower file beside it, doubling New Jersey's rows (Milestone 63).
+    refs = HudChasBulkAdapter(states=["NJ", "PA"]).refs()
+    assert [(r.layer, r.scope) for r in refs] == [
+        ("050", "NJ"),
+        ("060", "NJ"),
+        ("050", "PA"),
+        ("060", "PA"),
+    ]
+
+
 def test_an_unreviewed_release_is_refused() -> None:
     """A release whose dictionary nobody read could have renumbered Table 8."""
     with pytest.raises(SourceError, match="not reviewed"):
@@ -89,6 +101,8 @@ def test_a_town_is_keyed_as_the_api_keys_it(tmp_path: Path) -> None:
     path = _zip(tmp_path, [_row("0600000US3402100100", sumlevel="060")])
     [record] = HudChasBulkAdapter.xlsx_records(path, _ref("060"))
     assert (record["level"], record["geo_key"]) == ("mcd", "3400100")
+    # The full GEOID too: Pennsylvania repeats MCD codes across counties.
+    assert record["geoid"] == "3402100100"
 
 
 def test_rounding_within_slack_is_accepted(tmp_path: Path) -> None:

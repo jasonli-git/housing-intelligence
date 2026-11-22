@@ -208,20 +208,27 @@ def _regions_with_data(engine_conn) -> list[int]:  # type: ignore[no-untyped-def
     ]
 
 
-def _ranking_keys(engine_conn) -> list[tuple[str, str, str, str]]:  # type: ignore[no-untyped-def]
-    """Every (metric, level, window, basis) that actually has rows.
+# The API's ceiling: it holds a whole state's largest level, Pennsylvania's 2,570 towns.
+RANKING_LIMIT = 5000
+
+
+def _ranking_keys(engine_conn) -> list[tuple[str, str, str, str, str]]:  # type: ignore[no-untyped-def]
+    """Every (metric, level, window, basis, state) that actually has rows.
+
+    The state is the cohort's (Milestone 63): places rank within their own state.
 
     Enumerated from the data rather than from the product of the vocabularies: 23 metrics
     × 6 levels × 6 windows × 2 bases is 1,656 combinations, of which 141 exist. Rendering
     the product would mean 1,515 files that are all the same empty list.
     """
     return [
-        (row.metric_id, row.level, row.window, row.basis)
+        (row.metric_id, row.level, row.window, row.basis, row.state_code)
         for row in engine_conn.execute(
             text("""
-                SELECT DISTINCT metric_id, level::text AS level, "window", basis
-                FROM region_rankings
-                ORDER BY metric_id, level, "window", basis
+                SELECT DISTINCT k.metric_id, k.level::text AS level, k."window",
+                       k.basis, r.state_code
+                FROM region_rankings k JOIN regions r ON r.region_id = k.region_id
+                ORDER BY 1, 2, 3, 4, 5
             """)
         )
     ]
@@ -229,7 +236,7 @@ def _ranking_keys(engine_conn) -> list[tuple[str, str, str, str]]:  # type: igno
 
 def _plan(
     region_ids: list[int],
-    keys: list[tuple[str, str, str, str]],
+    keys: list[tuple[str, str, str, str, str]],
     geoids: Mapping[str, str] | None = None,
     *,
     states: Sequence[str] = (),
@@ -358,7 +365,8 @@ def _plan(
                 f"{out}/explanations/{window}.json",
             )
 
-    for metric_id, level, window, basis in keys:
+    legacy = legacy_geo_state.upper() if legacy_geo_state else None
+    for metric_id, level, window, basis, state in keys:
         # `window` here comes out of `region_rankings`, where a value ranking is stored
         # under the sentinel "latest". That is storage vocabulary, not API vocabulary:
         # the endpoint's `Window` literal has no "latest", and `basis=value` ignores the
@@ -366,10 +374,18 @@ def _plan(
         # window for value rankings, while the output path keeps it — the path mirrors
         # how the data is keyed, and dropping it would collide every value ranking for a
         # metric into one file per level.
-        query = f"/rankings?metric_id={metric_id}&level={level}&basis={basis}&limit=1000"
+        query = (
+            f"/rankings?metric_id={metric_id}&level={level}&basis={basis}"
+            f"&state={state}&limit={RANKING_LIMIT}"
+        )
         if basis != "value":
             query += f"&window={window}"
-        yield query, f"rankings/{metric_id}/{level}/{window}/{basis}.json"
+        # One state's list each (Milestone 63), under the state like geometry (#401);
+        # the compatibility owner's list also keeps the unscoped path it always had.
+        tail = f"{metric_id}/{level}/{window}/{basis}.json"
+        yield query, f"rankings/{state}/{tail}"
+        if state == legacy:
+            yield query, f"rankings/{tail}"
 
 
 def _unlicensed(engine_conn) -> list[str]:  # type: ignore[no-untyped-def]

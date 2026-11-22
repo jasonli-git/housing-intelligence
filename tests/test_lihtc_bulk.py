@@ -172,7 +172,10 @@ def test_staging_uses_latest_release_and_verified_place_relationships(
         "p(column01,column03,column05,column06)"
     )
     con.execute("COPY permits TO ? (FORMAT PARQUET)", [str(bps / "place_NE.parquet")])
-    con.execute("CREATE TABLE stg_nj_municipal_codes AS SELECT '3400100100' AS geoid")
+    con.execute(
+        "CREATE TABLE stg_block_homes AS "
+        "SELECT '34001' AS county_geoid, '3400100100' AS municipality_geoid"
+    )
     query = (
         jinja2.Environment()
         .from_string(
@@ -181,7 +184,11 @@ def test_staging_uses_latest_release_and_verified_place_relationships(
         .render(
             config=lambda **_: "",
             ref=lambda name: name,
-            var=lambda name: str(parquet),
+            var=lambda name: (
+                [["NJ", "34"], ["PA", "42"]]
+                if name == "state_fips_pairs"
+                else str(parquet)
+            ),
             release_vintage=lambda: (
                 "regexp_extract(filename, '/([^/]+)/[^/]+[.]parquet$', 1)"
             ),

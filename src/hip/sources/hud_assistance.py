@@ -1,4 +1,9 @@
-"""HUD assisted contracts and owner-downloaded, dated LIHTC bulk releases."""
+"""HUD assisted contracts and owner-downloaded, dated LIHTC bulk releases.
+
+Both are national files. Since Milestone 63 each keeps the rows of every state whose
+county numbering has been reviewed (`COUNTY_COUNTS`), not New Jersey's alone; staging
+keeps the scoped states'.
+"""
 
 from __future__ import annotations
 
@@ -9,16 +14,27 @@ from pathlib import Path
 from typing import ClassVar
 from urllib.parse import parse_qs, urlsplit
 
+from hip.config import fips_for
 from hip.sources.base import Discovery, ReleaseRef, SourceAdapter, SourceError
 from hip.sources.nj_affordable import excel_date, number, record
 from hip.sources.xlsx import rows, sheets
 
 MF_BASE = "https://www.hud.gov/sites/dfiles/Housing/documents"
 
+# The states read, by county count: a county code is located when it is one of the
+# state's odd FIPS codes, 001 to 2n-1, as both states number theirs.
+COUNTY_COUNTS = {"NJ": 21, "PA": 67}
+
+
+def located_county(state: str, county: str) -> bool:
+    """Whether a three-digit county code is one of the state's own."""
+    n = COUNTY_COUNTS[state]
+    return county.isdigit() and int(county) % 2 == 1 and int(county) <= 2 * n - 1
+
 
 class HudAssistedAdapter(SourceAdapter):
     source_id: ClassVar[str] = "hud_assisted"
-    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
+    states: ClassVar[tuple[str, ...] | None] = tuple(COUNTY_COUNTS)
     default_vintage: ClassVar[str] = "current"
     landing_format: ClassVar[str] = "xlsx_records"
 
@@ -80,12 +96,14 @@ class HudAssistedAdapter(SourceAdapter):
         for _, cells in iterator:
             c = {field: cells.get(col, "") for col, field in headers.items()}
             if ref.layer == "properties":
-                if c["state_code"] != "NJ":
+                state = c["state_code"]
+                if state not in COUNTY_COUNTS:
                     continue
                 county = c["county_code"].zfill(3)
                 if not county.isdigit() or len(county) != 3:
                     raise SourceError("HUD assisted: county code missing")
-                located = int(county) in range(1, 42, 2)
+                located = located_county(state, county)
+                fips = fips_for(state)
                 payload: dict[str, object] = {
                     "name": c["property_name_text"],
                     "address": c["address_line1_text"],
@@ -101,7 +119,7 @@ class HudAssistedAdapter(SourceAdapter):
                 output.append(
                     record(
                         c["property_id"],
-                        f"34{county}" if located else "34",
+                        f"{fips}{county}" if located else fips,
                         "hud_property",
                         payload,
                         stamp,
@@ -109,7 +127,7 @@ class HudAssistedAdapter(SourceAdapter):
                 )
             else:
                 # Contracts have no state field: retain the program records; staging
-                # joins exact property_id to the NJ property table, never a city name.
+                # joins exact property_id to the property table, never a city name.
                 payload = {
                     "property_id": c["property_id"],
                     "status": c["tracs_status_name"],
@@ -147,7 +165,7 @@ class HudLihtcAdapter(SourceAdapter):
     """
 
     source_id: ClassVar[str] = "hud_lihtc"
-    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
+    states: ClassVar[tuple[str, ...] | None] = tuple(COUNTY_COUNTS)
     default_vintage: ClassVar[str] = "2024"
     landing_format: ClassVar[str] = "xlsx_records"
     manual: ClassVar[bool] = True
@@ -262,7 +280,7 @@ class HudLihtcAdapter(SourceAdapter):
         }
         for _, cells in iterator:
             c = {field: cells.get(col, "") for col, field in headers.items()}
-            if c.get("proj_st") != "NJ":
+            if c.get("proj_st") not in COUNTY_COUNTS:
                 continue
             if not c["hud_id"]:
                 raise SourceError("LIHTC bulk: missing project identifier")
@@ -277,5 +295,5 @@ class HudLihtcAdapter(SourceAdapter):
             output.append(item)
         ids = [r["hud_id"] for r in output]
         if not ids or len(ids) != len(set(ids)):
-            raise SourceError("LIHTC bulk: empty NJ inventory or duplicate identifiers")
+            raise SourceError("LIHTC bulk: empty inventory or duplicate identifiers")
         return output

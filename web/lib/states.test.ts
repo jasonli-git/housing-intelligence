@@ -14,7 +14,8 @@ describe("covered states", () => {
   });
   it("give a state crumb only for a covered state", () => {
     expect(stateCrumbs("nj")).toEqual([{ href: "/states/new-jersey", label: "New Jersey" }]);
-    expect(stateCrumbs("PA")).toEqual([]);
-    expect(coveredState("PA")).toBeNull();
+    expect(stateCrumbs("pa")).toEqual([{ href: "/states/pennsylvania", label: "Pennsylvania" }]);
+    expect(stateCrumbs("OH")).toEqual([]);
+    expect(coveredState("OH")).toBeNull();
   });
 });

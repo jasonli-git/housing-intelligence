@@ -16,6 +16,9 @@ located as (
            floor((ST_X(h.point) - g.xmin) / g.dx)::integer as col,
            floor((g.ymax - ST_Y(h.point)) / g.dy)::integer as row
     from {{ ref('stg_block_homes') }} h cross join grid g
+    -- New Jersey's blocks only: the story images cover New Jersey (story sources stay
+    -- New Jersey's until reviewed for another state, Milestone 63).
+    where left(h.block_geoid, 2) = '34'
 ),
 sampled as (
     select l.municipality_geoid, l.county_geoid, l.zcta_geoid, l.homes, n.value as db

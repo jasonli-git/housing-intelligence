@@ -22,6 +22,7 @@ with tidal_counties(county_geoid) as (
 ),
 blocks as (
     select h.municipality_geoid, h.county_geoid, h.zcta_geoid, h.homes,
+           {{ scoped_layer('zones', 'left(h.county_geoid, 2)') }} as release_layer,
            f.high, f.moderate, f.mapped, f.tidal,
            h.county_geoid in (select county_geoid from tidal_counties) as tidal_mapped
     from {{ ref('stg_block_homes') }} h
@@ -37,7 +38,7 @@ places as (
     select zcta_geoid, 'zip', * exclude
            (municipality_geoid, county_geoid, zcta_geoid) from blocks
     union all
-    select '34', 'state', * exclude
+    select left(county_geoid, 2), 'state', * exclude
            (municipality_geoid, county_geoid, zcta_geoid) from blocks
 ),
 summed as (
@@ -47,15 +48,18 @@ summed as (
            sum(homes * moderate) / sum(homes) as moderate,
            sum(homes * mapped) / sum(homes) as mapped,
            sum(homes * tidal) / sum(homes) as tidal,
-           sum(homes) filter (where tidal_mapped) / sum(homes) as tidal_covered
-    from places group by all
+           sum(homes) filter (where tidal_mapped) / sum(homes) as tidal_covered,
+           -- The state map a place was read from; a ZIP code across a state line
+           -- names the first (Milestone 63).
+           min(release_layer) as release_layer
+    from places group by geoid, level
 ),
 years as (
     select {{ var('read_years')['fema_nfhl'] }} as fema,
            {{ var('read_years')['njdep_cafe'] }} as njdep
 ),
 long as (
-    select 'fema_nfhl' as source_id, 'zones' as release_layer, metric_id, geoid, level,
+    select 'fema_nfhl' as source_id, release_layer, metric_id, geoid, level,
            years.fema as y, value
     from summed, years,
          lateral (values ('fema_flood_homes_share', high),

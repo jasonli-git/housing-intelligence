@@ -73,6 +73,8 @@ def test_monthly_national_hpi_does_not_mix_geographies_frequencies_or_flavors(
             ),
         ],
     )
+    # The statewide index; FHFA's non-metro state index is left out (Milestone 63).
+    con.execute("alter table payload add column hpi_type varchar default 'traditional'")
     con.execute(f"copy payload to '{folder / 'master.parquet'}' (format parquet)")
     variables = {
         "parquet_dir": str(tmp_path),

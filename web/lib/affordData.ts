@@ -14,7 +14,9 @@ export type AffordData = {
 };
 
 async function latest(metricId: string, level: string): Promise<Map<number, RankedRegion>> {
-  const ranking = await api.rankings(metricId, level, "5y", 1000, "value");
+  // Every covered state's places in one list (5,000 is the endpoint's cap): at 1,000,
+  // New Jersey's and Pennsylvania's 3,135 towns were cut short (Milestone 63).
+  const ranking = await api.rankings(metricId, level, "5y", 5000, "value");
   return new Map((ranking?.items ?? []).map((item) => [item.region_id, item]));
 }
 

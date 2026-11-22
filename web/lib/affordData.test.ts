@@ -9,7 +9,8 @@ vi.mock("./api", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(api.regions).mockImplementation(async (query) => ({ items: query.includes("county")
+  // One covered state's places; the others' (Pennsylvania, Milestone 63) come back empty.
+  vi.mocked(api.regions).mockImplementation(async (query) => ({ items: !query.includes("state=NJ") ? [] : query.includes("county")
     ? [{ region_id: 1, name: "Test County", level: "county", parent_id: null }]
     : Array.from({ length: 95 }, (_, i) => ({ region_id: i + 2, name: `Town ${i}`, level: "municipality", parent_id: 1 })), total: 1 }) as never);
   vi.mocked(api.metrics).mockResolvedValue([]);

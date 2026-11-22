@@ -76,7 +76,7 @@ def test_repo_config_loads(monkeypatch: pytest.MonkeyPatch) -> None:
     geography = load_geography(REPO_CONFIG)
 
     assert sources and metrics
-    assert geography.states == ["NJ"]
+    assert geography.states == ["NJ", "PA"]
     # parcel stays out of Postgres (ARCHITECTURE #16)
     assert "parcel" not in geography.levels
     assert check_config(REPO_CONFIG) == []

@@ -245,7 +245,9 @@ export type EnergyContext = {
 
 export type Utilities = {
   region_id: number;
-  providers: { fuel: string; provider: string; approximate_share: number;
+  // `approximate_share` is null and `placed` "county" where a state has no territory map
+  // and EIA-861's county list places its utilities (Pennsylvania, Milestone 63).
+  providers: { fuel: string; provider: string; approximate_share: number | null; placed: "place" | "county";
     territory: InfrastructureRecord<{ fuel: string; provider: string; eia_id: string | null }>;
     electricity: InfrastructureRecord<ElectricUtility> | null;
     regulatory_reliability?: InfrastructureRecord<{ year: number; caidi_minutes: number;
@@ -671,6 +673,17 @@ export const api = {
   housingPressure: (id:number) => tryGet<HousingPressure>(`/regions/${id}/housing-pressure`),
   regions: (query: string) =>
     tryGet<{ total: number; items: Region[] }>(`/regions?${query}`),
+  /** Every region a query matches, a page of 1,000 at a time (the endpoint's cap):
+   * Pennsylvania has 2,571 towns (Milestone 63). Null if any page cannot be read. */
+  allRegions: async (query: string): Promise<{ total: number; items: Region[] } | null> => {
+    const items: Region[] = [];
+    for (let offset = 0; ; offset += 1000) {
+      const page = await tryGet<{ total: number; items: Region[] }>(`/regions?${query}&limit=1000&offset=${offset}`);
+      if (!page) return null;
+      items.push(...page.items);
+      if (items.length >= page.total || page.items.length === 0) return { total: page.total, items };
+    }
+  },
   region: (id: number) =>
     tryGet<Region & { ancestors: Region[] }>(`/regions/${id}`),
   summary: (id: number, window: string) =>
@@ -694,9 +707,10 @@ export const api = {
    * the storage keys value rankings under exactly that sentinel. `hip publish` splits
    * them for the same reason.
    */
-  values: (metricId: string, level: string, limit = 1000) =>
+  /** A value ranking; with `state`, that state's places alone (they rank within it). */
+  values: (metricId: string, level: string, limit = 1000, state?: string) =>
     tryGet<Ranking>(
-      `/rankings?metric_id=${metricId}&level=${level}&limit=${limit}&basis=value`,
+      `/rankings?metric_id=${metricId}&level=${level}&limit=${limit}&basis=value${state ? `&state=${state}` : ""}`,
     ),
   /** MOCK (2026-11-13): how many values a region holds, read from one row's `total`. */
   regionValueCount: (id: number) =>

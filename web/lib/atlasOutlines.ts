@@ -19,14 +19,15 @@ export const TOLERANCE: Record<AtlasLevel, { light: number; detail: number }> = 
 };
 
 /** The level's outlines at one detail, keyed by region. */
-export async function atlasOutlines(level: AtlasLevel, detail: "light" | "detail"): Promise<PackedOutline[]> {
+export async function atlasOutlines(level: AtlasLevel, detail: "light" | "detail", state = "NJ"): Promise<PackedOutline[]> {
   const tolerance = TOLERANCE[level][detail];
   if (level !== "municipality") {
-    const geometry = await api.geo(level, "NJ", tolerance);
+    const geometry = await api.geo(level, state, tolerance);
     return geometry ? pack(geometry, "region_id") : [];
   }
-  // New Jersey's towns (Director Note "Visualizing the data", 2026-10-22).
-  const [geometry, regions] = await Promise.all([api.geo("municipality", "NJ", tolerance), regionsWithData()]);
+  // A covered state's towns (Director Note "Visualizing the data", 2026-10-22; every
+  // covered state since Milestone 63).
+  const [geometry, regions] = await Promise.all([api.geo("municipality", state, tolerance), regionsWithData()]);
   if (!geometry) return [];
   // A name several towns share carries its county, "Franklin township (Somerset)", as the
   // place search does (lib/search.ts `shownNames`).

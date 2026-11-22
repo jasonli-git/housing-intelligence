@@ -37,6 +37,10 @@ select
     'current' as release_vintage
 from flavors
 where level = 'State'
+  -- The statewide index. FHFA also publishes a non-metro index for a state's areas
+  -- outside its metros; New Jersey has none, so it went unnoticed until Pennsylvania
+  -- (Milestone 63), where it doubled every quarter.
+  and hpi_type = 'traditional'
   and frequency = 'quarterly'
   and place_id in ({{ var("states") }})
   and value is not null

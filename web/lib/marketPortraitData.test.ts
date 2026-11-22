@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import type { PacketLevel, Region } from "./api";
 
-const mocks = vi.hoisted(() => ({ regions: vi.fn(), marketObservations: vi.fn() }));
+const mocks = vi.hoisted(() => ({ regions: vi.fn(), allRegions: vi.fn(), marketObservations: vi.fn() }));
 vi.mock("./api", () => ({ api: mocks }));
 import { marketPortraitData } from "./marketPortraitData";
 
@@ -10,6 +10,7 @@ const levels = [{ metric_id: "zhvi_sfr", period_start: "2026-09-01" }, { metric_
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.regions.mockImplementation(async (q: string) => q.includes("level=county") ? { total: 0, items: [] } : { total: 201, items: towns });
+  mocks.allRegions.mockImplementation(async () => ({ total: 201, items: towns }));
   mocks.marketObservations.mockImplementation(async (_metric: string, ids: number[], period: string) => ({ regions: ids.map(id => ({ region_id: id, series: [{ period_start: period, value: id * 1000 }] })) }));
 });
 
@@ -24,7 +25,7 @@ it("requests bounded batches at each metric's exact month and keeps the complete
 });
 
 it("refuses a truncated town registry instead of presenting it as statewide", async () => {
-  mocks.regions.mockResolvedValue({ total: 202, items: towns });
+  mocks.allRegions.mockResolvedValue({ total: 202, items: towns });
   await expect(marketPortraitData("NJ", levels)).rejects.toThrow(/registry is incomplete/);
   expect(mocks.marketObservations).not.toHaveBeenCalled();
 });

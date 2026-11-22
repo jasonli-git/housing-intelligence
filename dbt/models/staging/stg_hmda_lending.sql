@@ -30,7 +30,7 @@ placed as (
            'fips' as match_method
     from {{ ref('stg_hmda_loans') }} l
     union all
-    select l.*, 'state', '34', 1.0, 'fips' from {{ ref('stg_hmda_loans') }} l
+    select l.*, 'state', left(l.county, 2), 1.0, 'fips' from {{ ref('stg_hmda_loans') }} l
     union all
     select l.*, s.level, s.geoid, s.w, 'tract_homes'
     from {{ ref('stg_hmda_loans') }} l join shares s using (tract)
@@ -68,6 +68,9 @@ medians as (
 -- shares moved in their last digits on every rebuild.
 counts as (
     select year, level, geoid, any_value(match_method) as match_method,
+           -- The state file the loans came from; a ZIP code across a state line draws
+           -- on two, and names the first (Milestone 63).
+           min(release_layer) as release_layer,
            sum(w::decimal(38, 12)) filter (where action_taken = '1') as made,
            sum(w::decimal(38, 12)) filter (where action_taken in ('1', '2', '3')) as decided,
            sum(w::decimal(38, 12)) filter (where action_taken = '3') as denied,
@@ -80,7 +83,7 @@ counts as (
     from placed group by 1, 2, 3
 ),
 long as (
-    select c.year, c.level, c.geoid, c.match_method, v.metric_id, v.value
+    select c.year, c.level, c.geoid, c.match_method, c.release_layer, v.metric_id, v.value
     from counts c,
          lateral (values
              ('hmda_purchase_loans', c.made, c.made >= 30),
@@ -94,12 +97,12 @@ long as (
          ) as v(metric_id, value, enough)
     where v.enough
     union all
-    select m.year, m.level, m.geoid, c.match_method, m.metric_id, m.value
+    select m.year, m.level, m.geoid, c.match_method, c.release_layer, m.metric_id, m.value
     from medians m join counts c using (year, level, geoid)
     where c.made >= 30
 )
 select 'ffiec_hmda' as source_id, metric_id, geoid, level,
        make_date(year, 1, 1) as period_start, make_date(year, 12, 31) as period_end,
-       value::double as value, match_method, 'nj_' || year as release_layer,
+       value::double as value, match_method, release_layer,
        year::varchar as release_vintage
 from long

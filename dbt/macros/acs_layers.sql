@@ -3,17 +3,17 @@
 -- One request layer at every level it was fetched at — county, county subdivision and,
 -- from the 2020 edition, ZCTA — each row keyed to the region it describes. `prefix` is
 -- the adapter's layer prefix ('' for the first request, 'housing_', 'rent_', ...), so
--- `release_layer` names the file each row came from. ZCTA rows are `zip` regions: the
+-- `release_layer` names the file each row came from, scoped by state (`county_pa`). ZCTA rows are `zip` regions: the
 -- ZCTA's code is the region's geoid, and the caveat that a ZCTA is not a ZIP travels
 -- with the region level, not with each source.
 {% macro acs_layers(prefix) -%}
-    select *, 'county' as level, '{{ prefix }}county' as release_layer,
+    select *, 'county' as level, {{ file_scoped_layer(prefix ~ 'county', 'filename') }} as release_layer,
            state || county as geoid,
            regexp_extract(filename, '/(\d{4})/', 1)::int as vintage
     from read_parquet('{{ var("parquet_dir") }}/census_acs/*/{{ prefix }}county_*.parquet',
                       filename=true, union_by_name=true)
     union all by name
-    select *, 'municipality' as level, '{{ prefix }}cousub' as release_layer,
+    select *, 'municipality' as level, {{ file_scoped_layer(prefix ~ 'cousub', 'filename') }} as release_layer,
            state || county || "county subdivision" as geoid,
            regexp_extract(filename, '/(\d{4})/', 1)::int as vintage
     from read_parquet('{{ var("parquet_dir") }}/census_acs/*/{{ prefix }}cousub_*.parquet',
@@ -22,7 +22,7 @@
     -- TIGER. Same filter, same reason.
     where "county subdivision" <> '00000'
     union all by name
-    select *, 'zip' as level, '{{ prefix }}zcta' as release_layer,
+    select *, 'zip' as level, {{ file_scoped_layer(prefix ~ 'zcta', 'filename') }} as release_layer,
            "zip code tabulation area" as geoid,
            regexp_extract(filename, '/(\d{4})/', 1)::int as vintage
     from read_parquet('{{ var("parquet_dir") }}/census_acs/*/{{ prefix }}zcta_*.parquet',

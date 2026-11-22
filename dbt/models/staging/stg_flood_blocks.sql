@@ -10,11 +10,20 @@
 with blocks as (
     select block_geoid, geom, ST_Area(geom) as area from {{ ref('stg_block_homes') }}
 ),
-overlaid as (
-    select b.block_geoid, p.class,
-           sum(ST_Area(ST_Intersection(b.geom, p.geom))) / any_value(b.area) as share
+-- The spatial join is fenced off in a materialized CTE and each block's state matched
+-- after it: an equality beside ST_Intersects, even one written in WHERE, is pushed into
+-- the join and takes DuckDB off its spatial join onto a pairwise comparison (16s against
+-- hours with Pennsylvania).
+pairs as materialized (
+    select b.block_geoid, p.state, p.class,
+           ST_Area(ST_Intersection(b.geom, p.geom)) / b.area as share
     from blocks b
     join {{ ref('stg_flood_pieces') }} p on ST_Intersects(b.geom, p.geom)
+),
+overlaid as (
+    select block_geoid, class, sum(share) as share
+    from pairs
+    where state = left(block_geoid, 2)
     group by 1, 2
 ),
 pivoted as (

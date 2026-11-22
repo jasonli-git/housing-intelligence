@@ -12,7 +12,10 @@
 {{ config(materialized='table') }}
 
 with recursive polygons as (
-    select case
+    -- Each piece keeps its state, so a block is laid over its own state's map only:
+    -- two states' maps meet along a river and may overlap (Milestone 63).
+    select left(DFIRM_ID, 2) as state,
+           case
                when SFHA_TF = 'T' then 'high'
                when FLD_ZONE = 'X' and (ZONE_SUBTY like '0.2 PCT%'
                                         or ZONE_SUBTY like '%LEVEE%') then 'moderate'
@@ -20,17 +23,17 @@ with recursive polygons as (
                else 'minimal'
            end as class,
            ST_MakeValid(ST_GeomFromGeoJSON(geometry)) as geom
-    from read_parquet('{{ var("parquet_dir") }}/fema_nfhl/current/zones.parquet')
+    from read_parquet('{{ var("parquet_dir") }}/fema_nfhl/current/zones*.parquet')
     where geometry is not null
     union all
-    select 'tidal', ST_MakeValid(ST_GeomFromGeoJSON(geometry))
+    select '34', 'tidal', ST_MakeValid(ST_GeomFromGeoJSON(geometry))
     from read_parquet('{{ var("parquet_dir") }}/njdep_cafe/current/tidal.parquet')
     where geometry is not null
 ),
-parts(class, geom, depth) as (
-    select class, geom, 0 from polygons
+parts(state, class, geom, depth) as (
+    select state, class, geom, 0 from polygons
     union all
-    select p.class, ST_Intersection(p.geom, h.half), p.depth + 1
+    select p.state, p.class, ST_Intersection(p.geom, h.half), p.depth + 1
     from parts p,
          lateral (
              select ST_XMin(p.geom) as x0, ST_YMin(p.geom) as y0,
@@ -49,6 +52,6 @@ parts(class, geom, depth) as (
          ) h
     where ST_NPoints(p.geom) > 2000 and p.depth < 30
 )
-select class, geom
+select state, class, geom
 from parts
 where (ST_NPoints(geom) <= 2000 or depth = 30) and not ST_IsEmpty(geom)

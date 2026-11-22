@@ -27,7 +27,11 @@ class InfrastructureRecord(BaseModel):
 class UtilityProvider(BaseModel):
     fuel: str
     provider: str
-    approximate_share: float
+    # None where the territory is a county EIA lists a utility serving, with no share
+    # of its homes known (a state without a territory map of its own, Milestone 63).
+    approximate_share: float | None
+    # Where the territory was placed: the place itself, or its county.
+    placed: str = "place"
     territory: InfrastructureRecord
     electricity: InfrastructureRecord | None = None
     regulatory_reliability: list[InfrastructureRecord] = Field(default_factory=list)
@@ -78,6 +82,17 @@ def utilities(region_id: int, session: SessionDep) -> Utilities:
     county = f"county:{region['county_geoid']}" if region["county_geoid"] else entity
     local = records_for(session, list({entity, county}))
     territories = [r for r in local if r.kind == "utility_area" and r.entity_id == entity]
+    # A town in a state placed by county alone (Milestone 63) is given its county's
+    # utilities, each marked as the county's; a ZIP code nests in no county, so none.
+    by_county = not territories and region["level"] == "municipality"
+    if by_county:
+        territories = [
+            r
+            for r in local
+            if r.kind == "utility_area"
+            and r.entity_id == county
+            and r.payload.get("approximate_share") is None
+        ]
     ids = list(
         {f"utility:{r.payload['eia_id']}" for r in territories if r.payload.get("eia_id")}
     )
@@ -94,7 +109,10 @@ def utilities(region_id: int, session: SessionDep) -> Utilities:
             UtilityProvider(
                 fuel=str(r.payload["fuel"]),
                 provider=str(r.payload["provider"]),
-                approximate_share=float(r.payload["approximate_share"]),
+                approximate_share=None
+                if r.payload.get("approximate_share") is None
+                else float(r.payload["approximate_share"]),
+                placed="county" if by_county else "place",
                 territory=r,
                 electricity=company.get(str(r.payload.get("eia_id"))),
                 regulatory_reliability=_one_per_year(

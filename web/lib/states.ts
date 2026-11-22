@@ -7,6 +7,8 @@
  */
 export type CoveredState = {
   code: string;
+  /** The state's two-digit FIPS code, its GEOID. */
+  fips: string;
   name: string;
   path: string;
   regionId: number;
@@ -15,7 +17,10 @@ export type CoveredState = {
 };
 
 export const COVERED_STATES: ReadonlyArray<CoveredState> = [
-  { code: "NJ", name: "New Jersey", path: "/states/new-jersey", regionId: 1, locator: [-74.5, 40] },
+  { code: "NJ", fips: "34", name: "New Jersey", path: "/states/new-jersey", regionId: 1, locator: [-74.5, 40] },
+  // Milestone 63. Region ids are the warehouse's own, so this one is valid in the
+  // database Pennsylvania was first loaded into (ARCHITECTURE: region ids are pinned).
+  { code: "PA", fips: "42", name: "Pennsylvania", path: "/states/pennsylvania", regionId: 393710, locator: [-77.6, 40.9] },
 ];
 
 /** The state the home map points to and flies into. With several covered, the first:

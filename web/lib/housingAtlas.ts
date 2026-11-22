@@ -38,6 +38,14 @@ export const ATLAS_LEVELS: { key: AtlasLevel; label: string; noun: string; plura
   { key: "municipality", label: "Towns", noun: "town", plural: "towns", outlines: "/atlas/municipalities.json", detail: "/atlas/municipalities-detail.json" },
   { key: "zip", label: "ZIP codes", noun: "ZIP code", plural: "ZIP codes", outlines: "/atlas/zips.json", detail: "/atlas/zips-detail.json" },
 ];
+/** A covered state's outline files: New Jersey's keep their addresses, another state's
+ *  sit under its code, `/atlas/pa/counties.json` (Milestone 63). */
+export function atlasFiles(state: string, level: AtlasLevel): { outlines: string; detail: string } {
+  const l = ATLAS_LEVELS.find((x) => x.key === level)!;
+  if (state === "NJ") return { outlines: l.outlines, detail: l.detail };
+  const code = state.toLowerCase();
+  return { outlines: l.outlines.replace("/atlas/", `/atlas/${code}/`), detail: l.detail.replace("/atlas/", `/atlas/${code}/`) };
+}
 /** The zoom from which the detailed outlines are drawn (lib/atlasOutlines.ts). */
 export const DETAIL_ZOOM = 2;
 
@@ -81,9 +89,10 @@ type PublishedRanking = {
  * measure costs a reader nothing until it is chosen. Each row's date is its own period
  * end; files published before rows carried one fall back to the level's (`lastPeriod`).
  */
-export async function loadAtlasMeasure(base: string, entry: AtlasEntry, level: AtlasLevel, windows: readonly WindowKey[]): Promise<AtlasMeasure> {
+export async function loadAtlasMeasure(base: string, entry: AtlasEntry, level: AtlasLevel, windows: readonly WindowKey[], state = "NJ"): Promise<AtlasMeasure> {
+  // One state's ranking (Milestone 63: places rank within their state).
   const read = (path: string) =>
-    fetch(`${base}/rankings/${entry.metric_id}/${level}/${path}`)
+    fetch(`${base}/rankings/${state}/${entry.metric_id}/${level}/${path}`)
       .then((r) => (r.ok ? (r.json() as Promise<PublishedRanking>) : null))
       .catch(() => null);
   const [latest, ...changes] = await Promise.all([read("latest/value.json"), ...windows.map((w) => read(`${w}/change.json`))]);

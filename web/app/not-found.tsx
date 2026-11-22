@@ -1,3 +1,4 @@
+import { COVERED_STATES, coveredNames } from "@/lib/states";
 import Link from "next/link";
 
 import { Masthead } from "@/components/Masthead";
@@ -16,10 +17,10 @@ export default function NotFound() {
         </header>
         <section className="recovery-search" aria-label="Find another place">
           <PlaceSearch variant="hero" />
-          <p className="meta">Detailed coverage starts with New Jersey.</p>
+          <p className="meta">Detailed coverage: {coveredNames()}.</p>
         </section>
         <nav className="recovery-routes" aria-label="Where to go next">
-          <Link href="/states/new-jersey">Explore New Jersey <span aria-hidden="true">↗</span></Link>
+          {COVERED_STATES.map((s) => <Link key={s.code} href={s.path}>Explore {s.name} <span aria-hidden="true">↗</span></Link>)}
           <Link href="/">Housing Intelligence <span aria-hidden="true">→</span></Link>
         </nav>
       </main>

@@ -30,10 +30,11 @@ export function standing(level: PacketLevel | null | undefined): Standing | null
   return { mark: "typical", words: `Typical for NJ · ${of}`, short: "Typical for NJ" };
 }
 
-/** "more than in 94% of NJ towns" / "less than in 70%": a percentile in words. */
-export const share = (l: PacketLevel, more: string, less: string) => {
+/** "more than in 94% of NJ towns" / "less than in 70%": a percentile in words, among
+ * the place's own state's towns (ranks count within a state, Milestone 63). */
+export const share = (l: PacketLevel, more: string, less: string, state = "NJ") => {
   const p = Math.round(sizePct(l));
-  return p >= 50 ? `${more} in ${p}% of NJ towns` : `${less} in ${100 - p}% of NJ towns`;
+  return p >= 50 ? `${more} in ${p}% of ${state} towns` : `${less} in ${100 - p}% of ${state} towns`;
 };
 
 /** The briefing's six takeaway topics. The first published id of each is the one read. */

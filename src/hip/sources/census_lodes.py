@@ -1,4 +1,5 @@
-"""Where New Jersey's residents work: the Census Bureau's LODES (Milestone 45).
+"""Where residents work: the Census Bureau's LODES (Milestone 45; every scoped state
+since Milestone 63).
 
 LEHD Origin-Destination Employment Statistics pair every job covered by unemployment
 insurance with the census block its holder lives in and the block it is in. Version 8
@@ -12,6 +13,10 @@ York's and Pennsylvania's would leave the denominator short by every New Jerseya
 works in Delaware, Connecticut or further; the auxiliary files are 0.6 to 5.6MB each,
 so all of them are read. `JT00` is all jobs, so a person with two jobs counts twice.
 
+Each scoped state is read the same way, its own main file and crosswalk under
+`scoped_layer` names (`od_main_pa`). A scoped state's auxiliary file is read too once
+another state is in scope: New Jersey's holds the Pennsylvanians who work in New Jersey.
+
 New Jersey's crosswalk names each of its blocks' county subdivision and ZCTA, so a
 job's home and workplace in the state are placed without a spatial join. A workplace
 out of state is placed by its block's first five digits, its county.
@@ -24,10 +29,11 @@ where the employer reports the job, which for a firm with many sites can be its 
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import date
 from typing import ClassVar
 
-from hip.sources.base import Discovery, ReleaseRef, SourceAdapter
+from hip.sources.base import Discovery, ReleaseRef, SourceAdapter, scoped_layer
 
 BASE_URL = "https://lehd.ces.census.gov/data/lodes/LODES8"
 
@@ -51,10 +57,9 @@ MISSING: dict[str, tuple[str, ...]] = {
 
 
 class LodesAdapter(SourceAdapter):
-    """New Jersey's residents' jobs by home and workplace block, all jobs (`JT00`)."""
+    """Each scoped state's residents' jobs by home and workplace block (`JT00`)."""
 
     source_id: ClassVar[str] = "census_lodes"
-    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     # The floor: LODES 8.4, released 2025-12-18, adds 2023.
     default_vintage: ClassVar[str] = "2023"
     landing_format: ClassVar[str] = "csv"
@@ -62,23 +67,29 @@ class LodesAdapter(SourceAdapter):
     # read would make integers; staging casts the counts.
     csv_read_options: ClassVar[str] = ", all_varchar=true"
 
+    def __init__(self, states: Sequence[str] = ("NJ",)) -> None:
+        self.scoped = [s.upper() for s in states]
+
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         year = vintage or self.newest or self.default_vintage
         missing = MISSING.get(year, ())
-        refs = [
-            ReleaseRef(
-                source_id=self.source_id,
-                layer="od_main",
-                vintage=year,
-                url=f"{BASE_URL}/nj/od/nj_od_main_JT00_{year}.csv.gz",
-            ),
-            ReleaseRef(
-                source_id=self.source_id,
-                layer="xwalk",
-                vintage=year,
-                url=f"{BASE_URL}/nj/nj_xwalk.csv.gz",
-            ),
-        ]
+        refs = []
+        for home in self.scoped:
+            code = home.lower()
+            refs += [
+                ReleaseRef(
+                    source_id=self.source_id,
+                    layer=scoped_layer("od_main", home),
+                    vintage=year,
+                    url=f"{BASE_URL}/{code}/od/{code}_od_main_JT00_{year}.csv.gz",
+                ),
+                ReleaseRef(
+                    source_id=self.source_id,
+                    layer=scoped_layer("xwalk", home),
+                    vintage=year,
+                    url=f"{BASE_URL}/{code}/{code}_xwalk.csv.gz",
+                ),
+            ]
         refs += [
             ReleaseRef(
                 source_id=self.source_id,
@@ -89,7 +100,9 @@ class LodesAdapter(SourceAdapter):
                 url=f"{BASE_URL}/{state.lower()}/od/{state.lower()}_od_aux_JT00_{year}.csv.gz",
             )
             for state in STATES
-            if state != "NJ" and state not in missing
+            # A state's own residents are in its main file; its auxiliary file is read
+            # for any other scoped state's.
+            if state not in missing and any(home != state for home in self.scoped)
         ]
         return refs
 

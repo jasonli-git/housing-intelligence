@@ -8,6 +8,7 @@ import json
 import math
 import re
 import zipfile
+from collections.abc import Sequence
 from datetime import date
 from pathlib import Path
 from typing import Any, ClassVar
@@ -371,11 +372,28 @@ class CrimeAdapter(SourceAdapter):
         return result
 
 
+# CDC's ZIP code file names no state, so a state's ZIP codes are asked for by their first
+# two digits (USPS's prefixes): New Jersey's run 070-089, Pennsylvania's 150-196. "19"
+# also brings Delaware's 197-199, which match no region in scope and are never shown.
+CDC_ZIP_PREFIXES = {"NJ": ("07", "08"), "PA": ("15", "16", "17", "18", "19")}
+
+
 class PlacesAdapter(SourceAdapter):
+    """CDC PLACES health estimates for each scoped state (every state, Milestone 63).
+
+    One national dataset per level, asked for one query per level across every scoped
+    state, so the layers keep the names they had for New Jersey alone.
+    """
+
     source_id: ClassVar[str] = "cdc_places"
-    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "current"
     landing_format: ClassVar[str] = "xlsx_records"
+
+    def __init__(self, states: Sequence[str] = ("NJ",)) -> None:
+        self.scoped = [s.upper() for s in states]
+        unknown = [s for s in self.scoped if s not in CDC_ZIP_PREFIXES]
+        if unknown:
+            raise SourceError(f"CDC ZIP code prefixes not reviewed for {unknown}")
 
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         if vintage not in (None, "current"):
@@ -385,7 +403,12 @@ class PlacesAdapter(SourceAdapter):
                 self.source_id,
                 level,
                 "current",
-                f"https://data.cdc.gov/resource/{dataset}.json",
+                # The states asked for are part of the request, so part of the URL the
+                # raw cache compares (#214), as a fragment: it is never sent, and a
+                # query parameter would be read by Socrata as a column filter. New
+                # Jersey alone keeps the URL it always had.
+                f"https://data.cdc.gov/resource/{dataset}.json"
+                + ("" if self.scoped == ["NJ"] else f"#{','.join(self.scoped)}"),
             )
             for level, dataset in CDC_DATASETS.items()
         ]
@@ -398,12 +421,14 @@ class PlacesAdapter(SourceAdapter):
         return f"{ref.layer}.json"
 
     def _fetch_bytes(self, ref: ReleaseRef, destination: Path) -> None:
+        prefixes = [p for s in self.scoped for p in CDC_ZIP_PREFIXES[s]]
+        states = ",".join(f"'{s}'" for s in self.scoped)
         where = (
             "datavaluetypeid='CrdPrv' AND measureid in ('GHLTH','MHLTH','ACCESS2') AND "
             + (
-                "(locationid like '07%' OR locationid like '08%')"
+                "(" + " OR ".join(f"locationid like '{p}%'" for p in prefixes) + ")"
                 if ref.layer == "zip"
-                else "stateabbr='NJ'"
+                else f"stateabbr in ({states})"
             )
         )
         data: list[dict[str, Any]] = []
@@ -415,17 +440,19 @@ class PlacesAdapter(SourceAdapter):
             name = meta.json()["name"]
             if not re.search(r"20\d\d release$", name):
                 raise SourceError("CDC release identity missing")
+            url = ref.url.split("#", 1)[0]
             response = client.get(
-                ref.url, params={"$select": "count(*) as n", "$where": where}
+                url, params={"$select": "count(*) as n", "$where": where}
             )
             response.raise_for_status()
             expected = int(response.json()[0]["n"])
+            # New Jersey's floors; each state is bounded by New Jersey's ceiling.
             floors = {"county": 60, "tract": 5000, "zip": 1000}
-            if not floors[ref.layer] <= expected <= 12000:
-                raise SourceError("CDC NJ query unexpectedly small or unbounded")
+            if not floors[ref.layer] <= expected <= 12000 * len(self.scoped):
+                raise SourceError("CDC query unexpectedly small or unbounded")
             for start in range(0, expected, 1000):
                 response = client.get(
-                    ref.url,
+                    url,
                     params={
                         "$where": where,
                         "$limit": 1000,

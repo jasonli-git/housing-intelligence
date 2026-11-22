@@ -254,7 +254,8 @@ export type Destination = { name: string; region_id: number | null; share: numbe
 
 /** A town's leading place of work other than itself and the catch-alls ("Elsewhere in ..."). */
 export function leadingDestination(destinations: Destination[], self: number): Destination | null {
-  return destinations.find((d) => d.region_id !== self && !d.name.startsWith("Elsewhere")) ?? null;
+  // "Elsewhere in …" and "Other states" are remainders, not a place one works "in".
+  return destinations.find((d) => d.region_id !== self && !d.name.startsWith("Elsewhere") && d.name !== "Other states") ?? null;
 }
 
 /** Round values for a ratio-scale axis between `lo` and `hi`: 1, 2 and 5 times powers of ten, at most `most` of them. */

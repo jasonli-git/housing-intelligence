@@ -135,6 +135,10 @@ def dbt_vars(
         # by the year the platform read the copy they came from.
         # The noise map and night lights are downloaded by hand; each one's model waits
         # for its file, so the pipeline runs before they are handed in.
+        # EPA's water areas, read only for a state without a map of its own (#63).
+        "epa_water_areas_landed": any(
+            (settings.parquet_dir / "epa_water_areas").glob("*/areas_*.parquet")
+        ),
         "story_noise_landed": any(
             (settings.parquet_dir / "bts_noise").glob("*/noise.parquet")
         ),
@@ -165,8 +169,12 @@ def dbt_vars(
         ),
         # TIGER's road files, read for one story, take the boundary files' vintage.
         "tiger_roads_year": _tiger_roads_year(),
+        # A source never read is left out rather than sent as None: dbt reads its vars as
+        # YAML, where Python's None arrives as the string "None" (Milestone 63).
         "read_years": {
-            source_id: _read_year(settings.raw_dir, source_id) for source_id in READ_DATED
+            source_id: year
+            for source_id in READ_DATED
+            if (year := _read_year(settings.raw_dir, source_id)) is not None
         },
     }
 
@@ -177,6 +185,7 @@ READ_DATED = (
     "njdep_cafe",
     "njdep_kcsl",
     "njdep_water_areas",
+    "epa_water_areas",
     "epa_sdwis",
     # The visual stories' extracts republished in place (2026-10-22).
     "osm_nj",

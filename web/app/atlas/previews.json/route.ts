@@ -17,7 +17,7 @@ export async function GET() {
   // The catalogue's groups, without the measures only the visual stories use.
   const metrics=[...new Set(GROUPS.filter(g=>g.key!=="stories").flatMap(g=>g.metrics))];
   await Promise.all(metrics.map(async metric=>{
-    const read=async(level:"municipality"|"county")=>new Map(((await api.values(metric,level,1000))?.items??[]).filter(i=>Number.isFinite(i.value)).map(i=>[i.region_id,i.value] as const));
+    const read=async(level:"municipality"|"county")=>new Map(((await api.values(metric,level,1000,"NJ"))?.items??[]).filter(i=>Number.isFinite(i.value)).map(i=>[i.region_id,i.value] as const));
     const byTown=await read("municipality");
     if(byTown.size){previews[metric]={level:"municipality",shades:previewShades(towns,byTown,false)};return;}
     const byCounty=await read("county");

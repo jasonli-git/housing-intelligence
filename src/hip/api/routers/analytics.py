@@ -83,6 +83,8 @@ class Ranking(BaseModel):
     basis: str
     window: str
     level: str
+    # The state ranked within (Milestone 63); None when the request named none.
+    state: str | None = None
     total: int
     items: list[RankedRegion]
     # Under `basis=value` only: places with a figure the ranking leaves out.
@@ -96,7 +98,10 @@ def rankings(
     level: Annotated[RegionLevel, Query()] = "county",
     window: Annotated[Window, Query()] = "5y",
     basis: Annotated[RankingBasis, Query()] = "change",
-    limit: Annotated[int, Query(ge=1, le=1000)] = 25,
+    # 5,000 holds Pennsylvania's 2,570 towns whole; publication refuses a clipped list
+    # (#402), so the cap is what a state's largest level needs.
+    limit: Annotated[int, Query(ge=1, le=5000)] = 25,
+    state: Annotated[str | None, Query(pattern="^[A-Z]{2}$")] = None,
 ) -> Ranking:
     """Regions ordered best first, by change over a window or by current value.
 
@@ -107,6 +112,9 @@ def rankings(
 
     `basis=value` ignores `window` — a level has no span — and is the only basis a
     single-vintage source such as MOD-IV can be ranked on.
+
+    Ranks count within a state (Milestone 63), so `state` is how a reader asks for one
+    state's list; without it every state's places come back, each ranked among its own.
     """
     metric = (
         session.execute(
@@ -149,6 +157,7 @@ def rankings(
             ) o ON k.basis = 'value'
             WHERE k.metric_id = :m AND k.level = :level
               AND k.basis = :basis AND k."window" = :w
+              AND (CAST(:state AS text) IS NULL OR r.state_code = :state)
             -- Tied regions by id: otherwise their order, and which of them a LIMIT
             -- keeps, is the table's physical order, which a restore reshuffled
             -- (55 published rankings, 2026-10-21, ARCHITECTURE #421).
@@ -162,13 +171,14 @@ def rankings(
                 "basis": basis,
                 "w": effective_window,
                 "limit": limit,
+                "state": state,
             },
         )
         .mappings()
         .all()
     )
 
-    left_out = _left_out(session, metric_id, level) if basis == "value" else []
+    left_out = _left_out(session, metric_id, level, state) if basis == "value" else []
 
     return Ranking(
         metric_id=metric["metric_id"],
@@ -178,13 +188,16 @@ def rankings(
         basis=basis,
         window=effective_window,
         level=level,
+        state=state,
         total=int(rows[0]["total"]) if rows else 0,
         items=[RankedRegion(**row) for row in rows],
         left_out=left_out,
     )
 
 
-def _left_out(session: Session, metric_id: str, level: str) -> list[LeftOutRegion]:
+def _left_out(
+    session: Session, metric_id: str, level: str, state: str | None = None
+) -> list[LeftOutRegion]:
     """Places at `level` whose newest figure the value ranking does not hold.
 
     Only where the ranking holds someone: a metric ranked nowhere at this level (one
@@ -200,6 +213,7 @@ def _left_out(session: Session, metric_id: str, level: str) -> list[LeftOutRegio
                 FROM fact_metric_observation f
                 JOIN regions r ON r.region_id = f.region_id
                 WHERE f.metric_id = :m AND r.level = CAST(:level AS region_level)
+                  AND (CAST(:state AS text) IS NULL OR r.state_code = :state)
                 ORDER BY f.region_id, f.period_end DESC
             ),
             ranked AS (
@@ -217,7 +231,7 @@ def _left_out(session: Session, metric_id: str, level: str) -> list[LeftOutRegio
             ORDER BY l.name, l.region_id
             """
         ),
-        {"m": metric_id, "level": level},
+        {"m": metric_id, "level": level, "state": state},
     ).mappings()
     return [LeftOutRegion(**row) for row in rows]
 

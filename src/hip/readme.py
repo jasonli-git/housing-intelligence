@@ -7,7 +7,8 @@ rewrites what sits between each pair from its source; `hip readme --check` and
 so the check needs no warehouse:
 
 - sources: the registry entries NOTICE lists (`hip.notice`'s rule);
-- counties, towns, ZIP codes: the pinned place pages in `web/lib/placeRoutes.json`;
+- counties, towns, ZIP codes, each state's: the pinned place pages in
+  `web/lib/placeRoutes.json`;
 - the version: CHANGELOG's newest released heading;
 - the Tech Stack's versions: `.python-version`, `web/package.json`, `docker-compose.yml`;
 - the newest readings comparison: `reports/evaluation/readings-v*.md`.
@@ -43,9 +44,9 @@ def _sources(root: Path) -> str:
     return str(sum(1 for sid in load_sources() if sid not in _NOT_LISTED | set(PLANNED)))
 
 
-def _places(root: Path) -> Counter[str]:
+def _places(root: Path, state: str = "nj") -> Counter[str]:
     routes = json.loads((root / "web/lib/placeRoutes.json").read_text())
-    return Counter(r["level"] for r in routes.values() if r["state"] == "nj")
+    return Counter(r["level"] for r in routes.values() if r["state"] == state)
 
 
 def _version(root: Path) -> str:
@@ -86,6 +87,10 @@ FIELDS: dict[str, Callable[[Path], str]] = {
     "counties": lambda root: str(_places(root)["county"]),
     "towns": lambda root: str(_places(root)["municipality"]),
     "zips": lambda root: str(_places(root)["zip"]),
+    # Pennsylvania's, since Milestone 63.
+    "pa_counties": lambda root: str(_places(root, "pa")["county"]),
+    "pa_towns": lambda root: f"{_places(root, 'pa')['municipality']:,}",
+    "pa_zips": lambda root: f"{_places(root, 'pa')['zip']:,}",
     "version": _version,
     "python": lambda root: (root / ".python-version").read_text().strip(),
     "nextjs": lambda root: _package(root, "next"),

@@ -28,3 +28,17 @@ export const ATLAS_CITIES: { name: string; at: LonLat; beyond?: boolean }[] = [
   { name: "New York", at: [-73.97, 40.76], beyond: true },
   { name: "Philadelphia", at: [-75.165, 39.953], beyond: true },
 ];
+
+/** Pennsylvania's cities to find one's bearings by (Milestone 63): its largest and its
+ *  capital. Behind Pennsylvania the map draws the world's land, not a neighbours' file. */
+export const PA_CITIES: { name: string; at: LonLat; beyond?: boolean }[] = [
+  { name: "Philadelphia", at: [-75.165, 39.953] },
+  { name: "Pittsburgh", at: [-79.996, 40.441] },
+  { name: "Allentown", at: [-75.49, 40.608] },
+  { name: "Erie", at: [-80.085, 42.129] },
+  { name: "Reading", at: [-75.927, 40.336] },
+  { name: "Scranton", at: [-75.662, 41.409] },
+  { name: "Harrisburg", at: [-76.884, 40.264] },
+  { name: "Lancaster", at: [-76.306, 40.038] },
+  { name: "State College", at: [-77.86, 40.793] },
+];

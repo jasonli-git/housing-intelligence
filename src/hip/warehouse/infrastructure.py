@@ -63,7 +63,11 @@ def _validate_payload(kind: str, payload: dict[str, object]) -> None:
         value = payload.get(field)
         if value is not None and (not isinstance(value, (int, float)) or value < 0):
             raise ValueError(f"infrastructure: invalid {field}")
-    if kind == "utility_area" and float(str(payload["approximate_share"])) > 1.000001:
+    if (
+        kind == "utility_area"
+        and payload.get("approximate_share") is not None
+        and float(str(payload["approximate_share"])) > 1.000001
+    ):
         raise ValueError("infrastructure: invalid territory share")
     if kind == "pfas_samples" and (
         float(str(payload["detections"])) > float(str(payload["samples"]))

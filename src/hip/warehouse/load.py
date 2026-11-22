@@ -366,7 +366,8 @@ def load_facts(
         ).fetchall()
         rejects = duck.execute(
             f"""
-            SELECT source_id, layer, region_name, county_name, observations, reason
+            SELECT source_id, layer, region_name, county_name, observations, reason,
+                   state_code
             FROM {reject_table}
             """
         ).fetchall()
@@ -1200,9 +1201,10 @@ def _replace_rejects(conn: Any, rows: Sequence[tuple[Any, ...]]) -> None:
         text(
             """
             INSERT INTO source_match_reject
-                (source_id, layer, region_name, county_name, observations, reason)
+                (source_id, layer, region_name, county_name, observations, reason,
+                 state_code)
             VALUES (:source_id, :layer, :region_name, :county_name, :observations,
-                    :reason)
+                    :reason, :state_code)
             """
         ),
         [
@@ -1213,6 +1215,7 @@ def _replace_rejects(conn: Any, rows: Sequence[tuple[Any, ...]]) -> None:
                 "county_name": r[3],
                 "observations": int(r[4]),
                 "reason": r[5],
+                "state_code": r[6] if len(r) > 6 else None,
             }
             for r in rows
         ],

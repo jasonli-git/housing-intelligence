@@ -13,6 +13,10 @@ client = TestClient(app)
 pytestmark = pytest.mark.skipif(not probe().migrated, reason="needs a migrated warehouse")
 
 
+# Ranks count within a state (Milestone 63), so a ranking is asked for one.
+NJ_COUNTY_ZHVI = "/rankings?metric_id=zhvi_sfr&level=county&window=5y&state=NJ"
+
+
 @pytest.fixture(scope="module")
 def analyzed() -> None:
     if not client.get("/rankings?metric_id=zhvi_sfr&level=county").json().get("items"):
@@ -20,21 +24,21 @@ def analyzed() -> None:
 
 
 def test_rankings_are_dense_and_bounded(analyzed: None) -> None:
-    body = client.get("/rankings?metric_id=zhvi_sfr&level=county&window=5y").json()
+    body = client.get(NJ_COUNTY_ZHVI).json()
 
     items = body["items"]
     assert items
     assert items[0]["rank"] == 1
     assert all(1 <= i["rank"] <= i["of"] for i in items)
     assert all(0 <= i["percentile"] <= 100 for i in items)
-    # New Jersey has 21 counties, so a county ranking is over 21.
+    # Ranks count within a state (Milestone 63): New Jersey has 21 counties.
     assert items[0]["of"] == 21
 
 
 def test_rankings_follow_metric_direction(analyzed: None) -> None:
     """Rank 1 must be the good end, and 'good' is the metric's own definition."""
     body = client.get(
-        "/rankings?metric_id=price_to_income&level=county&window=5y&limit=21"
+        "/rankings?metric_id=price_to_income&level=county&window=5y&limit=21&state=NJ"
     ).json()
 
     assert body["direction"] == "lower_is_better"
@@ -142,7 +146,7 @@ def test_rankings_carry_each_region_s_rank_range(analyzed: None) -> None:
         pytest.skip("no ACS income ranking")
     for item in body["items"]:
         assert item["rank_best"] <= item["rank"] <= item["rank_worst"]
-    zillow = client.get("/rankings?metric_id=zhvi_sfr&level=county&window=5y").json()
+    zillow = client.get(NJ_COUNTY_ZHVI).json()
     assert all(item["rank_best"] is None for item in zillow["items"])
 
 

@@ -31,6 +31,7 @@ from hip.sources.community import (
     SchoolPerformanceAdapter,
 )
 from hip.sources.epa_sdwis import SdwisAdapter
+from hip.sources.epa_water import EpaWaterAreasAdapter
 from hip.sources.fcc import BroadbandLocationsAdapter, BroadbandSummaryAdapter
 from hip.sources.fema import NfhlAdapter, NfipClaimsAdapter
 from hip.sources.fhfa import HpiAdapter, HpiCountyAdapter
@@ -131,6 +132,7 @@ IMPLEMENTED: tuple[str, ...] = (
     NfipClaimsAdapter.source_id,
     KcslAdapter.source_id,
     WaterAreasAdapter.source_id,
+    EpaWaterAreasAdapter.source_id,
     SdwisAdapter.source_id,
     BlocksAdapter.source_id,
     # 2010 block groups placed among 2020 blocks, for flood claims (#354).
@@ -212,6 +214,7 @@ METRIC_SOURCES: tuple[str, ...] = (
     NfipClaimsAdapter.source_id,
     KcslAdapter.source_id,
     WaterAreasAdapter.source_id,
+    EpaWaterAreasAdapter.source_id,
     SdwisAdapter.source_id,
     NjAffordableAdapter.source_id,
     HudAssistedAdapter.source_id,
@@ -365,13 +368,10 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         SchoolPerformanceAdapter,
         SchoolBoundariesAdapter,
         CrimeAdapter,
-        PlacesAdapter,
         BroadbandSummaryAdapter,
-        BroadbandLocationsAdapter,
         BpuReliabilityAdapter,
         BpuAnnualReportsAdapter,
         EiaAdapter,
-        EnergyBurdenAdapter,
         LeadLinesAdapter,
         LeadLinesOpraAdapter,
         UcmrAdapter,
@@ -379,10 +379,21 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
     ):
         if source_id == builder.source_id:
             return builder()
+    if source_id == EpaWaterAreasAdapter.source_id:
+        return EpaWaterAreasAdapter(states=scope.states)
+    if source_id == BroadbandLocationsAdapter.source_id:
+        return BroadbandLocationsAdapter(states=scope.states)
+    if source_id == EnergyBurdenAdapter.source_id:
+        return EnergyBurdenAdapter(states=scope.states)
+    if source_id == PlacesAdapter.source_id:
+        return PlacesAdapter(states=scope.states)
     if source_id == TigerAdapter.source_id:
         return TigerAdapter(states=scope.states)
     if source_id == DistrictDirectoryAdapter.source_id:
-        return DistrictDirectoryAdapter(states=scope.states)
+        # New Jersey's alone: it explains NJDOE's district results (#356), which no
+        # other covered state has a counterpart for (Milestone 63).
+        covered = DistrictDirectoryAdapter.states or ()
+        return DistrictDirectoryAdapter(states=[s for s in scope.states if s in covered])
     if source_id == ZhviAdapter.source_id:
         return ZhviAdapter()
     if source_id == ZhviBottomAdapter.source_id:
@@ -438,23 +449,23 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
     if source_id == BlockRelationshipAdapter.source_id:
         return BlockRelationshipAdapter(states=scope.states)
     if source_id == NfhlAdapter.source_id:
-        return NfhlAdapter()
+        return NfhlAdapter(states=scope.states)
     if source_id == CafeAdapter.source_id:
         return CafeAdapter()
     if source_id == NfipClaimsAdapter.source_id:
-        return NfipClaimsAdapter()
+        return NfipClaimsAdapter(states=scope.states)
     if source_id == KcslAdapter.source_id:
         return KcslAdapter()
     if source_id == WaterAreasAdapter.source_id:
         return WaterAreasAdapter()
     if source_id == SdwisAdapter.source_id:
-        return SdwisAdapter()
+        return SdwisAdapter(states=scope.states)
     if source_id == LodesAdapter.source_id:
-        return LodesAdapter()
+        return LodesAdapter(states=scope.states)
     if source_id == TransitStopsAdapter.source_id:
-        return TransitStopsAdapter()
+        return TransitStopsAdapter(states=scope.states)
     if source_id == HmdaAdapter.source_id:
-        return HmdaAdapter()
+        return HmdaAdapter(states=scope.states)
     if source_id == HudFhaLimitsAdapter.source_id:
         return HudFhaLimitsAdapter()
     if source_id == OsmAdapter.source_id:

@@ -190,7 +190,36 @@ def test_cdc_fetch_count_checks_and_records_release(
     p = json.loads(str(result[0]["payload"]))
     assert len(result) == 63
     assert p["year"] == 2023 and p["release"] == "2025" and p["confidence"] == 95
-    assert all("stateabbr='NJ'" in r.url.params.get("$where", "") for r in calls[1:])
+    assert all("stateabbr in ('NJ')" in r.url.params.get("$where", "") for r in calls[1:])
+
+
+def test_cdc_asks_for_every_scoped_state_in_one_query_per_level() -> None:
+    """Milestone 63: one national dataset per level, so states join one query."""
+    calls: list[httpx.Request] = []
+
+    def respond(r: httpx.Request) -> httpx.Response:
+        calls.append(r)
+        if "/api/views/" in r.url.path:
+            return httpx.Response(200, json={"name": "PLACES ZCTA Data, 2025 release"})
+        return httpx.Response(200, json=[{"n": "0"}])
+
+    a = PlacesAdapter(states=["NJ", "PA"])
+    a._client = lambda: httpx.Client(transport=httpx.MockTransport(respond))  # type: ignore[method-assign]
+    zip_ref = next(r for r in a.refs() if r.layer == "zip")
+    with pytest.raises(SourceError, match="unexpectedly small"):
+        a._fetch_bytes(zip_ref, Path("/nonexistent"))
+    where = calls[1].url.params["$where"]
+    assert "locationid like '07%'" in where and "locationid like '19%'" in where
+    county = next(r for r in a.refs() if r.layer == "county")
+    calls.clear()
+    with pytest.raises(SourceError):
+        a._fetch_bytes(county, Path("/nonexistent"))
+    assert "stateabbr in ('NJ','PA')" in calls[1].url.params["$where"]
+
+
+def test_cdc_refuses_a_state_whose_zip_prefixes_are_unreviewed() -> None:
+    with pytest.raises(SourceError, match="not reviewed"):
+        PlacesAdapter(states=["NJ", "OH"])
 
 
 def test_cdc_truncated_page_fails(monkeypatch: Any, tmp_path: Path) -> None:

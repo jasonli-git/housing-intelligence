@@ -9,13 +9,22 @@ import math
 import re
 import tempfile
 from collections import defaultdict
+from collections.abc import Sequence
 from datetime import date
 from pathlib import Path
 from typing import ClassVar
 from zipfile import ZipFile
 
+from hip.config import fips_for
 from hip.sources.arcgis import ArcGisAdapter, ArcGisLayer
-from hip.sources.base import Discovery, ReleaseRef, SourceAdapter, SourceError
+from hip.sources.base import (
+    Discovery,
+    ReleaseRef,
+    SourceAdapter,
+    SourceError,
+    layer_state,
+    scoped_layer,
+)
 from hip.sources.xlsx import rows
 
 
@@ -187,9 +196,15 @@ class LeadLinesOpraAdapter(SourceAdapter):
         return records
 
 
+# The states whose UCMR 5 samples are kept (Milestone 63). The file is national; a state
+# is read once its water systems can be placed: New Jersey by NJDEP's service areas,
+# Pennsylvania by EPA's (`epa_water_areas`).
+UCMR_STATES = ("NJ", "PA")
+
+
 class UcmrAdapter(SourceAdapter):
     source_id: ClassVar[str] = "epa_ucmr5"
-    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
+    states: ClassVar[tuple[str, ...] | None] = UCMR_STATES
     default_vintage: ClassVar[str] = "current"
     landing_format: ClassVar[str] = "xlsx_records"
 
@@ -235,7 +250,7 @@ class UcmrAdapter(SourceAdapter):
                 raise SourceError("UCMR 5 headers changed")
             for r in reader:
                 if (
-                    r["State"] != "NJ"
+                    r["State"] not in UCMR_STATES
                     or r["SamplePointType"] != "EP"
                     or r["Contaminant"].casefold() == "lithium"
                 ):
@@ -275,13 +290,27 @@ class UcmrAdapter(SourceAdapter):
                     }
                 )
         if not result:
-            raise SourceError("UCMR 5 has no NJ entry-point samples")
+            raise SourceError("UCMR 5 has no entry-point samples for its states")
         return result
 
 
+# The states EIA-861's utilities are kept for (Milestone 63). A utility is a record per
+# state, so one serving two never mixes their sales: New Jersey's keep the bare EIA id
+# they always had, another state's carry its code, `14940:PA`.
+EIA_STATES = ("NJ", "PA")
+
+
+def eia_key(utility: str, state: str) -> str:
+    return utility if state == "NJ" else f"{utility}:{state}"
+
+
 class EiaAdapter(SourceAdapter):
+    """Each kept state's utilities: residential sales, reliability, and since
+    Milestone 63 the counties EIA lists each serving (`Service_Territory`), which places
+    a state without a territory map of its own at county level."""
+
     source_id: ClassVar[str] = "eia861"
-    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
+    states: ClassVar[tuple[str, ...] | None] = EIA_STATES
     default_vintage: ClassVar[str] = "2024"
     landing_format: ClassVar[str] = "xlsx_records"
 
@@ -362,21 +391,24 @@ class EiaAdapter(SourceAdapter):
                         if any(r.get(k) != v for k, v in expected.items()):
                             raise SourceError("EIA utility headers or units changed")
                         header_seen = True
-                    if n < 4 or r.get("G" if prefix == "Sales_Ult_Cust" else "D") != "NJ":
+                    state = r.get("G" if prefix == "Sales_Ult_Cust" else "D")
+                    if n < 4 or state not in EIA_STATES:
                         continue
                     if r.get("A") != ref.vintage:
                         raise SourceError("EIA utility year differs from release")
-                    key = r["B"]
+                    key = eia_key(r["B"], state)
                     # EIA's statewide balancing adjustment is not a supplier;
                     # its signed corrections must not become company statistics.
-                    if key == "99999":
+                    # Tested on the bare id: the key carries the state outside NJ.
+                    if r["B"] == "99999":
                         if r["C"] != f"Adjustment {ref.vintage}":
                             raise SourceError("EIA adjustment identity changed")
                         continue
                     record = records.setdefault(
                         key,
                         {
-                            "utility_id": key,
+                            "utility_id": r["B"],
+                            "state": state,
                             "name": r["C"],
                             "year": int(ref.vintage),
                             "sales": [],
@@ -419,9 +451,39 @@ class EiaAdapter(SourceAdapter):
                                 )
                 if not header_seen:
                     raise SourceError("EIA utility header row missing")
-        if not records:
+            # The counties each kept utility serves outside New Jersey, which has a
+            # territory map of its own (`njdep_utility_areas`).
+            member = f"Service_Territory_{ref.vintage}.xlsx"
+            target = Path(folder) / member
+            target.write_bytes(archive.read(member))
+            for n, r in rows(target, "Counties_States"):
+                if n == 1:
+                    if (r.get("B"), r.get("E"), r.get("F")) != (
+                        "Utility Number",
+                        "State",
+                        "County",
+                    ):
+                        raise SourceError("EIA service territory headers changed")
+                    continue
+                state = r.get("E")
+                if state not in EIA_STATES or state == "NJ":
+                    continue
+                if r.get("A") != ref.vintage:
+                    raise SourceError("EIA territory year differs from release")
+                served = records.get(eia_key(r["B"], state))
+                # A utility with no residential sales here serves no homes.
+                if served is None:
+                    continue
+                counties = served.setdefault("counties", [])
+                assert isinstance(counties, list)
+                counties.append(r["F"])
+        if not any(r["state"] == "NJ" for r in records.values()):
             raise SourceError("EIA has no New Jersey utilities")
         return [{"utility_id": k, "payload": json.dumps(r)} for k, r in records.items()]
+
+
+# Each state's county count, which its file must hold whole (Milestone 63).
+LEAD_COUNTIES = {"NJ": 21, "PA": 67}
 
 
 class EnergyBurdenAdapter(SourceAdapter):
@@ -433,25 +495,31 @@ class EnergyBurdenAdapter(SourceAdapter):
     """
 
     source_id: ClassVar[str] = "doe_lead"
-    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "2022"
     landing_format: ClassVar[str] = "xlsx_records"
 
+    def __init__(self, states: Sequence[str] = ("NJ",)) -> None:
+        self.scoped = [s.upper() for s in states]
+        unknown = [s for s in self.scoped if s not in LEAD_COUNTIES]
+        if unknown:
+            raise SourceError(f"LEAD county files not reviewed for {unknown}")
+
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         if vintage not in (None, self.default_vintage):
-            raise SourceError("LEAD adapter supports the verified 2022 NJ bulk file")
+            raise SourceError("LEAD adapter supports the verified 2022 bulk files")
         return [
             ReleaseRef(
                 self.source_id,
-                "counties",
+                scoped_layer("counties", state),
                 "2022",
-                "https://data.openei.org/files/6219/NJ-2022-LEAD-data.zip",
+                f"https://data.openei.org/files/6219/{state}-2022-LEAD-data.zip",
             )
+            for state in self.scoped
         ]
 
     @classmethod
     def filename(cls, ref: ReleaseRef) -> str:
-        return "NJ-2022-LEAD-data.zip"
+        return f"{layer_state(ref.layer, 'counties')}-2022-LEAD-data.zip"
 
     @classmethod
     def xlsx_records(cls, path: Path, ref: ReleaseRef) -> list[dict[str, object]]:
@@ -459,7 +527,10 @@ class EnergyBurdenAdapter(SourceAdapter):
         names: dict[str, str] = {}
         questionable: set[str] = set()
         bands = {"0-30%", "30-60%", "60-80%", "80-100%", "100-150%", "150%+"}
-        with ZipFile(path) as archive, archive.open("NJ AMI Counties 2022.csv") as handle:
+        state = layer_state(ref.layer, "counties")
+        fips = fips_for(state)
+        member = f"{state} AMI Counties 2022.csv"
+        with ZipFile(path) as archive, archive.open(member) as handle:
             reader = csv.DictReader(io.TextIOWrapper(handle, encoding="utf-8-sig"))
             columns = [
                 "UNITS",
@@ -474,14 +545,14 @@ class EnergyBurdenAdapter(SourceAdapter):
                 raise SourceError("LEAD county headers changed")
             for r in reader:
                 if (
-                    r["ABV"] != "NJ"
+                    r["ABV"] != state
                     or r["AMI150"] not in bands
                     or r["TEN"] not in {"OWN", "REN"}
                 ):
                     raise SourceError(
                         "LEAD geography or disjoint income partition changed"
                     )
-                if not re.fullmatch(r"34\d{3}", r["FIP"]):
+                if not re.fullmatch(rf"{fips}\d{{3}}", r["FIP"]):
                     raise SourceError("LEAD county identifier changed")
                 names[r["FIP"]] = r["NAME"]
                 for field in columns:
@@ -491,8 +562,8 @@ class EnergyBurdenAdapter(SourceAdapter):
                     if value < 0 and field != "HINCP*UNITS":
                         questionable.add(r["FIP"])
                     sums[r["FIP"]][field] += value
-        if len(sums) != 21:
-            raise SourceError("LEAD must contain all 21 NJ counties")
+        if len(sums) != LEAD_COUNTIES[state]:
+            raise SourceError(f"LEAD must contain all {LEAD_COUNTIES[state]} counties")
         records: list[dict[str, object]] = []
         for geoid, fields in sorted(sums.items()):
             means = {

@@ -94,6 +94,10 @@ export async function PlacePoster({ regionId }: { regionId: number }) {
     </main>
   </>;
 
+  // The place's own state names its comparisons and sources (Milestone 63): New Jersey's
+  // tax and utility records are New Jersey's alone.
+  const st = region.state_code;
+  const nj = st === "NJ";
   // A ZIP code crosses town lines, so its county comes from the migration crosswalk.
   const isZip = region.level === "zip";
   const zipCounty = isZip ? (await api.migration(regionId))?.county_id : undefined;
@@ -189,7 +193,7 @@ export async function PlacePoster({ regionId }: { regionId: number }) {
   const stories = new Map(records.map((record) => [record.topic, summarizePlaceStory(record)]));
   const story = (topic: PlaceStoryTopic) => { const found = stories.get(topic); return found?.available ? found : null; };
   // Open cleanups have no published rank, so towns are compared per thousand homes here.
-  const towns = (await api.regions(`state=${region.state_code}&level=${region.level}&limit=1000`))?.items ?? [];
+  const towns = (await api.allRegions(`state=${region.state_code}&level=${region.level}`))?.items ?? [];
   const batches = Array.from({ length: Math.ceil(towns.length / 100) }, (_, i) => towns.slice(i * 100, i * 100 + 100).map((t) => t.region_id));
   const townValues = async (id: string, period?: string) => period ? new Map((await Promise.all(batches.map((ids) => api.marketObservations(id, ids, period))))
     .flatMap((part) => part?.regions.flatMap((r) => r.series.map((p) => [r.region_id, p.value] as const)) ?? [])) : new Map<number, number>();
@@ -274,7 +278,7 @@ export async function PlacePoster({ regionId }: { regionId: number }) {
     { key: "own", label: name, rate: taxRate.value, own: true },
     ...(countyRates.length > 1 && countyRates[0].id !== regionId ? [{ key: "low", label: `${countyRates[0].name}, lowest in county`, rate: countyRates[0].rate, own: false }] : []),
     ...(countyRates.length > 1 && countyRates.at(-1)!.id !== regionId ? [{ key: "high", label: `${countyRates.at(-1)!.name}, highest in county`, rate: countyRates.at(-1)!.rate, own: false }] : []),
-    { key: "state", label: `Typical NJ ${unitWord}`, rate: stateRates[Math.floor(stateRates.length / 2)], own: false },
+    { key: "state", label: `Typical ${st} ${unitWord}`, rate: stateRates[Math.floor(stateRates.length / 2)], own: false },
   ] : [];
   const sameHousePeak = Math.max(...sameHouseRows.map((row) => row.rate), 0.01);
   const ratio = level("nj_director_ratio")?.value ?? null;
@@ -664,7 +668,7 @@ export async function PlacePoster({ regionId }: { regionId: number }) {
           <p className={acts.note}>The typical home against the median household income, not any one household. The mark is the common 30% guideline.{multiple !== null && lessThanHere !== null ? ` A typical home here costs ${multiple.toFixed(1)} times the typical income, a higher multiple than ${lessThanHere.toFixed(0)}% of ${unitPlural}. ` : " "}{multiple !== null && story("market") && <Link href={placeStoryHref("market", regionId)} prefetch={false}>See every {unitWord} on one chart</Link>}</p>
         </div>}
       </div>
-      <Prov kind="calculated">An estimate, not a quote: 20% down at {cost!.rate.value.toFixed(2)}%, {homeRow ? "typical home" : "at a recent sale price"}{rent === null ? "" : rentIsSurvey ? ", against the Census survey’s median rent, which includes long-time tenants" : " and typical rental"}.{month.principal > 0 ? ` About ${dollars(month.principal)} of owning goes into the home.` : ""} Zillow, Census ACS, NJ Division of Taxation, Freddie Mac.</Prov>
+      <Prov kind="calculated">An estimate, not a quote: 20% down at {cost!.rate.value.toFixed(2)}%, {homeRow ? "typical home" : "at a recent sale price"}{rent === null ? "" : rentIsSurvey ? ", against the Census survey’s median rent, which includes long-time tenants" : " and typical rental"}.{month.principal > 0 ? ` About ${dollars(month.principal)} of owning goes into the home.` : ""} Zillow, Census ACS, {taxRate ? "NJ Division of Taxation, " : ""}Freddie Mac.</Prov>
     </div>}
     {(rentSizes.length > 1 || bills.length > 0 || pressureStory || lendingStory) && <MoreTiles names={[rentSizes.length > 1 && "rent by size", bills.length > 0 && "utilities", lendingStory && "mortgages", pressureStory && "cost burden"].flatMap((n) => (n ? [n] : []))}>
       {rentSizes.length > 1 && <section className={acts.tile}>
@@ -866,7 +870,7 @@ export async function PlacePoster({ regionId }: { regionId: number }) {
       {facts.length > 0 && <section id="living" className={acts.tile}>
         <h3 className={acts.find}>Services and risks</h3>
         {said(facts)}
-        <Prov>{electric ? `Electricity: ${electric}. ` : ""}FCC, BTS, NJDEP, EPA, NJ BPU and CDC.</Prov>
+        <Prov>{electric ? `Electricity: ${electric}. ` : ""}{nj ? "FCC, BTS, NJDEP, EPA, NJ BPU and CDC." : "FCC, BTS, EPA, EIA and CDC."}</Prov>
       </section>}
       {floodBars.length > 0 && <section className={acts.tile}>
         <h3 className={acts.find}>{Math.round(floodBars.reduce((sum, bar) => sum + bar.value, 0)).toLocaleString("en-US")} flood insurance claims in {flood.place ?? name} in 20 years</h3>
@@ -1019,7 +1023,7 @@ export async function PlacePoster({ regionId }: { regionId: number }) {
 
         {readingPanel && <div className={acts.reading}>{readingPanel}</div>}
 
-        <footer className={styles.close}>Dashed labels mark estimates; solid ones mark records and official figures. <span data-terms="off">Sources: Zillow, Census Bureau, NJ Division of Taxation, FEMA, NOAA, FHFA and Realtor.com.</span> <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a></footer>
+        <footer className={styles.close}>Dashed labels mark estimates; solid ones mark records and official figures. <span data-terms="off">Sources: Zillow, Census Bureau, {nj ? "NJ Division of Taxation, " : ""}FEMA, NOAA, FHFA and Realtor.com.</span> <Link href={`${regionPath(regionId)}/report`}>Every figure in the full report</Link> · <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a></footer>
       </main>
     </>);
   }
@@ -1035,7 +1039,7 @@ export async function PlacePoster({ regionId }: { regionId: number }) {
     <ul>{glance.map(({ t, l }) => <li key={t.key}><a href={`#${GLANCE_AT[t.key]}`}>
       <strong>{l.unit === "year" ? String(Math.round(l.value)) : formatMetric(l.value, l.unit, l.metric_id)}</strong>
       <span>{t.label}</span>
-      <small>{takeawayShare(l, t.more, t.less)}</small>
+      <small>{takeawayShare(l, t.more, t.less, st)}</small>
     </a></li>)}</ul>
   </div>;
   const conclusion: Record<string, string | null> = {
@@ -1045,13 +1049,14 @@ export async function PlacePoster({ regionId }: { regionId: number }) {
     tax: taxBill ? `Property tax is ${dollars(taxBill.value)} a year${taxStanding ? `, ${taxStanding.charAt(0).toLowerCase()}${taxStanding.slice(1)}` : ""}` : null,
     renting: rent !== null ? (rentShare !== null ? `Renting takes ${rentShare.toFixed(0)}% of a typical income here` : `Rent runs ${dollars(rent)} a month`) : null,
     housing: (bedrooms.length > 0 || owned !== null || stock.length > 0) ? (threePlus > 0 ? `${(threePlus * 100).toFixed(0)}% of homes have three or more bedrooms` : owned !== null ? `${(owned * 100).toFixed(0)}% of homes are owner-occupied` : null) : null,
-    area: level("acs_mean_commute_minutes")?.percentile != null ? `The average commute is ${Math.round(level("acs_mean_commute_minutes")!.value)} minutes, ${takeawayShare(level("acs_mean_commute_minutes")!, "longer than", "shorter than")}` : workBars.length > 0 && elsewhere !== null ? `${elsewhere.toFixed(0)}% of residents work outside ${isZip ? "the ZIP code" : "town"}` : null,
+    area: level("acs_mean_commute_minutes")?.percentile != null ? `The average commute is ${Math.round(level("acs_mean_commute_minutes")!.value)} minutes, ${takeawayShare(level("acs_mean_commute_minutes")!, "longer than", "shorter than", st)}` : workBars.length > 0 && elsewhere !== null ? `${elsewhere.toFixed(0)}% of residents work outside ${isZip ? "the ZIP code" : "town"}` : null,
   };
 
   // #522: each section's figure set against the state's median town or ZIP code,
   // read from the published value rankings, as the briefing's slides do.
   const peerLevel = isZip ? "zip" : "municipality";
-  const peerValues = async (id: string) => (await api.values(id, peerLevel))?.items ?? [];
+  // Within the place's own state (Milestone 63): unscoped, rankings return every state's.
+  const peerValues = async (id: string) => (await api.values(id, peerLevel, 5000, region.state_code))?.items ?? [];
   const middle = (vals: number[]) => { const v = vals.filter(Number.isFinite).sort((a, b) => a - b); return v.length ? v[Math.floor(v.length / 2)] : null; };
   const [pSale, pZhvi, pZori, pPaid, pTax, pCommute, pBeds] = await Promise.all(["sr1a_median_sale_price", "zhvi_sfr", "zori_all", "acs_median_gross_rent", "modiv_median_tax_bill", "acs_mean_commute_minutes", "acs_share_3plus_bedrooms"].map(peerValues));
   const median = {
@@ -1125,7 +1130,7 @@ export async function PlacePoster({ regionId }: { regionId: number }) {
           <text x={HL + 4} y={hy(heatBase) - 6}>1951–80 average, {Math.round(heatBase)} days</text>
           {heatSeries.filter((o) => yearOf(o) % 20 === 0).map((o) => <text key={o.period_end} x={HL + heatSeries.indexOf(o) * barW} y={HH - 6} textAnchor="middle">{yearOf(o)}</text>)}
         </svg>
-        <p className={styles.caption}>Days over 90°F each year; orange is the latest ten, the average in the title{heatRank && allHeat.length ? ` · ${ordinal(heatRank)} hottest of ${allHeat.length} NJ counties` : ""}. A county average, not this town’s readings from NOAA nClimGrid-Daily.{ground.find((g) => g.id === "tree_canopy_homes_share") ? ` Shade: ${ground.find((g) => g.id === "tree_canopy_homes_share")!.value} tree canopy over ${name}’s homes.` : ""}</p>
+        <p className={styles.caption}>Days over 90°F each year; orange is the latest ten, the average in the title{heatRank && allHeat.length ? ` · ${ordinal(heatRank)} hottest of ${allHeat.length} ${st} counties` : ""}. A county average, not this town’s readings from NOAA nClimGrid-Daily.{ground.find((g) => g.id === "tree_canopy_homes_share") ? ` Shade: ${ground.find((g) => g.id === "tree_canopy_homes_share")!.value} tree canopy over ${name}’s homes.` : ""}</p>
       </section>}
 
       {persistence && county && <section className={styles.contextItem}>
@@ -1148,7 +1153,7 @@ export async function PlacePoster({ regionId }: { regionId: number }) {
 
       {readingPanel && <div className={acts.reading}>{readingPanel}</div>}
 
-      <footer className={styles.close}>Dashed labels mark estimates; solid ones mark records and official figures. <span data-terms="off">Sources: Zillow, Census Bureau, FEMA, NJ Division of Taxation.</span> <Link href={reportHref}>Every figure in the full report</Link> · <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a></footer>
+      <footer className={styles.close}>Dashed labels mark estimates; solid ones mark records and official figures. <span data-terms="off">Sources: Zillow, Census Bureau, FEMA{nj ? ", NJ Division of Taxation" : ""}.</span> <Link href={reportHref}>Every figure in the full report</Link> · <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a></footer>
     </main>
   </>);
 }

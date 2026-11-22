@@ -10,6 +10,7 @@
 scope:
   states:
     - NJ
+    - PA
 
   # Compatibility owner of geo/<level>.json; never infer it from scope ordering.
   legacy_geo_state: NJ

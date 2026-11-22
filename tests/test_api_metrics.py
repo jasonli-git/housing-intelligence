@@ -35,7 +35,8 @@ def test_catalog_reports_coverage(loaded: None) -> None:
 def test_coverage_can_be_narrowed_to_a_level(loaded: None) -> None:
     counties = {m["metric_id"]: m for m in client.get("/metrics?level=county").json()}
 
-    assert counties["zhvi_sfr"]["regions"] == 21
+    # New Jersey's 21 counties and Pennsylvania's 67 (Milestone 63).
+    assert counties["zhvi_sfr"]["regions"] == 21 + 67
 
 
 def test_observations_carry_their_provenance(loaded: None) -> None:

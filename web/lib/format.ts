@@ -111,6 +111,8 @@ export const SHARE_METRICS: ReadonlySet<string> = new Set([
   "lodes_work_other_nj_share",
   "lodes_work_nyc_share",
   "lodes_work_pennsylvania_share",
+  "lodes_work_other_pa_share",
+  "lodes_work_new_jersey_share",
   "lodes_work_other_state_share",
   "transit_rail_homes_share",
   "transit_bus_homes_share",

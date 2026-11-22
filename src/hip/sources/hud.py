@@ -478,25 +478,34 @@ class HudChasAdapter(SourceAdapter):
         if not isinstance(entries, list):
             raise ValueError(f"hud_chas/{directory.ref.key}: directory is not a list")
         state = fips_for(directory.ref.scope or "")
+        # A borough split by a county line is listed once per county under one MCD code
+        # (dozens in Pennsylvania), and HUD's answer for that code already carries a row
+        # for each piece, so one ref per code; otherwise the same release is cached twice.
+        codes = sorted(
+            {
+                int(entry["entityId"])
+                for entry in entries
+                if isinstance(entry, dict)
+                and str(entry.get("statecode")) == state
+                # Code 0 is "County subdivisions not defined" — the water areas, listed
+                # once per coastal county (five times for NJ). Not a municipality, and
+                # TIGER's 00000 is filtered for the same reason.
+                and int(entry["entityId"]) != 0
+            }
+        )
         return [
             ReleaseRef(
                 source_id=self.source_id,
-                # State FIPS and the five-digit MCD code: the key dbt resolves to a
-                # municipal GEOID through TIGER, since a CHAS row names no county code.
-                layer=f"mcd_{state}{int(entry['entityId']):05d}",
+                # State FIPS and the five-digit MCD code; dbt resolves it to a municipal
+                # GEOID through TIGER plus the county named in each row's place name.
+                layer=f"mcd_{state}{code:05d}",
                 vintage=year,
                 url=(
                     f"{BASE_URL}/chas?type={CHAS_MCD}&year={year}"
-                    f"&stateId={int(state)}&entityId={int(entry['entityId'])}"
+                    f"&stateId={int(state)}&entityId={code}"
                 ),
             )
-            for entry in entries
-            if isinstance(entry, dict)
-            and str(entry.get("statecode")) == state
-            # Code 0 is "County subdivisions not defined" — the water areas, listed once
-            # per coastal county (five times for NJ). Not a municipality, and TIGER's
-            # 00000 is filtered for the same reason.
-            and int(entry["entityId"]) != 0
+            for code in codes
         ]
 
     @classmethod
@@ -574,10 +583,13 @@ class HudChasBulkAdapter(SourceAdapter):
             raise SourceError(
                 f"CHAS {year}: Table 8 is not reviewed against that release's dictionary"
             )
+        # One release per state, as every other scoped source: a scope naming several
+        # states lands as one file, and widening the scope (NJ to NJ,PA in Milestone 63)
+        # left the narrower file beside it and doubled New Jersey's rows. Each state
+        # reads the same national file the owner handed in.
         return [
-            ReleaseRef(
-                self.source_id, level, year, CHAS_PAGE, scope=",".join(self.states)
-            )
+            ReleaseRef(self.source_id, level, year, CHAS_PAGE, scope=state)
+            for state in self.states
             for level in CHAS_BULK_LEVELS
         ]
 
@@ -622,12 +634,16 @@ class HudChasBulkAdapter(SourceAdapter):
                     cls._check_sums(row, ref)
                     # `0500000US34021` → `34021`; `0600000US3402100100` → state and MCD
                     # code, `3400100`, the key the API's municipal releases carry.
+                    # The state-and-MCD key is unique only where MCD codes are unique
+                    # statewide, as New Jersey's are; Pennsylvania reuses them across
+                    # counties, so `geoid` keeps the county too (TIGER's cousub GEOID).
                     geo = row["geoid"].split("US", 1)[1]
                     geo_key = geo if level == "county" else geo[:2] + geo[5:]
                     records.append(
                         {
                             "level": level,
                             "geo_key": geo_key,
+                            "geoid": geo,
                             "name": row["name"],
                             **{c: row[c] for c in counts + margins},
                         }

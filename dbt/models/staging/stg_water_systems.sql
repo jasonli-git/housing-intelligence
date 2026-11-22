@@ -27,7 +27,7 @@ violations as (
            v.compl_per_begin_date::date as began,
            nullif(v.rtc_date::varchar, '')::date as returned,
            coalesce(c.value_description, f.value_description, 'Other') as what
-    from read_parquet('{{ var("parquet_dir") }}/epa_sdwis/current/violations.parquet') v
+    from read_parquet('{{ var("parquet_dir") }}/epa_sdwis/current/violations*.parquet') v
     cross join window_years w
     left join codes c
       on c.value_type = 'CONTAMINANT_CODE' and c.value_code = v.contaminant_code
@@ -66,7 +66,7 @@ places as (
     select county_geoid, 'county', pwsid, any_value(system_name), sum(homes)
     from served group by 1, 2, 3
     union all
-    select '34', 'state', pwsid, any_value(system_name), sum(homes)
+    select left(county_geoid, 2), 'state', pwsid, any_value(system_name), sum(homes)
     from served group by 1, 2, 3
 ),
 totals as (
@@ -77,7 +77,8 @@ totals as (
     union all
     select county_geoid, 'county', sum(homes) from {{ ref('stg_block_homes') }} group by 1
     union all
-    select '34', 'state', sum(homes) from {{ ref('stg_block_homes') }}
+    select left(county_geoid, 2), 'state', sum(homes)
+    from {{ ref('stg_block_homes') }} group by 1
 )
 select p.geoid, p.level, p.pwsid, p.system_name,
        round(p.homes) as homes,

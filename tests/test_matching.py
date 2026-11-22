@@ -50,7 +50,12 @@ def con() -> duckdb.DuckDBPyConnection:
           ('3402712345', 'municipality', 'Chatham',    'NJ', '34027', 'county'),
           ('3402767890', 'municipality', 'Chatham',    'NJ', '34027', 'county'),
           ('3400523400', 'municipality', 'Florence',   'NJ', '34005', 'county'),
-          ('08520',      'zip',          '08520',      'NJ', NULL, NULL)
+          ('08520',      'zip',          '08520',      'NJ', NULL, NULL),
+          -- Pennsylvania has a Mercer County too (Milestone 63); its namesake town
+          -- must not make New Jersey's ambiguous.
+          ('42',         'state',        'Pennsylvania','PA', NULL, NULL),
+          ('42085',      'county',       'Mercer',     'PA', '42', 'state'),
+          ('4208519780', 'municipality', 'East Windsor','PA','42085','county')
     """)
     c.execute(f"CREATE SCHEMA {STAGING}")
     c.execute(f"""
@@ -75,6 +80,9 @@ def con() -> duckdb.DuckDBPyConnection:
         f"('zillow_zhvi','{layer}','{name}',{fips},{county},'NJ',{jan},{value})"
         for layer, name, fips, county, value in rows
     )
+    pa = "'zillow_zhvi','city','East Windsor',NULL,'Mercer County','PA'"
+    values += f",\n({pa},{jan},210000)"
+    values += f",\n('zillow_zhvi','city','Iselin',NULL,'Middlesex County','PA',{jan},1)"
     c.execute(f"INSERT INTO main_staging.stg_zillow_zhvi VALUES {values}")
     build_observations(c, staged_models=MODELS, staging_schema=STAGING)
     return c
@@ -202,7 +210,7 @@ def test_every_keyed_model_declares_its_release_layer() -> None:
     # The ACS models read their layers through `acs_layers` (Milestone 34), which names
     # each row's file as its release layer, so a model using it declares one.
     macro = (dbt / "macros" / "acs_layers.sql").read_text()
-    assert "'{{ prefix }}zcta' as release_layer" in macro
+    assert "file_scoped_layer(prefix ~ 'zcta', 'filename') }} as release_layer" in macro
 
     def declares(sql: str) -> bool:
         return "as release_layer" in sql or "acs_layers(" in sql
@@ -245,3 +253,25 @@ def test_values_are_cut_to_twelve_significant_digits() -> None:
     assert got[2] == 1234567.89123
     assert got[3] == -0.000123456789012
     assert got[4:] == [0, None, 12.5]
+
+
+def test_a_town_matches_within_its_own_state(con: duckdb.DuckDBPyConnection) -> None:
+    """Milestone 63: name and county alone made New Jersey's Union township ambiguous
+    with Pennsylvania's, and it lost its Zillow figures. Each state's row finds its
+    own."""
+    rows = dict(
+        con.execute(
+            f"SELECT geoid, value FROM {OBSERVATION_TABLE} WHERE level = 'municipality'"
+            " AND geoid LIKE '%19780'"
+        ).fetchall()
+    )
+    assert rows == {"3402119780": 450000, "4208519780": 210000}
+
+
+def test_a_reject_names_its_state(con: duckdb.DuckDBPyConnection) -> None:
+    """Milestone 63: one unmatched name in a same-named county of each state is two
+    rejects, which the warehouse's unique key now tells apart by state."""
+    rows = con.execute(
+        f"SELECT state_code FROM {REJECT_TABLE} WHERE region_name = 'Iselin' ORDER BY 1"
+    ).fetchall()
+    assert rows == [("NJ",), ("PA",)]

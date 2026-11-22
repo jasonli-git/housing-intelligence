@@ -28,6 +28,7 @@ bulk as (
     select
         json['level'] as level,
         json['geo_key'] as geo_key,
+        json->>'geoid' as geoid,
         {{ release_vintage('filename') }} as release_vintage,
         json['T8_est2']::double  as owners,
         json['T8_moe2']::double  as owners_moe,
@@ -50,12 +51,16 @@ bulk as (
     )
 ),
 municipal as (
-    -- A CHAS row names its municipality by MCD code alone, with no county. TIGER maps
-    -- state plus MCD code to the GEOID, reading the file stg_nj_municipal_codes reads;
-    -- MCD codes are unique within a state.
-    select distinct STATEFP || COUSUBFP as geo_key, GEOID as geoid
-    from read_parquet('{{ var("parquet_dir") }}/census_tiger/*/cousub_*.parquet')
-    where COUSUBFP <> '00000'
+    -- A CHAS row names its municipality by state plus MCD code, with no county code.
+    -- MCD codes repeat across counties in Pennsylvania (a borough split by a county
+    -- line is one code in two counties, and HUD returns a row for each piece), so the
+    -- county is read from the row's name ("Falls Creek borough, Clearfield County,
+    -- Pennsylvania") and matched to TIGER's county name.
+    select distinct s.STATEFP || s.COUSUBFP as geo_key, s.GEOID as geoid, c.NAMELSAD as county_name
+    from read_parquet('{{ var("parquet_dir") }}/census_tiger/*/cousub_*.parquet') s
+    join read_parquet('{{ var("parquet_dir") }}/census_tiger/*/county.parquet') c
+      on c.STATEFP = s.STATEFP and c.COUNTYFP = s.COUNTYFP
+    where s.COUSUBFP <> '00000'
 ),
 keyed as (
     select
@@ -72,7 +77,9 @@ keyed as (
         "D5"::double  as renters_30_to_50,
         "D8"::double  as renters_over_50
     from raw r
-    left join municipal m on r.level = 'mcd' and m.geo_key = r.geo_key
+    left join municipal m
+        on r.level = 'mcd' and m.geo_key = r.geo_key
+       and m.county_name = list_extract(string_split(r.geoname, ', '), -2)
 ),
 with_margins as (
     -- The bulk margins, kept only where every count they qualify is the API's own.
@@ -93,7 +100,7 @@ with_margins as (
     from keyed k
     left join bulk b
         on b.level = k.source_level
-       and b.geo_key = k.geo_key
+       and coalesce(b.geoid = k.geoid, b.geo_key = k.geo_key)
        and b.release_vintage = k.release_vintage
 ),
 unpivoted as (
@@ -136,4 +143,9 @@ select
     release_vintage
 from unpivoted
 where value is not null
+  -- HUD rounds CHAS counts for disclosure (small cells show as 4), so in a few
+  -- dozen-household Pennsylvania boroughs the burdened count exceeds the households it
+  -- is a share of (Glasgow borough: 4 renters, 4 + 4 burdened). Such a share is an
+  -- artefact of rounding, not a reading, and is withheld rather than capped.
+  and value <= 1
   and geoid is not null

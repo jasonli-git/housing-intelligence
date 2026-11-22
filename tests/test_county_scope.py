@@ -104,7 +104,7 @@ def test_a_state_only_source_names_the_scoped_states_it_does_not_cover() -> None
     # Every implemented source has a class to read its coverage from, unbuilt.
     assert set(IMPLEMENTED) <= set(SOURCE_CLASSES)
     assert uncovered(SOURCE_CLASSES["nj_modiv"], two) == ["PA"]
-    assert uncovered(SOURCE_CLASSES["fema_nfhl"], two) == ["PA"]
+    assert uncovered(SOURCE_CLASSES["njdep_cafe"], two) == ["PA"]
     # A source that follows the scope covers both.
     assert uncovered(SOURCE_CLASSES["census_acs"], two) == []
     assert uncovered(SOURCE_CLASSES["nj_modiv"], scope("NJ")) == []

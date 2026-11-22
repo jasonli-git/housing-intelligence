@@ -65,7 +65,9 @@ def _run(con: duckdb.DuckDBPyConnection, model: str, parquet: Path) -> None:
         jinja2.Environment()
         .from_string((MODELS / f"{model}.sql").read_text())
         .render(
-            config=lambda **_: "", ref=lambda name: name, var=lambda name: str(parquet)
+            config=lambda **_: "",
+            ref=lambda name: name,
+            var=lambda name: "'34', '42'" if name == "state_fips" else str(parquet),
         )
     )
     con.execute(f"CREATE OR REPLACE TABLE {model} AS {sql}")
@@ -189,3 +191,39 @@ def test_a_place_with_under_thirty_loans_gets_no_loan_figures(
     _world(con, tmp_path)
     # ZIP 07307 holds only tract B's 20 loans.
     assert _figures(con, "07307") == {}
+
+
+def test_each_state_reads_its_own_file_and_keeps_its_own_release(
+    con, tmp_path: Path
+) -> None:
+    """Milestone 63: Pennsylvania's file sits beside New Jersey's, as its own layer."""
+    _write(
+        con,
+        tmp_path / "ffiec_hmda" / "2025" / "pa_2025.parquet",
+        [loan("42101000100", rate="5.5") for _ in range(30)],
+    )
+    _world(con, tmp_path)
+    rows = dict(
+        con.execute(
+            "SELECT geoid, release_layer FROM stg_hmda_lending "
+            "WHERE metric_id = 'hmda_purchase_loans' AND level IN ('state', 'county')"
+        ).fetchall()
+    )
+    assert rows == {
+        "34": "nj_2025",
+        "34017": "nj_2025",
+        "42": "pa_2025",
+        "42101": "pa_2025",
+    }
+    state = _figures(con, "42")
+    assert state["hmda_purchase_loans"] == (30, "fips")
+    assert state["hmda_median_rate"][0] == 5.5
+
+
+def test_the_adapter_reads_one_file_per_scoped_state_and_year() -> None:
+    refs = HmdaAdapter(states=["NJ", "PA"]).refs("2025")
+    assert [(r.layer, r.url.split("?")[1]) for r in refs] == [
+        ("nj_2025", "states=NJ&years=2025"),
+        ("pa_2025", "states=PA&years=2025"),
+    ]
+    assert HmdaAdapter.filename(refs[0]) == "hmda_nj_2025.csv"

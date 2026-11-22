@@ -324,6 +324,21 @@ def _asked_differently(manifest: dict[str, object], ref: ReleaseRef) -> bool:
     return own and isinstance(recorded, str) and redact(recorded) != redact(ref.url)
 
 
+def scoped_layer(base: str, state: str) -> str:
+    """A per-state layer's name: New Jersey's keeps the name it had alone (Milestone 63).
+
+    Layers read for New Jersey before a second state existed name raw files, Parquet
+    paths and every observation's release; renaming them would re-download and re-date
+    New Jersey's data for nothing. Every other state's carries its code: `claims_pa`.
+    """
+    return base if state.upper() == "NJ" else f"{base}_{state.lower()}"
+
+
+def layer_state(layer: str, base: str) -> str:
+    """The state a `scoped_layer` name was made for: `claims` is NJ, `claims_pa` PA."""
+    return "NJ" if layer == base else layer.removeprefix(f"{base}_").upper()
+
+
 class SourceAdapter(ABC):
     """One public data source.
 

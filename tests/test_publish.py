@@ -28,7 +28,7 @@ client = TestClient(app)
 # --- Path layout. Pure: no warehouse, no HTTP. ------------------------------------
 
 
-def _only_ranking(keys: list[tuple[str, str, str, str]]) -> tuple[str, str]:
+def _only_ranking(keys: list[tuple[str, str, str, str, str]]) -> tuple[str, str]:
     """The one ranking pair in a plan, past the fixed entries the plan always yields."""
     pairs = [pair for pair in _plan([], keys) if pair[1].startswith("rankings/")]
     assert len(pairs) == 1, pairs
@@ -78,24 +78,47 @@ def test_value_rankings_omit_the_window_from_the_request_but_keep_it_in_the_path
     parameter entirely. Sending it back produced a 422 and was caught by the publish
     gate rather than by a reader.
     """
-    keys = [("modiv_median_assessed_value", "municipality", "latest", "value")]
+    keys = [("modiv_median_assessed_value", "municipality", "latest", "value", "NJ")]
     api_path, out_path = _only_ranking(keys)
     assert "window=" not in api_path
     assert out_path == (
-        "rankings/modiv_median_assessed_value/municipality/latest/value.json"
+        "rankings/NJ/modiv_median_assessed_value/municipality/latest/value.json"
     )
 
 
 def test_change_rankings_do_send_the_window() -> None:
-    keys = [("zhvi_sfr", "county", "5y", "change")]
+    keys = [("zhvi_sfr", "county", "5y", "change", "NJ")]
     api_path, out_path = _only_ranking(keys)
     assert "window=5y" in api_path
-    assert out_path == "rankings/zhvi_sfr/county/5y/change.json"
+    assert out_path == "rankings/NJ/zhvi_sfr/county/5y/change.json"
+
+
+def test_rankings_publish_per_state_and_the_legacy_state_keeps_its_path() -> None:
+    """Milestone 63: places rank within their state, so each state has its own list.
+
+    New Jersey's unscoped paths are a published contract, kept by the same explicit
+    compatibility owner as geometry's (#401); Pennsylvania's exist only under its code.
+    """
+    keys = [("zhvi_sfr", "county", "5y", "change", s) for s in ("NJ", "PA")]
+    pairs = [
+        pair
+        for pair in _plan([], keys, states=["NJ", "PA"], legacy_geo_state="NJ")
+        if pair[1].startswith("rankings/")
+    ]
+    assert [out for _, out in pairs] == [
+        "rankings/NJ/zhvi_sfr/county/5y/change.json",
+        "rankings/zhvi_sfr/county/5y/change.json",
+        "rankings/PA/zhvi_sfr/county/5y/change.json",
+    ]
+    assert all("&state=" in api for api, _ in pairs)
+    assert "state=PA" in pairs[2][0] and "limit=5000" in pairs[2][0]
 
 
 def test_plan_paths_are_unique() -> None:
     """Two API paths writing one file would silently drop an artifact."""
-    paths = [out for _, out in _plan([11, 12], [("zhvi_sfr", "county", "5y", "change")])]
+    keys = [("zhvi_sfr", "county", "5y", "change", "NJ")]
+    plan = _plan([11, 12], keys, states=["NJ"], legacy_geo_state="NJ")
+    paths = [out for _, out in plan]
     assert len(paths) == len(set(paths))
 
 
@@ -230,14 +253,16 @@ def test_skipped_entries_are_explanations_not_data(published: Path) -> None:
         and "/housing-pressure" not in path
     ]
     assert not unexpected, f"unexpected 404s: {unexpected[:5]}"
-    # 52 on 2026-10-06: the nation, 10 towns and 41 ZIP codes, all small places. Many
-    # more would mean the lists stopped loading.
+    # 52 on 2026-10-06: the nation, 10 towns and 41 ZIP codes, all small places. With
+    # Pennsylvania, 799 on 2026-11-22: New Jersey's 55 and the nation, plus 335 towns
+    # and 407 ZIP codes, none above 1,102 people (median about 200). Many more would
+    # mean the lists stopped loading.
     no_destinations = [p for p in manifest["skipped_404"] if "/work-destinations" in p]
-    assert len(no_destinations) <= 60, f"work destinations missing: {no_destinations[:5]}"
-    # Milestone 35: only a region with no county — the state, the nation — has no income
-    # limits; every county, town and ZIP reads one.
+    assert len(no_destinations) <= 850, f"lists missing: {no_destinations[:5]}"
+    # Milestone 35: only a region with no county — a state, the nation — has no income
+    # limits; every county, town and ZIP reads one. Two states since Milestone 63.
     no_limits = [path for path in manifest["skipped_404"] if "/income-limits" in path]
-    assert len(no_limits) <= 2, f"income limits missing: {no_limits[:5]}"
+    assert len(no_limits) <= 3, f"income limits missing: {no_limits[:5]}"
 
 
 # --- Region identity. Pure: a manifest on disk, no warehouse. ----------------------

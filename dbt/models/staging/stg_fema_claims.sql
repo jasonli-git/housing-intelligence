@@ -1,5 +1,6 @@
 -- Flood insurance claims paid, per county, ZIP code, town and the state, by year of loss
--- (Milestone 40, ARCHITECTURE #302; towns since #354).
+-- (Milestone 40, ARCHITECTURE #302; towns since #354; every scoped state since Milestone
+-- 63, one file each).
 --
 -- A claim counts when the NFIP paid anything on the building or its contents; claims
 -- closed without payment are left out. Payments are as paid, in the dollars of the
@@ -26,8 +27,11 @@ with claims as (
            left(reportedZipCode, 5) as zip,
            left(censusGeoid, 12) as block_group,
            coalesce(netBuildingPaymentAmount, 0) + coalesce(netContentsPaymentAmount, 0)
-               as paid
-    from read_parquet('{{ var("parquet_dir") }}/fema_nfip_claims/current/claims.parquet')
+               as paid,
+           regexp_extract(filename, '/(claims[a-z_]*)\.parquet$', 1) as release_layer
+    from read_parquet(
+        '{{ var("parquet_dir") }}/fema_nfip_claims/current/claims*.parquet', filename = true
+    )
     where yearOfLoss is not null
 ),
 paid as (select * from claims where paid > 0),
@@ -91,17 +95,23 @@ ambiguous as (
 ),
 counted as (
     select county_geoid as geoid, 'county' as level, 'fips' as match_method, year,
-           count(*)::double as claims, sum(paid) as amount, null::double as unplaced
-    from paid where county_geoid like '34%' group by all
+           count(*)::double as claims, sum(paid) as amount, null::double as unplaced,
+           min(release_layer) as release_layer
+    from paid where left(county_geoid, 2) in ({{ var("state_fips") }}) group by all
     union all
-    select zip, 'zip', 'zcta', year, count(*), sum(paid), null
-    from paid where regexp_matches(zip, '^0[78][0-9]{3}$') group by all
+    -- A ZIP code across a state line counts both states' claims, as the reported ZIP
+    -- code it is; the ZIP codes are the scope's own (`stg_block_homes`).
+    select zip, 'zip', 'zcta', year, count(*), sum(paid), null, min(release_layer)
+    from paid where zip in (select distinct zcta_geoid from {{ ref('stg_block_homes') }})
+    group by zip, year
     union all
-    select '34', 'state', 'fips', year, count(*), sum(paid), null
-    from paid group by all
+    select left(county_geoid, 2), 'state', 'fips', year, count(*), sum(paid), null,
+           min(release_layer)
+    from paid where left(county_geoid, 2) in ({{ var("state_fips") }})
+    group by left(county_geoid, 2), year
     union all
     select p.town, 'municipality', 'block_crosswalk', c.year,
-           sum(p.weight), sum(c.paid * p.weight), null
+           sum(p.weight), sum(c.paid * p.weight), null, min(c.release_layer)
     from paid c join placed p using (block_group)
     -- 150 claims name a county other than their block group's. FEMA's county is the
     -- one the county figure counts, so a claim the two disagree on is not placed.
@@ -109,7 +119,8 @@ counted as (
     group by all
 ),
 unplaced as (
-    select a.town as geoid, c.year, count(*)::double as claims
+    select a.town as geoid, c.year, count(*)::double as claims,
+           min(c.release_layer) as release_layer
     from paid c join ambiguous a using (block_group)
     where left(c.block_group, 5) = c.county_geoid
     group by all
@@ -125,7 +136,7 @@ select 'fema_nfip_claims' as source_id, metric_id, geoid, level,
        make_date(year::int, 1, 1) as period_start,
        make_date(year::int, 12, 31) as period_end,
        value::double as value, match_method,
-       'claims' as release_layer, 'current' as release_vintage
+       release_layer, 'current' as release_vintage
 from counted
 cross join lateral (
     values ('fema_flood_claims', claims), ('fema_flood_claims_paid', amount)
@@ -133,5 +144,6 @@ cross join lateral (
 union all
 select 'fema_nfip_claims', 'fema_flood_claims_unplaced', t.geoid, 'municipality',
        make_date(t.year::int, 1, 1), make_date(t.year::int, 12, 31),
-       coalesce(u.claims, 0), 'block_crosswalk', 'claims', 'current'
+       coalesce(u.claims, 0), 'block_crosswalk',
+       {{ scoped_layer('claims', 'left(t.geoid, 2)') }}, 'current'
 from town_years t left join unplaced u using (geoid, year)

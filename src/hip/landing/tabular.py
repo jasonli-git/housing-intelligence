@@ -7,6 +7,9 @@ dbt's job at the `stage` stage; keeping landing dumb is what makes it re-runnabl
 
 from __future__ import annotations
 
+import functools
+import hashlib
+import inspect
 import json
 import tempfile
 import zipfile
@@ -50,6 +53,35 @@ def _stamp_path(out: Path) -> Path:
     return out.with_suffix(".parquet.src")
 
 
+@functools.cache
+def _adapter_code(source_id: str) -> str:
+    """A hash of the code that turns a source's files into rows, for the stamp.
+
+    The release's sha256 alone says nothing of the adapter reading it. Milestone 63
+    taught EIA-861's records to carry the counties each utility serves; the raw file was
+    unchanged, so every run skipped it and Pennsylvania's utilities never landed, here
+    or on any machine after the merge. The adapter's own classes (not `SourceAdapter`,
+    whose fetching shapes no row) are hashed, so any edit to them lands once more.
+    """
+    from hip.sources.registry import SOURCE_CLASSES
+
+    cls = SOURCE_CLASSES.get(source_id)
+    if cls is None:
+        return ""
+    code = hashlib.sha256()
+    for klass in cls.__mro__:
+        if klass is SourceAdapter or not klass.__module__.startswith("hip.sources"):
+            continue
+        code.update(inspect.getsource(klass).encode())
+    return code.hexdigest()[:16]
+
+
+def _code_path(out: Path) -> Path:
+    """Where `_adapter_code` is recorded. Beside `.parquet.src`, never in it: staging
+    models and `hip archive` read that file as the release's sha256 alone."""
+    return out.with_suffix(".parquet.code")
+
+
 def needs_landing(release: Release, out: Path, overwrite: bool) -> bool:
     """Whether `out` must be rebuilt from `release`.
 
@@ -68,7 +100,9 @@ def needs_landing(release: Release, out: Path, overwrite: bool) -> bool:
 
     Fixed by recording the producing release's sha256 beside the Parquet and comparing
     against it, which keeps the skip — transcoding 1.1GB of MOD-IV on every run is a
-    real cost — while making it answer the right question.
+    real cost — while making it answer the right question. Since Milestone 63 the
+    adapter's code hash sits beside it (`_adapter_code`, `.parquet.code`), so a file
+    whose records are now read differently lands again; one with no hash lands once.
     """
     if overwrite or not out.exists():
         return True
@@ -77,12 +111,18 @@ def needs_landing(release: Release, out: Path, overwrite: bool) -> bool:
         # Landed before stamps existed. Rebuild once, so the stamp is written and
         # every later run can trust it.
         return True
-    return stamp.read_text().strip() != release.sha256
+    if stamp.read_text().strip() != release.sha256:
+        return True
+    code = _code_path(out)
+    return not code.exists() or code.read_text().strip() != _adapter_code(
+        release.ref.source_id
+    )
 
 
 def record_landed(release: Release, out: Path) -> None:
     """Note which release produced `out`, for `needs_landing` to compare against."""
     _stamp_path(out).write_text(release.sha256 + "\n")
+    _code_path(out).write_text(_adapter_code(release.ref.source_id) + "\n")
 
 
 # A UTF-8 byte-order mark, as the first column's name reads once a file is decoded as

@@ -46,7 +46,7 @@ let medians: Promise<Medians> | null = null;
  *  asked once per build worker rather than once a page. */
 export function njMedians(): Promise<Medians> {
   medians ??= Promise.all(MEDIAN_OF.map(async (id) => {
-    const v = ((await api.values(id, "municipality"))?.items ?? []).map((x) => x.value).filter(Number.isFinite).sort((a, b) => a - b);
+    const v = ((await api.values(id, "municipality", 1000, "NJ"))?.items ?? []).map((x) => x.value).filter(Number.isFinite).sort((a, b) => a - b);
     return v.length ? [id, v[Math.floor(v.length / 2)]] as const : null;
   })).then((pairs) => Object.fromEntries(pairs.filter((p) => p !== null)));
   return medians;

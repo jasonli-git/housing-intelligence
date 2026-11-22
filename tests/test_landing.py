@@ -15,6 +15,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import duckdb
+import pytest
 
 from hip.landing.tabular import land_csv, needs_landing, parquet_path
 from hip.sources.base import Release, ReleaseRef
@@ -112,6 +113,29 @@ def test_a_parquet_with_no_stamp_is_rebuilt_once(tmp_path: Path) -> None:
     out = parquet_path(release, parquet_dir)
 
     out.with_suffix(".parquet.src").unlink()
+    assert needs_landing(release, out, overwrite=False) is True
+
+
+def test_a_change_to_the_adapter_lands_its_files_again(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Milestone 63: EIA-861's records gained the counties a utility serves while its
+    file stayed the same, and the sha256 stamp alone skipped it on every run. The
+    adapter's code is stamped beside it, and a file with no such stamp lands once."""
+    from hip.landing import tabular
+
+    parquet_dir = tmp_path / "parquet"
+    release = _release(tmp_path, JUNE)
+    land_csv(release, parquet_dir=parquet_dir)
+    out = parquet_path(release, parquet_dir)
+    assert needs_landing(release, out, overwrite=False) is False
+    # The sha256 file is untouched: staging models read it as the sha256 alone.
+    assert out.with_suffix(".parquet.src").read_text() == release.sha256 + "\n"
+
+    monkeypatch.setattr(tabular, "_adapter_code", lambda source_id: "edited")
+    assert needs_landing(release, out, overwrite=False) is True
+    monkeypatch.undo()
+    out.with_suffix(".parquet.code").unlink()
     assert needs_landing(release, out, overwrite=False) is True
 
 

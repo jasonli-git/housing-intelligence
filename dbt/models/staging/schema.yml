@@ -101,7 +101,7 @@ models:
       - name: release_layer
         tests:
           - accepted_values:
-              values: ['housing_county', 'housing_cousub', 'housing_zcta']
+              values: ['housing_county', 'housing_county_pa', 'housing_cousub', 'housing_cousub_pa', 'housing_zcta', 'housing_zcta_pa']
       - name: value
         tests:
           - not_null
@@ -132,8 +132,8 @@ models:
       - name: release_layer
         tests:
           - accepted_values:
-              values: ['insurance_county', 'insurance_cousub', 'insurance_zcta',
-                       'utilities_county', 'utilities_cousub', 'utilities_zcta']
+              values: ['insurance_county', 'insurance_county_pa', 'insurance_cousub', 'insurance_cousub_pa', 'insurance_zcta', 'insurance_zcta_pa',
+                       'utilities_county', 'utilities_county_pa', 'utilities_cousub', 'utilities_cousub_pa', 'utilities_zcta', 'utilities_zcta_pa']
       - name: value
         tests:
           - not_null
@@ -150,10 +150,10 @@ models:
       - name: release_layer
         tests:
           - accepted_values:
-              values: ['rent_county', 'rent_cousub', 'rent_zcta',
-                       'stock_county', 'stock_cousub', 'stock_zcta',
-                       'rooms_county', 'rooms_cousub', 'rooms_zcta',
-                       'vacancy_county', 'vacancy_cousub', 'vacancy_zcta']
+              values: ['rent_county', 'rent_county_pa', 'rent_cousub', 'rent_cousub_pa', 'rent_zcta', 'rent_zcta_pa',
+                       'stock_county', 'stock_county_pa', 'stock_cousub', 'stock_cousub_pa', 'stock_zcta', 'stock_zcta_pa',
+                       'rooms_county', 'rooms_county_pa', 'rooms_cousub', 'rooms_cousub_pa', 'rooms_zcta', 'rooms_zcta_pa',
+                       'vacancy_county', 'vacancy_county_pa', 'vacancy_cousub', 'vacancy_cousub_pa', 'vacancy_zcta', 'vacancy_zcta_pa']
       # Dollars, a year, a household size or a share: none negative, none past $1m.
       - name: value
         tests:
@@ -174,9 +174,9 @@ models:
       - name: release_layer
         tests:
           - accepted_values:
-              values: ['people_county', 'people_cousub', 'people_zcta',
-                       'disability_county', 'disability_cousub', 'disability_zcta',
-                       'schools_county', 'schools_cousub', 'schools_zcta']
+              values: ['people_county', 'people_county_pa', 'people_cousub', 'people_cousub_pa', 'people_zcta', 'people_zcta_pa',
+                       'disability_county', 'disability_county_pa', 'disability_cousub', 'disability_cousub_pa', 'disability_zcta', 'disability_zcta_pa',
+                       'schools_county', 'schools_county_pa', 'schools_cousub', 'schools_cousub_pa', 'schools_zcta', 'schools_zcta_pa']
       - name: value
         tests:
           - not_null
@@ -394,7 +394,7 @@ models:
       - name: value
         tests:
           - not_null
-          - accepted_range: {name: stg_work_flows_in_range, min_value: 0, max_value: 5000000}
+          - accepted_range: {name: stg_work_flows_in_range, min_value: 0, max_value: 10000000}
 
   - name: stg_work_destinations
     description: >-

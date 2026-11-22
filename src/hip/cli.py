@@ -17,6 +17,7 @@ import logging
 import shutil
 import subprocess
 import sys
+from collections.abc import Sequence
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Annotated
@@ -93,6 +94,7 @@ from hip.sources.base import (
     SourceError,
     local,
     redact,
+    scoped_layer,
 )
 from hip.sources.registry import (
     IMPLEMENTED,
@@ -473,10 +475,43 @@ def _cached_releases(
     cached contributes no provenance rows, which is correct — it contributed no facts.
     """
     try:
-        return list(adapter.fetch_all(raw_dir=raw_dir, vintage=vintage, cached_only=True))
+        return _cached(adapter, raw_dir, vintage)
     except (SourceError, OSError) as exc:
         logger.warning("%s: no cached releases (%s)", adapter.source_id, redact(str(exc)))
         return []
+
+
+def _cached(adapter: SourceAdapter, raw_dir: Path, vintage: str | None) -> list[Release]:
+    """Every release of a source already on disk, for `land` and `load` alike.
+
+    A hand-in source (`manual`) is read file by file: its files arrive a state at a
+    time, so a second state's not handed in yet (Pennsylvania's FCC location files,
+    Milestone 63) is warned about and the first state's still land and load. Any other
+    source stays all or nothing, raising on the first ref missing from the cache.
+    """
+    if not adapter.manual:
+        return list(adapter.fetch_all(raw_dir=raw_dir, vintage=vintage, cached_only=True))
+    found: list[Release] = []
+    missing: list[str] = []
+    for ref in adapter.refs(vintage):
+        try:
+            release = adapter.fetch(ref, raw_dir=raw_dir, cached_only=True)
+        except (SourceError, OSError):
+            missing.append(ref.key)
+            continue
+        found.append(release)
+        found += [
+            adapter.fetch(child, raw_dir=raw_dir, cached_only=True)
+            for child in adapter.child_refs(release, vintage)
+        ]
+    if not found:
+        names = ", ".join(missing)
+        raise SourceError(f"{adapter.source_id}: nothing handed in ({names})")
+    if missing:
+        logger.warning(
+            "%s: not handed in yet, skipped: %s", adapter.source_id, ", ".join(missing)
+        )
+    return found
 
 
 def _adapters(source: str | None) -> list[SourceAdapter]:
@@ -1014,11 +1049,7 @@ def land(
     skipped: list[str] = []
     for adapter in _adapters(source):
         try:
-            staged = list(
-                adapter.fetch_all(
-                    raw_dir=settings.raw_dir, vintage=vintage, cached_only=True
-                )
-            )
+            staged = _cached(adapter, settings.raw_dir, vintage)
         except (SourceError, OSError) as exc:
             skipped.append(adapter.source_id)
             typer.secho(
@@ -1331,6 +1362,20 @@ def _landed_rows(
     return int(row[0]) if row else 0
 
 
+def _fact_layer(release: Release, states: Sequence[str]) -> str:
+    """The layer a fact's release is recorded under.
+
+    A source read once per state lands one file per state under the same layer, so
+    from Milestone 63 each state's file is recorded as `scoped_layer` names it: New
+    Jersey's keeps the bare layer it always had, Pennsylvania's is `county_pa`. Staging
+    names the same layer on each row, so a value cites its own state's file.
+    """
+    ref = release.ref
+    if ref.scope is not None and ref.scope in states:
+        return scoped_layer(ref.layer, ref.scope)
+    return ref.layer
+
+
 @app.command()
 def load(
     vintage: Annotated[str | None, typer.Option("--vintage")] = None,
@@ -1415,7 +1460,7 @@ def load(
             fact_provenance += [
                 ReleaseProvenance(
                     source_id=release.ref.source_id,
-                    layer=release.ref.layer,
+                    layer=_fact_layer(release, scope.states),
                     vintage=release.ref.vintage,
                     fetched_at=release.fetched_at,
                     file_sha256=release.sha256,

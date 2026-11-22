@@ -27,8 +27,12 @@ export function GroundAndWater({
   water: inputWater,
   compact = false,
   scope = "all",
+  state = "NJ",
 }: {
   name: string;
+  /** The place's state (Milestone 63): New Jersey's own sources and rules are named only
+   *  for a New Jersey place; another state's service areas are EPA's estimate. */
+  state?: string;
   levels: PacketLevel[];
   water: WaterSystems | null;
   compact?: boolean;
@@ -47,6 +51,7 @@ export function GroundAndWater({
   const visibleSystems = compact ? orderedSystems.slice(0,2) : orderedSystems;
   const remainingSystems = compact ? orderedSystems.slice(2) : [];
   const headingId = scope === "sites" ? "ground-sites-heading" : "ground-water-heading";
+  const nj = state === "NJ";
 
   return (
     <section className="section sales ground-water" aria-labelledby={headingId}>
@@ -72,8 +77,9 @@ export function GroundAndWater({
         <p className="sales-note">
           Of the homes here, {shareText(publicShare)} are on public water.
           {publicShare < 0.99
-            ? " Most of the rest draw from private wells, which federal drinking water law does not cover; New Jersey requires a well to be tested when a home is sold or leased."
+            ? ` Most of the rest draw from private wells, which federal drinking water law does not cover${nj ? "; New Jersey requires a well to be tested when a home is sold or leased" : ""}.`
             : ""}
+          {!nj && " The service areas are EPA’s, partly modelled, so the share is an estimate."}
         </p>
       )}
 
@@ -95,7 +101,7 @@ export function GroundAndWater({
             <summary>{s.name}</summary>
             <div className="reader-details-body">
               {report ? <p className="sales-note"><a href={report.url} target="_blank" rel="noreferrer">Read this system’s annual water-quality report</a> · system ID matched {report.verified}. Ask the supplier for current results; an annual report is not live testing.</p>
-                : <p className="sales-note">No direct annual-report link verified for this system. <a href="https://ordspub.epa.gov/ords/safewater/f?p=136:103::::103:P103_STATE:NJ" target="_blank" rel="noreferrer">Search EPA’s New Jersey report directory</a> using {s.pwsid} / {s.name}, or ask the supplier.</p>}
+                : <p className="sales-note">No direct annual-report link verified for this system. <a href={`https://ordspub.epa.gov/ords/safewater/f?p=136:103::::103:P103_STATE:${state}`} target="_blank" rel="noreferrer">Search EPA’s report directory for the state</a> using {s.pwsid} / {s.name}, or ask the supplier.</p>}
               {lead ? <>
                 <p className="sales-note">Service-line inventory, submission {lead.submission_year}{lead.submitted ? ` · submitted ${lead.submitted}` : ""}{lead.category_updated ? ` · category data updated ${lead.category_updated}` : ""}{lead.opra_request ? ` · released by NJDEP under OPRA request ${lead.opra_request}` : ""}.</p>
                 <dl className="utility-reliability">
@@ -119,15 +125,15 @@ export function GroundAndWater({
             </div>
           </details>;
         })}
-        <p className="sales-note">NJ requires lead-line identification and replacement by 2031; extensions may apply. <a href="https://dep.nj.gov/lead/replacement/">NJDEP replacement programme</a>. These counts do not measure lead concentration.</p>
-        <p className="sales-note">The current public system-inventory map reaches submission 2024. <a href="https://dep.nj.gov/lead/map/">NJDEP’s 2025 statewide totals</a> are newer, but cannot replace an individual system’s record.</p>
+        {nj && <p className="sales-note">NJ requires lead-line identification and replacement by 2031; extensions may apply. <a href="https://dep.nj.gov/lead/replacement/">NJDEP replacement programme</a>. These counts do not measure lead concentration.</p>}
+        {nj && <p className="sales-note">The current public system-inventory map reaches submission 2024. <a href="https://dep.nj.gov/lead/map/">NJDEP’s 2025 statewide totals</a> are newer, but cannot replace an individual system’s record.</p>}
         <p className="sales-note">EPA references shown for PFOA and PFOS only (4 ng/L, reviewed October 2026); proposals affect other PFAS rules. Compliance uses running annual averages, not the maxima above. <a href="https://www.epa.gov/sdwa/and-polyfluoroalkyl-substances-pfas">EPA rules</a> · <a href="https://www.epa.gov/dwucmr/fifth-unregulated-contaminant-monitoring-rule-data-finder">EPA UCMR Data Finder</a>. <a href="https://www.epa.gov/ccr">Find an annual water-quality report</a>, or ask the supplier for its Consumer Confidence Report and current results.</p>
       </ReaderDetails>}
 
       {water && (
         <p className="sales-note reader-takeaway">
-          These are system-wide past violations, not today’s water quality or a count of affected homes. A missing resolution date does not prove the issue is still unresolved. For current New Jersey results, check{" "}
-          <a href={DRINKING_WATER_WATCH} target="_blank" rel="noreferrer">Drinking Water Watch</a>.
+          These are system-wide past violations, not today’s water quality or a count of affected homes. A missing resolution date does not prove the issue is still unresolved.{nj ? <>{" "}For current New Jersey results, check{" "}
+          <a href={DRINKING_WATER_WATCH} target="_blank" rel="noreferrer">Drinking Water Watch</a>.</> : " For current results, ask the supplier."}
         </p>
       )}
       <ReaderDetails title={scope === "sites" ? "Site records and sources" : "Water records and sources"}>
@@ -137,21 +143,21 @@ export function GroundAndWater({
           law requires not done, in a period that began from {water.first_year} to{" "}
           {water.last_year}. It is a period the water broke a rule, not a measure of the
           water today; each system’s name opens EPA’s record of what happened and what was
-          done. New Jersey’s own limits on PFAS are not in EPA’s records:{" "}
+          done.{nj && <>{" "}New Jersey’s own limits on PFAS are not in EPA’s records:{" "}
           <a href={DRINKING_WATER_WATCH} target="_blank" rel="noreferrer">
             Drinking Water Watch
           </a>{" "}
-          has them.
+          has them.</>}
         </p>
       )}
 
       <p className="sales-note">
-        {scope === "sites" ? "Sites: New Jersey Department of Environmental Protection." : <>Sites and service areas: New Jersey Department of Environmental Protection.
-        Violations: EPA’s Safe Drinking Water Information System. Homes served are estimated
+        {scope === "sites" ? "Sites: New Jersey Department of Environmental Protection." : <>{nj ? "Sites and service areas: New Jersey Department of Environmental Protection." : "Service areas: EPA’s public water system service areas, partly modelled."}
+        {" "}Violations: EPA’s Safe Drinking Water Information System. Homes served are estimated
         from the 2020 Census.</>}
       </p>
       </ReaderDetails>
-      <p className="sales-note publisher-notice-inline">{NJDEP_NOTICE}</p>
+      {nj && <p className="sales-note publisher-notice-inline">{NJDEP_NOTICE}</p>}
       {scope === "all" && <StoryLink href="/stories/water-you-can-check" />}
     </section>
   );

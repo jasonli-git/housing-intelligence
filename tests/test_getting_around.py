@@ -18,9 +18,10 @@ import jinja2
 import pytest
 
 from hip.config import REPO_ROOT
-from hip.sources.bts_ntm import BOX, TransitStopsAdapter
+from hip.sources.bts_ntm import TransitStopsAdapter, box
 from hip.sources.census_lodes import MISSING, STATES, LodesAdapter
 from hip.sources.registry import IMPLEMENTED, METRIC_SOURCES
+from tests.dbt_render import dbt_context
 
 MODELS = REPO_ROOT / "dbt" / "models" / "staging"
 
@@ -54,11 +55,19 @@ def test_lodes_discovers_a_newer_year_when_new_jerseys_file_appears() -> None:
 
 
 def test_transit_stops_are_read_for_a_box_around_new_jersey_without_geometry() -> None:
-    layer = TransitStopsAdapter.LAYERS["stops"]
-    assert layer.where == BOX and not layer.geometry
+    layer = TransitStopsAdapter().layers()["stops"]
+    assert layer.where == box("NJ") and not layer.geometry
+    assert "stop_lon >= -75.65" in layer.where
     assert {"stop_lat", "stop_lon", "stop_type_text", "location_type"} <= set(
         layer.fields
     )
+
+
+def test_each_scoped_state_has_its_own_box_and_new_jersey_keeps_its_layer() -> None:
+    """Milestone 63: one layer a state; New Jersey's keeps the name `stops`."""
+    layers = TransitStopsAdapter(states=["NJ", "PA"]).layers()
+    assert list(layers) == ["stops", "stops_pa"]
+    assert "stop_lon >= -80.75" in layers["stops_pa"].where
 
 
 def test_both_sources_are_fetched_and_cited() -> None:
@@ -74,11 +83,7 @@ def _run(con: duckdb.DuckDBPyConnection, model: str, parquet: Path) -> None:
     sql = (
         jinja2.Environment()
         .from_string((MODELS / f"{model}.sql").read_text())
-        .render(
-            config=lambda **_: "",
-            ref=lambda name: name,
-            var=lambda name: str(parquet),
-        )
+        .render(**dbt_context(lambda name: str(parquet)))
     )
     con.execute(f"CREATE OR REPLACE TABLE {model} AS {sql}")
 
@@ -276,3 +281,54 @@ def test_a_ferry_landing_and_a_station_entrance_are_not_stops(
         "SELECT stop_type_text FROM stg_transit_stops ORDER BY 1"
     ).fetchall()
     assert kinds == [('"Bus"',), ('"Rail"',)]
+
+
+PA_TOWN = "4201700001"
+PA1, PA2 = "420170001001000", "420170001001001"
+
+
+def test_a_pennsylvania_town_reads_its_own_files_and_its_own_shares(
+    con, tmp_path: Path
+) -> None:
+    """Milestone 63: a Pennsylvania town's residents, from Pennsylvania's main file and
+    New Jersey's auxiliary file, with the shares that read true for Pennsylvania."""
+    root = tmp_path / "census_lodes" / "2023"
+    _write(
+        con,
+        root / "xwalk_pa.parquet",
+        [
+            {"tabblk2020": PA1, "cty": "42017", "ctycsub": PA_TOWN, "zcta": "18940"},
+            {"tabblk2020": PA2, "cty": "42017", "ctycsub": PA_TOWN, "zcta": "18940"},
+        ],
+    )
+    od = lambda h, w, n: {"w_geocode": w, "h_geocode": h, "S000": str(n)}  # noqa: E731
+    _write(
+        con,
+        root / "od_main_pa.parquet",
+        [od(PA1, PA2, 120), od(PA1, PHILADELPHIA, 40)],
+    )
+    # New Jersey's auxiliary file: a Pennsylvanian working in Hudson County.
+    _write(con, root / "od_aux_NJ.parquet", [od(PA2, A1, 40)])
+    _lodes_world(con, tmp_path)
+    town = _shares(con, PA_TOWN)
+    assert town["lodes_resident_jobs"] == 200
+    assert town["lodes_work_home_county_share"] == pytest.approx(120 / 200)
+    assert town["lodes_work_other_pa_share"] == pytest.approx(40 / 200)
+    assert town["lodes_work_new_jersey_share"] == pytest.approx(40 / 200)
+    for nj_only in ("lodes_work_other_nj_share", "lodes_work_pennsylvania_share"):
+        assert nj_only not in town
+    # And New Jersey's town keeps the shares it had.
+    assert "lodes_work_other_pa_share" not in _shares(con, TOWN_A)
+    assert _shares(con, TOWN_A)["lodes_resident_jobs"] == 400
+    layers = dict(
+        con.execute(
+            "SELECT geoid, release_layer FROM stg_work_flows "
+            "WHERE metric_id = 'lodes_resident_jobs' AND level = 'state'"
+        ).fetchall()
+    )
+    assert layers == {"34": "od_main", "42": "od_main_pa"}
+    # The Hudson County job is a linked town, not a named state.
+    destinations = con.execute(
+        "SELECT destination_geoid FROM stg_work_destinations WHERE geoid = ?", [PA_TOWN]
+    ).fetchall()
+    assert (TOWN_A,) in destinations

@@ -23,12 +23,20 @@ import json
 import os
 from collections.abc import Iterable
 from datetime import date
+from pathlib import Path
 from typing import ClassVar
+from urllib.parse import parse_qs, urlencode, urlsplit
+
+import httpx
 
 from hip.config import ConfigError, fips_for
 from hip.sources.base import Discovery, Release, ReleaseRef, SourceAdapter, local
 
 BASE_URL = "https://api.census.gov/data"
+
+# The most ZCTAs one request names: New Jersey's 598 pass whole, Pennsylvania's 1,800 are
+# asked for in parts (`AcsAdapter._fetch_bytes`).
+ZCTA_BATCH = 600
 
 # Census variable -> the metric_id it becomes. Cost burden needs several variables
 # combined, so its parts are fetched and the ratio is computed in dbt.
@@ -343,6 +351,37 @@ class AcsAdapter(SourceAdapter):
             for prefix, (first, variables) in self.requests().items()
             if year >= first
         ]
+
+    def _fetch_bytes(self, ref: ReleaseRef, destination: Path) -> None:
+        """A long list of ZCTAs is asked for in parts and written as one matrix.
+
+        The API refuses a request naming Pennsylvania's 1,800 ZCTAs (400, or a 520 from
+        its edge), where New Jersey's 598 pass (Milestone 63). A list of up to
+        `ZCTA_BATCH` codes is still one request, so New Jersey's files are unchanged.
+        """
+        query = parse_qs(urlsplit(ref.url).query)
+        selector = query.get("for", [""])[0]
+        prefix = "zip code tabulation area:"
+        codes = selector[len(prefix) :].split(",") if selector.startswith(prefix) else []
+        if len(codes) <= ZCTA_BATCH:
+            super()._fetch_bytes(ref, destination)
+            return
+        base = ref.url.split("?", 1)[0]
+        matrix: list[list[object]] = []
+        with httpx.Client(timeout=120, headers=self.headers) as client:
+            for start in range(0, len(codes), ZCTA_BATCH):
+                part = {k: v[0] for k, v in query.items()}
+                part["for"] = prefix + ",".join(codes[start : start + ZCTA_BATCH])
+                response = client.get(f"{base}?{urlencode(part, safe=':,*')}")
+                response.raise_for_status()
+                rows = response.json()
+                if not isinstance(rows, list) or not rows:
+                    raise ValueError(f"census_acs/{ref.key}: a part is not a matrix")
+                if matrix and rows[0] != matrix[0]:
+                    raise ValueError(f"census_acs/{ref.key}: parts disagree on columns")
+                matrix += rows if not matrix else rows[1:]
+        destination.write_text(json.dumps(matrix), encoding="utf-8")
+        self._last_validators = {}
 
     @classmethod
     def to_records(cls, payload: object, ref: ReleaseRef) -> list[dict[str, object]]:

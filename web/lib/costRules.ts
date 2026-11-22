@@ -183,10 +183,54 @@ export const RELIEF: ReadonlyArray<Rule> = [
 ];
 
 /**
+ * Pennsylvania's realty transfer tax (Milestone 63): 1% of the price to the state and,
+ * in most places, 1% more to the town and school district, which some levy higher —
+ * Philadelphia and Pittsburgh among them. Buyer and seller are both liable and by custom
+ * split it evenly, so the seller's share is taken as half of the usual 2%. The local
+ * rate of a particular town is not held, and the rule says so.
+ */
+export const PA_TRANSFER_RULE: Rule = {
+  label:
+    "Pennsylvania realty transfer tax: the state's 1% and the usual 1% local tax, customarily split; some towns levy more",
+  source: "Pennsylvania Department of Revenue",
+  url: "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/realty-transfer-tax",
+  reviewed: "2026-11-21",
+};
+
+/** The seller's customary half of Pennsylvania's usual 2% transfer tax. */
+export function paSellerFees(price: number): number {
+  return price <= 0 ? 0 : price * 0.01;
+}
+
+/** A Pennsylvania landlord may take at most two months' rent in a lease's first year. */
+export const PA_DEPOSIT_RULE: Rule = {
+  label: "Pennsylvania's cap on a security deposit in a lease's first year",
+  source: "Landlord and Tenant Act of 1951, section 511.1 (68 P.S. § 250.511a)",
+  url: "https://www.palegis.us/statutes/unconsolidated/law-information/view-statute?SESSYR=1951&SESSIND=0&ACTNUM=20&SMTHLWIND=&CHPT=5&SCTN=&SUBSCTN=",
+  reviewed: "2026-11-21",
+};
+
+/** Pennsylvania's relief and help buying, as links, as New Jersey's are. */
+export const PA_RELIEF: ReadonlyArray<Rule> = [
+  {
+    label: "Property Tax/Rent Rebate Program, for older and disabled residents",
+    source: "Pennsylvania Department of Revenue",
+    url: "https://www.pa.gov/agencies/revenue/ptrr",
+    reviewed: "2026-11-21",
+  },
+  {
+    label: "Help buying a first home",
+    source: "Pennsylvania Housing Finance Agency",
+    url: "https://www.phfa.org/homebuyers/",
+    reviewed: "2026-11-21",
+  },
+];
+
+/**
  * The rules that belong to a state: what a seller pays it on a sale, how large a deposit
- * a landlord may take, and its relief programs (2026-10-21, ARCHITECTURE #407). Only New
- * Jersey's are held. A place in a state with none shows its costs without those lines and
- * says so, rather than New Jersey's.
+ * a landlord may take, and its relief programs (2026-10-21, ARCHITECTURE #407). New
+ * Jersey's and, since Milestone 63, Pennsylvania's are held. A place in a state with none
+ * shows its costs without those lines and says so, rather than another state's.
  */
 export type StateRules = {
   /** The state's possessive, for sentences: "New Jersey’s". */
@@ -206,6 +250,14 @@ export const STATE_RULES: Readonly<Record<string, StateRules>> = {
     depositMonths: DEPOSIT_MONTHS,
     depositRule: DEPOSIT_RULE,
     relief: RELIEF,
+  },
+  PA: {
+    name: "Pennsylvania",
+    sellerFees: paSellerFees,
+    transferRule: PA_TRANSFER_RULE,
+    depositMonths: 2,
+    depositRule: PA_DEPOSIT_RULE,
+    relief: PA_RELIEF,
   },
 };
 

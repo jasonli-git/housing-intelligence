@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { COVERED_STATES, coveredNames } from "@/lib/states";
 import Link from "next/link";
 
 import home from "./_poster/home.module.css";
@@ -21,7 +22,7 @@ import { pageMetadata } from "@/lib/meta";
 
 export const metadata: Metadata = pageMetadata({
   title: "Housing Intelligence — Find your place",
-  description: "A clearer picture of the place you could call home. Free housing data with sources for every figure; detailed coverage starts with New Jersey.",
+  description: `A clearer picture of the place you could call home. Free housing data with sources for every figure; detailed coverage of ${coveredNames()}.`,
   path: "/",
 });
 
@@ -119,7 +120,7 @@ export default async function HousingLandingPage() {
         </div>
         <div className={home.map}>
           <div className={original.map}><NationalCoverageMap preview focusedEntry /></div>
-          <p><span>A coverage map, not prices. Alaska and Hawaii not shown.</span><Link href="/states/new-jersey">Detailed coverage: New Jersey ↗</Link></p>
+          <p><span>A coverage map, not prices. Alaska and Hawaii not shown.</span><span>Detailed coverage: {COVERED_STATES.map((s, i) => <span key={s.code}>{i ? " · " : ""}<Link href={s.path}>{s.name} ↗</Link></span>)}</span></p>
         </div>
       </section>
 

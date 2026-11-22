@@ -55,7 +55,7 @@ export async function storyPoints(story: string): Promise<{ points: { series: st
 export async function latestFor(metrics: string[], level: string, ids: number[]): Promise<Map<number, Partial<Record<string, number>>>> {
   const byMetric = await Promise.all(
     metrics.map(async (m) => {
-      const ranked = (await api.values(m, level, 1000))?.items ?? [];
+      const ranked = (await api.values(m, level, 1000, "NJ"))?.items ?? [];
       if (ranked.length) return [m, new Map(ranked.map((r) => [r.region_id, r.value]))] as const;
       const series = await seriesFor(m, ids);
       return [m, new Map([...series].flatMap(([id, s]) => (s.length ? [[id, s.at(-1)!.value] as const] : [])))] as const;
@@ -106,7 +106,7 @@ export async function storyShapes(level: "county" | "municipality", width: numbe
  * where its middle falls.
  */
 export async function storyZips(): Promise<(Place & { county: number | null })[]> {
-  const [values, zipGeo, countyGeo] = await Promise.all([api.values(PRICE, "zip", 1000), api.geo("zip", "NJ", 0.001), api.geo("county", "NJ", 0.001)]);
+  const [values, zipGeo, countyGeo] = await Promise.all([api.values(PRICE, "zip", 1000, "NJ"), api.geo("zip", "NJ", 0.001), api.geo("county", "NJ", 0.001)]);
   type Feature = { properties: Record<string, unknown>; geometry: { type: string; coordinates: unknown } };
   const rings = (f: Feature): number[][] => {
     const polys = (f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates) as number[][][][];
