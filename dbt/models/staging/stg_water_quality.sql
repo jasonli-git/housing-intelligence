@@ -61,7 +61,7 @@ cross join lateral (
             'water_homes_share_public', public,
             {{ scoped_layer('areas', 'state') }},
             case when state = '34' then {{ var('read_years')['njdep_water_areas'] }}
-                 else {{ var('read_years')['epa_water_areas'] or 'null' }} end),
+                 else {{ var('read_years').get('epa_water_areas') or 'null' }} end),
            ('epa_sdwis', 'water_homes_share_violation', violation,
             {{ scoped_layer('violations', 'state') }},
             {{ var('read_years')['epa_sdwis'] }})

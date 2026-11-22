@@ -169,8 +169,12 @@ def dbt_vars(
         ),
         # TIGER's road files, read for one story, take the boundary files' vintage.
         "tiger_roads_year": _tiger_roads_year(),
+        # A source never read is left out rather than sent as None: dbt reads its vars as
+        # YAML, where Python's None arrives as the string "None" (Milestone 63).
         "read_years": {
-            source_id: _read_year(settings.raw_dir, source_id) for source_id in READ_DATED
+            source_id: year
+            for source_id in READ_DATED
+            if (year := _read_year(settings.raw_dir, source_id)) is not None
         },
     }
 
