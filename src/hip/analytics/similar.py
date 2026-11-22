@@ -28,6 +28,11 @@ the sale price where it exists, never ranked on.
 on Zillow's typical home value instead: sales carry only a town code, so no ZIP
 has a recorded-sales price, and ZIPs are never compared with towns, so no comparison
 mixes the two measures. The page says which price it used.
+
+**Within a state** (Milestone 63): a place is matched only among its own state's, each
+state's measures scaled across its own places, as rankings are. Pennsylvania's towns
+have no recorded-sales price (SR1A is New Jersey's), so they get no matches; its ZIP
+codes are matched among themselves on Zillow's value.
 """
 
 from __future__ import annotations
@@ -160,13 +165,14 @@ _FIGURES = text(
         SELECT f.metric_id, max(f.period_end) AS period_end
         FROM fact_metric_observation f JOIN regions r USING (region_id)
         WHERE r.level = CAST(:level AS region_level) AND f.metric_id = ANY(:metrics)
+          AND r.state_code = :state
         GROUP BY f.metric_id
     )
     SELECT f.region_id, f.metric_id, f.value, f.period_start, f.period_end
     FROM fact_metric_observation f
     JOIN newest n ON n.metric_id = f.metric_id AND n.period_end = f.period_end
     JOIN regions r ON r.region_id = f.region_id
-    WHERE r.level = CAST(:level AS region_level)
+    WHERE r.level = CAST(:level AS region_level) AND r.state_code = :state
     """
 )
 
@@ -187,12 +193,18 @@ def rebuild_similar(engine: Engine) -> int:
     )
     with engine.begin() as conn:
         conn.execute(text("TRUNCATE similar_places"))
-        for rules in LEVELS:
+        states = [
+            row[0]
+            for row in conn.execute(
+                text("SELECT DISTINCT state_code FROM regions ORDER BY 1")
+            )
+        ]
+        for rules, state in ((r, s) for r in LEVELS for s in states):
             metrics = [*MEASURES, rules.price, COMMUTE, *rules.context]
             if rules.sales:
                 metrics.append(rules.sales)
             rows = conn.execute(
-                _FIGURES, {"metrics": metrics, "level": rules.level}
+                _FIGURES, {"metrics": metrics, "level": rules.level, "state": state}
             ).fetchall()
             figures: dict[int, dict[str, float]] = {}
             periods: dict[str, str] = {}
