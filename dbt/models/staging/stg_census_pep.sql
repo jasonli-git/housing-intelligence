@@ -59,6 +59,35 @@ with counties as (
     -- 061 only. Places and "balance of" records overlap these municipalities.
     where sumlev = '061'
 
+), whole_county_towns as (
+
+    -- Philadelphia is a city and county in one, and PEP gives it no 061 row, only its
+    -- county's 050 (Milestone 63). TIGER draws that county as a single county
+    -- subdivision, so the county's estimate is the town's, from the same file. Only a
+    -- county with no 061 row of its own and exactly one TIGER subdivision qualifies.
+    select
+        'municipality' as level,
+        t.geoid,
+        {{ scoped_layer('cousub', "lpad(p.state::varchar, 2, '0')") }} as release_layer,
+        {{ release_vintage('p.filename') }} as release_vintage,
+        p.* exclude (sumlev, state, county, cousub, filename)
+    from read_parquet(
+        '{{ var("parquet_dir") }}/census_pep/*/cousub_*.parquet', filename=true
+    ) p
+    join (
+        select STATEFP || COUNTYFP as county_geoid, any_value(GEOID) as geoid
+        from read_parquet('{{ var("parquet_dir") }}/census_tiger/*/cousub_*.parquet')
+        where COUSUBFP <> '00000'
+        group by 1
+        having count(*) = 1
+    ) t on t.county_geoid = lpad(p.state::varchar, 2, '0') || lpad(p.county::varchar, 3, '0')
+    where p.sumlev = '050'
+      and not exists (
+          select 1
+          from read_parquet('{{ var("parquet_dir") }}/census_pep/*/cousub_*.parquet') m
+          where m.sumlev = '061' and m.state = p.state and m.county = p.county
+      )
+
 ), combined as (
 
     -- (?i) because the lander preserves the publisher's header casing and Census ships
@@ -71,6 +100,10 @@ with counties as (
     select level, geoid, release_layer, release_vintage,
            columns('(?i)^popestimate\d{4}$')
     from municipalities
+    union all by name
+    select level, geoid, release_layer, release_vintage,
+           columns('(?i)^popestimate\d{4}$')
+    from whole_county_towns
 
 ), unpivoted as (
 

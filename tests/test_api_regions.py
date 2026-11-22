@@ -55,15 +55,16 @@ def test_municipalities_match_the_real_state(loaded: None) -> None:
 
 
 def test_name_search_is_case_insensitive(loaded: None) -> None:
-    body = client.get("/regions?level=county&q=mercer").json()
+    # Pennsylvania has a Mercer County too (Milestone 63), so the search is scoped.
+    body = client.get("/regions?level=county&q=mercer&state=NJ").json()
 
     assert body["total"] == 1
     assert body["items"][0]["name"] == "Mercer"
 
 
 def test_pagination_is_stable_and_non_overlapping(loaded: None) -> None:
-    first = client.get("/regions?level=municipality&limit=10&offset=0").json()
-    second = client.get("/regions?level=municipality&limit=10&offset=10").json()
+    first = client.get("/regions?level=municipality&state=NJ&limit=10&offset=0").json()
+    second = client.get("/regions?level=municipality&state=NJ&limit=10&offset=10").json()
 
     assert first["total"] == second["total"] == NJ_MUNICIPALITIES
     assert len(first["items"]) == len(second["items"]) == 10
@@ -154,7 +155,7 @@ def test_backdrop_is_not_in_the_region_spine(loaded: None) -> None:
     `/regions`, search, and the counts the site quotes (migration 0012)."""
     states = client.get("/regions?level=state&limit=100").json()
 
-    assert [item["state_code"] for item in states["items"]] == ["NJ"]
+    assert [item["state_code"] for item in states["items"]] == ["NJ", "PA"]
 
 
 def test_has_data_partitions_the_spine() -> None:
@@ -181,7 +182,7 @@ def test_has_data_composes_with_other_filters() -> None:
     counties = client.get("/regions?has_data=true&level=county&limit=1").json()
     assert counties["total"] > 0
     both = client.get("/regions?has_data=true&level=county&state=NJ&limit=1").json()
-    assert both["total"] == counties["total"]
+    assert both["total"] == 21 < counties["total"]
 
 
 def test_name_lsad_disambiguates_places_sharing_a_name_and_county() -> None:

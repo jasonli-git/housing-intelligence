@@ -222,7 +222,9 @@ def test_the_packet_carries_the_fact_and_not_its_inputs(bergen: object) -> None:
 def test_a_quoted_distance_from_the_median_binds_to_the_fact(bergen: object) -> None:
     packet = bergen
     p = packet.persistence
-    sentence = f"In {p.last_year} it sat {p.vs_median:.1f}% above its long-run median."
+    # Two decimals: since Milestone 63's reload Bergen's 15.47% and its movers' income
+    # change, 15.49%, both round to 15.5%, and a one-decimal figure binds to either.
+    sentence = f"In {p.last_year} it sat {p.vs_median:.2f}% above its long-run median."
     binding = bind(sentence, packet)
     assert any(c.field == "persistence.vs_median" for c in binding.citations), json.dumps(
         [c.model_dump(mode="json") for c in binding.citations]
@@ -245,7 +247,7 @@ def test_no_forecast_from_the_long_run_comparison(
     packet = bergen
     p = packet.persistence
     text = (
-        f"In {p.last_year} it sat {p.vs_median:.1f}% above its long-run median. {follow}"
+        f"In {p.last_year} it sat {p.vs_median:.2f}% above its long-run median. {follow}"
     )
     problems = prediction_problems(text, bind(text, packet), packet)
     assert bool(problems) is refused

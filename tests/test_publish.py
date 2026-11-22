@@ -253,10 +253,12 @@ def test_skipped_entries_are_explanations_not_data(published: Path) -> None:
         and "/housing-pressure" not in path
     ]
     assert not unexpected, f"unexpected 404s: {unexpected[:5]}"
-    # 52 on 2026-10-06: the nation, 10 towns and 41 ZIP codes, all small places. Many
-    # more would mean the lists stopped loading.
+    # 52 on 2026-10-06: the nation, 10 towns and 41 ZIP codes, all small places. With
+    # Pennsylvania, 799 on 2026-11-22: New Jersey's 55 and the nation, plus 335 towns
+    # and 407 ZIP codes, none above 1,102 people (median about 200). Many more would
+    # mean the lists stopped loading.
     no_destinations = [p for p in manifest["skipped_404"] if "/work-destinations" in p]
-    assert len(no_destinations) <= 60, f"work destinations missing: {no_destinations[:5]}"
+    assert len(no_destinations) <= 850, f"lists missing: {no_destinations[:5]}"
     # Milestone 35: only a region with no county — the state, the nation — has no income
     # limits; every county, town and ZIP reads one.
     no_limits = [path for path in manifest["skipped_404"] if "/income-limits" in path]
