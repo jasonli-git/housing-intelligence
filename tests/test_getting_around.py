@@ -18,7 +18,7 @@ import jinja2
 import pytest
 
 from hip.config import REPO_ROOT
-from hip.sources.bts_ntm import BOX, TransitStopsAdapter
+from hip.sources.bts_ntm import TransitStopsAdapter, box
 from hip.sources.census_lodes import MISSING, STATES, LodesAdapter
 from hip.sources.registry import IMPLEMENTED, METRIC_SOURCES
 from tests.dbt_render import dbt_context
@@ -55,11 +55,19 @@ def test_lodes_discovers_a_newer_year_when_new_jerseys_file_appears() -> None:
 
 
 def test_transit_stops_are_read_for_a_box_around_new_jersey_without_geometry() -> None:
-    layer = TransitStopsAdapter.LAYERS["stops"]
-    assert layer.where == BOX and not layer.geometry
+    layer = TransitStopsAdapter().layers()["stops"]
+    assert layer.where == box("NJ") and not layer.geometry
+    assert "stop_lon >= -75.65" in layer.where
     assert {"stop_lat", "stop_lon", "stop_type_text", "location_type"} <= set(
         layer.fields
     )
+
+
+def test_each_scoped_state_has_its_own_box_and_new_jersey_keeps_its_layer() -> None:
+    """Milestone 63: one layer a state; New Jersey's keeps the name `stops`."""
+    layers = TransitStopsAdapter(states=["NJ", "PA"]).layers()
+    assert list(layers) == ["stops", "stops_pa"]
+    assert "stop_lon >= -80.75" in layers["stops_pa"].where
 
 
 def test_both_sources_are_fetched_and_cited() -> None:

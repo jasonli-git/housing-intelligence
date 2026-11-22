@@ -1,10 +1,13 @@
--- Transit stops near New Jersey, by the kind of service that stops there (Milestone 45,
--- ARCHITECTURE #314), from the National Transit Map.
+-- Transit stops near each scoped state, by the kind of service that stops there
+-- (Milestone 45, ARCHITECTURE #314), from the National Transit Map; one layer a state
+-- since Milestone 63, each stop kept once where two states' boxes overlap.
 --
 -- Rail is commuter rail, PATH and PATCO, the subway, and light rail; bus includes the
 -- few trolleybus stops. A stop with both is both. Ferry landings are left out: a ferry
 -- is not the everyday trip a half-mile walk stands for. A stop's place is projected to
--- New Jersey State Plane (EPSG:3424, US survey feet), so distances are in feet.
+-- New Jersey State Plane (EPSG:3424, US survey feet), so distances are in feet. Across
+-- Pennsylvania the projection is kept: at its western edge, about 500km from the
+-- projection's meridian, it stretches distance by 0.3%, eight feet in a half mile.
 {{ config(materialized='table') }}
 
 with stops as (
@@ -13,7 +16,11 @@ with stops as (
            stop_type_text ilike '%bus%' as is_bus,
            ST_Transform(ST_Point(stop_lon::double, stop_lat::double),
                         'EPSG:4269', 'EPSG:3424', always_xy := true) as point
-    from read_parquet('{{ var("parquet_dir") }}/bts_ntm/current/stops.parquet')
+    from (
+        select distinct on (ntd_id, stop_id) *
+        from read_parquet('{{ var("parquet_dir") }}/bts_ntm/current/stops*.parquet')
+        order by ntd_id, stop_id, download_date desc
+    ) s
     -- GTFS location types 2 to 4 are entrances, generic nodes and boarding areas, not
     -- places a trip stops; the layer writes an absent type as '' or 'Null'.
     where coalesce(location_type, '') in ('', 'Null', '0', '1')
