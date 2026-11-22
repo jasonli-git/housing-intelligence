@@ -70,7 +70,10 @@ def build_observations(
     con.execute(
         f"""
         CREATE OR REPLACE TEMP TABLE muni_lookup AS
+        -- The state is part of the key (Milestone 63): New Jersey's Union township is in
+        -- Union County, and so is a Union township in Pennsylvania's.
         SELECT m.geoid,
+               m.state_code,
                {_norm("m.name")}  AS name_key,
                {_norm("c.name")}  AS county_key
         FROM {regions_table} m
@@ -95,7 +98,7 @@ def build_observations(
     union = "\nUNION ALL\n".join(
         f"""
         SELECT '{metric_id}' AS metric_id, source_id, layer, region_name,
-               county_name, fips_key, period_start, value
+               county_name, state_code, fips_key, period_start, value
         FROM {staging_schema}.{model}
         """
         for model, metric_id in staged_models.items()
@@ -109,9 +112,9 @@ def build_observations(
     con.execute(
         """
         CREATE OR REPLACE TEMP TABLE muni_ambiguous AS
-        SELECT name_key, county_key
+        SELECT state_code, name_key, county_key
         FROM muni_lookup
-        GROUP BY 1, 2 HAVING count(*) > 1
+        GROUP BY 1, 2, 3 HAVING count(*) > 1
         """
     )
     # Source side: two distinct source geographies normalize onto one key. Stripping
@@ -122,14 +125,15 @@ def build_observations(
     con.execute(
         f"""
         CREATE OR REPLACE TEMP TABLE source_ambiguous AS
-        SELECT name_key, county_key FROM (
+        SELECT state_code, name_key, county_key FROM (
             SELECT DISTINCT
+                   state_code,
                    {_norm("region_name")} AS name_key,
                    {_norm("replace(county_name, ' County', '')")} AS county_key,
                    region_name
             FROM staged WHERE layer = 'city'
         )
-        GROUP BY 1, 2 HAVING count(*) > 1
+        GROUP BY 1, 2, 3 HAVING count(*) > 1
         """
     )
 
@@ -177,16 +181,19 @@ def build_observations(
                NULL::DOUBLE AS margin_of_error
         FROM staged s
         JOIN muni_lookup m
-          ON m.name_key = {_norm("s.region_name")}
+          ON m.state_code = s.state_code
+         AND m.name_key = {_norm("s.region_name")}
          AND m.county_key = {_norm("replace(s.county_name, ' County', '')")}
         WHERE s.layer = 'city'
           AND NOT EXISTS (
               SELECT 1 FROM muni_ambiguous a
-              WHERE a.name_key = m.name_key AND a.county_key = m.county_key
+              WHERE a.state_code = m.state_code
+                AND a.name_key = m.name_key AND a.county_key = m.county_key
           )
           AND NOT EXISTS (
               SELECT 1 FROM source_ambiguous sa
-              WHERE sa.name_key = m.name_key AND sa.county_key = m.county_key
+              WHERE sa.state_code = m.state_code
+                AND sa.name_key = m.name_key AND sa.county_key = m.county_key
           )
         """
     )
@@ -290,12 +297,12 @@ def _build_rejects(con: duckdb.DuckDBPyConnection) -> None:
         f"""
         CREATE TABLE {REJECT_TABLE} AS
         WITH geo AS (
-            SELECT source_id, layer, region_name, county_name, fips_key,
+            SELECT source_id, layer, region_name, county_name, state_code, fips_key,
                    {name_key}   AS name_key,
                    {county_key} AS county_key,
                    count(*)     AS observations
             FROM staged
-            GROUP BY 1, 2, 3, 4, 5, 6, 7
+            GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
         ),
         flagged AS (
             SELECT g.*,
@@ -304,13 +311,16 @@ def _build_rejects(con: duckdb.DuckDBPyConnection) -> None:
                    EXISTS (SELECT 1 FROM zip_lookup z WHERE z.geoid = g.region_name)
                        AS zip_hit,
                    EXISTS (SELECT 1 FROM muni_lookup m
-                           WHERE m.name_key = g.name_key
+                           WHERE m.state_code = g.state_code
+                             AND m.name_key = g.name_key
                              AND m.county_key = g.county_key) AS muni_hit,
                    EXISTS (SELECT 1 FROM muni_ambiguous a
-                           WHERE a.name_key = g.name_key
+                           WHERE a.state_code = g.state_code
+                             AND a.name_key = g.name_key
                              AND a.county_key = g.county_key) AS muni_ambiguous,
                    EXISTS (SELECT 1 FROM source_ambiguous sa
-                           WHERE sa.name_key = g.name_key
+                           WHERE sa.state_code = g.state_code
+                             AND sa.name_key = g.name_key
                              AND sa.county_key = g.county_key) AS source_ambiguous
             FROM geo g
         )
