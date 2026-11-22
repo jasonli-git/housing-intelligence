@@ -54,6 +54,16 @@ file once (#530). Its follow-ups are under Open.
   The owner decided on 2026-11-21 not to bundle R2 files for Pennsylvania (step 1) and
   to revisit at a third state.
   R2 charges per file written: past 1M Class A operations a month, each started million costs $4.50, rounded up. The Oct 5 – Nov 4 cycle reached 1.03M and was billed $4.50. Each changed file costs about 2 operations: the upload, plus the `--backup-dir` copy (#359). A refresh across many states could reach millions. Options: bundle a state's artifacts into fewer files, back up less, batch refreshes into one deploy. Weigh at the same time, for the file cap, whether to render place pages on demand: a Worker would fill a template from that place's R2 data and cache the page, instead of pre-building every page in the static export. That would shrink build and deploy size at many states, but not the data writes. It costs runtime reads and CPU, a slower first visit and a migration away from `output: export`. A possible middle path: pre-built pages for New Jersey and the stories, on-demand pages for other states. Avoid pages that build themselves in the browser, which would break share previews. (Owner, 2026-11-04.)
+  What on-demand pages would cost (Cloudflare's pricing pages, read 2026-11-22): static
+  assets are free and unlimited, but a page a Worker builds is a billed request, and so
+  is a hit on the Worker's cache, though a hit uses no CPU. Workers Paid, which the
+  account already has (#454), includes 10M requests and 30M CPU ms a month for its $5
+  minimum, then $0.30 per million requests and $0.02 per million CPU ms; R2 includes 10M
+  reads a month, then $0.36 per million. At an unmeasured 5–20 ms and one or two R2 reads
+  a page, 1M views a month stays within the $5, and 20M adds about $3–4. The cost then
+  follows traffic rather than being fixed, so a viral story or an aggressive crawler
+  shows up on the bill; the middle path keeps the busiest pages static and free. Measure
+  a page's CPU time before deciding.
 - The completeness report still says "New Jersey's population" and "the state" where it
   now measures two states (`hip.completeness`, Milestone 63).
 - Look into promoting the Census County Business Patterns cross-check from a one-off review to a pipeline step that re-runs on refresh (owner, 2026-11-03). It compared Overture's county counts with NAICS 812310, 713910 and 713940 for 2023, using the `CENSUS_API_KEY` the ACS already uses; results are in docs/STORIES.md.
