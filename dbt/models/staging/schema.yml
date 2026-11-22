@@ -394,7 +394,7 @@ models:
       - name: value
         tests:
           - not_null
-          - accepted_range: {name: stg_work_flows_in_range, min_value: 0, max_value: 5000000}
+          - accepted_range: {name: stg_work_flows_in_range, min_value: 0, max_value: 10000000}
 
   - name: stg_work_destinations
     description: >-

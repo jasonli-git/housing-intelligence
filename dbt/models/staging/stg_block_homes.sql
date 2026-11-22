@@ -1,4 +1,4 @@
--- New Jersey's 2020 census blocks that hold homes, and the regions each sits in
+-- The covered states' 2020 census blocks that hold homes, and the regions each sits in
 -- (Milestone 40, ARCHITECTURE #301).
 --
 -- The weights behind every share of homes this milestone publishes: flood zones and
@@ -18,19 +18,39 @@ with blocks as (
 ),
 towns as (
     select GEOID as geoid, ST_GeomFromWKB(geom_wkb) as geom
-    from read_parquet('{{ var("parquet_dir") }}/census_tiger/*/cousub_NJ.parquet')
-    where COUSUBFP <> '00000'
+    from read_parquet('{{ var("parquet_dir") }}/census_tiger/*/cousub_*.parquet')
+    where COUSUBFP <> '00000' and STATEFP in ({{ var('state_fips') }})
 ),
 zctas as (
-    -- New Jersey's ZIP codes begin 07 and 08.
+    -- Every ZCTA: a block's interior point picks its own, and a ZCTA that crosses a
+    -- state line is the Census's geography, not an error. (Until Milestone 63 only
+    -- New Jersey's 07 and 08 prefixes were read.)
     select GEOID20 as geoid, ST_GeomFromWKB(geom_wkb) as geom
     from read_parquet('{{ var("parquet_dir") }}/census_tiger/*/zcta.parquet')
-    where left(GEOID20, 2) in ('07', '08')
 ),
 -- Inner spatial joins, keyed back by block: under a LEFT join DuckDB 1.5's spatial
 -- join can emit a matched row a second time as unmatched (`stg_njdep_sites`).
-block_town as (
+-- A block's town is always in the block's own county. The 2025 town lines can put a
+-- 2020 block's interior point a few metres over a county line (one Columbia County, PA
+-- block in a Luzerne town), so the county is matched after the spatial join (fenced
+-- off, as in `stg_flood_blocks`), and a block left without a town takes the town of its
+-- own county it overlaps most.
+point_town as materialized (
     select b.block_geoid, t.geoid from blocks b join towns t on ST_Contains(t.geom, b.point)
+),
+by_point as (
+    select * from point_town where left(geoid, 5) = left(block_geoid, 5)
+),
+by_overlap as (
+    select b.block_geoid, arg_max(t.geoid, ST_Area(ST_Intersection(b.geom, t.geom))) as geoid
+    from blocks b
+    join towns t on left(t.geoid, 5) = left(b.block_geoid, 5)
+    where b.block_geoid not in (select block_geoid from by_point)
+      and ST_Intersects(b.geom, t.geom)
+    group by 1
+),
+block_town as (
+    select * from by_point union all select * from by_overlap
 ),
 block_zcta as (
     select b.block_geoid, z.geoid from blocks b join zctas z on ST_Contains(z.geom, b.point)

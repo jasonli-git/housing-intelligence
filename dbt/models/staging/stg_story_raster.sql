@@ -29,6 +29,9 @@ blocks as (
     select h.municipality_geoid, h.county_geoid, h.zcta_geoid, h.homes,
            ST_X(h.point) as lon, ST_Y(h.point) as lat
     from {{ ref('stg_block_homes') }} h
+    -- New Jersey's blocks only: the story images cover New Jersey (story sources stay
+    -- New Jersey's until reviewed for another state, Milestone 63).
+    where left(h.block_geoid, 2) = '34'
 ),
 -- Each block's pixel in each image, worked out first: the joins below are then plain
 -- equality joins, which DuckDB will not do on columns of a cross-joined grid.
