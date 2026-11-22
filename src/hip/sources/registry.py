@@ -370,7 +370,6 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         BpuReliabilityAdapter,
         BpuAnnualReportsAdapter,
         EiaAdapter,
-        EnergyBurdenAdapter,
         LeadLinesAdapter,
         LeadLinesOpraAdapter,
         UcmrAdapter,
@@ -378,6 +377,8 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
     ):
         if source_id == builder.source_id:
             return builder()
+    if source_id == EnergyBurdenAdapter.source_id:
+        return EnergyBurdenAdapter(states=scope.states)
     if source_id == PlacesAdapter.source_id:
         return PlacesAdapter(states=scope.states)
     if source_id == TigerAdapter.source_id:

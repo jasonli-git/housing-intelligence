@@ -9,13 +9,22 @@ import math
 import re
 import tempfile
 from collections import defaultdict
+from collections.abc import Sequence
 from datetime import date
 from pathlib import Path
 from typing import ClassVar
 from zipfile import ZipFile
 
+from hip.config import fips_for
 from hip.sources.arcgis import ArcGisAdapter, ArcGisLayer
-from hip.sources.base import Discovery, ReleaseRef, SourceAdapter, SourceError
+from hip.sources.base import (
+    Discovery,
+    ReleaseRef,
+    SourceAdapter,
+    SourceError,
+    layer_state,
+    scoped_layer,
+)
 from hip.sources.xlsx import rows
 
 
@@ -424,6 +433,10 @@ class EiaAdapter(SourceAdapter):
         return [{"utility_id": k, "payload": json.dumps(r)} for k, r in records.items()]
 
 
+# Each state's county count, which its file must hold whole (Milestone 63).
+LEAD_COUNTIES = {"NJ": 21, "PA": 67}
+
+
 class EnergyBurdenAdapter(SourceAdapter):
     """One disjoint AMI partition, not four overlapping income classifications.
 
@@ -433,25 +446,31 @@ class EnergyBurdenAdapter(SourceAdapter):
     """
 
     source_id: ClassVar[str] = "doe_lead"
-    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "2022"
     landing_format: ClassVar[str] = "xlsx_records"
 
+    def __init__(self, states: Sequence[str] = ("NJ",)) -> None:
+        self.scoped = [s.upper() for s in states]
+        unknown = [s for s in self.scoped if s not in LEAD_COUNTIES]
+        if unknown:
+            raise SourceError(f"LEAD county files not reviewed for {unknown}")
+
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         if vintage not in (None, self.default_vintage):
-            raise SourceError("LEAD adapter supports the verified 2022 NJ bulk file")
+            raise SourceError("LEAD adapter supports the verified 2022 bulk files")
         return [
             ReleaseRef(
                 self.source_id,
-                "counties",
+                scoped_layer("counties", state),
                 "2022",
-                "https://data.openei.org/files/6219/NJ-2022-LEAD-data.zip",
+                f"https://data.openei.org/files/6219/{state}-2022-LEAD-data.zip",
             )
+            for state in self.scoped
         ]
 
     @classmethod
     def filename(cls, ref: ReleaseRef) -> str:
-        return "NJ-2022-LEAD-data.zip"
+        return f"{layer_state(ref.layer, 'counties')}-2022-LEAD-data.zip"
 
     @classmethod
     def xlsx_records(cls, path: Path, ref: ReleaseRef) -> list[dict[str, object]]:
@@ -459,7 +478,10 @@ class EnergyBurdenAdapter(SourceAdapter):
         names: dict[str, str] = {}
         questionable: set[str] = set()
         bands = {"0-30%", "30-60%", "60-80%", "80-100%", "100-150%", "150%+"}
-        with ZipFile(path) as archive, archive.open("NJ AMI Counties 2022.csv") as handle:
+        state = layer_state(ref.layer, "counties")
+        fips = fips_for(state)
+        member = f"{state} AMI Counties 2022.csv"
+        with ZipFile(path) as archive, archive.open(member) as handle:
             reader = csv.DictReader(io.TextIOWrapper(handle, encoding="utf-8-sig"))
             columns = [
                 "UNITS",
@@ -474,14 +496,14 @@ class EnergyBurdenAdapter(SourceAdapter):
                 raise SourceError("LEAD county headers changed")
             for r in reader:
                 if (
-                    r["ABV"] != "NJ"
+                    r["ABV"] != state
                     or r["AMI150"] not in bands
                     or r["TEN"] not in {"OWN", "REN"}
                 ):
                     raise SourceError(
                         "LEAD geography or disjoint income partition changed"
                     )
-                if not re.fullmatch(r"34\d{3}", r["FIP"]):
+                if not re.fullmatch(rf"{fips}\d{{3}}", r["FIP"]):
                     raise SourceError("LEAD county identifier changed")
                 names[r["FIP"]] = r["NAME"]
                 for field in columns:
@@ -491,8 +513,8 @@ class EnergyBurdenAdapter(SourceAdapter):
                     if value < 0 and field != "HINCP*UNITS":
                         questionable.add(r["FIP"])
                     sums[r["FIP"]][field] += value
-        if len(sums) != 21:
-            raise SourceError("LEAD must contain all 21 NJ counties")
+        if len(sums) != LEAD_COUNTIES[state]:
+            raise SourceError(f"LEAD must contain all {LEAD_COUNTIES[state]} counties")
         records: list[dict[str, object]] = []
         for geoid, fields in sorted(sums.items()):
             means = {
