@@ -7,30 +7,40 @@ with files as (
     -- Historical raw releases remain on disk; only the newest bulk file is served.
     select * from files
     where release_vintage::int = (select max(release_vintage::int) from files)
+), states(postal, fips) as (
+    -- The scoped states (Milestone 63); the landed file holds every reviewed state's.
+    values {% for pair in var('state_fips_pairs') %}('{{ pair[0] }}', '{{ pair[1] }}'){{ ", " if not loop.last }}{% endfor %}
 ), places as (
     -- Census BPS publishes both place and MCD codes. CDPs without a verified MCD
     -- relationship never become municipalities merely because their names match.
-    select distinct lpad(trim(column03), 3, '0') as countyfp,
+    select distinct trim(column01) as statefp, lpad(trim(column03), 3, '0') as countyfp,
            lpad(trim(column05), 5, '0') as placefp,
-           '34' || lpad(trim(column03), 3, '0')
+           trim(column01) || lpad(trim(column03), 3, '0')
                 || lpad(trim(column06), 5, '0') as town_geoid
     from read_parquet('{{ var("parquet_dir") }}/census_permits/*/place_*.parquet')
-    where trim(column01) = '34' and trim(column05) <> '00000'
+    where trim(column01) in (select fips from states) and trim(column05) <> '00000'
       and trim(column06) <> '00000'
 ), unique_places as (
-    select countyfp, placefp, min(town_geoid) as town_geoid
-    from places group by 1, 2 having count(distinct town_geoid) = 1
+    select statefp, countyfp, placefp, min(town_geoid) as town_geoid
+    from places group by 1, 2, 3 having count(distinct town_geoid) = 1
+), counties as (
+    select distinct county_geoid from {{ ref('stg_block_homes') }}
+), towns as (
+    select distinct municipality_geoid as geoid from {{ ref('stg_block_homes') }}
 ), located as (
-    select r.*, case when try_cast(cnty2020 as int) between 1 and 41
-                              and try_cast(cnty2020 as int) % 2 = 1
-                    then '34' || lpad(cnty2020, 3, '0') end as county_geoid,
+    select r.*, s.fips as state_geoid,
+           case when s.fips || lpad(r.cnty2020, 3, '0') in (select county_geoid from counties)
+                then s.fips || lpad(r.cnty2020, 3, '0') end as county_geoid,
            p.town_geoid
-    from raw r left join unique_places p
-      on p.countyfp = lpad(r.cnty2020, 3, '0')
+    from raw r
+    join states s on s.postal = r.PROJ_ST
+    left join unique_places p
+      on p.statefp = s.fips
+     and p.countyfp = lpad(r.cnty2020, 3, '0')
      and p.placefp = lpad(r.place2020, 5, '0')
 )
 select 'hud_lihtc' as source_id, HUD_ID as record_id,
-       coalesce(i.geoid, county_geoid, '34') as geoid,
+       coalesce(i.geoid, county_geoid, state_geoid) as geoid,
        case when i.geoid is not null then 'municipality'
             when county_geoid is not null then 'county' else 'state' end as level,
        'lihtc_property' as kind,
@@ -63,4 +73,4 @@ select 'hud_lihtc' as source_id, HUD_ID as record_id,
        make_date(coverage_through, 12, 31) as snapshot,
        'properties' as release_layer, release_vintage
 from located r
-left join {{ ref('stg_nj_municipal_codes') }} i on i.geoid = r.town_geoid
+left join towns i on i.geoid = r.town_geoid
