@@ -565,6 +565,11 @@ models:
     columns:
       - name: y
         tests: [not_null]
+  - name: story_points_density
+    description: People by 1.6 km square, and each town's people and land, from 2020 blocks.
+    columns:
+      - name: y
+        tests: [not_null]
   - name: story_points_famous
     description: The most widely known person born in each town; built once landed.
     columns:

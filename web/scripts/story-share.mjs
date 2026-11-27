@@ -84,7 +84,7 @@ async function captureChart(browser, url) {
     const narrow = await context.newPage();
     await narrow.goto(url, { waitUntil: 'networkidle', timeout: 90_000 });
     await narrow.evaluate(() => document.fonts.ready);
-    await narrow.addStyleTag({ content: `*,*::before,*::after{animation:none!important;transition:none!important} nextjs-portal{display:none!important} ${PLAIN} [data-share-whole] .story-h{margin-top:20px!important} [data-share-whole] figure{margin-bottom:0!important} [data-share-plain]:not(#_){background:none!important;box-shadow:none!important;border-color:transparent!important;backdrop-filter:none!important} [data-share-plain]:not(#_)::before,[data-share-plain]:not(#_)::after{display:none!important}` });
+    await narrow.addStyleTag({ content: `*,*::before,*::after{animation:none!important;transition:none!important} nextjs-portal{display:none!important} .shortcut-bar{display:none!important} ${PLAIN} [data-share-whole] .story-h{margin-top:20px!important} [data-share-whole] figure{margin-bottom:0!important} [data-share-plain]:not(#_){background:none!important;box-shadow:none!important;border-color:transparent!important;backdrop-filter:none!important} [data-share-plain]:not(#_)::before,[data-share-plain]:not(#_)::after{display:none!important}` });
     // A chart the story marks with `data-share-chart`, leaving its controls behind; otherwise
     // the first block of the story tall enough to be a chart, in page order.
     const found = await narrow.evaluate(() => {

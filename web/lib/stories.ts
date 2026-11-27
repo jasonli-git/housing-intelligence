@@ -48,6 +48,7 @@ export const STORIES = [
   { href: "/stories/the-hottest-counties", title: "The hottest counties", blurb: "How many summer days pass 90°F in each county now, against the thirty years from 1951." },
   { href: "/stories/the-pizza-bagel-line", title: "The pizza–bagel line", blurb: "How far from New York the bagel shop reaches: bagel shops against pizzerias, north to south." },
   { href: "/stories/hometown-famous", title: "Hometown famous", blurb: "Which towns have produced the most notable people for their size, and the best-known person born in each." },
+  { href: "/stories/where-new-jersey-lives", title: "Where New Jersey lives", blurb: "New Jersey's 9.3 million people as spikes rising from the map, square by square, and the most crowded towns." },
 ];
 
 /** A town with the latest value of each measure the stories read. */

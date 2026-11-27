@@ -11,7 +11,7 @@ export const LIBRARY_STORIES = STORIES.filter((story) => !ON_PLACE_PAGES.has(sto
 export const COLLECTIONS = [
   { id: "jersey", title: "Only in New Jersey", description: "The state’s unmistakable character.", stories: ["the-wawa-line", "boroughitis", "the-pizza-bagel-line", "diner-capital", "whats-in-a-name", "the-starbucks-index", "court-circle-lane", "hometown-famous"] },
   { id: "money", title: "What your money buys", description: "Beyond the asking price.", stories: ["pricier-towns", "the-long-commute-premium"] },
-  { id: "place", title: "The feel of a place", description: "Trees, streets, space and quiet.", stories: ["the-leafy-premium", "what-quiet-costs", "where-you-can-see-the-stars", "pavement-or-lawn", "living-higher", "how-big-the-houses-are", "when-the-town-was-built", "the-flood-claims-calendar"] },
+  { id: "place", title: "The feel of a place", description: "Trees, streets, space and quiet.", stories: ["the-leafy-premium", "what-quiet-costs", "where-you-can-see-the-stars", "pavement-or-lawn", "living-higher", "how-big-the-houses-are", "when-the-town-was-built", "the-flood-claims-calendar", "where-new-jersey-lives"] },
 ] as const;
 
 export type CollectionId = (typeof COLLECTIONS)[number]["id"];
@@ -69,6 +69,7 @@ export const STORY_PREVIEWS: Record<string, string> = {
   "the-hottest-counties": "Summer days above 90°F, then and now.",
   "the-pizza-bagel-line": "Bagel shops versus pizzerias, north to south.",
   "hometown-famous": "Notable people born in each town, relative to its size.",
+  "where-new-jersey-lives": "Where the state’s people live, as spikes on a 3D map.",
 };
 
 export const storyPreview = (story: Story) => STORY_PREVIEWS[storySlug(story)] ?? story.blurb;

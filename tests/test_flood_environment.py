@@ -170,8 +170,9 @@ def test_every_m40_source_is_fetched_and_every_cited_one_is_loaded() -> None:
         "epa_sdwis",
     }
     assert cited <= set(METRIC_SOURCES)
-    # Blocks only weigh the others; they are fetched, never cited by a figure.
-    assert "census_blocks" in IMPLEMENTED and "census_blocks" not in METRIC_SOURCES
+    # Blocks weigh the others' figures without being cited by them; from 2026-11-27 they
+    # are also cited, by the "Where New Jersey lives" story's own rows.
+    assert "census_blocks" in IMPLEMENTED and "census_blocks" in METRIC_SOURCES
 
 
 # --- Staging models -----------------------------------------------------------------
