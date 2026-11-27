@@ -178,11 +178,11 @@ export const POSTING_ORDER: Posting[] = [
   { date: "2026-11-20", slug: "the-flood-claims-calendar", state: "posted" },
   { date: "2026-11-23", slug: "hometown-famous", state: "planned" },
   { date: "2026-11-27", slug: "when-the-town-was-built", state: "planned" },
-  { date: "2026-11-30", slug: "the-pizza-bagel-line", state: "planned" },
-  { date: "2026-12-04", slug: "where-you-can-see-the-stars", state: "planned" },
-  { date: "2026-12-07", slug: "boroughitis", state: "planned" },
-  { date: "2026-12-11", slug: "pricier-towns", state: "planned" },
-  { date: "2026-12-14", slug: "where-new-jersey-lives", state: "planned" },
+  { date: "2026-11-30", slug: "where-new-jersey-lives", state: "planned" },
+  { date: "2026-12-04", slug: "the-pizza-bagel-line", state: "planned" },
+  { date: "2026-12-07", slug: "where-you-can-see-the-stars", state: "planned" },
+  { date: "2026-12-11", slug: "boroughitis", state: "planned" },
+  { date: "2026-12-14", slug: "pricier-towns", state: "planned" },
 ];
 
 const where = (slug: string) => [

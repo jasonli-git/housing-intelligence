@@ -69,11 +69,11 @@ Two stories a week on X and Bluesky, Mondays and Fridays at 9 AM Eastern, from 2
 | 2026-11-20 | [The flood claims calendar](../web/app/stories/the-flood-claims-calendar/page.tsx) | posted |
 | 2026-11-23 | [Hometown famous](../web/app/stories/hometown-famous/page.tsx) | planned |
 | 2026-11-27 | [When the town was built](../web/app/stories/when-the-town-was-built/page.tsx) | planned |
-| 2026-11-30 | [The pizza–bagel line](../web/app/stories/the-pizza-bagel-line/page.tsx) | planned |
-| 2026-12-04 | [Where you can see the stars](../web/app/stories/where-you-can-see-the-stars/page.tsx) | planned |
-| 2026-12-07 | [Boroughitis](../web/app/stories/boroughitis/page.tsx) | planned |
-| 2026-12-11 | [What goes with pricier towns](../web/app/stories/pricier-towns/page.tsx) | planned |
-| 2026-12-14 | [Where New Jersey lives](../web/app/stories/where-new-jersey-lives/page.tsx) | planned |
+| 2026-11-30 | [Where New Jersey lives](../web/app/stories/where-new-jersey-lives/page.tsx) | planned |
+| 2026-12-04 | [The pizza–bagel line](../web/app/stories/the-pizza-bagel-line/page.tsx) | planned |
+| 2026-12-07 | [Where you can see the stars](../web/app/stories/where-you-can-see-the-stars/page.tsx) | planned |
+| 2026-12-11 | [Boroughitis](../web/app/stories/boroughitis/page.tsx) | planned |
+| 2026-12-14 | [What goes with pricier towns](../web/app/stories/pricier-towns/page.tsx) | planned |
 
 ## Reviews
 
