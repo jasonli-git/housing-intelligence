@@ -103,10 +103,12 @@ export default async function WhereNewJerseyLivesPage() {
   const top = shown[0]?.perSqMi ?? 1;
   const peak = sorted[0];
 
+  // The tallest square's people, by town (reviewed 2026-11-27): Jersey City 22,919, Union
+  // City 14,739, North Bergen 3,676, Hoboken 1,150. Named in words, since the grid is fixed.
   return (
     <StoryShell
       title="Where New Jersey lives"
-      takeaway={<><b>Half of New Jersey lives on {Math.round(halfShare * 100)}% of its land.</b> The tallest spike, in Union City and West New York, holds {fmt(peak[2])} people on one square of ground a mile across.</>}
+      takeaway={<><b>Half of New Jersey lives on {Math.round(halfShare * 100)}% of its land.</b> The tallest spike, where Jersey City meets Union City, holds {fmt(peak[2])} people on one square of ground a mile across.</>}
       lede={<>New Jersey is the most crowded state in the country, but not evenly. Each spike stands on a square of ground about a mile across ({CELL_KM} km), and its height is how many people live there: {fmt(total)} in all, at the 2020 Census.</>}
       note={<>Population: the U.S. Census Bureau&rsquo;s 2020 Census, every block&rsquo;s count placed at its centre and summed into squares {CELL_KM} km a side, and each town&rsquo;s land summed from its blocks. A spike is people where they live, not where they work, so office districts look empty. Heights are to scale; the tilted view shortens distances running away from the reader, which the flat map does not.</>}
     >
