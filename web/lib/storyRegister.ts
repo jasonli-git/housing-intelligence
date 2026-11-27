@@ -147,6 +147,21 @@ export const REVIEWS: Record<string, StoryReview> = {
       "An assessor's year for an old house is often an estimate, and only standing houses are counted; the note says both.",
     ],
   },
+  "where-new-jersey-lives": {
+    status: "live",
+    reviewed: "2026-11-27",
+    sources: [
+      { id: "census_blocks", use: "people and land by 2020 block, summed into 1.6 km squares and into towns", asOf: "2020 Census (April 1, 2020)",
+        coverage: "All 137,972 NJ blocks placed; 9,288,994 people, the census total, in 6,733 squares and 564 of 564 towns; land 7,354.8 sq mi, the Census's state figure" },
+    ],
+    issues: [
+      "The counts are 2020's; the Census's estimate for July 2025 is 9,548,215, 2.8% more, but blocks are counted only once a decade.",
+      "The takeaway first named the tallest square \"Union City and West New York\"; it is mostly Jersey City (22,919) and Union City (14,739), corrected 2026-11-27.",
+      "\"7% of its land\" counts the squares' whole area; on the blocks' own land it is 7.2%, the same once rounded.",
+      "A block's people stand at its interior point, so a square on a town line takes them whole; it counts where people sleep, not work.",
+    ],
+    ideas: ["A version for Pennsylvania once story sources open to it (#532).", "Population change 2010 to 2020 as rising and falling spikes."],
+  },
 };
 
 /** One social post on X and Bluesky at 9 AM ET: Fridays until 2026-11-20, then Mondays and
@@ -167,6 +182,7 @@ export const POSTING_ORDER: Posting[] = [
   { date: "2026-12-04", slug: "where-you-can-see-the-stars", state: "planned" },
   { date: "2026-12-07", slug: "boroughitis", state: "planned" },
   { date: "2026-12-11", slug: "pricier-towns", state: "planned" },
+  { date: "2026-12-14", slug: "where-new-jersey-lives", state: "planned" },
 ];
 
 const where = (slug: string) => [

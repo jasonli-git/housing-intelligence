@@ -53,7 +53,7 @@ open work is in [TODO.md](TODO.md), and ideas here are not decided.
 | [The hottest counties](../web/app/stories/the-hottest-counties/page.tsx) | place pages | yes | not yet reviewed | — |
 | [The pizza–bagel line](../web/app/stories/the-pizza-bagel-line/page.tsx) | Only in New Jersey | yes | live | 2026-11-03 |
 | [Hometown famous](../web/app/stories/hometown-famous/page.tsx) | Only in New Jersey | yes | live | 2026-11-03 |
-| [Where New Jersey lives](../web/app/stories/where-new-jersey-lives/page.tsx) | The feel of a place | yes | not yet reviewed | — |
+| [Where New Jersey lives](../web/app/stories/where-new-jersey-lives/page.tsx) | The feel of a place | yes | live | 2026-11-27 |
 
 ## Posting order
 
@@ -73,6 +73,7 @@ Two stories a week on X and Bluesky, Mondays and Fridays at 9 AM Eastern, from 2
 | 2026-12-04 | [Where you can see the stars](../web/app/stories/where-you-can-see-the-stars/page.tsx) | planned |
 | 2026-12-07 | [Boroughitis](../web/app/stories/boroughitis/page.tsx) | planned |
 | 2026-12-11 | [What goes with pricier towns](../web/app/stories/pricier-towns/page.tsx) | planned |
+| 2026-12-14 | [Where New Jersey lives](../web/app/stories/where-new-jersey-lives/page.tsx) | planned |
 
 ## Reviews
 
@@ -226,3 +227,23 @@ Reviewed 2026-11-03 · live
 **Ideas** (not decided)
 
 - Pantheon (MIT) is curated but older, smaller and of unclear data licence; Wikidata stays the source, refreshed monthly.
+
+### Where New Jersey lives
+
+Reviewed 2026-11-27 · live
+
+| Source | Used for | As of | Coverage |
+|---|---|---|---|
+| `census_blocks` | people and land by 2020 block, summed into 1.6 km squares and into towns | 2020 Census (April 1, 2020) | All 137,972 NJ blocks placed; 9,288,994 people, the census total, in 6,733 squares and 564 of 564 towns; land 7,354.8 sq mi, the Census's state figure |
+
+**Issues**
+
+- The counts are 2020's; the Census's estimate for July 2025 is 9,548,215, 2.8% more, but blocks are counted only once a decade.
+- The takeaway first named the tallest square "Union City and West New York"; it is mostly Jersey City (22,919) and Union City (14,739), corrected 2026-11-27.
+- "7% of its land" counts the squares' whole area; on the blocks' own land it is 7.2%, the same once rounded.
+- A block's people stand at its interior point, so a square on a town line takes them whole; it counts where people sleep, not work.
+
+**Ideas** (not decided)
+
+- A version for Pennsylvania once story sources open to it (#532).
+- Population change 2010 to 2020 as rising and falling spikes.
