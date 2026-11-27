@@ -7,7 +7,7 @@ sources stood when last reviewed.
 Decisions about how the stories are built are in [ARCHITECTURE.md](ARCHITECTURE.md);
 open work is in [TODO.md](TODO.md), and ideas here are not decided.
 
-## All stories (42)
+## All stories (43)
 
 | Story | Where it appears | Share image | Status | Reviewed |
 |---|---|---|---|---|
@@ -53,6 +53,7 @@ open work is in [TODO.md](TODO.md), and ideas here are not decided.
 | [The hottest counties](../web/app/stories/the-hottest-counties/page.tsx) | place pages | yes | not yet reviewed | — |
 | [The pizza–bagel line](../web/app/stories/the-pizza-bagel-line/page.tsx) | Only in New Jersey | yes | live | 2026-11-03 |
 | [Hometown famous](../web/app/stories/hometown-famous/page.tsx) | Only in New Jersey | yes | live | 2026-11-03 |
+| [Where New Jersey lives](../web/app/stories/where-new-jersey-lives/page.tsx) | The feel of a place | yes | not yet reviewed | — |
 
 ## Posting order
 

@@ -258,6 +258,8 @@ METRIC_SOURCES: tuple[str, ...] = (
     NClimGridAdapter.source_id,
     ImperviousAdapter.source_id,
     FootprintsAdapter.source_id,
+    # Where New Jersey lives: people by block (2026-11-27).
+    BlocksAdapter.source_id,
 )
 
 

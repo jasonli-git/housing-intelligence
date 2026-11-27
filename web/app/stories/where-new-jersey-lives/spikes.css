@@ -1,0 +1,18 @@
+/* Where New Jersey lives: the 3D and flat views, their switch and marks. */
+.spike-views { display: flex; gap: .25rem; align-items: center; }
+.spike-switch input { position: absolute; opacity: 0; pointer-events: none; }
+.spike-switch label { padding: .3rem .8rem; border: 1px solid var(--border); border-radius: 999px; font-size: 13px; cursor: pointer; color: var(--text-secondary); }
+.spike-switch input:checked + label { background: var(--text-primary); border-color: var(--text-primary); color: var(--surface-1); }
+.spike-switch input:focus-visible + label { outline: 2px solid var(--story-2); outline-offset: 2px; }
+.spike-switch figure { margin-top: .75rem; }
+.spike-switch:has(#spike-3d:checked) .spike-flat, .spike-switch:has(#spike-flat:checked) .spike-3d { display: none; }
+.spike-ground { fill: var(--surface-2); stroke: none; }
+.spike { fill: var(--story-2); stroke: var(--surface-1); stroke-width: .25; }
+.spike:hover { fill: var(--text-primary); }
+@media (prefers-reduced-motion: no-preference) { .spike { transition: fill .1s; } }
+.spike-switch figure svg { display: block; width: 100%; min-width: 0; max-width: 760px; margin: 0 auto; max-height: none; }
+.spike-county { fill: none; stroke: var(--text-muted); stroke-width: .4; stroke-opacity: .6; }
+.spike-label line { stroke: var(--text-secondary); stroke-width: .6; }
+.spike-label text, .spike-ref text { font-size: 11px; fill: var(--text-primary); text-anchor: middle; paint-order: stroke; stroke: var(--surface-1); stroke-width: 3px; }
+.spike-ref text { text-anchor: start; fill: var(--text-secondary); }
+.spike-flat .spike-county { pointer-events: none; }
